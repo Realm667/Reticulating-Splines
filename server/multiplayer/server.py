@@ -217,10 +217,12 @@ class Directory:
                 del self.host_slots[ip]
             self.rooms.pop(room_id, None)
             if room:
-                for pair in list(room.peers.values()):
-                    await pair.guest.close()
-                    if pair.host is not None:
-                        await pair.host.close()
+                # Close every peer immediately. A client that does not acknowledge
+                # the close handshake must not delay the other players in turn.
+                connections = [socket for pair in list(room.peers.values())
+                               for socket in (pair.guest, pair.host) if socket is not None]
+                await asyncio.gather(*(socket.close() for socket in connections),
+                                     return_exceptions=True)
             await ws.close()
         return ws
 
