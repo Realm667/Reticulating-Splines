@@ -107,6 +107,10 @@ It inherits the page's text color and shows public games only. It refreshes ever
 30 seconds while the page is visible. Names are inserted as text, never HTML.
 No player IPs, participant rosters, passwords or LAN games are published. A failed
 request displays unavailability, not a misleading zero-player count.
+If a CMS strips the placeholder's `data-rs-activity` attribute, the script uses
+the empty div immediately before it, or creates its own div at that position.
+Keep the script in the custom HTML block. Run widget checks with
+`node --test server/multiplayer/test_widget.cjs` from the repository root.
 
 ## Protocol and limits
 
