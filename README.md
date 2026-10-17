@@ -25,8 +25,8 @@ ownership and municipal-account rules. Reticulating Splines does not patch or
 run the original SimCity 2000 executable.
 
 **Development status:** the project is in development; multiplayer is experimental.
-Public preview **0.3.0-rs.2** is based on Nicholas Ochoa's OpenSC2K 0.3.0
-with reviewed later upstream fixes. [Download the desktop packages](https://github.com/Realm667/Reticulating-Splines/releases/tag/v0.3.0-rs.2)
+Public preview **0.3.0-rs.3** is based on Nicholas Ochoa's OpenSC2K 0.3.0
+with reviewed later upstream fixes. [Download the desktop packages](https://github.com/Realm667/Reticulating-Splines/releases/tag/v0.3.0-rs.3)
 for Windows x64/ARM64, Linux x64/ARM64, or macOS (Intel and Apple Silicon).
 Replacement graphics, music and sounds are included; importing your own
 supported original game is optional. Extract Windows/Linux archives to a writable
@@ -46,8 +46,8 @@ profiles remain compatible; Windows exports use **`ReticulatingSplines.exe`**.
 | --- | --- |
 | Building & planning | Eleven map sizes from 16 to 4096 tiles per side, including classic 128 × 128 cities; configurable terrain, per-tile data maps, service coverage, transport overlays and additional zoom levels. Large maps need more memory and preparation time. |
 | Light, weather & life | Day/night cycles, illuminated windows and streets, rain, snow, storms, clouds, fog, seasons, reflective water, waves, forests, decorative traffic and pedestrians. |
-| Multiplayer | Two to eight players over LAN or direct IP, with Co-op, Competitive Shared and Competitive Region modes. |
-| Everyday comfort | Middle-click tool picking, remembered window positions, compact tool flyouts and light/dark interface themes. |
+| Multiplayer | Two to eight players with LAN discovery, an Internet game directory, direct host connections, optional UPnP forwarding and an external reachability check; Co-op, Competitive Shared and Competitive Region modes. |
+| Everyday comfort | Middle-click tool picking, remembered window positions, compact tool flyouts and light/dark or Classic Windows/DOS interface themes. |
 | Music & sound | Imported original audio, optional replacement packs or your own MP3 folders, with favorites and playback-queue controls in the music box. |
 | Artwork & modding | Original or replacement artwork, separately selectable asset packs and JavaScript mods with game events, an API and a developer console. |
 | Languages | English, German, Spanish, French, Italian, Brazilian Portuguese and Korean; Korean coverage is still being expanded. |
