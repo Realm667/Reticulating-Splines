@@ -8418,3 +8418,63 @@ msgstr ""
 #: src/ui/settings/about_dialog.gd
 msgid "Reticulating Splines — CC BY 4.0"
 msgstr ""
+
+#. LAN game browser; supplementary translation from English.
+#: game/src/multiplayer/multiplayer_lan_browser.gd
+msgid "Search LAN games"
+msgstr ""
+
+#. LAN game browser; supplementary translation from English.
+#: game/src/multiplayer/multiplayer_lan_browser.gd
+msgid "Find lobbies and running games on the local IPv4 network. Select a game, then join."
+msgstr ""
+
+#. LAN game browser; supplementary translation from English.
+#: game/src/multiplayer/multiplayer_lan_browser.gd
+msgid "LAN search unavailable. You can still enter the host address."
+msgstr ""
+
+#. LAN game browser; supplementary translation from English.
+#: game/src/multiplayer/multiplayer_lan_browser.gd
+msgid "Searching the local network…"
+msgstr ""
+
+#. LAN game browser; supplementary translation from English.
+#: game/src/multiplayer/multiplayer_lan_browser.gd
+msgid "No games found. Search again, or enter the host address. Check the host's firewall and LAN connection."
+msgstr ""
+
+#. LAN game browser; supplementary translation from English.
+#: game/src/multiplayer/multiplayer_lan_browser.gd
+msgid "Select a game to fill in its address and port. Passwords are entered below."
+msgstr ""
+
+#. LAN game browser; supplementary translation from English.
+#: game/src/multiplayer/multiplayer_lan_browser.gd
+msgid "City / Host"
+msgstr ""
+
+#. LAN game browser; supplementary translation from English.
+#: game/src/multiplayer/multiplayer_lan_browser.gd
+msgid "Status / Players"
+msgstr ""
+
+#. LAN game browser; supplementary translation from English.
+#: game/src/multiplayer/multiplayer_lan_browser.gd
+msgid "Lobby"
+msgstr ""
+
+#. LAN game browser; supplementary translation from English.
+#: game/src/multiplayer/multiplayer_lan_browser.gd
+msgid "In progress"
+msgstr ""
+
+#. LAN game browser; supplementary translation from English.
+#: game/src/multiplayer/multiplayer_lan_browser.gd
+msgid "Full"
+msgstr ""
+
+#. LAN game browser; supplementary translation from English.
+#: game/src/multiplayer/multiplayer_lan_browser.gd
+msgid "Different game version"
+msgstr ""

@@ -9,10 +9,29 @@ clients send commands, never authoritative balances or city files.
 
 Open Multiplayer from the main menu. Select Host or Join, player name and color.
 The host chooses the mode, terrain, land price and optional password. Guests enter
-the host address and TCP port (default 20000), then create or request a city seat.
+the host address and TCP port (default 20000), or use **Search LAN games**. Select
+a result to fill in its address and port, enter its password if required, then
+join and create or request a city seat. Search results include both waiting lobbies
+and running games, with city, host, mode, connected players and password status.
+Full games and different network builds cannot be selected from the list.
 A new game begins only after everyone is ready and the host starts it. A lobby
 change resets readiness. The host can rename their own city and assign visible
 starting handicaps; each player can edit their own city-name cell.
+
+LAN discovery uses IPv4 broadcast queries on UDP ports 20001–20008. Hosts answer
+only while hosting; the small port range also permits multiple host processes on
+one computer. A search sends three probes over four seconds, closes its socket,
+and expires results after 15 seconds. Refresh to find newly opened/closed games.
+Closing the dialog, changing to Host or joining cancels the search. Discovery
+never bypasses the normal TCP password, version, capacity or seat checks. It does
+not advertise passwords, credentials, city data or computer account names.
+
+The host firewall must allow the game's discovery UDP port and chosen TCP port
+on the local network. Isolated Wi-Fi clients, routed subnets, IPv6-only networks
+or blocked broadcasts may prevent discovery; direct-IP joining remains available.
+Older hosts without discovery support can also be reached by direct IP. Discovery
+packets have an independent version, bounded sizes, rate limits and a per-search
+nonce; responses use the actual sender's address rather than a claimed endpoint.
 
 Starting funds use localized currency formatting. Shared starting territories
 have Very small, Small, Medium (standard), Large and Generous presets: 50%, 75%,

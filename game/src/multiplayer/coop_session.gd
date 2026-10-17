@@ -26,6 +26,7 @@ const BUILD := "opensc2k-coop-1"
 const NETWORK_BUILD := "opensc2k-multiplayer-22"
 const MAX_PLAYERS := 8
 var world: CoopWorld
+var lan: MultiplayerLanDiscovery
 var active := false
 var hosting := false
 var connected := false
@@ -132,6 +133,8 @@ func ensure_credential() -> void:
 
 
 func _exit_tree() -> void:
+	if lan != null:
+		lan.stop_advertising()
 	close_wire_jobs()
 	for retired: Dictionary in retiring_channels:
 		for stream: MultiplayerStateStream in retired.get("streams", []):
@@ -183,10 +186,26 @@ func host(document: Sc2File, port: int, join_code: String, player_name: String, 
 	if not use_lobby:
 		goal.begin(world)
 	waiting_for_start = use_lobby
+	if lan == null:
+		lan = MultiplayerLanDiscovery.new()
+		add_child(lan)
+	# Discovery is optional: an unavailable UDP port must not prevent direct TCP play.
+	lan.advertise(lan_description)
 	apply_speed()
 	publish()
 	connection_changed.emit()
 	return ""
+
+
+func lan_description() -> Dictionary:
+	if not active or not hosting or server == null or not server.is_listening() or world == null:
+		return {}
+	return {"session": session_id, "port": server.get_local_port(), "build": NETWORK_BUILD,
+		"host": MultiplayerLanDiscovery.plain_name(local_player_name),
+		"city": MultiplayerLanDiscovery.plain_name(world.city.document.city_name()),
+		"mode": "region" if world is RegionWorld else "shared" if world is SharedWorld else "coop",
+		"phase": "lobby" if waiting_for_start else "running", "locked": not code.is_empty(),
+		"players": requested_speed.size(), "open": channels.size() < MAX_PLAYERS - 1}
 
 
 func join(address: String, port: int, join_code: String, player_name: String, intent := "new") -> String:
@@ -220,6 +239,8 @@ func join(address: String, port: int, join_code: String, player_name: String, in
 
 
 func stop() -> void:
+	if lan != null:
+		lan.stop_advertising()
 	close_wire_jobs()
 	build_publication_pending = false
 	build_chain.clear()

@@ -29864,3 +29864,63 @@ msgstr "As finanças dos jogadores não são exibidas nesta prévia."
 #: src/ui/settings/about_dialog.gd
 msgid "Reticulating Splines — CC BY 4.0"
 msgstr "Reticulating Splines — CC BY 4.0"
+
+#. LAN game browser; supplementary translation from English.
+#: game/src/multiplayer/multiplayer_lan_browser.gd
+msgid "Search LAN games"
+msgstr "Buscar jogos na LAN"
+
+#. LAN game browser; supplementary translation from English.
+#: game/src/multiplayer/multiplayer_lan_browser.gd
+msgid "Find lobbies and running games on the local IPv4 network. Select a game, then join."
+msgstr "Busque salas e jogos em andamento na rede IPv4 local. Selecione um jogo e entre."
+
+#. LAN game browser; supplementary translation from English.
+#: game/src/multiplayer/multiplayer_lan_browser.gd
+msgid "LAN search unavailable. You can still enter the host address."
+msgstr "Busca na LAN indisponível. Você pode inserir o endereço do anfitrião."
+
+#. LAN game browser; supplementary translation from English.
+#: game/src/multiplayer/multiplayer_lan_browser.gd
+msgid "Searching the local network…"
+msgstr "Buscando na rede local…"
+
+#. LAN game browser; supplementary translation from English.
+#: game/src/multiplayer/multiplayer_lan_browser.gd
+msgid "No games found. Search again, or enter the host address. Check the host's firewall and LAN connection."
+msgstr "Nenhum jogo encontrado. Busque novamente ou insira o endereço do anfitrião. Verifique o firewall e a conexão LAN dele."
+
+#. LAN game browser; supplementary translation from English.
+#: game/src/multiplayer/multiplayer_lan_browser.gd
+msgid "Select a game to fill in its address and port. Passwords are entered below."
+msgstr "Selecione um jogo para preencher o endereço e a porta. Insira a senha abaixo."
+
+#. LAN game browser; supplementary translation from English.
+#: game/src/multiplayer/multiplayer_lan_browser.gd
+msgid "City / Host"
+msgstr "Cidade / Anfitrião"
+
+#. LAN game browser; supplementary translation from English.
+#: game/src/multiplayer/multiplayer_lan_browser.gd
+msgid "Status / Players"
+msgstr "Status / Jogadores"
+
+#. LAN game browser; supplementary translation from English.
+#: game/src/multiplayer/multiplayer_lan_browser.gd
+msgid "Lobby"
+msgstr "Sala"
+
+#. LAN game browser; supplementary translation from English.
+#: game/src/multiplayer/multiplayer_lan_browser.gd
+msgid "In progress"
+msgstr "Em andamento"
+
+#. LAN game browser; supplementary translation from English.
+#: game/src/multiplayer/multiplayer_lan_browser.gd
+msgid "Full"
+msgstr "Lotado"
+
+#. LAN game browser; supplementary translation from English.
+#: game/src/multiplayer/multiplayer_lan_browser.gd
+msgid "Different game version"
+msgstr "Versão do jogo diferente"

@@ -19,6 +19,7 @@ var goal_years: OptionButton
 var years_label: Label
 var duration: SpinBox
 var duration_label: Label
+var lan_browser: MultiplayerLanBrowser
 
 func _init(owner: ApplicationMultiplayer) -> void:
 	owner_ref = weakref(owner)
@@ -132,6 +133,9 @@ func setup(body: VBoxContainer) -> void:
 	goal_picker.item_selected.connect(func(index: int) -> void:
 		goal_target.value = 100000 if index == 2 else 10000
 		update())
+	lan_browser = MultiplayerLanBrowser.new()
+	coop.lobby.add_child(lan_browser)
+	lan_browser.setup(coop)
 	var network := HBoxContainer.new()
 	coop.lobby.add_child(network)
 	address_box = column(network, 2)
@@ -172,6 +176,9 @@ func update() -> void:
 	var hosting := role.selected == 0
 	host_fields.visible = hosting
 	address_box.visible = not hosting
+	lan_browser.visible = not hosting
+	lan_browser.sync_visibility()
+	lan_browser.refresh()
 	password_label.text = "Password (optional)" if hosting else "Password"
 	action.text = "Create game" if hosting else "Join / Reconnect"
 	coop.use_current.visible = coop.city_picker.selected == 1

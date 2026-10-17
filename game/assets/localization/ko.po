@@ -8084,3 +8084,63 @@ msgstr "이 미리보기에는 플레이어별 재정이 표시되지 않습니�
 #: src/ui/settings/about_dialog.gd
 msgid "Reticulating Splines — CC BY 4.0"
 msgstr "Reticulating Splines — CC BY 4.0"
+
+#. LAN game browser; supplementary translation from English.
+#: game/src/multiplayer/multiplayer_lan_browser.gd
+msgid "Search LAN games"
+msgstr "LAN 게임 검색"
+
+#. LAN game browser; supplementary translation from English.
+#: game/src/multiplayer/multiplayer_lan_browser.gd
+msgid "Find lobbies and running games on the local IPv4 network. Select a game, then join."
+msgstr "로컬 IPv4 네트워크에서 대기실과 진행 중인 게임을 찾습니다. 게임을 선택한 다음 참가하세요."
+
+#. LAN game browser; supplementary translation from English.
+#: game/src/multiplayer/multiplayer_lan_browser.gd
+msgid "LAN search unavailable. You can still enter the host address."
+msgstr "LAN 검색을 사용할 수 없습니다. 호스트 주소를 직접 입력할 수 있습니다."
+
+#. LAN game browser; supplementary translation from English.
+#: game/src/multiplayer/multiplayer_lan_browser.gd
+msgid "Searching the local network…"
+msgstr "로컬 네트워크 검색 중…"
+
+#. LAN game browser; supplementary translation from English.
+#: game/src/multiplayer/multiplayer_lan_browser.gd
+msgid "No games found. Search again, or enter the host address. Check the host's firewall and LAN connection."
+msgstr "게임을 찾지 못했습니다. 다시 검색하거나 호스트 주소를 입력하세요. 호스트의 방화벽과 LAN 연결을 확인하세요."
+
+#. LAN game browser; supplementary translation from English.
+#: game/src/multiplayer/multiplayer_lan_browser.gd
+msgid "Select a game to fill in its address and port. Passwords are entered below."
+msgstr "게임을 선택하면 주소와 포트가 입력됩니다. 비밀번호는 아래에 입력하세요."
+
+#. LAN game browser; supplementary translation from English.
+#: game/src/multiplayer/multiplayer_lan_browser.gd
+msgid "City / Host"
+msgstr "도시 / 호스트"
+
+#. LAN game browser; supplementary translation from English.
+#: game/src/multiplayer/multiplayer_lan_browser.gd
+msgid "Status / Players"
+msgstr "상태 / 플레이어"
+
+#. LAN game browser; supplementary translation from English.
+#: game/src/multiplayer/multiplayer_lan_browser.gd
+msgid "Lobby"
+msgstr "대기실"
+
+#. LAN game browser; supplementary translation from English.
+#: game/src/multiplayer/multiplayer_lan_browser.gd
+msgid "In progress"
+msgstr "진행 중"
+
+#. LAN game browser; supplementary translation from English.
+#: game/src/multiplayer/multiplayer_lan_browser.gd
+msgid "Full"
+msgstr "정원 초과"
+
+#. LAN game browser; supplementary translation from English.
+#: game/src/multiplayer/multiplayer_lan_browser.gd
+msgid "Different game version"
+msgstr "다른 게임 버전"

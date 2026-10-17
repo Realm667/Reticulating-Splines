@@ -147,7 +147,10 @@ func draw_edit_hover() -> void:
 	var point := roster.get_local_mouse_position()
 	var row := roster.get_item_at_position(point)
 	var column := roster.get_column_at_position(point)
-	if row == null or column < 0 or row.get_metadata(column) != true:
+	if row == null or column < 0:
+		return
+	var editable: Variant = row.get_metadata(column)
+	if not editable is bool or not editable:
 		return
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color(0.5, 0.65, 0.75, 0.08)
