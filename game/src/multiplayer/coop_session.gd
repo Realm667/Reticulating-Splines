@@ -27,6 +27,7 @@ const NETWORK_BUILD := "opensc2k-multiplayer-22"
 const MAX_PLAYERS := 8
 var world: CoopWorld
 var lan: MultiplayerLanDiscovery
+var online: MultiplayerOnline
 var active := false
 var hosting := false
 var connected := false
@@ -219,18 +220,25 @@ func join(address: String, port: int, join_code: String, player_name: String, in
 		incoming_state.close()
 		incoming_state = null
 	decoder = MultiplayerDelta.new()
-	var peer := StreamPeerTCP.new()
-	var result := peer.connect_to_host(address, port)
-	if result != OK:
-		return "Cannot connect: %s" % error_string(result)
-	for channel in channels.values():
-		channel.close()
+	var channel: CityTcpChannel
+	if address.begins_with("relay:"):
+		var room := address.trim_prefix("relay:")
+		if not MultiplayerLanDiscovery.valid_nonce(room):
+			return "Select an Internet game first."
+		channel = MultiplayerRelayChannel.new(MultiplayerOnline.websocket_url("/join/" + room))
+	else:
+		var peer := StreamPeerTCP.new()
+		var result := peer.connect_to_host(address, port)
+		if result != OK:
+			return "Cannot connect: %s" % error_string(result)
+		channel = CityTcpChannel.new(peer)
+	for previous_channel in channels.values():
+		previous_channel.close()
 	channels.clear()
 	active = true
 	hosting = false
 	connected = false
 	code = join_code
-	var channel := CityTcpChannel.new(peer)
 	channels[0] = channel
 	channel.send({"type": "hello", "protocol": PROTOCOL, "build": NETWORK_BUILD, "code": code,
 		"token": credential, "name": player_name.left(32), "session": session_id, "color": player_color, "intent": intent})
@@ -239,6 +247,9 @@ func join(address: String, port: int, join_code: String, player_name: String, in
 
 
 func stop() -> void:
+	if online != null:
+		online.finish()
+		online = null
 	if lan != null:
 		lan.stop_advertising()
 	close_wire_jobs()
@@ -331,6 +342,14 @@ func stop() -> void:
 	next_command = 1
 	session_id = ""
 	connection_changed.emit()
+
+
+func publish_online() -> void:
+	if not active or not hosting or online != null:
+		return
+	online = MultiplayerOnline.new()
+	add_child(online)
+	online.start(self)
 
 
 func _process(delta: float) -> void:

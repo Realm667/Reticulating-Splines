@@ -87,6 +87,7 @@ func browser_case(host: CoopSession) -> void:
 	await process_frame
 	app.coop.open()
 	app.coop.launch.role.select(1)
+	app.coop.launch.join_tabs.current_tab = 1
 	app.coop.launch.update()
 	var browser := app.coop.launch.lan_browser
 	check(browser.visible, "join role exposes LAN browser")

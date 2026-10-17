@@ -2250,6 +2250,12 @@
     "lane": "product"
   },
   {
+    "id": "multiplayer_online_test",
+    "script": "tests/multiplayer_online_test.gd",
+    "domain": "ui",
+    "lane": "product"
+  },
+  {
     "id": "multiplayer_lan_test",
     "script": "tests/multiplayer_lan_test.gd",
     "domain": "ui",

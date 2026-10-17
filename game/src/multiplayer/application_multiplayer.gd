@@ -227,6 +227,8 @@ func host_document(document: Sc2File) -> void:
 		show_message(result)
 		return
 	pending_new_city = false
+	if not launch.lan_only.button_pressed:
+		session.publish_online()
 	save_identity()
 	panel.hide()
 	show_message("Game running on port %d. Choose a game speed." % int(port.value))
@@ -240,6 +242,8 @@ func host_saved_city(path: String) -> void:
 		var error := session.resume_session(path, int(port.value), join_code.text, player.text)
 		if not error.is_empty():
 			show_message(error)
+		elif not launch.lan_only.button_pressed:
+			session.publish_online()
 		return
 	var document := Sc2File.new()
 	if not document.parse(FileAccess.get_file_as_bytes(path)):
@@ -258,7 +262,14 @@ func start_join() -> void:
 		return
 	remember_city()
 	session.player_color = color_picker.color.to_html(false)
-	var result := session.join(address.text.strip_edges(), int(port.value), join_code.text, player.text, "choose")
+	var endpoint := address.text.strip_edges()
+	if not launch.advanced.button_pressed and launch.join_tabs.current_tab == 0:
+		var room := launch.internet_browser.selected_online
+		if room.is_empty():
+			show_message("Select an Internet game first.")
+			return
+		endpoint = "relay:" + room
+	var result := session.join(endpoint, int(port.value), join_code.text, player.text, "choose")
 	show_message(result if not result.is_empty() else "Connecting to the host…")
 	save_identity()
 

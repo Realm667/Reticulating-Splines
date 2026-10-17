@@ -26982,3 +26982,83 @@ msgstr "Wähle das Aussehen von Menüs und Fenstern."
 
 msgid "Pixelated MS Sans Serif — CC BY-SA 3.0"
 msgstr "Pixelated MS Sans Serif — CC BY-SA 3.0"
+
+#. Internet multiplayer; supplementary translation from English.
+#: game/src/multiplayer/multiplayer_online.gd
+msgid "Internet / LAN · up to 8 players · matching game versions required."
+msgstr "Internet / LAN · bis zu 8 Spieler · gleiche Spielversion erforderlich."
+
+#. Internet multiplayer; supplementary translation from English.
+#: game/src/multiplayer/multiplayer_online.gd
+msgid "LAN only"
+msgstr "Nur LAN"
+
+#. Internet multiplayer; supplementary translation from English.
+#: game/src/multiplayer/multiplayer_online.gd
+msgid "Game name, host name and player count are publicly listed online."
+msgstr "Spielname, Hostname und Spielerzahl werden öffentlich online angezeigt."
+
+#. Internet multiplayer; supplementary translation from English.
+#: game/src/multiplayer/multiplayer_online.gd
+msgid "Visible on the local network only."
+msgstr "Nur im lokalen Netzwerk sichtbar."
+
+#. Internet multiplayer; supplementary translation from English.
+#: game/src/multiplayer/multiplayer_online.gd
+msgid "Internet"
+msgstr "Internet"
+
+#. Internet multiplayer; supplementary translation from English.
+#: game/src/multiplayer/multiplayer_online.gd
+msgid "LAN"
+msgstr "LAN"
+
+#. Internet multiplayer; supplementary translation from English.
+#: game/src/multiplayer/multiplayer_online.gd
+msgid "Advanced: direct connection"
+msgstr "Erweitert: direkte Verbindung"
+
+#. Internet multiplayer; supplementary translation from English.
+#: game/src/multiplayer/multiplayer_online.gd
+msgid "Find Internet games"
+msgstr "Internetspiele suchen"
+
+#. Internet multiplayer; supplementary translation from English.
+#: game/src/multiplayer/multiplayer_online.gd
+msgid "Find online lobbies and running games. Password-protected games show a lock."
+msgstr "Online-Lobbys und laufende Spiele suchen. Passwortgeschützte Spiele zeigen ein Schloss."
+
+#. Internet multiplayer; supplementary translation from English.
+#: game/src/multiplayer/multiplayer_online.gd
+msgid "Internet games unavailable. LAN play is still available."
+msgstr "Internetspiele nicht verfügbar. LAN-Spiele sind weiterhin möglich."
+
+#. Internet multiplayer; supplementary translation from English.
+#: game/src/multiplayer/multiplayer_online.gd
+msgid "Finding Internet games…"
+msgstr "Internetspiele werden gesucht…"
+
+#. Internet multiplayer; supplementary translation from English.
+#: game/src/multiplayer/multiplayer_online.gd
+msgid "No public games right now."
+msgstr "Derzeit keine öffentlichen Spiele."
+
+#. Internet multiplayer; supplementary translation from English.
+#: game/src/multiplayer/multiplayer_online.gd
+msgid "Select a game, enter its password if needed, then join."
+msgstr "Spiel auswählen, bei Bedarf Passwort eingeben und beitreten."
+
+#. Internet multiplayer; supplementary translation from English.
+#: game/src/multiplayer/multiplayer_online.gd
+msgid "Select an Internet game first."
+msgstr "Zuerst ein Internetspiel auswählen."
+
+#. Internet multiplayer; supplementary translation from English.
+#: game/src/multiplayer/multiplayer_online.gd
+msgid "Online listing unavailable. LAN play is still available."
+msgstr "Online-Anzeige nicht verfügbar. LAN-Spiele sind weiterhin möglich."
+
+#. Internet multiplayer; supplementary translation from English.
+#: game/src/multiplayer/multiplayer_online.gd
+msgid "Game is visible online."
+msgstr "Das Spiel ist online sichtbar."

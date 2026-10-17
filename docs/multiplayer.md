@@ -1,6 +1,6 @@
 # Multiplayer
 
-Experimental LAN/direct-IP multiplayer supports **Koop**, **Competitive Shared**
+Experimental Internet/LAN multiplayer supports **Koop**, **Competitive Shared**
 and **Competitive Region**, with two to eight players on supported SC2X map sizes.
 All participants need the same network build. The host owns the simulation;
 clients send commands, never authoritative balances or city files.
@@ -8,15 +8,25 @@ clients send commands, never authoritative balances or city files.
 ## Starting a game
 
 Open Multiplayer from the main menu. Select Host or Join, player name and color.
-The host chooses the mode, terrain, land price and optional password. Guests enter
-the host address and TCP port (default 20000), or use **Search LAN games**. Select
-a result to fill in its address and port, enter its password if required, then
+The host chooses the mode, terrain, land price and optional password. Games are
+listed online automatically unless the host selects **LAN only**. A password
+protects admission; it does not hide the public game and host names or player count.
+Guests select **Internet** or **LAN** and search for games. Select
+a result, enter its password if required, then
 join and create or request a city seat. Search results include both waiting lobbies
 and running games, with city, host, mode, connected players and password status.
 Full games and different network builds cannot be selected from the list.
 A new game begins only after everyone is ready and the host starts it. A lobby
 change resets readiness. The host can rename their own city and assign visible
 starting handicaps; each player can edit their own city-name cell.
+
+Internet games use an HTTPS directory and a WSS relay; neither player needs an
+incoming router port for this connection. The host still handles password, build,
+capacity and seat checks. **Advanced: direct connection** retains manual address
+and TCP port entry (default 20000). If online registration fails, the host receives
+a notice and LAN play remains available. The online service must be deployed
+before public Internet discovery works; see [service setup](../server/multiplayer/README.md)
+for hosting requirements, protocol, limits and the embeddable website widget.
 
 LAN discovery uses IPv4 broadcast queries on UDP ports 20001–20008. Hosts answer
 only while hosting; the small port range also permits multiple host processes on

@@ -20,13 +20,19 @@ var years_label: Label
 var duration: SpinBox
 var duration_label: Label
 var lan_browser: MultiplayerLanBrowser
+var internet_browser: MultiplayerLanBrowser
+var join_tabs: TabBar
+var lan_only: CheckBox
+var visibility_hint: Label
+var advanced: CheckButton
+var network: HBoxContainer
 
 func _init(owner: ApplicationMultiplayer) -> void:
 	owner_ref = weakref(owner)
 
 func setup(body: VBoxContainer) -> void:
 	MultiplayerText.setup()
-	ApplicationMultiplayer.label(body, "LAN / direct IP · up to 8 players · matching game versions required.")
+	ApplicationMultiplayer.label(body, "Internet / LAN · up to 8 players · matching game versions required.")
 	coop.lobby = VBoxContainer.new()
 	body.add_child(coop.lobby)
 	role = OptionButton.new()
@@ -79,6 +85,11 @@ func setup(body: VBoxContainer) -> void:
 		popup.hide())
 	host_fields = VBoxContainer.new()
 	coop.lobby.add_child(host_fields)
+	lan_only = CheckBox.new()
+	lan_only.text = "LAN only"
+	host_fields.add_child(lan_only)
+	visibility_hint = ApplicationMultiplayer.label(host_fields, "Game name, host name and player count are publicly listed online.")
+	lan_only.toggled.connect(func(_value: bool) -> void: update())
 	ApplicationMultiplayer.label(host_fields, "Game mode")
 	coop.mode_picker = OptionButton.new()
 	for title in ["Co-op", "Competitive Shared", "Competitive Region"]:
@@ -133,10 +144,22 @@ func setup(body: VBoxContainer) -> void:
 	goal_picker.item_selected.connect(func(index: int) -> void:
 		goal_target.value = 100000 if index == 2 else 10000
 		update())
+	join_tabs = TabBar.new()
+	join_tabs.add_tab("Internet")
+	join_tabs.add_tab("LAN")
+	coop.lobby.add_child(join_tabs)
+	join_tabs.tab_changed.connect(func(_index: int) -> void: update())
+	internet_browser = MultiplayerLanBrowser.new()
+	coop.lobby.add_child(internet_browser)
+	internet_browser.setup(coop, true)
 	lan_browser = MultiplayerLanBrowser.new()
 	coop.lobby.add_child(lan_browser)
 	lan_browser.setup(coop)
-	var network := HBoxContainer.new()
+	advanced = CheckButton.new()
+	advanced.text = "Advanced: direct connection"
+	coop.lobby.add_child(advanced)
+	advanced.toggled.connect(func(_value: bool) -> void: update())
+	network = HBoxContainer.new()
 	coop.lobby.add_child(network)
 	address_box = column(network, 2)
 	coop.address = ApplicationMultiplayer.field(address_box, "Host address", "127.0.0.1")
@@ -175,10 +198,19 @@ func update() -> void:
 		goal_years.set_item_text(index, tr("%d game years") % [1, 3, 5, 10][index])
 	var hosting := role.selected == 0
 	host_fields.visible = hosting
+	visibility_hint.text = "Visible on the local network only." if lan_only.button_pressed else "Game name, host name and player count are publicly listed online."
+	join_tabs.visible = not hosting
+	join_tabs.set_tab_title(0, tr("Internet"))
+	join_tabs.set_tab_title(1, tr("LAN"))
+	advanced.visible = not hosting
+	network.visible = hosting or advanced.button_pressed
 	address_box.visible = not hosting
-	lan_browser.visible = not hosting
+	lan_browser.visible = not hosting and join_tabs.current_tab == 1 and not advanced.button_pressed
+	internet_browser.visible = not hosting and join_tabs.current_tab == 0 and not advanced.button_pressed
 	lan_browser.sync_visibility()
 	lan_browser.refresh()
+	internet_browser.sync_visibility()
+	internet_browser.refresh()
 	password_label.text = "Password (optional)" if hosting else "Password"
 	action.text = "Create game" if hosting else "Join / Reconnect"
 	coop.use_current.visible = coop.city_picker.selected == 1

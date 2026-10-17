@@ -25,7 +25,7 @@ func send_latest(message: Dictionary) -> void:
 	ephemeral[str(message.type)] = message
 
 
-func _init(peer: StreamPeerTCP, receive_limit := MAX_FRAME) -> void:
+func _init(peer: StreamPeerTCP = null, receive_limit := MAX_FRAME) -> void:
 	socket = peer
 	limit = receive_limit
 
@@ -69,6 +69,11 @@ func poll(max_messages := 64) -> Array[Dictionary]:
 		input.append_array(received[1])
 		bytes_received += received[1].size()
 		last_received = Time.get_ticks_msec()
+	return decode_messages(max_messages)
+
+
+func decode_messages(max_messages: int) -> Array[Dictionary]:
+	var messages: Array[Dictionary] = []
 	# Bound reads rather than rejecting a backlog of individually valid frames.
 	var started := Time.get_ticks_usec()
 	for _index in max_messages:

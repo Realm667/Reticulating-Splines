@@ -20,6 +20,7 @@
     "game/src/formats/city_save_backup.gd"
   ],
   "non_display_literals": {
+    "Authorization: Bearer ": "Internal HTTP authorization header; never display or translate.",
     "SimCity 2000 (%s)": "Product and platform proper names; source package identity.",
     "CaptureOverlay": "Internal scene node name.",
     "Fixed": "Internal controls category rendered as Fixed controls.",
