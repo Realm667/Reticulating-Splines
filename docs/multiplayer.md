@@ -20,13 +20,22 @@ A new game begins only after everyone is ready and the host starts it. A lobby
 change resets readiness. The host can rename their own city and assign visible
 starting handicaps; each player can edit their own city-name cell.
 
-Internet games use an HTTPS directory and a WSS relay; neither player needs an
-incoming router port for this connection. The host still handles password, build,
-capacity and seat checks. **Advanced: direct connection** retains manual address
-and TCP port entry (default 20000). If online registration fails, the host receives
-a notice and LAN play remains available. The online service must be deployed
-before public Internet discovery works; see [service setup](../server/multiplayer/README.md)
-for hosting requirements, protocol, limits and the embeddable website widget.
+Internet games use an HTTPS directory to find the host, then connect directly over
+TCP (default port 20000). Game traffic does not pass through the directory. The host
+handles password, build, capacity and seat checks and must accept incoming connections.
+**Automatically forward port (UPnP)** can create a temporary rule on a supported
+router; the game removes its own rule when hosting ends. **LAN only** neither
+publishes the game online nor creates a router rule. The game does not change the
+operating system firewall.
+
+After registration, an external check reports whether the host is reachable,
+unreachable or the check is unavailable. The host can repeat this check. UPnP does
+not bypass CGNAT or DS-Lite; some networks need manual forwarding or cannot host
+incoming Internet connections. Guests do not need a forwarded port.
+**Advanced: direct connection** retains manual address and TCP port entry without
+the directory. A directory outage does not end established direct connections.
+See [service setup](../server/multiplayer/README.md) for hosting requirements,
+protocol, limits and the embeddable website widget.
 
 LAN discovery uses IPv4 broadcast queries on UDP ports 20001–20008. Hosts answer
 only while hosting; the small port range also permits multiple host processes on
@@ -193,8 +202,10 @@ multiplayer original is preserved and the copy has no active session identity.
 
 ## Limits and validation
 
-TCP uses ordered bounded queues and checked streamed snapshots. There is no
-Internet discovery, NAT traversal, transport encryption or automatic host migration.
+TCP uses ordered bounded queues and checked streamed snapshots. Internet discovery
+and optional UPnP forwarding are available; direct game traffic has no transport
+encryption or automatic host migration. The HTTPS directory does not encrypt the
+separate TCP game connection.
 Use trusted participants. Loopback tests do not establish performance on eight
 physical LAN computers. Automated audio tests use Dummy audio, not listening tests.
 Per-frame work limits apply between messages and recipients; one large archive or
