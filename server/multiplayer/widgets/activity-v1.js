@@ -28,10 +28,10 @@
         if (running || document.hidden || !container.isConnected) return;
         running = true;
         try {
-          const response = await fetch(origin + '/api/multiplayer/v1/games', {credentials:'omit', signal:AbortSignal.timeout(8000)});
+          const response = await fetch(origin + '/api/multiplayer/v2/activity', {credentials:'omit', signal:AbortSignal.timeout(8000)});
           if (!response.ok) throw Error('unavailable');
           const data = await response.json();
-          if (data.version !== 1 || !Array.isArray(data.games)) throw Error('version');
+          if (data.version !== 2 || !Array.isArray(data.games)) throw Error('version');
           const games = data.games.slice(0, 256);
           const heading = document.createElement('h3');
           heading.textContent = `${games.reduce((n,g) => n + g.players, 0)} players online · ${games.length} games`;
@@ -72,7 +72,7 @@
       const timer = setInterval(() => {
         if (!container.isConnected) { clearInterval(timer); return; }
         refresh();
-      }, 30000);
+      }, 60000);
     }
   }
   if (document.readyState === 'loading') {

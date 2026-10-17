@@ -8239,3 +8239,28 @@ msgstr "온라인 목록을 이용할 수 없습니다. LAN 플레이는 가능�
 #: game/src/multiplayer/multiplayer_online.gd
 msgid "Game is visible online."
 msgstr "게임이 온라인에 표시됩니다."
+
+#. Direct Internet multiplayer; supplementary translation from English.
+#: game/src/multiplayer/multiplayer_online.gd
+msgid "Online listing unavailable. Direct connections still work."
+msgstr "온라인 목록을 이용할 수 없습니다. 직접 연결은 계속 가능합니다."
+
+#. Direct Internet multiplayer; supplementary translation from English.
+#: game/src/multiplayer/multiplayer_online.gd
+msgid "Internet games unavailable. Use a direct connection or LAN search."
+msgstr "인터넷 게임을 이용할 수 없습니다. 직접 연결 또는 LAN 검색을 사용하세요."
+
+#. Direct Internet multiplayer; supplementary translation from English.
+#: game/src/multiplayer/multiplayer_online.gd
+msgid "Game name, host name, player count and host IP address are publicly listed online."
+msgstr "게임 이름, 호스트 이름, 플레이어 수 및 호스트 IP 주소가 온라인에 공개됩니다."
+
+#. Direct Internet multiplayer; supplementary translation from English.
+#: game/src/multiplayer/multiplayer_online.gd
+msgid "Internet hosting: forward the TCP port below to this computer in your router and allow it in your firewall. Joining players need no port forwarding."
+msgstr "인터넷 호스트: 공유기에서 아래 TCP 포트를 이 컴퓨터로 전달하고 방화벽에서 허용하세요. 참가자는 포트 전달이 필요하지 않습니다."
+
+#. Direct Internet multiplayer; supplementary translation from English.
+#: game/src/multiplayer/multiplayer_online.gd
+msgid "Use the same external and internal TCP port. Internet hosting needs a reachable public address; CGNAT or DS-Lite may prevent incoming connections."
+msgstr "외부와 내부에 같은 TCP 포트를 사용하세요. 인터넷 호스팅에는 접근 가능한 공인 주소가 필요합니다. CGNAT 또는 DS-Lite는 들어오는 연결을 차단할 수 있습니다."

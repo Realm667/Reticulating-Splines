@@ -81,7 +81,7 @@ func start_search() -> void:
 		last_error = request.request(MultiplayerOnline.base_url() + MultiplayerOnline.API + "/games") != OK
 		if last_error:
 			pending = false
-		refresh_at = Time.get_ticks_msec() + 15000
+		refresh_at = Time.get_ticks_msec() + 60000
 	else:
 		last_error = discovery.search() != OK
 	refresh()
@@ -103,7 +103,7 @@ func receive_games(result: int, response_code: int, _headers: PackedStringArray,
 		var data: Dictionary = parser.data
 		last_error = not data.get("version") is float and not data.get("version") is int
 		if not last_error:
-			last_error = data.version != 1 or not data.get("games") is Array or data.games.size() > 256
+			last_error = data.version != 2 or not data.get("games") is Array or data.games.size() > 256
 		if not last_error:
 			for item: Variant in data.games:
 				var info := validated_game(item)
@@ -124,11 +124,11 @@ static func validated_game(value: Variant) -> Dictionary:
 		return {}
 	if not MultiplayerLanDiscovery.valid_integer(value.get("players"), 1, 8) or not value.get("locked") is bool or not value.get("open") is bool:
 		return {}
+	if not value.get("address") is String or not value.address.is_valid_ip_address() or not MultiplayerLanDiscovery.valid_integer(value.get("port"), 1024, 65535):
+		return {}
 	var info: Dictionary = value.duplicate()
 	info.city = MultiplayerLanDiscovery.plain_name(info.city)
 	info.host = MultiplayerLanDiscovery.plain_name(info.host)
-	info["address"] = "relay:" + info.id
-	info["port"] = 0
 	return info
 
 
@@ -137,7 +137,7 @@ func refresh() -> void:
 		return
 	search_button.disabled = discovery.searching or pending
 	if last_error:
-		status.text = tr("Internet games unavailable. LAN play is still available.") if internet else tr("LAN search unavailable. You can still enter the host address.")
+		status.text = tr("Internet games unavailable. Use a direct connection or LAN search.") if internet else tr("LAN search unavailable. You can still enter the host address.")
 	elif pending:
 		status.text = tr("Finding Internet games…")
 	elif discovery.searching:
@@ -189,7 +189,6 @@ func select_game() -> void:
 		if selected_online != info.id:
 			coop.join_code.clear()
 		selected_online = info.id
-		return
 	var changed: bool = coop.address.text != info.address or int(coop.port.value) != info.port
 	coop.address.text = info.address
 	coop.port.value = info.port

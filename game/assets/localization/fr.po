@@ -38882,3 +38882,28 @@ msgstr "Publication en ligne indisponible. Le jeu en LAN reste possible."
 #: game/src/multiplayer/multiplayer_online.gd
 msgid "Game is visible online."
 msgstr "La partie est visible en ligne."
+
+#. Direct Internet multiplayer; supplementary translation from English.
+#: game/src/multiplayer/multiplayer_online.gd
+msgid "Online listing unavailable. Direct connections still work."
+msgstr "Publication en ligne indisponible. Les connexions directes restent possibles."
+
+#. Direct Internet multiplayer; supplementary translation from English.
+#: game/src/multiplayer/multiplayer_online.gd
+msgid "Internet games unavailable. Use a direct connection or LAN search."
+msgstr "Parties Internet indisponibles. Utilisez une connexion directe ou la recherche LAN."
+
+#. Direct Internet multiplayer; supplementary translation from English.
+#: game/src/multiplayer/multiplayer_online.gd
+msgid "Game name, host name, player count and host IP address are publicly listed online."
+msgstr "Le nom de la partie, de l’hôte, le nombre de joueurs et l’adresse IP de l’hôte sont affichés publiquement en ligne."
+
+#. Direct Internet multiplayer; supplementary translation from English.
+#: game/src/multiplayer/multiplayer_online.gd
+msgid "Internet hosting: forward the TCP port below to this computer in your router and allow it in your firewall. Joining players need no port forwarding."
+msgstr "Hôte Internet : redirigez le port TCP ci-dessous vers cet ordinateur sur le routeur et autorisez-le dans le pare-feu. Les autres joueurs n’ont pas besoin de redirection de port."
+
+#. Direct Internet multiplayer; supplementary translation from English.
+#: game/src/multiplayer/multiplayer_online.gd
+msgid "Use the same external and internal TCP port. Internet hosting needs a reachable public address; CGNAT or DS-Lite may prevent incoming connections."
+msgstr "Utilisez le même port TCP externe et interne. L’hébergement Internet nécessite une adresse publique accessible ; CGNAT ou DS-Lite peuvent bloquer les connexions entrantes."

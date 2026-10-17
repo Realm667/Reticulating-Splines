@@ -24,6 +24,7 @@ var internet_browser: MultiplayerLanBrowser
 var join_tabs: TabBar
 var lan_only: CheckBox
 var visibility_hint: Label
+var forwarding_hint: Label
 var advanced: CheckButton
 var network: HBoxContainer
 
@@ -88,7 +89,8 @@ func setup(body: VBoxContainer) -> void:
 	lan_only = CheckBox.new()
 	lan_only.text = "LAN only"
 	host_fields.add_child(lan_only)
-	visibility_hint = ApplicationMultiplayer.label(host_fields, "Game name, host name and player count are publicly listed online.")
+	visibility_hint = ApplicationMultiplayer.label(host_fields, "Game name, host name, player count and host IP address are publicly listed online.")
+	forwarding_hint = ApplicationMultiplayer.label(host_fields, "Internet hosting: forward the TCP port below to this computer in your router and allow it in your firewall. Joining players need no port forwarding.")
 	lan_only.toggled.connect(func(_value: bool) -> void: update())
 	ApplicationMultiplayer.label(host_fields, "Game mode")
 	coop.mode_picker = OptionButton.new()
@@ -198,7 +200,9 @@ func update() -> void:
 		goal_years.set_item_text(index, tr("%d game years") % [1, 3, 5, 10][index])
 	var hosting := role.selected == 0
 	host_fields.visible = hosting
-	visibility_hint.text = "Visible on the local network only." if lan_only.button_pressed else "Game name, host name and player count are publicly listed online."
+	visibility_hint.text = "Visible on the local network only." if lan_only.button_pressed else "Game name, host name, player count and host IP address are publicly listed online."
+	forwarding_hint.visible = not lan_only.button_pressed
+	forwarding_hint.tooltip_text = "Use the same external and internal TCP port. Internet hosting needs a reachable public address; CGNAT or DS-Lite may prevent incoming connections."
 	join_tabs.visible = not hosting
 	join_tabs.set_tab_title(0, tr("Internet"))
 	join_tabs.set_tab_title(1, tr("LAN"))

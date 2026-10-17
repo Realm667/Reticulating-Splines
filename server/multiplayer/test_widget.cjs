@@ -27,10 +27,10 @@ async function fixture({marked = true, loading = false, occupied = false, failur
     createElement: element, addEventListener(event, fn) { assert.equal(event, 'DOMContentLoaded'); ready = fn; }};
   const context = vm.createContext({document, URL, AbortSignal, setInterval() {}, clearInterval() {},
     async fetch(url, options) {
-      assert.equal(url, 'https://rs.realm667.com/api/multiplayer/v1/games');
+      assert.equal(url, 'https://rs.realm667.com/api/multiplayer/v2/activity');
       assert.equal(options.credentials, 'omit');
       requests++;
-      return {ok: !failure, async json() { return {version: 1, games: [], totals}; }};
+      return {ok: !failure, async json() { return {version: 2, games: [], totals}; }};
     }});
   vm.runInContext(source, context);
   if (loading) { assert.equal(container.shadowRoot, null); ready(); }

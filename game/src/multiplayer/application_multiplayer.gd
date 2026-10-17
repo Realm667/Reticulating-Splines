@@ -263,13 +263,16 @@ func start_join() -> void:
 	remember_city()
 	session.player_color = color_picker.color.to_html(false)
 	var endpoint := address.text.strip_edges()
+	var endpoint_port := int(port.value)
 	if not launch.advanced.button_pressed and launch.join_tabs.current_tab == 0:
 		var room := launch.internet_browser.selected_online
-		if room.is_empty():
+		var info: Dictionary = launch.internet_browser.discovery.results.get(room, {})
+		if info.is_empty() or not info.open or info.build != CoopSession.NETWORK_BUILD:
 			show_message("Select an Internet game first.")
 			return
-		endpoint = "relay:" + room
-	var result := session.join(endpoint, int(port.value), join_code.text, player.text, "choose")
+		endpoint = info.address
+		endpoint_port = int(info.port)
+	var result := session.join(endpoint, endpoint_port, join_code.text, player.text, "choose")
 	show_message(result if not result.is_empty() else "Connecting to the host…")
 	save_identity()
 

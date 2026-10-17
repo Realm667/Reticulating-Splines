@@ -15,8 +15,13 @@ func check(value: bool, message: String) -> void:
 
 func run() -> void:
 	var valid := {"id": "a".repeat(32), "city": "City", "host": "Host", "build": CoopSession.NETWORK_BUILD,
-		"mode": "coop", "phase": "lobby", "players": 2, "locked": true, "open": true}
+		"mode": "coop", "phase": "lobby", "players": 2, "locked": true, "open": true, "address": "203.0.113.5", "port": 20000}
 	check(not MultiplayerLanBrowser.validated_game(valid).is_empty(), "public metadata accepted")
+	check(MultiplayerLanBrowser.validated_game(valid).address == "203.0.113.5", "directory supplies direct endpoint")
+	for address in ["relay:abc", "https://example.com", "", "127.0.0.999"]:
+		var invalid := valid.duplicate()
+		invalid.address = address
+		check(MultiplayerLanBrowser.validated_game(invalid).is_empty(), "invalid endpoint rejected")
 	for key in valid:
 		var invalid := valid.duplicate()
 		invalid[key] = []

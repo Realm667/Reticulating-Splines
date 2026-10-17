@@ -67,6 +67,7 @@
     "InformationPanel": "Godot theme variation.",
     "Image": "Internal TextureRect node name.",
     "PanelPadding8_8_8_8": "Godot theme variation.",
-    "AppPalette": "Godot theme palette name."
+    "AppPalette": "Godot theme palette name.",
+    "Content-Type: application/json": "Internal HTTP content type header; never displayed."
   }
 }

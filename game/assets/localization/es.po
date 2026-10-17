@@ -28654,3 +28654,28 @@ msgstr "Listado en línea no disponible. Puedes seguir jugando en LAN."
 #: game/src/multiplayer/multiplayer_online.gd
 msgid "Game is visible online."
 msgstr "La partida es visible en línea."
+
+#. Direct Internet multiplayer; supplementary translation from English.
+#: game/src/multiplayer/multiplayer_online.gd
+msgid "Online listing unavailable. Direct connections still work."
+msgstr "Listado en línea no disponible. Las conexiones directas siguen funcionando."
+
+#. Direct Internet multiplayer; supplementary translation from English.
+#: game/src/multiplayer/multiplayer_online.gd
+msgid "Internet games unavailable. Use a direct connection or LAN search."
+msgstr "Partidas en Internet no disponibles. Usa una conexión directa o la búsqueda LAN."
+
+#. Direct Internet multiplayer; supplementary translation from English.
+#: game/src/multiplayer/multiplayer_online.gd
+msgid "Game name, host name, player count and host IP address are publicly listed online."
+msgstr "El nombre de la partida, del anfitrión, el número de jugadores y la dirección IP del anfitrión se muestran públicamente en línea."
+
+#. Direct Internet multiplayer; supplementary translation from English.
+#: game/src/multiplayer/multiplayer_online.gd
+msgid "Internet hosting: forward the TCP port below to this computer in your router and allow it in your firewall. Joining players need no port forwarding."
+msgstr "Anfitrión en Internet: redirige el puerto TCP de abajo a este equipo en el router y permítelo en el cortafuegos. Los demás jugadores no necesitan redirigir puertos."
+
+#. Direct Internet multiplayer; supplementary translation from English.
+#: game/src/multiplayer/multiplayer_online.gd
+msgid "Use the same external and internal TCP port. Internet hosting needs a reachable public address; CGNAT or DS-Lite may prevent incoming connections."
+msgstr "Usa el mismo puerto TCP externo e interno. Alojar en Internet requiere una dirección pública accesible; CGNAT o DS-Lite pueden impedir conexiones entrantes."
