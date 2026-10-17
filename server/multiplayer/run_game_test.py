@@ -10,17 +10,20 @@ from pathlib import Path
 
 from aiohttp import web
 from direct_test_fixture import create_app
+from upnp_fixture import install
 
 
 async def run(args):
-    runner = web.AppRunner(create_app(), access_log=None)
+    app = create_app()
+    install(app)
+    runner = web.AppRunner(app, access_log=None)
     await runner.setup()
     site = web.TCPSite(runner, "127.0.0.1", 0)
     await site.start()
     port = runner.addresses[0][1]
     environment = dict(os.environ, RS_MULTIPLAYER_URL=f"http://127.0.0.1:{port}")
     command = [args.godot, "--headless", "--audio-driver", "Dummy", "--path", args.project,
-               "--script", Path(__file__).with_name("godot_integration.gd").as_posix()]
+               "--script", Path(__file__).with_name(args.script).as_posix()]
     process = None
     try:
         process = await asyncio.create_subprocess_exec(*command, env=environment,
@@ -35,7 +38,7 @@ async def run(args):
         await asyncio.wait_for(process.wait(), 90)
         await reader
         text = "".join(lines)
-        return process.returncode or (0 if "Direct integration: 0 failure(s)" in text else 1)
+        return process.returncode or (0 if "integration: 0 failure(s)" in text else 1)
     finally:
         if process is not None and process.returncode is None:
             process.terminate()
@@ -45,6 +48,7 @@ async def run(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--script", default="godot_integration.gd")
     parser.add_argument("--godot", required=True)
     parser.add_argument("--project", required=True)
     raise SystemExit(asyncio.run(run(parser.parse_args())))

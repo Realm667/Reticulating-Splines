@@ -2,6 +2,7 @@
 declare(strict_types=1);
 // Deployment defines these in a private config before requiring this entry point.
 require_once __DIR__ . '/directory.php';
+require_once __DIR__ . '/reachability.php';
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
 header('X-Content-Type-Options: nosniff');
@@ -18,7 +19,11 @@ try {
     $prefix = '/api/multiplayer/v2';
     $path = str_starts_with($path, $prefix) ? substr($path, strlen($prefix)) : '/invalid';
     $auth = $_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '';
-    [$status, $response] = directory_handle(directory_db(DIRECTORY_DB), $_SERVER['REQUEST_METHOD'], $path, $body, $auth, $_SERVER['REMOTE_ADDR'], time());
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && str_ends_with($path, '/check')) {
+        [$status, $response] = reachability_handle(directory_db(DIRECTORY_DB), $path, $body, $auth, $_SERVER['REMOTE_ADDR'], time());
+    } else {
+        [$status, $response] = directory_handle(directory_db(DIRECTORY_DB), $_SERVER['REQUEST_METHOD'], $path, $body, $auth, $_SERVER['REMOTE_ADDR'], time());
+    }
     http_response_code($status);
     echo json_encode($response, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE);
 } catch (JsonException $e) {

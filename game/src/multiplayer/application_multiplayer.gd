@@ -124,6 +124,7 @@ func setup() -> void:
 	app.add_child(city_file)
 	status = label(body, "")
 	status.hide()
+	body.add_child(MultiplayerConnectivity.new(session))
 	message = label(body, "")
 	message.hide()
 	sign_dialog = ConfirmationDialog.new()
@@ -228,7 +229,7 @@ func host_document(document: Sc2File) -> void:
 		return
 	pending_new_city = false
 	if not launch.lan_only.button_pressed:
-		session.publish_online()
+		session.publish_online(launch.auto_forward.button_pressed)
 	save_identity()
 	panel.hide()
 	show_message("Game running on port %d. Choose a game speed." % int(port.value))
@@ -243,7 +244,7 @@ func host_saved_city(path: String) -> void:
 		if not error.is_empty():
 			show_message(error)
 		elif not launch.lan_only.button_pressed:
-			session.publish_online()
+			session.publish_online(launch.auto_forward.button_pressed)
 		return
 	var document := Sc2File.new()
 	if not document.parse(FileAccess.get_file_as_bytes(path)):

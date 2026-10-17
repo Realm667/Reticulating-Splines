@@ -1,6 +1,6 @@
 <?php
 declare(strict_types=1);
-require __DIR__ . '/directory.php';
+require_once __DIR__ . '/directory.php';
 $db = directory_db(':memory:');
 $now = 1792260000;
 $id = str_repeat('a', 32);

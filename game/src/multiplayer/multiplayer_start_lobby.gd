@@ -31,6 +31,7 @@ func _init(owner: MultiplayerWindows) -> void:
 			windows.dock_chat(window.visible and waiting))
 	summary = ApplicationMultiplayer.label(body, "")
 	summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	body.add_child(MultiplayerConnectivity.new(windows.coop.session))
 	roster = Tree.new()
 	roster.hide_root = true
 	roster.select_mode = Tree.SELECT_SINGLE

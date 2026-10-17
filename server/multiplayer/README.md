@@ -87,3 +87,38 @@ On rs.realm667.com v1 returns HTTP 410 and the old supervisor is disabled.
 Installed v1 clients need an updated Runtime for automatic Internet discovery;
 manual TCP joining and LAN continue to work. Updating the Runtime is a separate
 release task. Game network protocol and save format are unchanged.
+
+## Automatic forwarding and reachability
+
+Internet hosts can enable **Automatically forward port (UPnP)**. Discovery and
+router requests run in a worker thread. The game requests TCP only, a one-hour
+lease, and renews it every 30 minutes. Routers that only allow permanent leases
+fall back to manual configuration. LAN-only games never request a mapping.
+Existing rules are queried first and preserved. A random description and the
+internal address/port identify rules created by this session; only these may be
+renewed or removed. Normal leave cleans up; expiry covers process crashes.
+The game does not modify the OS firewall. UPnP cannot bypass CGNAT/DS-Lite.
+
+After registration and the UPnP attempt, an authenticated
+`POST /api/multiplayer/v2/games/{id}/check` requests one external test. Its body
+contains a fresh 64-hex `nonce`. The PHP service connects only to that room's
+registered TCP port at the request's observed public IP (which must match the
+room). Caller-specified addresses/ports are ignored. No player password, token,
+city state or chat is sent through this connection. A length-prefixed JSON
+`reachability` frame must receive `reachability_ok` with the same one-time nonce.
+The game admits probes separately, even when all player slots are occupied.
+
+Results are `reachable`, `unreachable`, or `unavailable`. A failed HTTP request,
+unavailable server socket support or explicit local networking denial is not
+reported as a host failure. A timeout alone cannot distinguish host/router
+filtering from upstream filtering; it means this check could not reach the host.
+The UI offers **Check again**, limited to once per 30 seconds. Server limits are
+two probes per source IP/minute and 30/minute globally, with short socket timeouts
+and 256-byte response limits. Network I/O runs after the SQLite transaction ends.
+
+Deploy `reachability.php` before the updated `directory_entry.php`, and allow
+`games/{32hex}/check` through the same v2 rewrite. Preserve the SQLite database.
+Validate outbound TCP from the web PHP context, not only SSH. Tests:
+`php test_reachability.php` and the optional three local fixture ports;
+`python run_game_test.py --godot PATH --project ISOLATED_PROJECT --script upnp_integration.gd`.
+The latter uses a loopback SOAP router and never changes a real router.

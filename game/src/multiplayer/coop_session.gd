@@ -27,6 +27,7 @@ const NETWORK_BUILD := "opensc2k-multiplayer-22"
 const MAX_PLAYERS := 8
 var world: CoopWorld
 var lan: MultiplayerLanDiscovery
+var admission := MultiplayerAdmission.new()
 var online: MultiplayerOnline
 var active := false
 var hosting := false
@@ -134,6 +135,7 @@ func ensure_credential() -> void:
 
 
 func _exit_tree() -> void:
+	admission.close()
 	if lan != null:
 		lan.stop_advertising()
 	close_wire_jobs()
@@ -247,6 +249,7 @@ func join(address: String, port: int, join_code: String, player_name: String, in
 
 
 func stop() -> void:
+	admission.close()
 	if online != null:
 		online.finish()
 		online = null
@@ -344,12 +347,12 @@ func stop() -> void:
 	connection_changed.emit()
 
 
-func publish_online() -> void:
+func publish_online(auto_forward := false) -> void:
 	if not active or not hosting or online != null:
 		return
 	online = MultiplayerOnline.new()
 	add_child(online)
-	online.start(self)
+	online.start(self, auto_forward)
 
 
 func _process(delta: float) -> void:
@@ -379,14 +382,8 @@ func _process(delta: float) -> void:
 		reconnect_attempt += 1
 		reconnect_at = Time.get_ticks_msec() + mini(8000, 1000 * reconnect_attempt)
 		join(reconnect_endpoint.address, reconnect_endpoint.port, reconnect_endpoint.code, reconnect_endpoint.name, reconnect_endpoint.intent)
-	if hosting and server.is_connection_available():
-		var peer := server.take_connection()
-		if channels.size() >= MAX_PLAYERS - 1:
-			peer.disconnect_from_host()
-		else:
-			channels[next_peer] = CityTcpChannel.new(peer, 65536)
-			handshake_started[next_peer] = Time.get_ticks_msec()
-			next_peer += 1
+	if hosting:
+		admission.poll(self)
 	for id: int in channels.keys():
 		var channel := channels[id]
 		var inbox: Array = received_messages.get(id, [])

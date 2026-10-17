@@ -33,6 +33,8 @@ func run() -> void:
 	check(host.online == null, "session creation alone does not publish LAN/test games")
 	host.publish_online()
 	check(await wait_for(func() -> bool: return host.online.registered), "host registered online")
+	check(await wait_for(func() -> bool: return host.online.reachability == "reachable"), "external challenge returns through real game TCP listener")
+	check(host.channels.is_empty() and host.identities.is_empty(), "probe occupies no player seat")
 	var app: CityApplication = load("res://main.tscn").instantiate()
 	Fixture.configure(app, true)
 	root.add_child(app)
@@ -64,6 +66,7 @@ func run() -> void:
 	app.coop.host_document(Sc2xDocument.create_empty(128, "Private city").document)
 	check(app.coop.session.hosting and app.coop.session.online == null, "LAN-only host UI never publishes online: " + app.coop.message.text)
 	app.coop.session.stop()
+	app.coop.launch.auto_forward.button_pressed = false
 	app.coop.launch.lan_only.button_pressed = false
 	app.coop.host_document(Sc2xDocument.create_empty(128, "Public city").document)
 	check(await wait_for(func() -> bool: return app.coop.session.online != null and app.coop.session.online.registered), "normal host UI publishes automatically")

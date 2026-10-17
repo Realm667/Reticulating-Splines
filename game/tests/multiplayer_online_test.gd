@@ -79,5 +79,49 @@ func run() -> void:
 	channel.close()
 	server.close()
 	listener.stop()
+	await check_admission()
 	print("Multiplayer online tests: %d failure(s)" % failures)
 	quit(1 if failures else 0)
+
+
+func check_admission() -> void:
+	var host := CoopSession.new()
+	root.add_child(host)
+	host.set_process(false)
+	host.server = TCPServer.new()
+	check(host.server.listen(0, "127.0.0.1") == OK, "probe listener")
+	host.online = MultiplayerOnline.new()
+	host.online.checking = true
+	host.online.probe_nonce = "a".repeat(64)
+	host.online.deadline = Time.get_ticks_msec() + 8000
+	for id in range(1, CoopSession.MAX_PLAYERS):
+		host.channels[id] = CityTcpChannel.new()
+	for nonce in ["b".repeat(64), "a".repeat(64), "a".repeat(64)]:
+		var socket := StreamPeerTCP.new()
+		socket.connect_to_host("127.0.0.1", host.server.get_local_port())
+		var peer := CityTcpChannel.new(socket)
+		peer.send({"type": "reachability", "nonce": nonce})
+		var replies: Array[Dictionary] = []
+		var expected: bool = nonce == host.online.probe_nonce
+		var until := Time.get_ticks_msec() + 1500
+		while not peer.failed and replies.is_empty() and Time.get_ticks_msec() < until:
+			host.admission.poll(host)
+			replies.append_array(peer.poll())
+			await process_frame
+		check((not replies.is_empty()) == expected, "only current nonce receives a proof, even at player capacity")
+		if expected:
+			check(replies[0].get("type") == "reachability_ok" and replies[0].get("nonce") == nonce, "probe proof matches nonce")
+		peer.close()
+	check(host.channels.size() == 7 and host.identities.is_empty(), "probe does not alter player slots or identities")
+	host.online.checking = true
+	host.online.completed(HTTPRequest.RESULT_SUCCESS, 503, PackedStringArray(), "not json".to_utf8_buffer())
+	check(host.online.reachability == "unavailable", "server failure is not host unreachable")
+	host.online.checking = true
+	host.online.completed(HTTPRequest.RESULT_SUCCESS, 200, PackedStringArray(), '{"version":2,"status":"unreachable"}'.to_utf8_buffer())
+	check(host.online.reachability == "unreachable", "negative external test is distinct")
+	host.online.free()
+	host.online = null
+	host.channels.clear()
+	host.server.stop()
+	host.queue_free()
+	await process_frame

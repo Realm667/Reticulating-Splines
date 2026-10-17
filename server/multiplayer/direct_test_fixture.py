@@ -1,4 +1,5 @@
 """Loopback-only HTTP fixture for game-side integration; PHP has separate tests."""
+import asyncio, json, struct
 from aiohttp import web
 
 
@@ -26,8 +27,31 @@ def create_app():
         secrets[key] = token
         return web.json_response({'version': 2, 'id': key})
 
+    async def probe(request):
+        key = request.match_info['id']
+        if key not in games or secrets[key] != request.headers.get('Authorization', ''):
+            raise web.HTTPForbidden()
+        data = await request.json()
+        writer = None
+        try:
+            reader, writer = await asyncio.open_connection('127.0.0.1', games[key]['port'])
+            message = json.dumps({'type':'reachability', 'nonce':data['nonce']}).encode()
+            writer.write(struct.pack('<I',len(message)) + message)
+            await writer.drain()
+            header = await asyncio.wait_for(reader.readexactly(4), 3)
+            reply = json.loads(await reader.readexactly(struct.unpack('<I',header)[0]))
+            assert reply == {'type':'reachability_ok','nonce':data['nonce']}
+        except (OSError, asyncio.TimeoutError, asyncio.IncompleteReadError):
+            return web.json_response({'version':2,'status':'unreachable'})
+        finally:
+            if writer:
+                writer.close()
+                await writer.wait_closed()
+        return web.json_response({'version':2,'status':'reachable'})
+
     app = web.Application(client_max_size=4096)
     app.router.add_get('/api/multiplayer/v2/games', listing)
     app.router.add_put('/api/multiplayer/v2/games/{id}', update)
     app.router.add_delete('/api/multiplayer/v2/games/{id}', update)
+    app.router.add_post('/api/multiplayer/v2/games/{id}/check', probe)
     return app

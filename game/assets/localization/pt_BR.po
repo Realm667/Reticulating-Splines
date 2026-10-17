@@ -30044,3 +30044,55 @@ msgstr "Anfitrião na Internet: encaminhe a porta TCP abaixo para este computado
 #: game/src/multiplayer/multiplayer_online.gd
 msgid "Use the same external and internal TCP port. Internet hosting needs a reachable public address; CGNAT or DS-Lite may prevent incoming connections."
 msgstr "Use a mesma porta TCP externa e interna. Hospedar na Internet exige um endereço público acessível; CGNAT ou DS-Lite podem impedir conexões de entrada."
+
+#. supplementary multiplayer connectivity, AI-assisted
+msgid "Automatically forward port (UPnP)"
+msgstr "Encaminhar porta automaticamente (UPnP)"
+
+#. supplementary multiplayer connectivity, AI-assisted
+msgid "Allow the router to open the game port while hosting. Existing rules are kept. Your firewall must also allow the game."
+msgstr "Permite que o roteador abra a porta do jogo enquanto você hospeda. As regras existentes são mantidas. O firewall também deve permitir o jogo."
+
+#. supplementary multiplayer connectivity, AI-assisted
+msgid "Reachable from the Internet"
+msgstr "Acessível pela Internet"
+
+#. supplementary multiplayer connectivity, AI-assisted
+msgid "Not reachable — check port forwarding and firewall"
+msgstr "Inacessível — verifique o encaminhamento de porta e o firewall"
+
+#. supplementary multiplayer connectivity, AI-assisted
+msgid "Checking Internet access…"
+msgstr "Verificando acesso pela Internet…"
+
+#. supplementary multiplayer connectivity, AI-assisted
+msgid "Reachability check unavailable"
+msgstr "Verificação de acesso indisponível"
+
+#. supplementary multiplayer connectivity, AI-assisted
+msgid "Automatic port forwarding is off"
+msgstr "Encaminhamento automático de porta desativado"
+
+#. supplementary multiplayer connectivity, AI-assisted
+msgid "Setting up automatic port forwarding…"
+msgstr "Configurando encaminhamento automático de porta…"
+
+#. supplementary multiplayer connectivity, AI-assisted
+msgid "Automatic port forwarding is active"
+msgstr "Encaminhamento automático de porta ativo"
+
+#. supplementary multiplayer connectivity, AI-assisted
+msgid "Existing port forwarding kept"
+msgstr "Encaminhamento de porta existente mantido"
+
+#. supplementary multiplayer connectivity, AI-assisted
+msgid "Automatic port forwarding unavailable — configure the router manually"
+msgstr "Encaminhamento automático indisponível — configure o roteador manualmente"
+
+#. supplementary multiplayer connectivity, AI-assisted
+msgid "Check again"
+msgstr "Verificar novamente"
+
+#. supplementary multiplayer connectivity, AI-assisted
+msgid "Router refused UPnP — allow automatic port forwarding for this computer"
+msgstr "O roteador recusou UPnP — permita o encaminhamento automático de porta para este computador"

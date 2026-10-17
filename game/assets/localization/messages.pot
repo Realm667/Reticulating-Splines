@@ -8598,3 +8598,57 @@ msgstr ""
 #: game/src/multiplayer/multiplayer_online.gd
 msgid "Use the same external and internal TCP port. Internet hosting needs a reachable public address; CGNAT or DS-Lite may prevent incoming connections."
 msgstr ""
+
+
+
+#. supplementary multiplayer connectivity, AI-assisted
+msgid "Automatically forward port (UPnP)"
+msgstr ""
+
+#. supplementary multiplayer connectivity, AI-assisted
+msgid "Allow the router to open the game port while hosting. Existing rules are kept. Your firewall must also allow the game."
+msgstr ""
+
+#. supplementary multiplayer connectivity, AI-assisted
+msgid "Reachable from the Internet"
+msgstr ""
+
+#. supplementary multiplayer connectivity, AI-assisted
+msgid "Not reachable — check port forwarding and firewall"
+msgstr ""
+
+#. supplementary multiplayer connectivity, AI-assisted
+msgid "Checking Internet access…"
+msgstr ""
+
+#. supplementary multiplayer connectivity, AI-assisted
+msgid "Reachability check unavailable"
+msgstr ""
+
+#. supplementary multiplayer connectivity, AI-assisted
+msgid "Automatic port forwarding is off"
+msgstr ""
+
+#. supplementary multiplayer connectivity, AI-assisted
+msgid "Setting up automatic port forwarding…"
+msgstr ""
+
+#. supplementary multiplayer connectivity, AI-assisted
+msgid "Automatic port forwarding is active"
+msgstr ""
+
+#. supplementary multiplayer connectivity, AI-assisted
+msgid "Existing port forwarding kept"
+msgstr ""
+
+#. supplementary multiplayer connectivity, AI-assisted
+msgid "Automatic port forwarding unavailable — configure the router manually"
+msgstr ""
+
+#. supplementary multiplayer connectivity, AI-assisted
+msgid "Check again"
+msgstr ""
+
+#. supplementary multiplayer connectivity, AI-assisted
+msgid "Router refused UPnP — allow automatic port forwarding for this computer"
+msgstr ""

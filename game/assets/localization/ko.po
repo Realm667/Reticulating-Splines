@@ -8264,3 +8264,55 @@ msgstr "인터넷 호스트: 공유기에서 아래 TCP 포트를 이 컴퓨터�
 #: game/src/multiplayer/multiplayer_online.gd
 msgid "Use the same external and internal TCP port. Internet hosting needs a reachable public address; CGNAT or DS-Lite may prevent incoming connections."
 msgstr "외부와 내부에 같은 TCP 포트를 사용하세요. 인터넷 호스팅에는 접근 가능한 공인 주소가 필요합니다. CGNAT 또는 DS-Lite는 들어오는 연결을 차단할 수 있습니다."
+
+#. supplementary multiplayer connectivity, AI-assisted
+msgid "Automatically forward port (UPnP)"
+msgstr "자동 포트 전달 (UPnP)"
+
+#. supplementary multiplayer connectivity, AI-assisted
+msgid "Allow the router to open the game port while hosting. Existing rules are kept. Your firewall must also allow the game."
+msgstr "호스팅 중 라우터가 게임 포트를 열도록 허용합니다. 기존 규칙은 유지됩니다. 방화벽에서도 게임을 허용해야 합니다."
+
+#. supplementary multiplayer connectivity, AI-assisted
+msgid "Reachable from the Internet"
+msgstr "인터넷에서 접속 가능"
+
+#. supplementary multiplayer connectivity, AI-assisted
+msgid "Not reachable — check port forwarding and firewall"
+msgstr "접속 불가 — 포트 전달 및 방화벽 확인"
+
+#. supplementary multiplayer connectivity, AI-assisted
+msgid "Checking Internet access…"
+msgstr "인터넷 접속 확인 중…"
+
+#. supplementary multiplayer connectivity, AI-assisted
+msgid "Reachability check unavailable"
+msgstr "접속 확인을 사용할 수 없음"
+
+#. supplementary multiplayer connectivity, AI-assisted
+msgid "Automatic port forwarding is off"
+msgstr "자동 포트 전달 꺼짐"
+
+#. supplementary multiplayer connectivity, AI-assisted
+msgid "Setting up automatic port forwarding…"
+msgstr "자동 포트 전달 설정 중…"
+
+#. supplementary multiplayer connectivity, AI-assisted
+msgid "Automatic port forwarding is active"
+msgstr "자동 포트 전달 활성화됨"
+
+#. supplementary multiplayer connectivity, AI-assisted
+msgid "Existing port forwarding kept"
+msgstr "기존 포트 전달 유지됨"
+
+#. supplementary multiplayer connectivity, AI-assisted
+msgid "Automatic port forwarding unavailable — configure the router manually"
+msgstr "자동 포트 전달 불가 — 라우터를 수동으로 설정하세요"
+
+#. supplementary multiplayer connectivity, AI-assisted
+msgid "Check again"
+msgstr "다시 확인"
+
+#. supplementary multiplayer connectivity, AI-assisted
+msgid "Router refused UPnP — allow automatic port forwarding for this computer"
+msgstr "라우터가 UPnP를 거부했습니다 — 이 컴퓨터의 자동 포트 전달을 허용하세요"
