@@ -28,8 +28,9 @@ func show_tools(
 
 func show_palette(selected_subtool: int, anchor: Rect2) -> void:
 	# PopupPanel otherwise keeps the engine's dark default under a light theme.
-	var panel := get_theme_stylebox("panel", "PanelContainer").duplicate() as StyleBoxFlat
-	panel.bg_color.a = 1.0
+	var panel := get_theme_stylebox("panel", "PopupPanel").duplicate() as StyleBox
+	if panel is StyleBoxFlat:
+		panel.bg_color.a = 1.0
 	add_theme_stylebox_override("panel", panel)
 	palette.show()
 	palette.sync_selection(selected_subtool)

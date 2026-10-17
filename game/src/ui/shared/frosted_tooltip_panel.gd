@@ -51,7 +51,7 @@ static func bind(panel: PanelContainer) -> void:
 
 
 func _refresh() -> void:
-	var enabled := _panel.is_visible_in_tree() and AppUiTheme.translucent_menus
+	var enabled := _panel.is_visible_in_tree() and AppUiTheme.uses_translucency()
 	_panel.material = _glass if enabled else _original_material
 	var style := AppUiTheme.current().get_stylebox("panel", "TooltipPanel") as StyleBoxFlat
 	if style != null:

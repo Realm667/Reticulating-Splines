@@ -93,7 +93,7 @@ static func load_values(
 
 
 static func normalize_theme(value: Variant) -> String:
-	return "light" if str(value) == "light" else "dark"
+	return AppUiTheme.normalize(str(value))
 
 
 static func normalize_renderer(value: Variant) -> String:

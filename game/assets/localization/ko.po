@@ -8144,3 +8144,18 @@ msgstr "정원 초과"
 #: game/src/multiplayer/multiplayer_lan_browser.gd
 msgid "Different game version"
 msgstr "다른 게임 버전"
+
+#. Classic interface themes; supplementary translation.
+msgid "Classic Windows"
+msgstr "클래식 Windows"
+
+#. Classic interface themes; supplementary translation.
+msgid "Classic DOS"
+msgstr "클래식 DOS"
+
+#. Classic interface themes; supplementary translation.
+msgid "Choose the appearance of menus and windows."
+msgstr "메뉴와 창의 모양을 선택합니다."
+
+msgid "Pixelated MS Sans Serif — CC BY-SA 3.0"
+msgstr "Pixelated MS Sans Serif — CC BY-SA 3.0"

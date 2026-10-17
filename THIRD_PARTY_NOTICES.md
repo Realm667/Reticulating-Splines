@@ -87,6 +87,16 @@ In packages, the license texts are in `licenses/rust`.
 - License text: `game/assets/licenses/fluidr3mono/FluidR3Mono-License.txt`
   (in Linux packages: `licenses/fluidr3mono`).
 
+## Classic interface fonts
+
+Pixelated MS Sans Serif and MS Sans Serif Bold by lou (2017), created with
+FontStruct, use CC BY-SA 3.0. The files from 98.css 0.1.21 were converted
+losslessly from WOFF2 to TTF; glyphs and embedded metadata are unchanged.
+These fonts retain their own CC license, independently of the MIT-licensed
+98.css stylesheet. Attribution, source URLs and the full license are in
+`game/assets/licenses/classic-font/` (in downloads: `licenses/classic-font/`;
+in game: **About > Licenses**).
+
 ## Reticulating Splines replacement packs
 
 Daniel Gimmer's replacement artwork, music and sound contributions use CC BY 4.0.

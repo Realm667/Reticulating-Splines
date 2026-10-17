@@ -9,8 +9,7 @@ var close_button: TextureButton
 
 func _init(title_text := "") -> void:
 	var window_theme := AppUiTheme.current()
-	var border := window_theme.get_stylebox("embedded_border", "Window") as StyleBoxFlat
-	color = border.bg_color
+	color = _title_background(window_theme)
 	custom_minimum_size.y = 30
 	var row := HBoxContainer.new()
 	row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -46,9 +45,16 @@ func _ready() -> void:
 
 
 func _refresh_theme() -> void:
-	color = (get_theme_stylebox("embedded_border", "Window") as StyleBoxFlat).bg_color
+	color = _title_background(AppUiTheme.current())
+	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT if AppUiTheme.selected == "classic_windows" else HORIZONTAL_ALIGNMENT_CENTER
 	title_label.add_theme_font_override("font", get_theme_font("title_font", "Window"))
 	title_label.add_theme_font_size_override("font_size", get_theme_font_size("title_font_size", "Window"))
 	title_label.add_theme_color_override("font_color", get_theme_color("title_color", "Window"))
 	close_button.texture_normal = get_theme_icon("close", "Window")
 	close_button.texture_pressed = get_theme_icon("close_pressed", "Window")
+
+
+static func _title_background(source: Theme) -> Color:
+	if source.has_color("title_background", "AppPalette"):
+		return source.get_color("title_background", "AppPalette")
+	return (source.get_stylebox("embedded_border", "Window") as StyleBoxFlat).bg_color

@@ -48,7 +48,7 @@ func _refresh_theme() -> void:
 	if _refreshing:
 		return
 	_refreshing = true
-	_enabled = _layer != null and AppUiTheme.translucent_menus
+	_enabled = _layer != null and AppUiTheme.uses_translucency()
 	var style := AppUiTheme.current().get_stylebox("panel", "TooltipPanel").duplicate() as StyleBoxFlat
 	if _enabled:
 		_surface.add_theme_stylebox_override("panel", style)

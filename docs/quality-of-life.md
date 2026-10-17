@@ -1,7 +1,7 @@
 # Quality of life
 
 The interface uses shared dialog margins, control spacing, headings and keyboard
-focus styles in both themes. Utility windows follow theme changes immediately.
+focus styles across four themes. Utility windows follow theme changes immediately.
 
 The dark theme follows the Reticulating Splines website: anthracite surfaces,
 dark inset controls, lime selection/focus markers and primary actions, and petrol
@@ -15,8 +15,8 @@ percentage text changes color at the fill edge. Window panels paint their entire
 rectangular surface, avoiding black corner gaps. Selecting a theme does not alter
 cities or simulation state.
 
-Floating windows use an elevation shadow over the city. Multiplayer chat uses
-the same Montserrat family as the rest of the interface. Long tooltips wrap at
+The modern themes use elevation shadows over the city. Multiplayer chat follows
+the active interface font. Long tooltips wrap at
 word boundaries to about 55 average characters per line, measured with the active
 font and limited by the window width.
 
@@ -26,6 +26,23 @@ still opens hosting/joining. About identifies Reticulating Splines, its features
 project link, upstream OpenSC2K attribution, dependencies and original-asset
 rights. Project text, credits navigation and update status translate live;
 third-party license documents retain their original wording.
+
+## Classic themes
+
+Settings > UI offers Classic Windows and Classic DOS alongside Bright and Dark.
+Classic Windows uses opaque gray beveled controls, navy title bars and selections,
+and a proportional pixel font. Classic DOS uses bold pixel lettering, gray title
+bars and white menus with black selections. Both preserve the saved transparency
+preference for returning to a modern theme. Their font recreation by lou is
+licensed under CC BY-SA 3.0; attribution and license text appear in About and
+the packaged licenses.
+
+The compact classic tool palette floats over the map. Its Layers button opens
+the existing view and visibility controls; RCI stays in the palette. The palette
+scrolls when vertical space is limited. Switching back restores the modern
+sidebar and status-bar RCI. Toolbar artwork follows the selected graphics pack,
+including imported SC2000 icons; no original-game assets are bundled with the
+themes. Existing interface scaling and language fallback also apply.
 
 ## Tool flyouts
 

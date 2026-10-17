@@ -33,7 +33,7 @@ func _process(_delta: float) -> void:
 
 func _refresh_theme() -> void:
 	var viewport := _layer.custom_viewport as Viewport
-	_enabled = AppUiTheme.translucent_menus and viewport.gui_embed_subwindows and not _dialog.force_native
+	_enabled = AppUiTheme.uses_translucency() and viewport.gui_embed_subwindows and not _dialog.force_native
 	_dialog.transparent = _enabled
 	_dialog.begin_bulk_theme_override()
 
@@ -67,7 +67,8 @@ func _refresh_theme() -> void:
 		else:
 			control.remove_theme_stylebox_override("panel")
 
-	_glass.color = AppUiTheme.current().get_stylebox("panel", "MainMenuPanel").bg_color
+	if _enabled:
+		_glass.color = AppUiTheme.current().get_stylebox("panel", "MainMenuPanel").bg_color
 	_background_copy.copy_mode = BackBufferCopy.COPY_MODE_VIEWPORT if _enabled else BackBufferCopy.COPY_MODE_DISABLED
 	_refresh_visibility()
 

@@ -38235,3 +38235,18 @@ msgstr "Completa"
 #: game/src/multiplayer/multiplayer_lan_browser.gd
 msgid "Different game version"
 msgstr "Versione del gioco diversa"
+
+#. Classic interface themes; supplementary translation.
+msgid "Classic Windows"
+msgstr "Windows classico"
+
+#. Classic interface themes; supplementary translation.
+msgid "Classic DOS"
+msgstr "DOS classico"
+
+#. Classic interface themes; supplementary translation.
+msgid "Choose the appearance of menus and windows."
+msgstr "Scegli l’aspetto dei menu e delle finestre."
+
+msgid "Pixelated MS Sans Serif — CC BY-SA 3.0"
+msgstr "Pixelated MS Sans Serif — CC BY-SA 3.0"

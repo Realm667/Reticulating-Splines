@@ -129,4 +129,8 @@ func _refresh_import_style() -> void:
 	if import_button == null:
 		return
 	import_border = AppUiTheme.current().get_stylebox("normal", "Button").duplicate() as StyleBoxFlat
+	if import_border == null:
+		# The import attention border remains a flat, animated outline in retro mode.
+		import_border = AppUiClassicTheme.flat(AppUiClassicTheme.FACE, 5)
+		import_border.set_border_width_all(2)
 	import_button.add_theme_stylebox_override("normal", import_border)

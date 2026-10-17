@@ -3,6 +3,8 @@ extends RefCounted
 
 
 static func build(value: String, _files := false, translucent_menus := true) -> Theme:
+	if value in ["classic_windows", "classic_dos"]:
+		return AppUiClassicTheme.build(value)
 	var dark := value == "dark"
 	var result := _website_theme(dark)
 	result.set_color("default_color", "RichTextLabel", result.get_color("font_color", "Label"))

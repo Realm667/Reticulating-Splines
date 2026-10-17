@@ -76,7 +76,7 @@ func open_settings_dialog() -> void:
 	app.main_overlays.settings_dialog.sprite_corrections_check.button_pressed = preferences.sprite_corrections
 	app.main_overlays.settings_dialog.show_hd_graphics(preferences.hd_graphics)
 	app.main_overlays.settings_dialog.recent_autosaves_check.button_pressed = preferences.recent_autosaves
-	app.main_overlays.settings_dialog.theme_selector.select(1 if preferences.ui_theme == "dark" else 0)
+	app.main_overlays.settings_dialog.theme_selector.select(AppUiTheme.IDS.find(preferences.ui_theme))
 	app.main_overlays.settings_dialog.language_selector.select(AppLocalization.codes().find(preferences.ui_language))
 	app.main_overlays.settings_dialog.translucent_menus_check.button_pressed = preferences.translucent_menus
 	app.main_overlays.settings_dialog.ui_scale_selector.select(AppUiScale.option_index(preferences.ui_scale))

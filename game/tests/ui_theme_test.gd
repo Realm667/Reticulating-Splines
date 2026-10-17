@@ -24,7 +24,8 @@ func _run() -> void:
 	assert(main.city_session.activate_document(EmptyCityTemplate.create(128)))
 	main.frame.select_speed(GameSpeedController.Speed.PAUSED)
 	var before: PackedByteArray = main.document_state.city.document.serialize().data
-	for selected in [1, 0, 1]:
+	var shared_theme := main.theme
+	for selected in [1, 2, 3, 0, 2, 1, 3]:
 		main.settings.open_settings_dialog()
 		var dialog: AppSettingsDialog = main.main_overlays.settings_dialog
 		# a check box change applies at once and shows when Settings next opens
@@ -34,19 +35,44 @@ func _run() -> void:
 		dialog.hide()
 		main.settings.open_settings_dialog()
 		assert(dialog.dark_underground_check.button_pressed == dark_underground)
-		var previous_mode: String = main.preferences.ui_theme
-		var previous_color: Color = main.theme.get_stylebox("normal", "Button").bg_color
 		dialog.theme_selector.select(selected)
+		dialog.theme_selector.item_selected.emit(selected)
 		dialog.dark_underground_check.button_pressed = true
 		main.settings.apply_settings()
 		dialog.hide()
 		await process_frame
 		await process_frame
 		assert(AppSettingsStore.load_values(path).dark_underground)
-		assert(main.preferences.ui_theme == ("dark" if selected == 1 else "light"))
+		assert(main.preferences.ui_theme == AppUiTheme.IDS[selected])
 		assert(AppSettingsStore.load_values(path).ui_theme == main.preferences.ui_theme)
-		if previous_mode != main.preferences.ui_theme:
-			assert(main.theme.get_stylebox("normal", "Button").bg_color != previous_color)
+		assert(main.theme == shared_theme, "Retained windows keep the shared resource")
+		assert(main.coop.windows.chat_log.get_theme_font("normal_font") == shared_theme.default_font,
+			"An existing chat follows live theme changes")
+		assert(dialog.translucent_menus_check.disabled == AppUiTheme.is_classic())
+		assert(main.preferences.translucent_menus, "Retro themes preserve the modern transparency preference")
+		assert(AppUiTheme.uses_translucency() == not AppUiTheme.is_classic())
+		var toolbar := main.city_toolbar
+		assert(toolbar.layers_button.is_visible_in_tree() == AppUiTheme.is_classic())
+		if AppUiTheme.is_classic():
+			assert(toolbar.get_parent() is ScrollContainer)
+			toolbar.show_layers()
+			await process_frame
+			assert(toolbar.layers_popup.visible)
+			assert(toolbar.data_view_input.is_visible_in_tree())
+			assert(toolbar.view_visibility_checks.buildings.is_visible_in_tree())
+			var requests: Array = []
+			var observe := func(visible: bool, layer: String) -> void: requests.append([visible, layer])
+			toolbar.surface_visibility_requested.connect(observe)
+			var buildings: CheckBox = toolbar.view_visibility_checks.buildings
+			var previous := buildings.button_pressed
+			buildings.button_pressed = not previous
+			assert(requests.back() == [not previous, "buildings"])
+			buildings.button_pressed = previous
+			toolbar.surface_visibility_requested.disconnect(observe)
+			toolbar.layers_popup.hide()
+		else:
+			assert(toolbar.get_parent() is HBoxContainer)
+			assert(toolbar.data_view_input.is_visible_in_tree())
 		assert(main.document_state.city.document.serialize().data == before)
 		var late := FileDialogFactory.city_open()
 		main.add_child(late)
@@ -85,7 +111,7 @@ func _run() -> void:
 	await process_frame
 	var restored := _create_main(path)
 	await process_frame
-	assert(restored.preferences.ui_theme == "dark")
+	assert(restored.preferences.ui_theme == "classic_dos")
 	assert(restored.preferences.dark_underground)
 	restored.free()
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))

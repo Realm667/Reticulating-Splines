@@ -101,6 +101,12 @@ var view_mode_buttons: Dictionary[CityViewMode.Mode, CheckBox] = {}
 var control_bindings := ControlBindings.defaults()
 # the help topics of the buttons that are not tools
 var _help_topics: Dictionary[Control, String] = {}
+var layers_button: Button
+var layers_popup: PopupPanel
+var classic_footer: VBoxContainer
+var _layer_controls: Array[Control] = []
+var _layer_column: VBoxContainer
+var _classic_layout := false
 
 
 func _ready() -> void:
@@ -213,6 +219,65 @@ func _ready() -> void:
 		start_city_button: "Done", regenerate_button: "Make New Map",
 	}
 	_watch_buttons(self)
+	_build_classic_controls()
+	theme_changed.connect(_sync_classic_layout.call_deferred)
+	_sync_classic_layout()
+
+
+func _build_classic_controls() -> void:
+	_layer_column = VBoxContainer.new()
+	_layer_column.custom_minimum_size.x = 210
+	layers_popup = PopupPanel.new()
+	layers_popup.theme = AppUiTheme.current()
+	add_child(layers_popup)
+	var scroll := ScrollContainer.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	layers_popup.add_child(scroll)
+	scroll.add_child(_layer_column)
+	_layer_column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	layers_popup.close_requested.connect(layers_popup.hide)
+	layers_popup.popup_hide.connect(_on_flyout_closed)
+	layers_popup.window_input.connect(func(event: InputEvent) -> void:
+		if event.is_action_pressed("ui_cancel"):
+			layers_popup.set_input_as_handled()
+			layers_popup.hide())
+	visibility_changed.connect(func() -> void:
+		if not is_visible_in_tree():
+			layers_popup.hide())
+	if get_viewport() != null:
+		get_viewport().size_changed.connect(layers_popup.hide)
+	for control in [view_layers_heading, $Margin/Column/ViewModes, data_view_input, $Margin/Column/Layers]:
+		_layer_controls.append(control)
+	classic_footer = VBoxContainer.new()
+	classic_footer.visible = false
+	$Margin/Column.add_child(classic_footer)
+	layers_button = Button.new()
+	layers_button.text = "Layers"
+	classic_footer.add_child(layers_button)
+	layers_button.pressed.connect(show_layers)
+
+
+func show_layers() -> void:
+	if not _classic_layout or not is_visible_in_tree():
+		return
+	var requested := Vector2i(_layer_column.get_combined_minimum_size()) + Vector2i(16, 16)
+	layers_popup.popup(CityToolHoldMenu.fit_to_view(layers_button.get_global_rect(), requested, Rect2i(get_viewport_rect())))
+	view_mode_buttons[CityViewMode.Mode.CITY].grab_focus.call_deferred()
+
+
+func _sync_classic_layout() -> void:
+	if not is_node_ready() or _classic_layout == AppUiTheme.is_classic():
+		return
+	_classic_layout = AppUiTheme.is_classic()
+	layers_popup.hide()
+	hold_menu.hide()
+	for control in _layer_controls:
+		control.reparent(_layer_column if _classic_layout else $Margin/Column)
+	classic_footer.visible = _classic_layout
+	$Margin/Column/LandscapeSpacer.visible = not _classic_layout
+	$Margin/Column/ChildPaletteDivider.visible = not _classic_layout
+	custom_minimum_size.x = 0 if _classic_layout else 180
+	reset_size()
 
 
 func _input(event: InputEvent) -> void:

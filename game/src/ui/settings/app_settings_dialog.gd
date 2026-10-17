@@ -102,6 +102,8 @@ func _ready() -> void:
 	language_selector.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
 	ui_scale_selector = %UiScaleSelector
 	translucent_menus_check = %TranslucentMenusCheck
+	theme_selector.item_selected.connect(func(_index: int) -> void: _sync_theme_controls())
+	visibility_changed.connect(_sync_theme_controls)
 	effects_slider = %EffectsSlider
 	folder_edit = %FolderEdit
 	dark_underground_check = %DarkUndergroundCheck
@@ -343,6 +345,11 @@ func set_update_check_running(running: bool) -> void:
 	check_updates_now_button.text = "Checking..." if running else "Check now"
 
 
+func _sync_theme_controls() -> void:
+	if translucent_menus_check != null:
+		translucent_menus_check.disabled = AppUiTheme.is_classic(AppUiTheme.IDS[maxi(0, theme_selector.selected)])
+
+
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_TRANSLATION_CHANGED and is_node_ready():
 		set_update_status(last_update_check, last_update_error)
@@ -403,7 +410,7 @@ func selected_values() -> AppSettingsStore.Values:
 	result.cities_folder = cities_folder_edit.text.strip_edges()
 	result.mods_folder = mods_folder_edit.text.strip_edges()
 	result.default_mayor_name = default_mayor_edit.text.strip_edges()
-	result.ui_theme = "dark" if theme_selector.selected == 1 else "light"
+	result.ui_theme = AppUiTheme.IDS[maxi(0, theme_selector.selected)]
 	result.ui_language = AppLocalization.codes()[maxi(0, language_selector.selected)]
 	result.translucent_menus = translucent_menus_check.button_pressed
 	result.ui_scale = AppUiScale.OPTIONS[maxi(0, ui_scale_selector.selected)]
