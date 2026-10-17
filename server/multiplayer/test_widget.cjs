@@ -15,7 +15,7 @@ function element(tagName = 'DIV') {
   };
 }
 
-async function fixture({marked = true, loading = false, occupied = false, failure = false} = {}) {
+async function fixture({marked = true, loading = false, occupied = false, failure = false, totals} = {}) {
   const container = element();
   if (occupied) container.textContent = 'Existing website content';
   const script = {src: 'https://rs.realm667.com/widgets/activity-v1.js', isConnected: true,
@@ -30,7 +30,7 @@ async function fixture({marked = true, loading = false, occupied = false, failur
       assert.equal(url, 'https://rs.realm667.com/api/multiplayer/v1/games');
       assert.equal(options.credentials, 'omit');
       requests++;
-      return {ok: !failure, async json() { return {version: 1, games: []}; }};
+      return {ok: !failure, async json() { return {version: 1, games: [], totals}; }};
     }});
   vm.runInContext(source, context);
   if (loading) { assert.equal(container.shadowRoot, null); ready(); }
@@ -58,4 +58,15 @@ test('fallback preserves existing website content', async () => {
 test('API failure remains visible', async () => {
   const f = await fixture({failure: true});
   assert.equal(f.container.shadowRoot.children[1].textContent, 'Activity currently unavailable.');
+});
+test('aggregate statistics render separately and tolerate older servers', async () => {
+  const f = await fixture({totals: {available: true, sessions: 1234, today: 7, peak_players: 16, since: '2026-10-17'}});
+  const section = f.container.shadowRoot.children[1];
+  const summary = section.children[3];
+  assert.deepEqual(summary.children.map(cell => cell.children[1].textContent), ['1,234', '7', '16']);
+  assert.match(section.children[4].textContent, /2026-10-17/);
+  const legacy = await fixture();
+  assert.equal(legacy.container.shadowRoot.children[1].children.length, 3);
+  const unavailable = await fixture({totals: {available: false}});
+  assert.equal(unavailable.container.shadowRoot.children[1].children.length, 3);
 });

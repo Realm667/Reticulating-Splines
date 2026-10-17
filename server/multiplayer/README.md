@@ -112,6 +112,20 @@ the empty div immediately before it, or creates its own div at that position.
 Keep the script in the custom HTML block. Run widget checks with
 `node --test server/multiplayer/test_widget.cjs` from the repository root.
 
+The directory response also includes `totals`: sessions started, sessions started
+today (UTC), peak concurrent host-reported players, and the collection start date.
+A session counts once when a registered room first reports `running`, including
+a saved game hosted again. Lobby-only visits do not count as played sessions.
+These are session counters, not unique savegames, verified users or completed
+matches. LAN-only activity and past sessions before collection are not counted.
+The small `activity-totals.json` file beside the server (override `TOTALS_PATH`)
+contains only aggregate counters and dates. Keep it outside the public docroot
+and preserve it during upgrades. Writes are atomic and run off the relay's event
+loop; failed persistence hides the totals and is retried on host updates. Invalid
+stored data stops startup rather than silently resetting history. Back it up as
+part of normal server operation. Restarting the relay is needed for server updates;
+deploy when no rooms are active.
+
 ## Protocol and limits
 
 - `GET /api/multiplayer/v1/games`: versioned public metadata, cached for five seconds.

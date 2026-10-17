@@ -7,7 +7,9 @@ import asyncio
 import contextlib
 import json
 import ipaddress
+import logging
 import os
+from datetime import datetime, timezone
 from pathlib import Path
 import secrets
 import time
@@ -19,6 +21,78 @@ PREFIX = "/api/multiplayer/v1"
 CHUNK = 65536
 MAX_ROOMS = 256
 LEASE = 60
+
+
+def utc_day():
+    return datetime.now(timezone.utc).date().isoformat()
+
+
+class Totals:
+    """Aggregate session counters only; never retain room or player identities."""
+
+    def __init__(self, path=None):
+        self.path = Path(path) if path else None
+        self.lock = asyncio.Lock()
+        self.revision = 0
+        self.dirty = False
+        self.available = True
+        self.data = dict(since=utc_day(), sessions=0, day=utc_day(), today=0, peak_players=0)
+        self.dirty = bool(self.path and not self.path.exists())
+        if self.path and self.path.exists():
+            saved = json.loads(self.path.read_text(encoding="utf-8"))
+            if (set(saved) != set(self.data)
+                    or any(type(saved[k]) is not int or saved[k] < 0
+                           for k in ("sessions", "today", "peak_players"))):
+                raise ValueError("Invalid activity totals; preserve file for recovery")
+            for key in ("since", "day"):
+                datetime.strptime(saved[key], "%Y-%m-%d")
+            self.data = saved
+
+    def observe(self, started, players):
+        if started:
+            today = utc_day()
+            if self.data["day"] != today:
+                self.data.update(day=today, today=0)
+            self.data["sessions"] += 1
+            self.data["today"] += 1
+        peak = players > self.data["peak_players"]
+        if peak:
+            self.data["peak_players"] = players
+        if started or peak:
+            self.revision += 1
+            self.dirty = True
+
+    def snapshot(self):
+        return dict(since=self.data["since"], sessions=self.data["sessions"],
+                    today=self.data["today"] if self.data["day"] == utc_day() else 0,
+                    peak_players=self.data["peak_players"], available=self.available)
+
+    def write(self, payload):
+        temporary = self.path.with_suffix(self.path.suffix + ".tmp")
+        with open(os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600),
+                  "w", encoding="utf-8", closefd=True) as stream:
+            stream.write(payload)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(temporary, self.path)
+
+    async def flush(self):
+        if not self.path:
+            return
+        async with self.lock:
+            if not self.dirty:
+                return
+            revision = self.revision
+            payload = json.dumps(self.data, sort_keys=True)
+            try:
+                await asyncio.to_thread(self.write, payload)
+            except OSError:
+                self.available = False
+                logging.warning("Activity totals could not be persisted; will retry")
+                return
+            self.available = True
+            if self.revision == revision:
+                self.dirty = False
 
 
 def metadata(value):
@@ -59,14 +133,26 @@ class Room:
     info: dict
     seen: float = field(default_factory=time.monotonic)
     listed: bool = True
+    counted: bool = False
     peers: dict = field(default_factory=dict)
 
 
 class Directory:
-    def __init__(self):
+    def __init__(self, totals_path=None):
         self.rooms = {}
         self.rates = {}
         self.host_slots = {}
+        self.totals = Totals(totals_path)
+
+    async def record_activity(self, room):
+        started = room.listed and room.info["phase"] == "running" and not room.counted
+        if started:
+            room.counted = True
+        now = time.monotonic()
+        players = sum(r.info["players"] for r in self.rooms.values()
+                      if r.listed and not r.control.closed and now - r.seen < LEASE)
+        self.totals.observe(started, players)
+        await self.totals.flush()
 
     def allow(self, key, maximum=30):
         now = time.monotonic()
@@ -81,7 +167,8 @@ class Directory:
         now = time.monotonic()
         games = [dict(room.info, id=key) for key, room in self.rooms.items()
                  if room.listed and now - room.seen < LEASE and not room.control.closed]
-        return web.json_response({"version": 1, "games": games}, headers={
+        return web.json_response({"version": 1, "games": games,
+                                  "totals": self.totals.snapshot()}, headers={
             "Cache-Control": "public, max-age=5", "Access-Control-Allow-Origin": "*"})
 
     async def host(self, request):
@@ -105,6 +192,7 @@ class Directory:
             if len(self.rooms) >= MAX_ROOMS or sum(r.ip == ip for r in self.rooms.values()) >= 4:
                 raise ValueError("capacity")
             self.rooms[room_id] = room
+            await self.record_activity(room)
             await ws.send_json({"type": "registered", "id": room_id, "token": room.token})
             async for message in ws:
                 if message.type != WSMsgType.TEXT or not self.allow((room_id, "update"), 90):
@@ -115,6 +203,7 @@ class Directory:
                 if packet.get("type") == "update":
                     room.info = metadata(packet.get("game"))
                     room.seen = time.monotonic()
+                    await self.record_activity(room)
                 elif packet.get("type") == "unlist":
                     room.listed = False
                     room.seen = time.monotonic()
@@ -198,6 +287,7 @@ class Directory:
             await asyncio.wait_for(target.send_bytes(message.data), 10)
 
     async def lifecycle(self, app):
+        await self.totals.flush()
         async def expire():
             while True:
                 await asyncio.sleep(5)
@@ -211,6 +301,7 @@ class Directory:
             await task
         for room in list(self.rooms.values()):
             await room.control.close()
+        await self.totals.flush()
 
 
 async def health(_request):
@@ -232,7 +323,7 @@ async def proxy_identity(request, handler):
 
 
 def create_app(service=None):
-    service = service or Directory()
+    service = service or Directory(os.getenv("TOTALS_PATH", str(Path(__file__).with_name("activity-totals.json"))))
     app = web.Application(client_max_size=2048, middlewares=[proxy_identity])
     app.cleanup_ctx.append(service.lifecycle)
     app.router.add_get(PREFIX + "/games", service.games)

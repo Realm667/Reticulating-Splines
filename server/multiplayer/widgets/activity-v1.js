@@ -18,6 +18,7 @@
       const root = container.attachShadow({mode: 'open'});
       const style = document.createElement('style');
       style.textContent = ':host{display:block;font:14px system-ui;color:inherit}section{padding:16px;border:1px solid #66717b;border-radius:6px}h3{margin:0 0 12px;font-size:16px}ul{list-style:none;padding:0;margin:0}li{padding:8px 0;border-top:1px solid #66717b}small{opacity:.8}';
+      style.textContent += 'dl{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:12px;margin:18px 0 8px;padding-top:14px;border-top:1px solid #66717b}dt{font-size:12px;opacity:.8}dd{margin:4px 0 0;font-size:23px;font-weight:650;font-variant-numeric:tabular-nums}';
       const section = document.createElement('section');
       section.setAttribute('aria-live', 'polite');
       section.textContent = 'Loading activity…';
@@ -44,6 +45,25 @@
           const hint = document.createElement('small');
           hint.textContent = games.length ? 'Join from Multiplayer → Internet in the game.' : 'No public games right now.';
           section.replaceChildren(heading, list, hint);
+          const totals = data.totals;
+          if (totals?.available && ['sessions', 'today', 'peak_players'].every(
+            key => Number.isSafeInteger(totals[key]) && totals[key] >= 0)) {
+            const summary = document.createElement('dl');
+            summary.setAttribute('aria-label', 'Totals');
+            for (const [key, label] of [['sessions', 'Sessions started'],
+              ['today', 'Today (UTC)'], ['peak_players', 'Peak players']]) {
+              const cell = document.createElement('div');
+              const title = document.createElement('dt');
+              title.textContent = label;
+              const value = document.createElement('dd');
+              value.textContent = totals[key].toLocaleString('en');
+              cell.append(title, value);
+              summary.append(cell);
+            }
+            const note = document.createElement('small');
+            note.textContent = `Since ${totals.since} · Online sessions only; resumed games count as new sessions.`;
+            section.append(summary, note);
+          }
         } catch {
           section.textContent = 'Activity currently unavailable.';
         } finally { running = false; }
