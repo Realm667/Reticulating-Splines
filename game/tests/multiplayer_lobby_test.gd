@@ -27,6 +27,8 @@ func await_lobby_view(host: CoopSession, guest: CoopSession) -> void:
 func run() -> void:
 	for mode in ["coop", "shared", "region"]:
 		await lobby_case(mode)
+		await continuation_case(mode)
+	await compatibility_case()
 	check(MultiplayerGoalHud.value({"funds": 50000, "debt": 20000}, "wealth") == 30000, "HUD subtracts all debt")
 	check(MultiplayerGoalHud.value({"population": 321}, "population") == 321, "HUD population")
 	print("Multiplayer lobby checks: %d failures" % failures)
@@ -142,7 +144,7 @@ func lobby_case(mode: String) -> void:
 		var verify := CoopSession.new()
 		root.add_child(verify)
 		verify.host(Sc2xDocument.create_empty(32, "Verify").document, 0, "", "Verify", "region")
-		check(verify.restore_embedded(checkpoint.document).is_empty(), "competition rules and starts restore")
+		check(verify.restore_embedded(checkpoint.document, host.token).is_empty(), "competition rules and starts restore")
 		check(verify.starts.previous == host.starts.previous and verify.goal.hold_days == CityCalendar.DAYS_PER_YEAR * 10, "repeated starts remain prohibited after reload")
 		verify.stop()
 		verify.queue_free()
@@ -150,4 +152,104 @@ func lobby_case(mode: String) -> void:
 	host.stop()
 	guest.queue_free()
 	host.queue_free()
+	await process_frame
+
+
+func compatibility_case() -> void:
+	var host := CoopSession.new()
+	var probe := MultiplayerCompatibility.new()
+	root.add_child(host)
+	root.add_child(probe)
+	check(host.host(Sc2xDocument.create_empty(32, "Probe").document, 0, "secret", "Host").is_empty(), "probe host")
+	var results: Array[String] = []
+	probe.completed.connect(func(error: String) -> void: results.append(error))
+	probe.check_host("127.0.0.1", host.server.get_local_port())
+	var until := Time.get_ticks_msec() + 6000
+	while results.is_empty() and Time.get_ticks_msec() < until:
+		await create_timer(0.01).timeout
+	check(results == [""], "real TCP compatibility before password or admission")
+	check(host.channels.is_empty() and host.members.size() == 1 and host.seats.pending.is_empty(), "probe consumes no player seat")
+	var response := {"type": "compatibility", "nonce": "test", "open": true, "protocol": CoopSession.PROTOCOL, "build": CoopSession.NETWORK_BUILD}
+	check(MultiplayerCompatibility.response_error(response, "test").is_empty(), "matching simulation contract")
+	response.build = "other"
+	check(MultiplayerCompatibility.response_error(response, "test") == "Different game version", "incompatible build rejected")
+	response.build = CoopSession.NETWORK_BUILD
+	response.protocol = -1
+	check(not MultiplayerCompatibility.response_error(response, "test").is_empty(), "incompatible protocol rejected")
+	response.protocol = CoopSession.PROTOCOL
+	response.open = false
+	check(MultiplayerCompatibility.response_error(response, "test") == "Full", "full host explained")
+	check(not MultiplayerCompatibility.response_error(response, "wrong").is_empty(), "mismatching probe rejected")
+	probe.check_host("127.0.0.1", host.server.get_local_port())
+	probe.cancel()
+	await settle()
+	check(results.size() == 1 and probe.channel == null, "cancel prevents late completion")
+	host.stop()
+	probe.queue_free()
+	host.queue_free()
+
+
+func continuation_case(mode: String) -> void:
+	var host := CoopSession.new()
+	var guest := CoopSession.new()
+	var absent := CoopSession.new()
+	var resumed := CoopSession.new()
+	for node in [host, guest, absent, resumed]:
+		root.add_child(node)
+	host.host(Sc2xDocument.create_empty(32, "Continue").document, 0, "", "Original", mode, false)
+	guest.join("127.0.0.1", host.server.get_local_port(), "", "Returning")
+	absent.join("127.0.0.1", host.server.get_local_port(), "", "Absent")
+	await settle()
+	check(guest.connected and absent.connected, "continuation participants " + mode)
+	host.request({"kind": "speed", "speed": 1})
+	var original_actor := host.token
+	var returning_actor := guest.token
+	var absent_actor := absent.token
+	var returning_identity := guest.credential
+	host.goal.holding[returning_actor.sha256_text()] = {"days": 150, "since": 30}
+	var goal_before := host.goal.saved().duplicate(true)
+	var own: CoopWorld = host.world.municipalities[returning_actor] if host.world is SharedWorld else host.world
+	own.city.set_funds(76543)
+	var city_before := own.city.document.serialize().data
+	var saved := host.city_checkpoint()
+	check(saved.error.is_empty(), "running checkpoint " + mode)
+	var names := host.members.duplicate(true)
+	guest.stop()
+	absent.stop()
+	host.stop()
+	resumed.credential = returning_identity
+	resumed.host(Sc2xDocument.create_empty(32, "Temporary").document, 0, "", "Returning", "coop", false)
+	var restored := resumed.restore_embedded(saved.document)
+	check(restored.is_empty(), "returning player hosts save " + mode + ": " + restored)
+	check(resumed.token == returning_actor and resumed.members[original_actor].name == names[original_actor].name, "host keeps own city and old host seat " + mode)
+	check(resumed.continuing and resumed.waiting_for_start and resumed.world.controller.speed == 1, "running save opens paused continuation " + mode)
+	check(JSON.parse_string(JSON.stringify(resumed.goal.saved())) == JSON.parse_string(JSON.stringify(goal_before)), "saved victory progress retained " + mode + " expected=" + JSON.stringify(goal_before) + " actual=" + JSON.stringify(resumed.goal.saved()))
+	check(resumed.world.city.document.serialize().data == city_before, "host city retained " + mode)
+	var again := resumed.city_checkpoint()
+	var record: Dictionary = JSON.parse_string(again.document.sc2x_extra_entries["multiplayer.json"].get_string_from_utf8())
+	check(record.started == true, "saving continuation does not become a new game")
+	resumed.request({"kind": "speed", "speed": 5})
+	await settle()
+	check(resumed.world.city.document.serialize().data == city_before, "no simulation during continuation " + mode)
+	resumed.request({"kind": "lobby_ready", "ready": true})
+	resumed.request({"kind": "lobby_start"})
+	check(resumed.waiting_for_start, "solo continuation also needs absence consent")
+	resumed.request({"kind": "lobby_start", "allow_absent": true})
+	check(not resumed.waiting_for_start, "saved match may continue with its host alone after consent")
+	check(resumed.restore_embedded(again.document).is_empty(), "resaved continuation retains identity and original phase")
+	host.join("127.0.0.1", resumed.server.get_local_port(), "", "Original")
+	await await_lobby_view(resumed, host)
+	check(host.token == original_actor, "original host reconnects to original city " + mode)
+	resumed.request({"kind": "lobby_ready", "ready": true})
+	host.request({"kind": "lobby_ready", "ready": true})
+	await settle()
+	resumed.request({"kind": "lobby_start"})
+	check(resumed.waiting_for_start, "absent players require explicit continuation consent")
+	resumed.request({"kind": "lobby_start", "allow_absent": true})
+	check(not resumed.waiting_for_start and not resumed.continuing, "host continues when connected players are ready")
+	check(resumed.world.city.funds() == 76543 and JSON.parse_string(JSON.stringify(resumed.goal.saved())) == JSON.parse_string(JSON.stringify(goal_before)), "continuation does not reset funds or victory clock")
+	check(resumed.members.has(absent_actor) and resumed.seats.credentials.get(absent.credential.sha256_text()) == absent_actor, "absent seat and credential preserved")
+	for node in [host, guest, absent, resumed]:
+		node.stop()
+		node.queue_free()
 	await process_frame

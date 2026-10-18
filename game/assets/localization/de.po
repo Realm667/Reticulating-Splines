@@ -27150,3 +27150,55 @@ msgstr "Cheat aktiviert: %s"
 #: src/application/classic_cheats.gd
 msgid "Cheat unavailable: %s"
 msgstr "Cheat nicht verfügbar: %s"
+
+#. Multiplayer continuation and pre-join checks; supplementary translation.
+msgid "Continue saved game"
+msgstr "Partie fortsetzen"
+
+#. Multiplayer continuation and pre-join checks; supplementary translation.
+msgid "Continue game"
+msgstr "Partie fortsetzen"
+
+#. Multiplayer continuation and pre-join checks; supplementary translation.
+msgid "Land owned"
+msgstr "Landbesitz"
+
+#. Multiplayer continuation and pre-join checks; supplementary translation.
+msgid "Continue without absent players"
+msgstr "Ohne abwesende Spieler fortsetzen"
+
+#. Multiplayer continuation and pre-join checks; supplementary translation.
+msgid "Absent players keep their cities and can reconnect later."
+msgstr "Abwesende Spieler behalten ihre Städte und können später zurückkehren."
+
+#. Multiplayer continuation and pre-join checks; supplementary translation.
+msgid "Confirm continuation without absent players. Their seats remain reserved."
+msgstr "Bestätige die Fortsetzung ohne abwesende Spieler. Ihre Plätze bleiben reserviert."
+
+#. Multiplayer continuation and pre-join checks; supplementary translation.
+msgid "Saved cities and progress are preserved. Connected players confirm Ready; the host continues."
+msgstr "Städte und Fortschritt bleiben erhalten. Verbundene Spieler bestätigen „Bereit“, dann setzt der Host fort."
+
+#. Multiplayer continuation and pre-join checks; supplementary translation.
+msgid "This profile has no saved player seat. Choose the player whose city you will take over as host."
+msgstr "Dieses Profil hat keinen gespeicherten Spielerplatz. Wähle den Spieler, dessen Stadt du als Host übernimmst."
+
+#. Multiplayer continuation and pre-join checks; supplementary translation.
+msgid "Choose a saved player seat before hosting."
+msgstr "Wähle vor dem Hosten einen gespeicherten Spielerplatz."
+
+#. Multiplayer continuation and pre-join checks; supplementary translation.
+msgid "Compatibility is checked before joining. Visual packs may differ."
+msgstr "Kompatibilität wird vor dem Beitritt geprüft. Grafikpakete dürfen abweichen."
+
+#. Multiplayer continuation and pre-join checks; supplementary translation.
+msgid "Checking compatibility…"
+msgstr "Kompatibilität wird geprüft…"
+
+#. Multiplayer continuation and pre-join checks; supplementary translation.
+msgid "Compatible"
+msgstr "Kompatibel"
+
+#. Multiplayer continuation and pre-join checks; supplementary translation.
+msgid "Compatibility check failed. Check the host address and connection."
+msgstr "Kompatibilitätsprüfung fehlgeschlagen. Prüfe Hostadresse und Verbindung."

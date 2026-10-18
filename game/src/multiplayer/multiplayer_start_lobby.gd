@@ -12,6 +12,9 @@ var summary: Label
 var ready: Button
 var start: Button
 var own_ready := false
+var allow_absent: CheckBox
+var consent_generation := -1
+var may_start := false
 var hint: Label
 var leave_button: Button
 var body: VBoxContainer
@@ -69,13 +72,18 @@ func _init(owner: MultiplayerWindows) -> void:
 	body.add_child(roster)
 	hint = ApplicationMultiplayer.label(body, "")
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	allow_absent = CheckBox.new()
+	allow_absent.text = "Continue without absent players"
+	allow_absent.tooltip_text = "Absent players keep their cities and can reconnect later."
+	body.add_child(allow_absent)
 	var actions := HBoxContainer.new()
 	body.add_child(actions)
 	ready = ApplicationMultiplayer.button(actions, "Ready", func() -> void:
 		windows.coop.session.request({"kind": "lobby_ready", "ready": not own_ready}))
 	start = ApplicationMultiplayer.button(actions, "Start game", func() -> void:
-		windows.coop.session.request({"kind": "lobby_start"}))
+		windows.coop.session.request({"kind": "lobby_start", "allow_absent": allow_absent.button_pressed}))
 	leave_button = ApplicationMultiplayer.button(actions, "Leave game", windows.coop.confirm_leave)
+	allow_absent.toggled.connect(func(_value: bool) -> void: update_start_button())
 
 func update(state: Dictionary) -> void:
 	var lobby: Dictionary = state.get("lobby", {})
@@ -84,11 +92,22 @@ func update(state: Dictionary) -> void:
 		window.hide()
 		return
 	var session := windows.coop.session
-	window.title = tr("Game lobby")
+	if consent_generation != int(lobby.get("generation", -1)):
+		consent_generation = int(lobby.get("generation", -1))
+		allow_absent.set_pressed_no_signal(false)
+	var resuming: bool = lobby.get("continuing", false)
+	window.title = tr("Continue saved game") if resuming else tr("Game lobby")
+	allow_absent.visible = session.hosting and resuming and state.get("roster", []).any(func(player: Dictionary) -> bool: return not player.online)
+	if not allow_absent.visible:
+		allow_absent.set_pressed_no_signal(false)
 	for column in 5:
 		roster.set_column_title(column, tr(["Player", "City", "Status", "Starting funds", "Starting land"][column]))
 	hint.text = tr("At least two players must join. Everyone confirms Ready; the host then starts the game. Changes to the player list reset readiness.") + "\n" + tr("Fields with a pencil can be edited.")
-	start.text = tr("Start game")
+	if resuming:
+		roster.set_column_title(3, tr("Treasury"))
+		roster.set_column_title(4, tr("Land owned"))
+		hint.text = tr("Saved cities and progress are preserved. Connected players confirm Ready; the host continues.")
+	start.text = tr("Continue game") if resuming else tr("Start game")
 	leave_button.text = tr("Leave game")
 	var mode := tr("Co-op") if state.get("mode", "coop") == "coop" else tr("Competitive Region") if state.get("mode") == "region" else tr("Competitive Shared")
 	var goal: Dictionary = state.get("goal", {})
@@ -96,11 +115,13 @@ func update(state: Dictionary) -> void:
 	if goal.get("kind") == "timed_score":
 		target = tr("Points after game time") + " · " + tr("%d game years · End year %d") % [int(goal.duration_days) / CityCalendar.DAYS_PER_YEAR, int(goal.end_year)]
 	summary.text = "%s · %s\n%s" % [mode, target, tr("Simulation and construction begin together after the host starts.")]
+	if resuming:
+		summary.text = "%s · %s" % [mode, target]
 	if goal.get("kind") == "timed_score":
 		summary.text += "\n" + MultiplayerGoal.score_help()
 	elif state.get("mode", "coop") != "coop" and goal.get("kind", "endless") != "endless":
 		summary.text += "\n" + (tr("Accumulate %d years as sole leader. Earned time is kept. Late cities are unranked.") % (int(goal.get("hold_days", 3000)) / CityCalendar.DAYS_PER_YEAR) if goal.get("rule") == "leadership" else tr("Stay at or above the target for one full game year. Dropping below resets the timer."))
-	var signature := TranslationServer.get_locale() + JSON.stringify(state.get("start_preview", {})) + JSON.stringify(state.get("roster", []).map(func(player: Dictionary) -> Array: return [player.id, player.name, player.city, player.online, player.get("ready", false), player.color, player.get("handicap", {})]))
+	var signature := str(resuming) + TranslationServer.get_locale() + JSON.stringify(state.get("start_preview", {})) + JSON.stringify(state.get("roster", []).map(func(player: Dictionary) -> Array: return [player.id, player.name, player.city, player.online, player.get("ready", false), player.color, player.get("handicap", {})]))
 	if signature != roster_signature and not editing_city():
 		roster_signature = signature
 		roster.clear()
@@ -116,6 +137,9 @@ func update(state: Dictionary) -> void:
 			var area: Dictionary = state.get("start_preview", {}).get(player.id, {})
 			if not area.is_empty() and state.get("mode") == "shared":
 				row.set_text(4, tr("%d land · %d water") % [area.land, area.water])
+			if resuming:
+				row.set_text(3, MultiplayerScoreboard.money(player.funds))
+				row.set_text(4, str(player.get("land", 0)))
 			row.set_text(2, tr("Offline") if not player.online else tr("Ready") if player.get("ready", false) else tr("Not ready"))
 			row.set_custom_color(2, Color("66cf79") if player.get("ready", false) and player.online else Color("ff9c40"))
 			for column in 5:
@@ -124,18 +148,23 @@ func update(state: Dictionary) -> void:
 				own_ready = player.get("ready", false)
 				row.set_editable(1, true)
 				mark_editable(row, 1, tr("Click your city name to rename it before the game starts."))
-			if session.hosting and state.get("mode") != "coop":
+			if session.hosting and not resuming and state.get("mode") != "coop":
 				mark_editable(row, 3, tr("Change starting funds"))
 				if state.get("mode") == "shared":
 					mark_editable(row, 4, tr("Change starting territory"))
 	ready.text = tr("Not ready") if own_ready else tr("Ready")
 	start.visible = session.hosting
-	start.disabled = not lobby.get("can_start", false)
+	may_start = lobby.get("can_start", false)
+	update_start_button()
 	roster.custom_minimum_size.y = maxi(80, roster.get_root().get_child_count() * 28 + 32)
 	if window.visible:
 		windows.fit_content.call_deferred(window, body, 760)
 	if not window.visible:
 		show_if_waiting.call_deferred()
+
+func update_start_button() -> void:
+	start.disabled = not may_start or (allow_absent.visible and not allow_absent.button_pressed)
+
 
 func mark_editable(row: TreeItem, column: int, tip: String) -> void:
 	row.set_metadata(column, true)

@@ -23,7 +23,7 @@ signal seat_lobby_received(data: Dictionary)
 
 const PROTOCOL := 1
 const BUILD := "opensc2k-coop-1"
-const NETWORK_BUILD := "opensc2k-multiplayer-22"
+const NETWORK_BUILD := "opensc2k-multiplayer-23"
 const MAX_PLAYERS := 8
 var world: CoopWorld
 var lan: MultiplayerLanDiscovery
@@ -48,6 +48,7 @@ var loans := MultiplayerLoans.new()
 var history := MultiplayerHistory.new()
 var starts := MultiplayerStarts.new()
 var waiting_for_start := false
+var continuing := false
 var lobby_ready: Dictionary = {}
 var lobby_generation := 0
 var viewed_cities: Dictionary = {}
@@ -326,6 +327,7 @@ func stop() -> void:
 	history = MultiplayerHistory.new()
 	starts = MultiplayerStarts.new()
 	waiting_for_start = false
+	continuing = false
 	lobby_ready.clear()
 	cursors.clear()
 	cursor_tools.clear()
@@ -609,7 +611,7 @@ func execute_ordered(actor: String, message: Dictionary) -> Dictionary:
 	member.sequence = sequence
 	var result: Dictionary
 	if message.get("kind") == "handicap":
-		if actor != token or not waiting_for_start or not world is SharedWorld or starts.assigned:
+		if actor != token or not waiting_for_start or not world is SharedWorld or starts.assigned or continuing:
 			return CoopWorld.rejected("Only the host can assign handicaps before a new game starts.")
 		var seat := seats.find_seat(str(message.get("seat", "")))
 		if seat.is_empty() or not CoopWorld.whole_number(message.get("funds"), 0, 2147483647) or not CoopWorld.whole_number(message.get("tiles"), 0, world.city.map_size * world.city.map_size / 32):
@@ -632,7 +634,9 @@ func execute_ordered(actor: String, message: Dictionary) -> Dictionary:
 	if message.get("kind") == "lobby_start":
 		if actor != token or not can_start_lobby() or message.get("lobby_generation") != lobby_generation:
 			return CoopWorld.rejected("Only the host can start when all connected players are ready.")
-		if world is SharedWorld:
+		if continuing and requested_speed.size() < members.size() and message.get("allow_absent") != true:
+			return CoopWorld.rejected("Confirm continuation without absent players. Their seats remain reserved.")
+		if world is SharedWorld and not continuing:
 			if not starts.assigned and goal.kind != "endless":
 				for tile in world.city.buildings.size():
 					if world.city.buildings[tile] > 13 or world.city.zones[tile] != 0:
@@ -640,7 +644,9 @@ func execute_ordered(actor: String, message: Dictionary) -> Dictionary:
 			var start_error := starts.prepare(world, members)
 			if not start_error.is_empty():
 				return CoopWorld.rejected(start_error)
-		goal.begin(world)
+		if not continuing:
+			goal.begin(world)
+		continuing = false
 		waiting_for_start = false
 		disconnected_pause = false
 		for player: String in requested_speed:
@@ -722,7 +728,7 @@ func apply_speed() -> void:
 
 
 func can_start_lobby() -> bool:
-	if not waiting_for_start or requested_speed.size() < 2 or not seats.pending.is_empty() or identities.size() != channels.size():
+	if not waiting_for_start or requested_speed.size() < (1 if continuing else 2) or not seats.pending.is_empty() or identities.size() != channels.size():
 		return false
 	for actor: String in requested_speed:
 		if not lobby_ready.get(actor, false):
@@ -890,14 +896,14 @@ func make_state(recipient := "") -> Dictionary:
 
 func make_common_state() -> Dictionary:
 	var state := {"summary_sequence": publication_count}
-	if waiting_for_start and world is SharedWorld:
+	if waiting_for_start and not continuing and world is SharedWorld:
 		if not starts.prepare(world, members, false).is_empty():
 			starts.preview.clear()
 	state["goal"] = goal.saved()
 	state["loans"] = loans.public_rows()
 	state["starts"] = starts.public_positions()
 	state["round"] = starts.round_number
-	state["lobby"] = {"waiting": waiting_for_start, "can_start": can_start_lobby(), "generation": lobby_generation}
+	state["lobby"] = {"waiting": waiting_for_start, "continuing": continuing, "can_start": can_start_lobby(), "generation": lobby_generation}
 	state["start_preview"] = starts.preview.duplicate(true)
 	var players: Array[String] = []
 	for player: String in requested_speed:
@@ -1033,7 +1039,7 @@ func save_session(path: String) -> String:
 	if not checkpoint_error.is_empty():
 		return checkpoint_error
 	var data := {"format": "OpenSC2K Koop", "version": PROTOCOL, "build": BUILD,
-		"started": not waiting_for_start,
+		"started": continuing or not waiting_for_start,
 		"admin_history": admin_history, "goal": goal.saved(), "loans": loans.saved(), "history": history.series, "starts": starts.saved(),
 		"session": session_id, "host": token, "members": members, "seats": seats.saved(), "state": world.snapshot(true),
 		"dispatch": Array(world.dispatch_cycles), "dispatch_initialized": world.dispatch_initialized,
@@ -1064,7 +1070,7 @@ func save_session(path: String) -> String:
 	return ""
 
 
-func resume_session(path: String, port: int, join_code: String, player_name: String) -> String:
+func resume_session(path: String, port: int, join_code: String, player_name: String, selected_seat := "") -> String:
 	path = ProjectSettings.globalize_path(path)
 	if not FileAccess.file_exists(path) or FileAccess.get_file_as_bytes(path).size() > CityTcpChannel.MAX_FRAME:
 		return "The session file is missing or too large."
@@ -1103,10 +1109,14 @@ func resume_session(path: String, port: int, join_code: String, player_name: Str
 	var dispatch := CoopWorld.read_dispatch_points(data.get("dispatch_points"), document.map_size)
 	if not dispatch.error.is_empty():
 		return dispatch.error
+	ensure_credential()
+	var own_seat := saved_seat(data, credential)
+	if own_seat.is_empty() and not data.members.has(selected_seat):
+		return "Choose a saved player seat before hosting."
 	var host_error := host(document, port, join_code, player_name)
 	if not host_error.is_empty():
 		return host_error
-	token = data.host
+	token = own_seat if not own_seat.is_empty() else selected_seat
 	session_id = data.session
 	members = data.members
 	requested_speed.clear()
@@ -1121,7 +1131,8 @@ func resume_session(path: String, port: int, join_code: String, player_name: Str
 	world.statistics = data.get("statistics", {})
 	world.dispatch_owners = data.get("dispatch_owners", {})
 	seats.restore(data.get("seats"), player_name)
-	waiting_for_start = data.get("started", true) != true
+	continuing = data.get("started", true) == true
+	waiting_for_start = true
 	reset_lobby_ready()
 	apply_speed()
 	next_command = int(members[token].sequence) + 1
@@ -1242,7 +1253,7 @@ func city_checkpoint() -> Dictionary:
 	Sc2xCheckpoint.capture(world.controller, world.city.document.sc2x_metadata)
 	var document := world.city.document.duplicate_document()
 	var data := {"version": 1, "host": token, "session": session_id, "members": members, "seats": seats.saved(),
-		"started": not waiting_for_start,
+		"started": continuing or not waiting_for_start,
 		"admin_history": admin_history, "goal": goal.saved(), "loans": loans.saved(), "history": history.series, "starts": starts.saved(),
 		"statistics": world.statistics, "dispatch_owners": world.dispatch_owners,
 		"dispatch": Array(world.dispatch_cycles), "dispatch_initialized": world.dispatch_initialized, "dispatch_points": world.saved_dispatch_points()}
@@ -1289,7 +1300,7 @@ static func write_document(document: Sc2File, path: String) -> String:
 	return ""
 
 
-func restore_embedded(document: Sc2File) -> String:
+func restore_embedded(document: Sc2File, selected_seat := "") -> String:
 	var data: Variant = JSON.parse_string(document.sc2x_extra_entries.get("multiplayer.json", PackedByteArray()).get_string_from_utf8())
 	if not data is Dictionary or data.get("version") != 1 or not data.get("members") is Dictionary:
 		return "Invalid multiplayer city data."
@@ -1339,8 +1350,17 @@ func restore_embedded(document: Sc2File) -> String:
 	if not dispatch.error.is_empty():
 		return dispatch.error
 	restored_world.dispatch_slot_points = dispatch.points
+	ensure_credential()
+	var own_seat := saved_seat(data, credential)
+	if own_seat.is_empty() and not data.members.has(selected_seat):
+		return "Choose a saved player seat before hosting."
 	world = restored_world
-	token = data.host
+	token = own_seat if not own_seat.is_empty() else selected_seat
+	if world is SharedWorld:
+		world.host_actor = token
+		world.city = world.municipalities[token].city
+		world.engine = world.municipalities[token].engine
+		world.controller = world.municipalities[token].controller
 	session_id = data.session
 	members = data.members
 	requested_speed.clear()
@@ -1368,12 +1388,23 @@ func restore_embedded(document: Sc2File) -> String:
 	starts.restore(data.get("starts", {"round": 1, "assigned": true, "previous": {}, "positions": {}}))
 	if world is SharedWorld:
 		starts.repair_reserved_corridors(world)
-	waiting_for_start = data.get("started", true) != true
+	continuing = data.get("started", true) == true
+	waiting_for_start = true
 	reset_lobby_ready()
 	apply_speed()
 	next_command = int(members[token].sequence) + 1
 	publish()
 	return ""
+
+
+static func saved_seat(data: Dictionary, identity: String) -> String:
+	var seats_data: Variant = data.get("seats")
+	var actor := ""
+	if seats_data is Dictionary and seats_data.get("credentials") is Dictionary:
+		actor = str(seats_data.credentials.get(identity.sha256_text(), ""))
+	elif data.get("members", {}).has(identity):
+		actor = identity
+	return actor if data.get("members", {}).has(actor) else ""
 
 
 func valid_cursor_number(value: Variant) -> bool:

@@ -162,6 +162,8 @@ func refresh() -> void:
 			item.set_icon(0, lock_icon)
 		item.set_text(1, tr({"coop": "Co-op", "shared": "Competitive Shared", "region": "Competitive Region"}[info.mode]))
 		var phase := tr("Lobby") if info.phase == "lobby" else tr("In progress")
+		if info.build == CoopSession.NETWORK_BUILD:
+			phase += " · " + tr("Compatible")
 		if not info.open:
 			phase = tr("Full")
 		if info.build != CoopSession.NETWORK_BUILD:

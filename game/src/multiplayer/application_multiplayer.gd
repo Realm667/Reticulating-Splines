@@ -33,6 +33,8 @@ var mode_picker: OptionButton
 var city_picker: OptionButton
 var city_file: FileDialog
 var pending_new_city := false
+var pending_join: Dictionary = {}
+var continuation_dialog: ConfirmationDialog
 var selected_city_path := ""
 var multiplayer_save_path := ""
 var identity_signature := ""
@@ -235,12 +237,18 @@ func host_document(document: Sc2File) -> void:
 	show_message("Game running on port %d. Choose a game speed." % int(port.value))
 
 
-func host_saved_city(path: String) -> void:
+func host_saved_city(path: String, selected_seat := "") -> void:
 	remember_city()
 	selected_city_path = path
 	multiplayer_save_path = "" if use_current.button_pressed else path
 	if path.get_extension().to_lower() == "sc2mp":
-		var error := session.resume_session(path, int(port.value), join_code.text, player.text)
+		if selected_seat.is_empty():
+			var saved: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
+			session.ensure_credential()
+			if saved is Dictionary and saved.get("members") is Dictionary and CoopSession.saved_seat(saved, session.credential).is_empty():
+				confirm_host_seat(path, saved)
+				return
+		var error := session.resume_session(path, int(port.value), join_code.text, player.text, selected_seat)
 		if not error.is_empty():
 			show_message(error)
 		elif not launch.lan_only.button_pressed:
@@ -250,9 +258,15 @@ func host_saved_city(path: String) -> void:
 	if not document.parse(FileAccess.get_file_as_bytes(path)):
 		show_message(document.parse_error)
 		return
+	if document.sc2x_extra_entries.has("multiplayer.json") and selected_seat.is_empty():
+		var saved: Variant = JSON.parse_string(document.sc2x_extra_entries["multiplayer.json"].get_string_from_utf8())
+		session.ensure_credential()
+		if saved is Dictionary and saved.get("members") is Dictionary and CoopSession.saved_seat(saved, session.credential).is_empty():
+			confirm_host_seat(path, saved)
+			return
 	host_document(document)
 	if session.hosting and document.sc2x_extra_entries.has("multiplayer.json"):
-		var error := session.restore_embedded(document)
+		var error := session.restore_embedded(document, selected_seat)
 		if not error.is_empty():
 			leave()
 			show_message(error)
@@ -261,8 +275,8 @@ func host_saved_city(path: String) -> void:
 func start_join() -> void:
 	if not can_start():
 		return
-	remember_city()
-	session.player_color = color_picker.color.to_html(false)
+	if not pending_join.is_empty():
+		return
 	var endpoint := address.text.strip_edges()
 	var endpoint_port := int(port.value)
 	if not launch.advanced.button_pressed and launch.join_tabs.current_tab == 0:
@@ -273,9 +287,57 @@ func start_join() -> void:
 			return
 		endpoint = info.address
 		endpoint_port = int(info.port)
-	var result := session.join(endpoint, endpoint_port, join_code.text, player.text, "choose")
+	pending_join = {"address": endpoint, "port": endpoint_port, "code": join_code.text, "name": player.text}
+	launch.action.disabled = true
+	launch.compatibility_status.text = tr("Checking compatibility…")
+	launch.compatibility.check_host(endpoint, endpoint_port)
+
+
+func cancel_compatibility() -> void:
+	if launch == null or launch.compatibility == null:
+		return
+	launch.compatibility.cancel()
+	pending_join.clear()
+	if launch.action != null:
+		launch.action.disabled = false
+	launch.compatibility_status.text = tr("Compatibility is checked before joining. Visual packs may differ.")
+
+
+func compatibility_checked(error: String) -> void:
+	var target := pending_join.duplicate()
+	pending_join.clear()
+	launch.action.disabled = false
+	if target.is_empty() or not panel.visible or launch.role.selected != 1:
+		return
+	launch.compatibility_status.text = tr("Compatible") if error.is_empty() else tr(error)
+	if not error.is_empty() or not can_start():
+		return
+	remember_city()
+	session.player_color = color_picker.color.to_html(false)
+	var result := session.join(target.address, target.port, target.code, target.name, "choose")
 	show_message(result if not result.is_empty() else "Connecting to the host…")
 	save_identity()
+
+
+func confirm_host_seat(path: String, saved: Dictionary) -> void:
+	if is_instance_valid(continuation_dialog):
+		continuation_dialog.queue_free()
+	continuation_dialog = ConfirmationDialog.new()
+	continuation_dialog.theme = AppUiTheme.current()
+	continuation_dialog.title = tr("Continue saved game")
+	continuation_dialog.dialog_text = tr("This profile has no saved player seat. Choose the player whose city you will take over as host.")
+	continuation_dialog.ok_button_text = tr("Approve takeover")
+	var choices := OptionButton.new()
+	for actor: Variant in saved.members:
+		if actor is String and saved.members[actor] is Dictionary:
+			choices.add_item(str(saved.members[actor].get("name", actor)))
+			choices.set_item_metadata(choices.item_count - 1, actor)
+	continuation_dialog.add_child(choices)
+	app.add_child(continuation_dialog)
+	continuation_dialog.confirmed.connect(func() -> void:
+		if choices.selected >= 0:
+			host_saved_city(path, str(choices.get_item_metadata(choices.selected))))
+	continuation_dialog.popup_centered(Vector2i(560, 180))
 
 
 static func city_fields(state: Dictionary) -> Dictionary:

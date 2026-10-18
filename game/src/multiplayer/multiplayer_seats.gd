@@ -68,7 +68,7 @@ func choose(peer: int, choice: Variant, city_name: Variant = "") -> void:
 			session.world.municipalities[actor].city.document.set_city_name(name)
 		var applicant: Dictionary = pending[peer]
 		session.members[actor] = {"name": applicant.name, "sequence": 0,
-			"color": session.valid_color(applicant.color), "seat_status": "connected", "ranked": session.waiting_for_start}
+			"color": session.valid_color(applicant.color), "seat_status": "connected", "ranked": session.waiting_for_start and not session.continuing}
 		credentials[str(applicant.identity).sha256_text()] = actor
 		admit(peer, actor)
 		return

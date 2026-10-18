@@ -26,7 +26,13 @@ func poll(session: CoopSession) -> void:
 				channel.failed = true
 		elif not messages.is_empty():
 			var message: Dictionary = messages[0]
-			if message.get("type") == "reachability":
+			if message.get("type") == "compatibility" and MultiplayerLanDiscovery.valid_nonce(message.get("nonce")):
+				channel.send({"type": "compatibility", "nonce": message.nonce,
+					"protocol": CoopSession.PROTOCOL, "build": CoopSession.NETWORK_BUILD,
+					"open": session.channels.size() < CoopSession.MAX_PLAYERS - 1})
+				entry.reply = true
+				entry.until = Time.get_ticks_msec() + 1000
+			elif message.get("type") == "reachability":
 				if session.online != null and session.online.accept_probe(message):
 					channel.send({"type": "reachability_ok", "nonce": message.nonce})
 					entry.reply = true

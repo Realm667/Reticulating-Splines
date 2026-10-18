@@ -8662,3 +8662,55 @@ msgstr ""
 #: src/application/classic_cheats.gd
 msgid "Cheat unavailable: %s"
 msgstr ""
+
+#. Multiplayer continuation and pre-join checks; supplementary translation.
+msgid "Continue saved game"
+msgstr ""
+
+#. Multiplayer continuation and pre-join checks; supplementary translation.
+msgid "Continue game"
+msgstr ""
+
+#. Multiplayer continuation and pre-join checks; supplementary translation.
+msgid "Land owned"
+msgstr ""
+
+#. Multiplayer continuation and pre-join checks; supplementary translation.
+msgid "Continue without absent players"
+msgstr ""
+
+#. Multiplayer continuation and pre-join checks; supplementary translation.
+msgid "Absent players keep their cities and can reconnect later."
+msgstr ""
+
+#. Multiplayer continuation and pre-join checks; supplementary translation.
+msgid "Confirm continuation without absent players. Their seats remain reserved."
+msgstr ""
+
+#. Multiplayer continuation and pre-join checks; supplementary translation.
+msgid "Saved cities and progress are preserved. Connected players confirm Ready; the host continues."
+msgstr ""
+
+#. Multiplayer continuation and pre-join checks; supplementary translation.
+msgid "This profile has no saved player seat. Choose the player whose city you will take over as host."
+msgstr ""
+
+#. Multiplayer continuation and pre-join checks; supplementary translation.
+msgid "Choose a saved player seat before hosting."
+msgstr ""
+
+#. Multiplayer continuation and pre-join checks; supplementary translation.
+msgid "Compatibility is checked before joining. Visual packs may differ."
+msgstr ""
+
+#. Multiplayer continuation and pre-join checks; supplementary translation.
+msgid "Checking compatibility…"
+msgstr ""
+
+#. Multiplayer continuation and pre-join checks; supplementary translation.
+msgid "Compatible"
+msgstr ""
+
+#. Multiplayer continuation and pre-join checks; supplementary translation.
+msgid "Compatibility check failed. Check the host address and connection."
+msgstr ""

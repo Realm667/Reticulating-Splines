@@ -28,6 +28,8 @@ var visibility_hint: Label
 var forwarding_hint: Label
 var advanced: CheckButton
 var network: HBoxContainer
+var compatibility: MultiplayerCompatibility
+var compatibility_status: Label
 
 func _init(owner: ApplicationMultiplayer) -> void:
 	owner_ref = weakref(owner)
@@ -178,6 +180,17 @@ func setup(body: VBoxContainer) -> void:
 	coop.port.max_value = 65535
 	coop.port.value = 20000
 	ports.add_child(coop.port)
+	compatibility = MultiplayerCompatibility.new()
+	coop.panel.add_child(compatibility)
+	compatibility_status = ApplicationMultiplayer.label(coop.lobby, "Compatibility is checked before joining. Visual packs may differ.")
+	compatibility_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	compatibility.completed.connect(coop.compatibility_checked)
+	coop.panel.visibility_changed.connect(func() -> void:
+		if not coop.panel.visible:
+			coop.cancel_compatibility())
+	coop.address.text_changed.connect(func(_value: String) -> void: coop.cancel_compatibility())
+	coop.port.value_changed.connect(func(_value: float) -> void: coop.cancel_compatibility())
+	coop.player.text_changed.connect(func(_value: String) -> void: coop.cancel_compatibility())
 	password_label = ApplicationMultiplayer.label(coop.lobby, "")
 	coop.join_code = LineEdit.new()
 	coop.join_code.secret = true
@@ -187,7 +200,9 @@ func setup(body: VBoxContainer) -> void:
 			coop.start_host()
 		else:
 			coop.start_join())
-	role.item_selected.connect(func(_index: int) -> void: update())
+	role.item_selected.connect(func(_index: int) -> void:
+		coop.cancel_compatibility()
+		update())
 	coop.mode_picker.item_selected.connect(func(_index: int) -> void: update())
 	coop.city_picker.item_selected.connect(func(_index: int) -> void:
 		coop.selected_city_path = ""
@@ -206,6 +221,7 @@ func update() -> void:
 		goal_years.set_item_text(index, tr("%d game years") % [1, 3, 5, 10][index])
 	var hosting := role.selected == 0
 	host_fields.visible = hosting
+	compatibility_status.visible = not hosting
 	visibility_hint.text = "Visible on the local network only." if lan_only.button_pressed else "Game name, host name, player count and host IP address are publicly listed online."
 	auto_forward.visible = not lan_only.button_pressed
 	forwarding_hint.visible = not lan_only.button_pressed

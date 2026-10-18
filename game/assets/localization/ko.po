@@ -8326,3 +8326,55 @@ msgstr "치트 활성화: %s"
 #: src/application/classic_cheats.gd
 msgid "Cheat unavailable: %s"
 msgstr "사용할 수 없는 치트: %s"
+
+#. Multiplayer continuation and pre-join checks; supplementary translation.
+msgid "Continue saved game"
+msgstr "저장한 게임 계속하기"
+
+#. Multiplayer continuation and pre-join checks; supplementary translation.
+msgid "Continue game"
+msgstr "게임 계속하기"
+
+#. Multiplayer continuation and pre-join checks; supplementary translation.
+msgid "Land owned"
+msgstr "소유 토지"
+
+#. Multiplayer continuation and pre-join checks; supplementary translation.
+msgid "Continue without absent players"
+msgstr "부재 중인 플레이어 없이 계속하기"
+
+#. Multiplayer continuation and pre-join checks; supplementary translation.
+msgid "Absent players keep their cities and can reconnect later."
+msgstr "부재 중인 플레이어는 도시를 유지하며 나중에 다시 접속할 수 있습니다."
+
+#. Multiplayer continuation and pre-join checks; supplementary translation.
+msgid "Confirm continuation without absent players. Their seats remain reserved."
+msgstr "부재 중인 플레이어 없이 계속할지 확인하세요. 해당 플레이어의 자리는 예약 상태로 유지됩니다."
+
+#. Multiplayer continuation and pre-join checks; supplementary translation.
+msgid "Saved cities and progress are preserved. Connected players confirm Ready; the host continues."
+msgstr "저장된 도시와 진행 상황이 유지됩니다. 접속한 플레이어가 준비를 누르면 호스트가 계속합니다."
+
+#. Multiplayer continuation and pre-join checks; supplementary translation.
+msgid "This profile has no saved player seat. Choose the player whose city you will take over as host."
+msgstr "이 프로필에는 저장된 플레이어 자리가 없습니다. 호스트로서 인계받을 도시의 플레이어를 선택하세요."
+
+#. Multiplayer continuation and pre-join checks; supplementary translation.
+msgid "Choose a saved player seat before hosting."
+msgstr "게임을 호스팅하기 전에 저장된 플레이어 자리를 선택하세요."
+
+#. Multiplayer continuation and pre-join checks; supplementary translation.
+msgid "Compatibility is checked before joining. Visual packs may differ."
+msgstr "참가 전에 호환성을 확인합니다. 그래픽 팩은 달라도 됩니다."
+
+#. Multiplayer continuation and pre-join checks; supplementary translation.
+msgid "Checking compatibility…"
+msgstr "호환성 확인 중…"
+
+#. Multiplayer continuation and pre-join checks; supplementary translation.
+msgid "Compatible"
+msgstr "호환됨"
+
+#. Multiplayer continuation and pre-join checks; supplementary translation.
+msgid "Compatibility check failed. Check the host address and connection."
+msgstr "호환성을 확인하지 못했습니다. 호스트 주소와 연결을 확인하세요."

@@ -101,6 +101,18 @@ func run() -> void:
 	app.coop.windows.chat_preview.text = "Player: New message"
 	await settle()
 	check(app.coop.windows.chat.get_rect().end.y <= app.map_view.camera_view_rect.end.y, "collapsed message preview also fits")
+	app.coop.windows.scoreboard.hide()
+	var continuation := app.coop.windows.start_lobby
+	var state := app.coop.session.make_state()
+	state.lobby = {"waiting": true, "continuing": true, "can_start": false, "generation": 99}
+	for locale in AppLocalization.codes():
+		AppLocalization.select(locale)
+		continuation.update(state)
+		await settle()
+		check_fit(continuation.window, continuation.body, "continuation " + locale)
+		var item := continuation.roster.get_root().get_first_child()
+		check(item.get_button_count(3) == 0 and item.get_button_count(4) == 0, "continuation cannot edit starting grants")
+	continuation.window.hide()
 	app.coop.leave()
 	app.queue_free()
 	await process_frame

@@ -81,7 +81,8 @@ func run() -> void:
 	root.add_child(new_host)
 	new_host.host(checkpoint.document, 0, "", "New host", "shared", false)
 	var own_identity := new_host.credential
-	check(new_host.restore_embedded(checkpoint.document).is_empty(), "another host resumes complete save")
+	check(not new_host.restore_embedded(checkpoint.document).is_empty(), "unknown host must explicitly select takeover")
+	check(new_host.restore_embedded(checkpoint.document, record.host).is_empty(), "another host resumes complete save")
 	check(new_host.credential == own_identity and new_host.members[new_host.token].name == "New host", "hosting does not impersonate old host credential")
 	check(new_host.world.municipalities[actor].city.funds() == funds, "other saved treasury retained")
 	check(new_host.seats.credentials.get(replacement.credential.sha256_text()) == actor, "successor can reconnect after host change")
