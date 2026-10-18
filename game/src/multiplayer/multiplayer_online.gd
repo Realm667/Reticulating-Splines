@@ -123,7 +123,7 @@ func announce() -> void:
 	deleting = closing
 	var info := description() if not deleting else {}
 	signature = JSON.stringify(info)
-	request_body = "" if deleting else JSON.stringify({"version": 2, "game": info})
+	request_body = "" if deleting else JSON.stringify({"version": 2, "game": info, "cities": activity_cities()})
 	last_update = Time.get_ticks_msec()
 	next_update = last_update + 60000
 	connect_request()
@@ -204,6 +204,23 @@ func description() -> Dictionary:
 	var data := session.lan_description()
 	data.erase("session")
 	return data
+
+
+func activity_cities() -> Array[Dictionary]:
+	# The saved session and municipal seats survive rehosting and renaming.
+	# Hash with a domain prefix; never publish session IDs or player credentials.
+	var result: Array[Dictionary] = []
+	if session == null or not session.hosting or session.waiting_for_start or session.world == null or session.session_id.is_empty():
+		return result
+	var prefix := "rs-activity-city-v1:" + session.session_id + ":"
+	if session.world is SharedWorld:
+		prefix += str(session.starts.round_number) + ":"
+		for actor: String in session.world.actors:
+			var municipality: CoopWorld = session.world.municipalities[actor]
+			result.append({"id": (prefix + actor).sha256_text(), "population": municipality.city.population()})
+	else:
+		result.append({"id": (prefix + "coop").sha256_text(), "population": session.world.city.population()})
+	return result
 
 
 func request_check() -> void:

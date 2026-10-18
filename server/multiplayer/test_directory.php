@@ -44,4 +44,46 @@ check(call_directory('DELETE', '/games/'.$id)[0] === 200 && call_directory('GET'
 for ($i=0; $i<13; $i++) $response = call_directory('PUT', '/games/'.str_pad(dechex($i),32,'0',STR_PAD_LEFT), $body);
 check($response[0] === 429, 'create limit');
 check(call_directory('GET','/games',[],null,$now+86400)[1]['totals']['today'] === 0, 'UTC day roll');
+// Fresh isolated database; never add synthetic cities to production totals.
+$db = directory_db(':memory:');
+$city_id = str_repeat('d', 64);
+$body = ['version'=>2, 'game'=>$game, 'cities'=>[['id'=>$city_id, 'population'=>12345]]];
+check(call_directory('PUT', '/games/'.$id, $body)[0] === 200, 'city report in lobby accepted');
+check(call_directory('GET', '/activity')[1]['totals']['cities_founded'] === 0, 'lobby does not found cities');
+$body['game']['phase'] = 'running';
+check(call_directory('PUT', '/games/'.$id, $body)[0] === 200, 'running city accepted');
+$body['cities'][0]['population'] = 15000;
+check(call_directory('PUT', '/games/'.$id, $body)[0] === 200, 'population growth accepted');
+$totals = call_directory('GET', '/activity')[1]['totals'];
+check($totals['cities_founded'] === 1 && $totals['total_population'] === 15000, 'heartbeat replaces population, not cumulative');
+check(!str_contains(json_encode(call_directory('GET', '/games')[1]), $city_id), 'city identifiers never published');
+call_directory('DELETE', '/games/'.$id);
+$new_id = str_repeat('e', 32);
+$body['game']['city'] = 'Renamed city';
+$body['cities'][0]['population'] = 9000;
+check(call_directory('PUT', '/games/'.$new_id, $body, 'Bearer '.str_repeat('f',64), $now+200, '1.1.1.1')[0] === 200, 'resumed city with new host and room accepted');
+$totals = call_directory('GET', '/activity', [], null, $now+200)[1]['totals'];
+check($totals['cities_founded'] === 1 && $totals['total_population'] === 9000 && $totals['sessions'] === 2, 'rename/rehost and population decline remain one city');
+check(call_directory('GET', '/activity', [], null, $now+400)[1]['totals']['total_population'] === 9000, 'city totals survive listing expiry');
+$body['cities'][] = ['id'=>str_repeat('1',64), 'population'=>2000];
+check(call_directory('PUT', '/games/'.$id, $body, null, $now+400)[0] === 200, 'multiple municipalities');
+$totals = call_directory('GET', '/activity', [], null, $now+400)[1]['totals'];
+check($totals['cities_founded'] === 2 && $totals['total_population'] === 11000, 'distinct cities summed even with identical names');
+$legacy = $body; unset($legacy['cities']);
+check(call_directory('PUT', '/games/'.$id, $legacy, null, $now+400)[0] === 200, 'old clients compatible');
+check(call_directory('GET', '/activity', [], null, $now+400)[1]['totals']['total_population'] === 11000, 'missing data never resets totals');
+foreach ([-1, 1.5, '200', 8589934591, null] as $invalid) {
+    $bad = $body; $bad['cities'][0]['population'] = $invalid;
+    check(call_directory('PUT', '/games/'.$id, $bad, null, $now+400)[0] === 400, 'invalid population rejected');
+}
+$bad = $body; $bad['cities'][] = $bad['cities'][0];
+check(call_directory('PUT', '/games/'.$id, $bad, null, $now+400)[0] === 400, 'duplicate city rejected');
+$bad = $body; $bad['cities'][0]['id'] = 'not-an-id';
+check(call_directory('PUT', '/games/'.$id, $bad, null, $now+400)[0] === 400, 'invalid city ID rejected');
+$bad = $body; $bad['cities'] = array_fill(0, 9, $body['cities'][0]);
+check(call_directory('PUT', '/games/'.$id, $bad, null, $now+400)[0] === 400, 'oversized report rejected');
+check(call_directory('PUT', '/games/'.$id, $body, 'Bearer '.str_repeat('0',64), $now+400)[0] === 403, 'unauthorized city updates rejected');
+$body['cities'][0]['population'] = 0;
+check(call_directory('PUT', '/games/'.$id, $body, null, $now+400)[0] === 200, 'zero population accepted');
+check(call_directory('GET', '/activity', [], null, $now+400)[1]['totals']['total_population'] === 2000, 'zero replaces earlier population');
 echo "$checks directory checks passed\n";

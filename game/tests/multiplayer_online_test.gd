@@ -14,6 +14,8 @@ func check(value: bool, message: String) -> void:
 
 
 func run() -> void:
+	check_activity_cities()
+	await check_activity_restore()
 	var valid := {"id": "a".repeat(32), "city": "City", "host": "Host", "build": CoopSession.NETWORK_BUILD,
 		"mode": "coop", "phase": "lobby", "players": 2, "locked": true, "open": true, "address": "203.0.113.5", "port": 20000}
 	check(not MultiplayerLanBrowser.validated_game(valid).is_empty(), "public metadata accepted")
@@ -82,6 +84,75 @@ func run() -> void:
 	await check_admission()
 	print("Multiplayer online tests: %d failure(s)" % failures)
 	quit(1 if failures else 0)
+
+
+func check_activity_cities() -> void:
+	var host := CoopSession.new()
+	var online := MultiplayerOnline.new()
+	online.session = host
+	host.hosting = true
+	host.waiting_for_start = false
+	host.session_id = "a".repeat(32)
+	host.world = CoopWorld.new()
+	check(host.world.open(Sc2xDocument.create_empty(128, "Activity fixture").document), "activity fixture opens")
+	host.world.city.document.set_misc_u32(Sc2MiscLayout.NORMAL_POPULATION, 1234)
+	var first := online.activity_cities()
+	check(first.size() == 1 and first[0].population == 1234, "co-op reports one city")
+	online.room = "different-public-room"
+	online.secret = "different-public-token"
+	host.world.city.document.set_misc_u32(Sc2MiscLayout.NORMAL_POPULATION, 800)
+	check(online.activity_cities()[0].id == first[0].id and online.activity_cities()[0].population == 800, "rehosting preserves ID and reports decline")
+	host.waiting_for_start = true
+	check(online.activity_cities().is_empty(), "lobby omits city reports")
+	host.waiting_for_start = false
+	host.hosting = false
+	check(online.activity_cities().is_empty(), "joining clients never report cities")
+	host.hosting = true
+	for shared: SharedWorld in [SharedWorld.new(), RegionWorld.new()]:
+		check(shared.open(Sc2xDocument.create_empty(128, "Municipal fixture").document), "municipal fixture opens")
+		check(shared.add_player("b".repeat(48)).is_empty(), "first municipality")
+		check(shared.add_player("c".repeat(48)).is_empty(), "second municipality")
+		host.world = shared
+		shared.municipalities[shared.actors[0]].city.document.set_misc_u32(Sc2MiscLayout.NORMAL_POPULATION, 100)
+		shared.municipalities[shared.actors[1]].city.document.set_misc_u32(Sc2MiscLayout.NORMAL_POPULATION, 200)
+		var cities := online.activity_cities()
+		check(cities.size() == 2 and cities[0].id != cities[1].id and cities[0].population + cities[1].population == 300, "each municipality has distinct ID and own population")
+		var saved_starts := host.starts.saved()
+		host.starts = MultiplayerStarts.new()
+		host.starts.restore(saved_starts)
+		check(online.activity_cities() == cities, "restored round preserves city identities")
+		host.starts.round_number += 1
+		check(online.activity_cities()[0].id != cities[0].id, "new rematch counts newly founded municipalities")
+	online.free()
+	host.free()
+
+
+func check_activity_restore() -> void:
+	var host := CoopSession.new()
+	var restored := CoopSession.new()
+	root.add_child(host)
+	root.add_child(restored)
+	host.set_process(false)
+	restored.set_process(false)
+	check(host.host(Sc2xDocument.create_empty(128, "Saved activity city").document, 0, "", "Host", "shared", false).is_empty(), "saved activity host starts")
+	host.waiting_for_start = false
+	var online := MultiplayerOnline.new()
+	online.session = host
+	var before := online.activity_cities()
+	var checkpoint := host.city_checkpoint()
+	check(checkpoint.error.is_empty(), "activity city checkpoint saves")
+	var selected_seat := host.token
+	host.stop()
+	check(restored.host(checkpoint.document, 0, "", "Restored host", "shared", false).is_empty(), "restored activity host starts")
+	check(restored.restore_embedded(checkpoint.document, selected_seat).is_empty(), "activity checkpoint restores")
+	restored.waiting_for_start = false
+	online.session = restored
+	check(online.activity_cities() == before, "actual save and restore retains city ID and population")
+	restored.stop()
+	online.free()
+	host.queue_free()
+	restored.queue_free()
+	await process_frame
 
 
 func check_admission() -> void:

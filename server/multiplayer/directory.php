@@ -10,6 +10,9 @@ function directory_db(string $path): PDO {
     $db->exec('CREATE TABLE IF NOT EXISTS limits (key TEXT PRIMARY KEY, count INTEGER NOT NULL, expires INTEGER NOT NULL)');
     $db->exec('CREATE TABLE IF NOT EXISTS totals (id INTEGER PRIMARY KEY CHECK(id=1), since TEXT, sessions INTEGER, day TEXT, today INTEGER, peak_players INTEGER)');
     $db->exec("INSERT OR IGNORE INTO totals VALUES (1, date('now'), 0, date('now'), 0, 0)");
+    $db->exec('CREATE TABLE IF NOT EXISTS activity_cities (id TEXT PRIMARY KEY, population INTEGER NOT NULL, updated INTEGER NOT NULL)');
+    $db->exec('CREATE TABLE IF NOT EXISTS activity_city_epoch (id INTEGER PRIMARY KEY CHECK(id=1), since TEXT NOT NULL)');
+    $db->exec("INSERT OR IGNORE INTO activity_city_epoch VALUES (1, date('now'))");
     return $db;
 }
 
@@ -44,6 +47,19 @@ function directory_limit(PDO $db, string $key, int $max, int $now): bool {
     return (int)directory_query($db, 'SELECT count FROM limits WHERE key=?', [$key])->fetchColumn() <= $max;
 }
 
+// Optional for older clients. Private opaque IDs are never returned in listings.
+function directory_city_report(mixed $value): ?array {
+    if (!is_array($value) || !array_is_list($value) || count($value) > 8) return null;
+    $cities = [];
+    foreach ($value as $city) {
+        if (!is_array($city) || !is_string($city['id'] ?? null) || !preg_match('/^[a-f0-9]{64}$/D', $city['id'])
+            || !is_int($city['population'] ?? null) || $city['population'] < 0 || $city['population'] > 8589934590
+            || isset($cities[$city['id']])) return null;
+        $cities[$city['id']] = $city['population'];
+    }
+    return $cities;
+}
+
 function directory_handle(PDO $db, string $method, string $path, mixed $body, string $auth, string $ip, int $now): array {
     $db->exec('BEGIN IMMEDIATE');
     try {
@@ -74,6 +90,9 @@ function directory_dispatch(PDO $db, string $method, string $path, mixed $body, 
         if ($totals['day'] !== $day) $totals['today'] = 0;
         unset($totals['day']);
         $totals['available'] = true;
+        $cities = $db->query('SELECT count(*) AS cities_founded, coalesce(sum(population), 0) AS total_population FROM activity_cities')->fetch(PDO::FETCH_ASSOC);
+        $totals = array_merge($totals, $cities);
+        $totals['cities_since'] = $db->query('SELECT since FROM activity_city_epoch WHERE id=1')->fetchColumn();
         return [200, ['version' => 2, 'games' => $games, 'totals' => $totals]];
     }
     if (!preg_match('#^/games/([a-f0-9]{32})$#D', $path, $match) || !in_array($method, ['PUT', 'DELETE'], true)) return [404, ['error' => 'not_found']];
@@ -90,6 +109,8 @@ function directory_dispatch(PDO $db, string $method, string $path, mixed $body, 
     if (!is_array($body)) return [400, ['error' => 'invalid_game']];
     $info = directory_metadata($body['game'] ?? null);
     if (!$info || ($body['version'] ?? null) !== 2) return [400, ['error' => 'invalid_game']];
+    $cities = array_key_exists('cities', $body) ? directory_city_report($body['cities']) : [];
+    if ($cities === null) return [400, ['error' => 'invalid_cities']];
     if (!directory_limit($db, 'update:' . $ip, 120, $now)) return [429, ['error' => 'rate_limit']];
     if (!$row) {
         if (!directory_limit($db, 'create:' . $ip, 12, $now)) return [429, ['error' => 'rate_limit']];
@@ -101,6 +122,11 @@ function directory_dispatch(PDO $db, string $method, string $path, mixed $body, 
         $started = 1;
     }
     directory_query($db, 'INSERT INTO games VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET ip=excluded.ip, info=excluded.info, expires=excluded.expires, started=excluded.started', [$id, $hash, $ip, json_encode($info, JSON_THROW_ON_ERROR), $now + DIRECTORY_LEASE, $started]);
+    if ($info['phase'] === 'running') {
+        foreach ($cities as $city_id => $population) {
+            directory_query($db, 'INSERT INTO activity_cities VALUES (?, ?, ?) ON CONFLICT(id) DO UPDATE SET population=excluded.population, updated=excluded.updated', [$city_id, $population, $now]);
+        }
+    }
     $players = 0;
     foreach ($db->query('SELECT info FROM games') as $game) $players += json_decode($game['info'], true)['players'];
     directory_query($db, 'UPDATE totals SET peak_players=max(peak_players, ?) WHERE id=1', [$players]);

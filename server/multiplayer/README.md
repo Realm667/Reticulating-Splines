@@ -55,6 +55,24 @@ after lease expiry counts as a new session. These are not verified unique people
 or completed matches. Preserve existing totals during migration; never silently
 reset a damaged database.
 
+New clients also send optional top-level `cities: [{id, population}, ...]` in
+PUT requests (at most eight). Each opaque 64-hex ID derives from the saved
+multiplayer session; competitive municipalities also use their saved seat and
+round. Co-op counts one city, shared/region modes count each municipality.
+Rehosting, renaming and restoring the same multiplayer save keep these IDs;
+rematches found new cities. Starting separate games from an ordinary imported
+city is a new founding; no content fingerprinting of private save files is used.
+
+Only running games update the persistent activity_cities table. Reports replace
+each city's population, including declines and zero, in the existing transaction.
+The last accepted report wins, even when two hosts run copies of the same save.
+Missing reports, lobby status, expired rooms and unlisting do not erase cities.
+Public totals expose cities_founded, total_population and cities_since; IDs and
+per-city reports are never exposed by GET endpoints. These host-reported values
+are community counters, not verified census data. Existing clients still work
+but contribute no city/population data. No offline/single-player tracking or
+historical backfill is performed. Old session totals remain unchanged.
+
 ## Widget
 
 Existing embeds keep the same script URL:

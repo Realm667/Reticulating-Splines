@@ -51,17 +51,21 @@
             const summary = document.createElement('dl');
             summary.setAttribute('aria-label', 'Totals');
             for (const [key, label] of [['sessions', 'Sessions started'],
-              ['today', 'Today (UTC)'], ['peak_players', 'Peak players']]) {
+              ['today', 'Sessions today (UTC)'], ['peak_players', 'Peak concurrent players'],
+              ['cities_founded', 'Cities founded'], ['total_population', 'Total population']]) {
               const cell = document.createElement('div');
               const title = document.createElement('dt');
               title.textContent = label;
               const value = document.createElement('dd');
-              value.textContent = totals[key].toLocaleString('en');
+              value.textContent = Number.isSafeInteger(totals[key]) && totals[key] >= 0
+                ? totals[key].toLocaleString('en') : '—';
               cell.append(title, value);
               summary.append(cell);
             }
             const note = document.createElement('small');
-            note.textContent = `Since ${totals.since} · Online sessions only; resumed games count as new sessions.`;
+            note.textContent = `Sessions since ${totals.since} · Online play only; resumed games count as new sessions. `
+              + (totals.cities_since ? `City reporting since ${totals.cities_since}. ` : '')
+              + 'Cities are counted once; population reflects each city’s latest reported total. Requires a game version with city reporting; earlier and offline play are not included.';
             section.append(summary, note);
           }
         } catch {

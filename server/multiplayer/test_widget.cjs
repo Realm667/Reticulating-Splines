@@ -63,10 +63,19 @@ test('aggregate statistics render separately and tolerate older servers', async 
   const f = await fixture({totals: {available: true, sessions: 1234, today: 7, peak_players: 16, since: '2026-10-17'}});
   const section = f.container.shadowRoot.children[1];
   const summary = section.children[3];
-  assert.deepEqual(summary.children.map(cell => cell.children[1].textContent), ['1,234', '7', '16']);
+  assert.deepEqual(summary.children.map(cell => cell.children[1].textContent), ['1,234', '7', '16', '—', '—']);
   assert.match(section.children[4].textContent, /2026-10-17/);
   const legacy = await fixture();
   assert.equal(legacy.container.shadowRoot.children[1].children.length, 3);
   const unavailable = await fixture({totals: {available: false}});
   assert.equal(unavailable.container.shadowRoot.children[1].children.length, 3);
+});
+
+test('city totals render including genuine zero and reject invalid values', async () => {
+  const totals = {available: true, sessions: 12, today: 1, peak_players: 4,
+    cities_founded: 0, total_population: 1234567, cities_since: '2026-10-18', since: '2026-10-17'};
+  const f = await fixture({totals});
+  assert.deepEqual(f.container.shadowRoot.children[1].children[3].children.map(c => c.children[1].textContent), ['12', '1', '4', '0', '1,234,567']);
+  const bad = await fixture({totals: {...totals, cities_founded: -1, total_population: '<img>'}});
+  assert.deepEqual(bad.container.shadowRoot.children[1].children[3].children.slice(3).map(c => c.children[1].textContent), ['—', '—']);
 });
