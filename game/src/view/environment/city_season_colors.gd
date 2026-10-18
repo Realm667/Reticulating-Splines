@@ -1,6 +1,6 @@
 class_name CitySeasonColors
 extends RefCounted
-## Red/green mark natural artwork; blue 1 marks warnings, 0.25 water sides.
+## Red/green mark natural artwork; blue 1 marks warnings, 0.25 water sides, 0.6 embedded water.
 
 @warning_ignore_start("integer_division")
 
@@ -22,11 +22,12 @@ static func prepare(archive: Sc2SpriteArchive, palette: Sc2Palette) -> void:
 		var power_warning := offset == 386
 		var water_side := offset == 284
 		var land_side := offset == 269
+		var waterfront := offset == BuildingTileIds.MARINA or (offset >= BuildingTileIds.SUSPENSION_BRIDGE_1 and offset <= BuildingTileIds.POWER_BRIDGE) or offset in [BuildingTileIds.HIGHWAY_BRIDGE, BuildingTileIds.REINFORCED_HIGHWAY_BRIDGE]
 		# Channel and connecting-water sprites contain land banks too. Their
-		# soil mask also carries terrain variation; water pixels stay unmarked.
+		# soil mask carries terrain variation; water gets its own material marker.
 		var ground := (offset >= 256 and offset <= 268) or (offset >= 270 and offset <= 283) or (offset >= 285 and offset <= 290)
 		var zone_ground := offset >= 291 and offset <= 299
-		if not trees and not ground and not zone_ground and not power_warning and not water_side and not land_side:
+		if not trees and not ground and not zone_ground and not power_warning and not water_side and not land_side and not waterfront:
 			continue
 		var entry := archive.find_sprite(id)
 		var pixels := entry.decode_indices().pixels
@@ -35,12 +36,18 @@ static func prepare(archive: Sc2SpriteArchive, palette: Sc2Palette) -> void:
 			if pixels[at] < 0:
 				continue
 			var color := palette.color(pixels[at])
+			var blue_water := color.b > 0.15 and color.b > color.r * 1.2 and color.b > color.g * 1.08
 			var foliage := trees and color.g > color.r * 0.9 and color.g > color.b * 1.25
 			var soil := (ground and _is_soil(color)) or (zone_ground and soil_indices.has(pixels[at]))
 			if land_side:
 				image.set_pixel(at % entry.width, at / entry.width, Color(0, 0, 0.4, 1))
 			elif water_side:
 				image.set_pixel(at % entry.width, at / entry.width, Color(0, 0, 0.25, 1))
+			elif (ground and blue_water) or (waterfront and (pixels[at] == 95 or (pixels[at] >= 200 and pixels[at] <= 211))):
+				# Terrain water also needs grading below the separate surface pass,
+				# including its exposed edge texels. On objects, use only the authored
+				# water ramp and waterfront IDs, never a global blue-color replacement.
+				image.set_pixel(at % entry.width, at / entry.width, Color(0, 0, 0.6, 1))
 			elif foliage or soil or power_warning:
 				image.set_pixel(at % entry.width, at / entry.width, Color(float(foliage), float(soil), float(power_warning), 1))
 		if not image.is_invisible():

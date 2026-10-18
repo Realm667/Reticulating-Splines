@@ -40,7 +40,7 @@ func _run() -> void:
 						if color.a == 0.0:
 							assert(mark.a == 0.0, "Shore mask escaped the artwork")
 						elif color.b > color.r and color.b > color.g:
-							assert(mark.a == 0.0, "Water was marked as land")
+							assert(mark.r == 0.0 and mark.g == 0.0 and (mark.a == 0.0 or (mark.b > 0.55 and mark.b < 0.65)), "Water was marked as land")
 							water.append(origin + Vector2i(x, y))
 						elif offset >= 285 and color.r > color.b + 0.1:
 							assert(mark.g == 1.0 and mark.a == 1.0, "A brown bank pixel was omitted")

@@ -8,23 +8,37 @@ float water_field(vec2 world) {
 	vec2 blend = smoothstep(vec2(0.0), vec2(1.0), fract(world / 96.0));
 	float a = mix(water_hash(cell), water_hash(cell + vec2(1.0, 0.0)), blend.x);
 	float b = mix(water_hash(cell + vec2(0.0, 1.0)), water_hash(cell + vec2(1.0)), blend.x);
-	// Five quiet color bands preserve the original pixel-art vocabulary.
-	return floor(mix(a, b, blend.y) * 5.0) / 4.0 - 0.5;
+	// Continuous low-frequency variation avoids visible polygon-like color bands.
+	return mix(a, b, blend.y) - 0.5;
 }
 
-// Long, crossing swells in map space. Their normal, highlights and reflection
-// displacement share one phase so the surface reads as a moving body of water.
+// Value noise and its analytic gradient. Three drifting scales avoid the
+// repeating lattice of a few interfering sine waves, without extra texture taps.
+vec3 water_noise(vec2 p) {
+	vec2 cell = floor(p);
+	vec2 f = fract(p);
+	vec2 u = f * f * (3.0 - 2.0 * f);
+	vec2 du = 6.0 * f * (1.0 - f);
+	float a = water_hash(cell);
+	float b = water_hash(cell + vec2(1.0, 0.0));
+	float c = water_hash(cell + vec2(0.0, 1.0));
+	float d = water_hash(cell + vec2(1.0));
+	return vec3(mix(mix(a, b, u.x), mix(c, d, u.x), u.y),
+	 du.x * mix(b - a, d - c, u.y), du.y * mix(c - a, d - b, u.x));
+}
+
+// Lighting and reflected silhouettes use the same moving surface gradient.
 vec3 water_swell(vec2 world, float clock, float rain, float coast, float axis) {
 	vec2 plane = vec2(world.x, world.y * 2.0);
-	float phase = dot(plane, vec2(0.042, 0.075)) - clock * 0.78;
-	float crossing = dot(plane, vec2(-0.085, 0.038)) - clock * 1.03;
-	float envelope = 0.7 + 0.3 * sin(dot(plane, vec2(0.012, -0.017)) + clock * 0.16);
-	float exposure = mix(0.25, 1.0, smoothstep(3.0, 28.0, coast)) * (axis > 0.0 ? 0.35 : 1.0);
-	float normal = cos(phase) * 0.72 + cos(crossing) * 0.28;
-	float crest = smoothstep(0.78, 0.98, sin(phase + 0.28 * sin(crossing)));
-	float segments = smoothstep(-0.15, 0.65, sin(dot(plane, vec2(0.09, -0.04)) + clock * 0.19));
-	float light = normal * 0.065 + crest * segments * 0.10;
-	return vec3(light, normal * 1.25, crest * segments) * envelope * exposure * (1.0 + rain * 0.45);
+	vec3 broad = water_noise(plane * 0.025 + vec2(clock * 0.055, clock * 0.035));
+	vec3 small = water_noise(plane * 0.067 + vec2(-clock * 0.095, clock * 0.065) + vec2(19.3, 7.1));
+	vec3 fine = water_noise(plane * 0.16 + vec2(clock * 0.13, -clock * 0.10) + vec2(3.7, 31.8));
+	float detail = 1.0 - smoothstep(2.0, 8.0, length(fwidth(world)));
+	vec2 normal = broad.yz * 0.48 + small.yz * 0.34 + fine.yz * 0.18 * detail;
+	float exposure = mix(0.55, 1.0, smoothstep(2.0, 24.0, coast)) * (axis > 0.0 ? 0.65 : 1.0);
+	float glint = smoothstep(0.25, 0.65, dot(normal, vec2(0.6, -0.8))) * detail;
+	float light = dot(normal, vec2(-0.6, 0.8)) * 0.12 + glint * 0.055;
+	return vec3(light, normal.x * 3.2, glint) * exposure * (1.0 + rain * 0.35);
 }
 
 float water_surf(vec2 world, float coast, float clock, float rain) {
@@ -36,19 +50,6 @@ float water_surf(vec2 world, float coast, float clock, float rain) {
 	float wash = (1.0 - smoothstep(1.5, 5.0, coast)) * (0.5 + 0.5 * sin(phase - 0.6));
 	float band = smoothstep(0.3, 2.0, coast) * (1.0 - smoothstep(12.0, 24.0, coast));
 	return (crest * broken * band * 0.24 + wash * 0.055) * (1.0 + rain * 0.25);
-}
-
-float water_light_lines(vec2 world, float axis, float clock, float rain) {
-	vec2 direction = axis == 2.0 ? vec2(-0.8944, 0.4472) : vec2(0.8944, 0.4472);
-	if (axis == 0.0) { direction = vec2(1.0, 0.0); }
-	float along = dot(world, direction);
-	float across = dot(world, vec2(-direction.y, direction.x));
-	float speed = axis > 0.0 ? 1.2 : 0.25;
-	float phase = fract((across + sin(along * 0.035 - clock * speed) * 1.4) / 17.0);
-	float line = step(0.91, phase);
-	float segments = step(0.60, sin(along * 0.13 + sin(across * 0.07)));
-	float envelope = 0.55 + 0.45 * sin(clock * 0.45 + along * 0.025);
-	return line * segments * envelope * (axis > 0.0 ? 0.045 : 0.022) * (1.0 + rain * 0.4);
 }
 
 // The same optical transmission is used on top and falling water. Falling

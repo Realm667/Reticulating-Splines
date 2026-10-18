@@ -8,6 +8,7 @@ func _initialize() -> void:
 func _run() -> void:
 	var pack := FixtureGraphics.pack()
 	_check_waterfall_cap(pack)
+	await _check_embedded_water(pack)
 	await _check_curtain_transparency()
 	var profiles := CityVisualLuts.new()
 	profiles.reload("")
@@ -212,5 +213,75 @@ func _check_curtain_transparency() -> void:
 	await RenderingServer.frame_post_draw
 	var graded_top := viewport.get_texture().get_image().get_pixel(8, 4)
 	assert(_distance(graded_side, graded_top) < 0.01, "Depth grading/transmission differs between falling and horizontal water")
+	viewport.queue_free()
+	await process_frame
+
+
+func _check_embedded_water(pack: GraphicsPack) -> void:
+	# Semantic coverage is restricted to waterfront sprites and their water ramp.
+	for view in 3:
+		var archive := pack.large_sprites if view == 2 else pack.small_medium_sprites
+		CitySeasonColors.prepare(archive, pack.palette)
+		for offset: int in [BuildingTileIds.MARINA, BuildingTileIds.SUSPENSION_BRIDGE_3, BuildingTileIds.ROAD_BRIDGE]:
+			var id := view * 500 + offset
+			var entry := archive.find_sprite(id)
+			var indices := entry.decode_indices().pixels
+			var mask: Image = archive.visual_seasons[id]
+			var water_count := 0
+			for at in indices.size():
+				var water := indices[at] == 95 or (indices[at] >= 200 and indices[at] <= 211)
+				var mark := mask.get_pixel(at % entry.width, at / entry.width)
+				assert((mark.b > 0.55) == water, "Waterfront mask recolored non-water artwork")
+				water_count += int(water)
+			assert(water_count > 0)
+	var viewport := SubViewport.new()
+	viewport.size = Vector2i(8, 4)
+	viewport.transparent_bg = true
+	viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	root.add_child(viewport)
+	var palette := Image.create(256, 1, false, Image.FORMAT_RGBA8)
+	palette.fill(pack.palette.color(95))
+	var pixels := Image.create(8, 4, false, Image.FORMAT_RGBA8)
+	pixels.fill(Color(95.0 / 255.0, 0, 0, 1))
+	var mask := Image.create(8, 4, false, Image.FORMAT_RGBA8)
+	mask.fill_rect(Rect2i(0, 0, 3, 4), Color(0, 0, 0.6, 1))
+	# Invalid/outside wall coordinates exercise the formerly blue border texels.
+	mask.fill_rect(Rect2i(3, 0, 2, 4), Color(0, 0, 0.25, 1))
+	var sprite := Sprite2D.new()
+	sprite.centered = false
+	sprite.texture = ImageTexture.create_from_image(pixels)
+	var material := ShaderMaterial.new()
+	material.shader = load("res://src/view/map/palette_cycle.gdshader")
+	material.set_shader_parameter("palette_lookup_all", true)
+	material.set_shader_parameter("animated_palette", ImageTexture.create_from_image(palette))
+	material.set_shader_parameter("environment_has_seasons", true)
+	material.set_shader_parameter("environment_season_mask", ImageTexture.create_from_image(mask))
+	material.set_shader_parameter("environment_enabled", true)
+	material.set_shader_parameter("water_enabled", true)
+	material.set_shader_parameter("water_depth_enabled", true)
+	material.set_shader_parameter("water_season_strength", 1.0)
+	sprite.material = material
+	viewport.add_child(sprite)
+	await process_frame
+	for hdr in [false, true]:
+		viewport.use_hdr_2d = hdr
+		material.set_shader_parameter("environment_lut_linear_canvas", hdr)
+		material.set_shader_parameter("water_enabled", false)
+		await RenderingServer.frame_post_draw
+		var unchanged := viewport.get_texture().get_image().get_pixel(6, 1)
+		material.set_shader_parameter("water_enabled", true)
+		var colors: Array[Color] = []
+		for season in 4:
+			var weights := Vector4.ZERO
+			weights[season] = 1.0
+			material.set_shader_parameter("environment_seasons", weights)
+			await RenderingServer.frame_post_draw
+			var result := viewport.get_texture().get_image()
+			var water := result.get_pixel(1, 1)
+			colors.append(water)
+			assert(water.b < 0.8 and water.g > water.r, "Embedded water retained saturated blue or became a power warning")
+			assert(water.is_equal_approx(result.get_pixel(3, 1)), "Water-side boundary leaked ungraded palette blue")
+			assert(result.get_pixel(6, 1).is_equal_approx(unchanged), "Unmarked blue artwork was recolored")
+		assert(colors[0] != colors[1] and colors[1] != colors[2] and colors[2] != colors[3], "Waterfront seasons are static")
 	viewport.queue_free()
 	await process_frame

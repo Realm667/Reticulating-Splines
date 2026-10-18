@@ -230,6 +230,15 @@ impl Builder {
             let footprint = self.sprites.footprint_draw(&draw);
             let water = horizontal_water(&footprint, &self.city, self.config);
             let axis = water.map_or(0, |i| water_axis(&self.city, i));
+            let waterfront = cell(&self.city, draw.depth).filter(|&i| {
+                let b = self.city.buildings[i];
+                water.is_none()
+                    && !draw.shadow
+                    && !draw.moving
+                    && draw.sprite == self.config.base() + i32::from(b)
+                    && (bridge(b) || b == crate::ids::building_tile_ids::MARINA)
+                    && self.city.wet(i)
+            });
             let clipped = draw.rect.clip(bounds);
             for y in clipped.y..clipped.y + clipped.h {
                 for x in clipped.x..clipped.x + clipped.w {
@@ -239,8 +248,14 @@ impl Builder {
                     }
                     let dst = (((y - bounds.y) * bounds.w + x - bounds.x) * 4) as usize;
                     out.surface[dst..dst + 4].fill(0);
-                    if let Some(i) = water.filter(|_| water_indices[sprite.rgba[src] as usize] != 0) {
-                        let cap = receiving_level(&footprint, &self.city, self.config, i, x, y);
+                    let embedded = waterfront
+                        .filter(|_| (140..=166).contains(&auxiliary(seasons, &draw, sprite, x - draw.rect.x, y - draw.rect.y)[2]));
+                    if let Some(i) = water.filter(|_| water_indices[sprite.rgba[src] as usize] != 0).or(embedded) {
+                        let cap = if embedded.is_some() {
+                            Some(self.city.water(i))
+                        } else {
+                            receiving_level(&footprint, &self.city, self.config, i, x, y)
+                        };
                         let side = cap.is_none() && footprint.sprite - self.config.base() == 284;
                         let Some(level) = cap.or_else(|| side.then(|| self.city.water(i) + 1)) else {
                             continue;
@@ -270,7 +285,7 @@ impl Builder {
         // altitude and the largest sprite in this configured artwork.
         let reach = self.sprite_limit.1 + 62 * self.config.step() + self.sprite_limit.0;
         let sources = self.collect(Rect::new(bounds.x, bounds.y - reach, bounds.w, bounds.h + 2 * reach))?;
-        seabed_pixels(&mut out.seabed, bounds, &sources, &self.city, self.config);
+        seabed_pixels(&mut out.seabed, bounds, &self.city, self.config);
         self.shore_distances(&mut out.seabed, bounds, water_indices)?;
         for (dst, bed) in side_beds {
             if out.surface[dst + 2] & 128 != 0 && out.surface[dst + 3] != 0 {
@@ -357,6 +372,12 @@ impl Builder {
                         if !visible {
                             continue;
                         }
+                        // Reuse the existing mask lookup only for visible reflected
+                        // pixels. Embedded water is a receiver, not an upright object.
+                        let season = auxiliary(seasons, draw, sprite, sx, sy);
+                        if (140..=166).contains(&season[2]) {
+                            continue;
+                        }
                         let distance = (y - plane).max(0);
                         let fade = (255 - distance * self.config.divisor()).max(0) as u8;
                         owners[pixel] = draw.order;
@@ -366,7 +387,7 @@ impl Builder {
                         } else {
                             auxiliary(emission, draw, sprite, sx, sy)
                         });
-                        out.seasons[dst..dst + 4].copy_from_slice(&auxiliary(seasons, draw, sprite, sx, sy));
+                        out.seasons[dst..dst + 4].copy_from_slice(&season);
                     }
                 }
             }
@@ -517,7 +538,7 @@ fn coast_distance_field(distance: &mut [u16], width: i32, height: i32, divisor: 
     }
 }
 
-fn seabed_pixels(out: &mut [u8], bounds: Rect, sources: &[Draw], city: &City, config: Config) {
+fn seabed_pixels(out: &mut [u8], bounds: Rect, city: &City, config: Config) {
     let data = crate::data_view::DataCity {
         edge: city.edge as usize,
         visible: city.visible,
@@ -525,33 +546,66 @@ fn seabed_pixels(out: &mut [u8], bounds: Rect, sources: &[Draw], city: &City, co
         terrain: &city.terrain,
         flags: &city.flags,
     };
-    let mut painted = std::collections::HashSet::new();
-    for draw in sources {
-        let Some(i) = cell(city, draw.depth) else { continue };
-        if !painted.insert(i) {
-            continue;
+    // The seabed exists beneath every cell, even when a multi-tile building
+    // suppresses that cell's individual sprite draw. Bound the grid search by
+    // the region and the legal altitude range; never traverse the whole city.
+    let mut low = [city.edge; 2];
+    let mut high = [0; 2];
+    for sx in [bounds.x, bounds.x + bounds.w] {
+        for sy in [bounds.y, bounds.y + bounds.h] {
+            for altitude in [0, 32] {
+                let across = (sx - config.side() - (city.edge + 1) * config.hw()) as f32 / config.hw() as f32;
+                let along = (sy - config.top() + altitude * config.step()) as f32 / config.hh() as f32;
+                for (axis, coordinate) in [(0, (along + across) * 0.5), (1, (along - across) * 0.5)] {
+                    low[axis] = low[axis].min((coordinate.floor() as i32 - 1).clamp(0, city.edge));
+                    high[axis] = high[axis].max((coordinate.ceil() as i32 + 1).clamp(0, city.edge));
+                }
+            }
         }
-        let (x, y) = (i / city.edge as usize, i % city.edge as usize);
-        // Reuse the height-map's actual seabed polygons, including deep-water
-        // slopes and stream banks. These are not random textures or flat tiles.
-        let polygon = data.surface_polygon(x, y, true);
-        let flat = [
-            512.0 + (x + y) as f32 * 8.0,
-            520.0 + (x + y) as f32 * 8.0,
-            528.0 + (x + y) as f32 * 8.0,
-            520.0 + (x + y) as f32 * 8.0,
-        ];
-        let heights: [f32; 4] = std::array::from_fn(|n| (flat[n] - polygon[n][1]) / 12.0);
-        let points = polygon.map(|p| [p[0] / config.divisor() as f32, p[1] / config.divisor() as f32]);
-        for tri in [[0, 1, 2], [0, 2, 3]] {
-            let vertices = tri.map(|n| points[n]);
-            let z = tri.map(|n| heights[n]);
-            seabed_triangle(out, bounds, vertices, z);
+    }
+    // Keep the ordinary back-to-front order for overlapping raised polygons.
+    for diagonal in low[0] + low[1]..high[0] + high[1] {
+        for tx in low[0]..high[0] {
+            let ty = diagonal - tx;
+            if ty < low[1] || ty >= high[1] {
+                continue;
+            }
+            let (x, y) = (tx as usize, ty as usize);
+            if !data.visible(x * city.edge as usize + y, true) {
+                continue;
+            }
+            // Reuse the height-map's actual seabed polygons, including deep-water
+            // slopes and stream banks. These are not random textures or flat tiles.
+            let polygon = data.surface_polygon(x, y, true);
+            let flat = [
+                512.0 + (x + y) as f32 * 8.0,
+                520.0 + (x + y) as f32 * 8.0,
+                528.0 + (x + y) as f32 * 8.0,
+                520.0 + (x + y) as f32 * 8.0,
+            ];
+            let heights: [f32; 4] = std::array::from_fn(|n| (flat[n] - polygon[n][1]) / 12.0);
+            let points = polygon.map(|p| [p[0] / config.divisor() as f32, p[1] / config.divisor() as f32]);
+            for tri in [[0, 1, 2], [0, 2, 3]] {
+                let vertices = tri.map(|n| points[n]);
+                let z = tri.map(|n| heights[n]);
+                let grid = [[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]];
+                let shade = seabed_shade(tri.map(|n| grid[n]), z);
+                seabed_triangle(out, bounds, vertices, z, shade);
+            }
         }
     }
 }
 
-fn seabed_triangle(out: &mut [u8], bounds: Rect, p: [[f32; 2]; 3], h: [f32; 3]) {
+fn seabed_shade(p: [[f32; 2]; 3], h: [f32; 3]) -> u8 {
+    let a = [p[1][0] - p[0][0], p[1][1] - p[0][1]];
+    let b = [p[2][0] - p[0][0], p[2][1] - p[0][1]];
+    let area = a[0] * b[1] - a[1] * b[0];
+    let dx = ((h[1] - h[0]) * b[1] - (h[2] - h[0]) * a[1]) / area;
+    let dy = (a[0] * (h[2] - h[0]) - b[0] * (h[1] - h[0])) / area;
+    (190.0 + (dy - dx) * 24.0 / (1.0 + dx * dx + dy * dy).sqrt()).clamp(120.0, 230.0) as u8
+}
+
+fn seabed_triangle(out: &mut [u8], bounds: Rect, p: [[f32; 2]; 3], h: [f32; 3], shade: u8) {
     let cross = |a: [f32; 2], b: [f32; 2], c: [f32; 2]| (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]);
     let area = cross(p[0], p[1], p[2]);
     if area.abs() < 0.001 {
@@ -561,8 +615,6 @@ fn seabed_triangle(out: &mut [u8], bounds: Rect, p: [[f32; 2]; 3], h: [f32; 3]) 
     let right = p.iter().map(|v| v[0].ceil() as i32).max().unwrap().min(bounds.x + bounds.w);
     let top = p.iter().map(|v| v[1].floor() as i32).min().unwrap().max(bounds.y);
     let bottom = p.iter().map(|v| v[1].ceil() as i32).max().unwrap().min(bounds.y + bounds.h);
-    // Constant face shading makes the actual slopes readable through water.
-    let shade = (190.0 + (h[0] - h[1]) * 35.0 + (h[0] - h[2]) * 22.0).clamp(60.0, 255.0) as u8;
     for y in top..bottom {
         for x in left..right {
             let q = [x as f32 + 0.5, y as f32 + 0.5];
@@ -584,6 +636,40 @@ fn seabed_triangle(out: &mut [u8], bounds: Rect, p: [[f32; 2]; 3], h: [f32; 3]) 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn seabed_covers_cells_without_sprite_draws() {
+        for view in 0..3 {
+            let mut builder = fixture(view);
+            builder.city.altitude.fill(0);
+            builder.city.terrain.fill(0x10);
+            builder.city.buildings.fill(112);
+            builder.city.zones.fill(0); // no individually anchored building draws
+            let c = builder.config;
+            let bounds = Rect::new(c.side(), c.top(), 160 / c.divisor(), 160 / c.divisor());
+            let mut bed = vec![0; (bounds.w * bounds.h * 4) as usize];
+            seabed_pixels(&mut bed, bounds, &builder.city, c);
+            for x in 0..builder.city.edge {
+                for y in 0..builder.city.edge {
+                    let px = (builder.city.edge + x - y + 1) * c.hw();
+                    let py = (x + y + 1) * c.hh();
+                    assert_eq!(bed[((py * bounds.w + px) * 4 + 3) as usize], 255);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn coplanar_seabed_has_no_diagonal_lighting_seam() {
+        let grid = [[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]];
+        for (dx, dy) in [(0.0, 0.0), (1.0, 0.0), (0.0, -1.0), (1.0, 1.0)] {
+            let h = grid.map(|p| 4.0 + p[0] * dx + p[1] * dy);
+            let shade = seabed_shade([grid[0], grid[1], grid[2]], [h[0], h[1], h[2]]);
+            for tri in [[0, 2, 3], [0, 1, 3], [1, 2, 3], [2, 1, 0]] {
+                assert_eq!(shade, seabed_shade(tri.map(|n| grid[n]), tri.map(|n| h[n])));
+            }
+        }
+    }
 
     #[test]
     fn padded_buildings_keep_reflection_and_light_contact_axes() {
@@ -843,6 +929,7 @@ mod tests {
             Rect::new(0, 0, 16, 16),
             [[0.0, 0.0], [16.0, 0.0], [0.0, 16.0]],
             [1.0, 3.0, 1.0],
+            190,
         );
         let near = output[(2 * 16 + 1) * 4];
         let raised = output[(2 * 16 + 10) * 4];

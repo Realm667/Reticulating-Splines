@@ -67,8 +67,15 @@ func _initialize() -> void:
 		assert(count > 0, "Missing reflected source")
 		var second: Dictionary = builder.water_reflections(data.bounds, data.indices, {}, {})
 		assert(first.reflected.get_data() == second.reflected.get_data(), "Cosmetic geometry is not deterministic")
+		# A material mask excludes painted water from an otherwise identical
+		# reflected sprite. Ordinary blue surfaces remain reflected without it.
+		var mask := (data.artwork[view * 500 + 112] as Image).duplicate()
+		mask.fill(Color(0, 0, 0.6, 1))
+		var masked: Dictionary = builder.water_reflections(data.bounds, data.indices, {}, {view * 500 + 112: mask})
+		assert((masked.reflected as Image).is_invisible(), "Embedded water reflected as an upright blue wedge")
 		data.indices.fill(0)
 		assert(builder.water_reflections(data.bounds, data.indices, {}, {}).is_empty())
+	_check_embedded_receivers()
 	var palette := Sc2Palette.new()
 	for index in 256:
 		palette.colors.append(Color.BLUE if index == 96 else Color(0.5, 0.5, 0.5))
@@ -231,3 +238,24 @@ func _check_ship_wakes() -> void:
 				source.flip_x()
 				lights.flip_x()
 			assert(source.get_data() == before, "Reflection extraction changed source artwork")
+
+
+func _check_embedded_receivers() -> void:
+	var data := fixture()
+	var bridge := BuildingTileIds.ROAD_BRIDGE
+	data.request.buildings[0] = bridge
+	data.request.terrain[0] = TerrainTileIds.SURFACE_WATER_FIRST
+	data.request.flags[0] = Sc2TileFlags.WATER
+	data.artwork[1000 + bridge] = data.artwork[1112]
+	var builder := NativeCityRegionBuilder.new()
+	assert(str(builder.configure(data.request, data.artwork, Color.BLACK.to_rgba32())).is_empty())
+	var plain: Dictionary = builder.water_reflections(data.bounds, data.indices, {}, {})
+	var mask := (data.artwork[1112] as Image).duplicate()
+	mask.fill(Color(0, 0, 0.6, 1))
+	var marked: Dictionary = builder.water_reflections(data.bounds, data.indices, {}, {1000 + bridge: mask})
+	var added := 0
+	for y in (marked.surface as Image).get_height():
+		for x in (marked.surface as Image).get_width():
+			if (marked.surface as Image).get_pixel(x, y).a > (plain.surface as Image).get_pixel(x, y).a:
+				added += 1
+	assert(added > 0, "Water painted into piers must receive the common depth, wave and season pass")

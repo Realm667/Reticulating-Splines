@@ -112,7 +112,7 @@ void fragment() {
 		if (!water_geometry_preview && (water_reflections_enabled || water_topography || water_waves_enabled)) {
 			base = water_body(base, bottom, depth, world, water_topography);
 			if (water_waves_enabled) {
-				base *= 1.0 + swell.x + water_light_lines(world, round(surface.b * 255.0), water_clock, water_rain);
+				base *= 1.0 + swell.x;
 				vec3 foam = environment_lut_linear_canvas ? lut_linear(vec3(0.66, 0.79, 0.83)) : vec3(0.66, 0.79, 0.83);
 				float detail = 1.0 - smoothstep(2.0, 8.0, length(fwidth(world)));
 				base = mix(base, foam, water_surf(world, coast, water_clock, water_rain) * detail);
@@ -128,8 +128,8 @@ void fragment() {
 			// contact pixels still, particularly where bridge piers meet the water.
 			float contact = max(original_reflection.a, max(texture(TEXTURE, UV + vec2(1.0, 0.0) / dimensions).a,
 				texture(TEXTURE, UV - vec2(1.0, 0.0) / dimensions).a));
-			float detached = smoothstep(0.025, 0.20, 1.0 - contact);
-			float offset = water_geometry_preview || !water_waves_enabled ? 0.0 : clamp(swell.y * detached, -1.5, 1.5) / water_divisor;
+			float detached = smoothstep(0.004, 0.08, 1.0 - contact);
+			float offset = water_geometry_preview || !water_waves_enabled ? 0.0 : clamp(swell.y * detached, -2.0, 2.0) / water_divisor;
 			vec2 first_uv = UV + vec2(floor(offset), 0.0) / dimensions;
 			vec2 second_uv = first_uv + vec2(1.0, 0.0) / dimensions;
 			vec4 reflected = mix(mirror_sample(texture(TEXTURE, first_uv), first_uv, surface.r, cloud_shade),

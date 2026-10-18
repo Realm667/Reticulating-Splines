@@ -30,7 +30,10 @@ vec3 map_edge_color(vec3 original, float mask) {
 	vec3 profile = texture(map_edge_profile, vec2(along / map_edge_size, right_face ? 0.25 : 0.75)).rgb;
 	float land = round(profile.r * 31.0);
 	float level = round(profile.g * 31.0);
-	if (altitude < -0.15 || altitude > 31.1 || along < 0.0 || along > map_edge_size) { return original; }
+	// Sprite silhouettes extend a fraction of a logical pixel beyond the
+	// ideal wall. Grade those boundary texels too, instead of leaking blue.
+	vec3 fallback = water ? water_depth_color(original, 0.0, 0.0) : original;
+	if (altitude < -0.15 || altitude > 31.1 || along < 0.0 || along > map_edge_size) { return fallback; }
 	vec3 color;
 	if (soil) {
 		float surface = edge_surface(along, right_face ? 0.25 : 0.75);
@@ -51,7 +54,7 @@ vec3 map_edge_color(vec3 original, float mask) {
 		color *= 0.96 + grain * 0.08;
 	} else {
 		// Do not treat inland waterfalls as the exposed map boundary.
-		if (profile.b < 0.5 || altitude < land - 0.15 || altitude > level + 0.15) { return original; }
+		if (profile.b < 0.5 || altitude < land - 0.15 || altitude > level + 0.15) { return fallback; }
 		float depth = max(level - altitude, 0.0);
 		vec3 graded = water_depth_color(original, depth, 3.0);
 		color = environment_lut_linear_canvas ? lut_srgb(graded) : graded;

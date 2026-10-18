@@ -268,6 +268,22 @@ func _check_surface_details(viewport: SubViewport, sprite: Sprite2D, material: S
 		assert(result.get_pixel(8, 8).r > result.get_pixel(9, 8).r,
 			"Ripple displaced a reflection's water contact")
 
+	# Away from the fixed contact, changing time must move the silhouette,
+	# not merely brighten an otherwise static reflection.
+	for x in 32:
+		mirror.fill_rect(Rect2i(x, 0, 1, 32), Color((40.0 if x % 2 == 0 else 96.0) / 255.0, 0, 0, 0.7))
+	(sprite.texture as ImageTexture).update(mirror)
+	var differences: Array[float] = []
+	for time in [0.0, 3.0, 9.0]:
+		material.set_shader_parameter("water_clock", time)
+		material.set_shader_parameter("water_reflections_enabled", true)
+		await RenderingServer.frame_post_draw
+		var reflected := viewport.get_texture().get_image().get_pixel(8, 8).r
+		material.set_shader_parameter("water_reflections_enabled", false)
+		await RenderingServer.frame_post_draw
+		differences.append(reflected - viewport.get_texture().get_image().get_pixel(8, 8).r)
+	assert(absf(differences.max() - differences.min()) > 0.005, "Reflection silhouette does not ripple")
+
 
 func _check_waves(viewport: SubViewport, sprite: Sprite2D, material: ShaderMaterial, mirror: Image, bottom: Image) -> void:
 	mirror.fill(Color.TRANSPARENT)

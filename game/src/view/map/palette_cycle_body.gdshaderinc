@@ -36,8 +36,10 @@ const float TERRAIN_INDEXED_TAG = 54.0;
 const float PARCEL_BORDER_TAG = 55.0;
 const float TREE_SHADOW_TAG = 56.0;
 uniform bool tree_shadows_enabled = true;
-varying flat float tree_shadow;
-varying flat float parcel_border;
+// Share one varying location so Vulkan stays below the 32-location limit.
+varying flat vec2 ground_effects;
+#define tree_shadow ground_effects.x
+#define parcel_border ground_effects.y
 const vec3 GRID_COLOR = vec3(0.22, 0.19, 0.10);
 const float GRID_OPACITY = 0.36;
 const float GRID_WIDTH = 0.45;
@@ -281,9 +283,9 @@ void fragment() {
 		);
 		int palette_index = int(round(encoded_index * 255.0));
 		// The auxiliary mask follows sprite silhouettes and painter occlusion.
-		// Its blue channel is reserved for power warnings, not terrain colors.
+		// Blue carries water/edge material markers and the power-warning tag.
 		vec4 natural_mask = environment_has_seasons ? environment_season_sample(UV) : vec4(0.0);
-		bool indexed_power_warning = natural_mask.b > 0.5;
+		bool indexed_power_warning = natural_mask.b > 0.9;
 		bool animated_index =
 			(palette_index >= 171 && palette_index <= 198) ||
 			(palette_index >= 200 && palette_index <= 219) ||
@@ -361,7 +363,9 @@ void fragment() {
 		} else if (dark_underground) {
 			COLOR.rgb = texture(dark_underground_palette, vec2((float(palette_index) + 0.5) / 256.0, 0.5)).rgb;
 		} else if (fullbright_draw < 0.5 && !indexed_power_warning) {
-			if (water_enabled && natural_mask.b > 0.2 && natural_mask.b < 0.3) {
+			COLOR.rgb = map_edge_color(COLOR.rgb, natural_mask.b);
+			if (water_enabled && ((natural_mask.b > 0.2 && natural_mask.b < 0.3) || (natural_mask.b > 0.55 && natural_mask.b < 0.65))) {
+				if (natural_mask.b > 0.55) { COLOR.rgb = water_depth_color(COLOR.rgb, 0.0, 0.0); }
 				// Water sides keep their original shading/animation and painter
 				// occlusion. Only share the surface tint; no flat waves or mirrors.
 				COLOR.rgb = water_season_color(COLOR.rgb);
@@ -369,7 +373,6 @@ void fragment() {
 					COLOR.rgb = water_body_tone(COLOR.rgb, 0.0, 0.0);
 				}
 			}
-			COLOR.rgb = map_edge_color(COLOR.rgb, natural_mask.b);
 			COLOR.rgb = environment_color_emission(cloud_shadow(COLOR.rgb, cloud_ground_grid), UV, building_emission);
 		}
 	} else if (artwork_kind > 2.5 && artwork_kind < 3.5) {
@@ -445,13 +448,14 @@ void fragment() {
 			// Authored waterfall frames use ANIMATION_TAG, not WATERFALL_TAG.
 			// Identify water from the shared mask so every frame gets grading.
 			vec4 natural_mask = environment_has_seasons ? environment_season_sample(center * pixel_size) : vec4(0.0);
-			if (water_enabled && natural_mask.b > 0.2 && natural_mask.b < 0.3) {
+			COLOR.rgb = map_edge_color(COLOR.rgb, natural_mask.b);
+			if (water_enabled && ((natural_mask.b > 0.2 && natural_mask.b < 0.3) || (natural_mask.b > 0.55 && natural_mask.b < 0.65))) {
+				if (natural_mask.b > 0.55) { COLOR.rgb = water_depth_color(COLOR.rgb, 0.0, 0.0); }
 				COLOR.rgb = water_season_color(COLOR.rgb);
 				if (water_reflections_enabled || water_topography || water_waves_enabled) {
 					COLOR.rgb = water_body_tone(COLOR.rgb, 0.0, 0.0);
 				}
 			}
-			COLOR.rgb = map_edge_color(COLOR.rgb, natural_mask.b);
 			COLOR.rgb = environment_color_emission(cloud_shadow(COLOR.rgb, cloud_ground_grid), center * pixel_size, building_emission);
 		}
 
