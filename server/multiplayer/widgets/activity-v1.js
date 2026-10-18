@@ -99,7 +99,8 @@
           if (data.version !== 2 || !Array.isArray(data.games)) throw Error('version');
           const games = data.games.slice(0, 256);
           const heading = document.createElement('h3');
-          heading.textContent = `${games.reduce((n,g) => n + g.players, 0)} players online · ${games.length} games`;
+          const players = games.reduce((n,g) => n + g.players, 0);
+          heading.textContent = `${players} ${players === 1 ? 'player' : 'players'} online · ${games.length} ${games.length === 1 ? 'game' : 'games'}`;
           const list = document.createElement('ul');
           for (const game of games.slice(0, 10)) {
             const item = document.createElement('li');
@@ -115,7 +116,7 @@
             key => Number.isSafeInteger(totals[key]) && totals[key] >= 0)) {
           const summary = document.createElement('table');
             summary.setAttribute('aria-label', 'Totals');
-            for (const [key, label] of [['sessions', 'Sessions started'],
+            for (const [key, label] of [['sessions', 'Total sessions started'],
               ['today', 'Sessions today (UTC)'], ['peak_players', 'Peak concurrent players'],
               ['cities_founded', 'Cities founded'], ['total_population', 'Total population']]) {
               const cell = document.createElement('tr');
