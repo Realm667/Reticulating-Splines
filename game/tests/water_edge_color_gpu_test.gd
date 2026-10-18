@@ -196,5 +196,21 @@ func _check_curtain_transparency() -> void:
 	material.set_shader_parameter("water_topography", false)
 	await RenderingServer.frame_post_draw
 	assert(viewport.get_texture().get_image().get_pixel(8, 4).a == 0.0, "Underwater-terrain toggle left a falling-bank overlay")
+	# A depth-colored surface must not leave the curtain in the original blue.
+	# Feed the same geometry to both paths, with no flat waves/reflections.
+	var palette := Image.create(256, 1, false, Image.FORMAT_RGBA8)
+	palette.fill(Color(0.05, 0.1, 0.95))
+	material.set_shader_parameter("animated_palette", ImageTexture.create_from_image(palette))
+	material.set_shader_parameter("water_depth_enabled", true)
+	material.set_shader_parameter("water_reflections_enabled", false)
+	material.set_shader_parameter("water_topography", true)
+	await RenderingServer.frame_post_draw
+	var graded_side := viewport.get_texture().get_image().get_pixel(8, 4)
+	assert(graded_side.a == 1.0 and graded_side.b < graded_side.g * 1.6, "Depth-colored curtain retained saturated original blue")
+	surface.fill(Color(5.0 / 255.0, 200.0 / 255.0, 0, 1))
+	material.set_shader_parameter("water_surface", ImageTexture.create_from_image(surface))
+	await RenderingServer.frame_post_draw
+	var graded_top := viewport.get_texture().get_image().get_pixel(8, 4)
+	assert(_distance(graded_side, graded_top) < 0.01, "Depth grading/transmission differs between falling and horizontal water")
 	viewport.queue_free()
 	await process_frame

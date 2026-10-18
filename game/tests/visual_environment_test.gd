@@ -40,6 +40,14 @@ func _run() -> void:
 	assert(is_equal_approx(smooth.get_pixel(15, 0).a, smooth.get_pixel(15, 1).a), "Layers must join across the front corner")
 	assert(smooth.get_pixel(9, 0).a < smooth.get_pixel(11, 0).a, "Strata follow diagonal terrain")
 	assert(smooth.get_pixel(10, 0).a < smooth.get_pixel(10, 0).r, "Slope-to-flat joins are rounded")
+	# Rotation rewrites the actual tile arrays. The profile must follow the
+	# displayed front perimeter, not rotate those arrays for a second time.
+	for turn in 4:
+		assert(CityRotationCommand.apply(other, true).ok)
+		profile.texture_for(other)
+		for along in 16:
+			assert(roundi(profile.image.get_pixel(along, 0).r * 31.0) == other.land_altitude(15, along), "Wrong right edge after turn %d" % turn)
+			assert(roundi(profile.image.get_pixel(along, 1).r * 31.0) == other.land_altitude(along, 15), "Wrong left edge after turn %d" % turn)
 	assert(elevation.range_for(other) != Vector2(2, 18), "Changing cities must refresh elevation shading")
 	var defaults := VisualEnhancementOptions.normalize({})
 	assert(defaults.day_seconds == 600.0)

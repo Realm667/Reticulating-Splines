@@ -22,6 +22,10 @@ func _check_scale_rules() -> void:
 	assert(AppUiScale.normalize(1) == 1.0)
 	assert(AppUiScale.normalize(9.0) == 2.0)
 	assert(AppUiScale.normalize("invalid") == AppUiScale.DEFAULT)
+	for window in [Vector2i(1280, 800), Vector2i(1920, 1080), Vector2i(2560, 1600)]:
+		for choice in AppUiScale.OPTIONS:
+			assert(AppUiScale.screen_scale(choice, window, base, true) == choice,
+				"Classic UI scale must not vary with window dimensions")
 
 	# window, choice, screen pixels for each interface pixel
 	for case in [

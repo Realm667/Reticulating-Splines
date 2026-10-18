@@ -296,7 +296,7 @@ func apply_settings() -> void:
 		preferences.ui_theme = str(values.ui_theme)
 		preferences.translucent_menus = bool(values.translucent_menus)
 		AppUiTheme.select(preferences.ui_theme, preferences.translucent_menus)
-		_apply_theme_filter()
+		apply_ui_scale()
 
 	var ui_scale := AppUiScale.normalize(values.ui_scale)
 
@@ -530,7 +530,7 @@ func load_app_settings() -> void:
 
 
 func _apply_theme_filter() -> void:
-	app.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST if AppUiTheme.is_classic() else CanvasItem.TEXTURE_FILTER_LINEAR
+	app.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST if AppUiScale.classic_pixel_filter() else CanvasItem.TEXTURE_FILTER_LINEAR
 
 
 # scale the interface and keep pixel artwork on whole screen pixels. call this
@@ -541,11 +541,12 @@ func apply_ui_scale() -> void:
 	if window == null:
 		return
 
-	var screen_pixels := AppUiScale.apply(window, preferences.ui_scale)
+	var screen_pixels := AppUiScale.apply(window, preferences.ui_scale, AppUiTheme.is_classic())
 	# headless windows have no real pixels, so keep one artwork pixel for each
 	# interface pixel there
 	var headless := DisplayServer.get_name() == "headless"
 	ScreenPixels.set_scale(0.0 if headless else screen_pixels)
+	_apply_theme_filter()
 	# keep the frosted glass blur in proportion to the interface
 	RenderingServer.global_shader_parameter_set("ui_scale_factor", AppUiScale.relative)
 

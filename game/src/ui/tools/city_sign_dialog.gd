@@ -7,7 +7,7 @@ var text_input: LineEdit
 func _ready() -> void:
 	hide()
 	theme = AppUiTheme.current()
-	text_input = $TextInput
+	text_input = $Fields/TextInput
 
 
 func show_text(value: String) -> void:

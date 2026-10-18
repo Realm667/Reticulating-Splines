@@ -7,6 +7,8 @@ func _initialize() -> void:
 
 
 func _run() -> void:
+	# Headless defaults to a 64px window, which cannot host literal classic 2x UI.
+	root.size = Vector2i(1280, 800)
 	var path := "user://theme-test-%d.cfg" % OS.get_process_id()
 	assert(AppSettingsStore.load_values(path).ui_theme == "dark")
 	assert(not AppSettingsStore.load_values(path).dark_underground)

@@ -20,8 +20,8 @@ func texture_for(city: CityState) -> Texture2D:
 	for face in 2:
 		for along in edge:
 			var tile := Vector2i(edge - 1, along) if face == 0 else Vector2i(along, edge - 1)
-			for _turn in posmod(city.compass_rotation(), 4):
-				tile = Vector2i(edge - 1 - tile.y, tile.x)
+			# CityRotation already rotates the tile arrays into view coordinates.
+			# Applying compass rotation here a second time samples a different edge.
 			image.set_pixel(along, face, Color(city.land_altitude(tile.x, tile.y) / 31.0,
 				city.water_altitude(tile.x, tile.y) / 31.0, float(city.is_water(tile.x, tile.y)), 1))
 	# Smooth along the whole visible perimeter, including the shared front corner.

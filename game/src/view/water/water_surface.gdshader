@@ -85,11 +85,21 @@ void fragment() {
 	float level = round(surface.r * 255.0) - 1.0;
 	float depth = max(level - bottom.r * 31.0, 0.0);
 	if (surface.b > 0.5) {
-		// Native bit 7 marks a falling face. Its existing artwork continues
-		// animating below this translucent bank; never add flat reflections.
-		if (!water_topography || !water_has_seabed || water_geometry_preview) { discard; }
-		vec4 substrate = water_substrate(bottom, depth, world);
-		COLOR = vec4(environment_ambient(cloud_shadow(substrate.rgb, cloud_ground_grid)), substrate.a);
+		if (water_depth_enabled && water_has_seabed && !water_geometry_preview) {
+			// Depth colors replace the surface palette. Do the same for falling
+			// faces before transmission, otherwise their original blue leaks through.
+			// Keep animated palette detail but never project flat waves/reflections.
+			vec3 base = water_depth_color(surface_color(UV, surface), depth, 0.0);
+			base = water_season_color(base);
+			base = water_body(base, bottom, depth, world, water_topography);
+			COLOR = vec4(environment_ambient(cloud_shadow(base, cloud_ground_grid)), 1.0);
+		} else {
+			// Native bit 7 marks a falling face. Its existing artwork continues
+			// animating below this translucent bank; never add flat reflections.
+			if (!water_topography || !water_has_seabed || water_geometry_preview) { discard; }
+			vec4 substrate = water_substrate(bottom, depth, world);
+			COLOR = vec4(environment_ambient(cloud_shadow(substrate.rgb, cloud_ground_grid)), substrate.a);
+		}
 	} else {
 		float coast = water_has_seabed ? bottom.b * 255.0 / 8.0 : 32.0;
 		vec3 swell = water_waves_enabled && !water_geometry_preview

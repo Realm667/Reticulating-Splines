@@ -1,11 +1,8 @@
 class_name AppUiScale
 extends RefCounted
-# The project stretch mode fits the base layout size to the window. The UI
-# scale is relative to that fit: 2.0 is the fitted size, and smaller values
-# show more of the layout. The interface never uses fewer than one screen pixel
-# for each interface pixel, and the layout never becomes smaller than the base
-# size. The city map uses its own whole-pixel scale, which follows the fit and
-# not the UI scale.
+# Modern themes scale relative to the window fit. Classic themes use literal
+# 1x, 1.5x or 2x screen pixels to preserve their authored bitmap fonts. The city
+# map keeps its independent whole-pixel scale based on the window fit.
 
 const OPTIONS: Array[float] = [1.0, 1.5, 2.0]
 const DEFAULT := 2.0
@@ -39,7 +36,11 @@ static func fit_scale(window_size: Vector2i, base_size: Vector2i) -> float:
 	return minf(float(window_size.x) / base_size.x, float(window_size.y) / base_size.y)
 
 
-static func screen_scale(ui_scale: float, window_size: Vector2i, base_size: Vector2i) -> float:
+static func screen_scale(ui_scale: float, window_size: Vector2i, base_size: Vector2i, classic := false) -> float:
+	# Classic glyphs are authored on an 11-pixel grid. A 2x choice must be
+	# exactly two screen pixels per source pixel, independent of window fit.
+	if classic:
+		return normalize(ui_scale)
 	var fit := fit_scale(window_size, base_size)
 
 	return maxf(fit * normalize(ui_scale) / DEFAULT, minf(fit, 1.0))
@@ -59,11 +60,11 @@ static func map_pixels(fit: float) -> int:
 # interface pixel. the window uses one exact scale on both axes. the project
 # stretch mode rounds the layout to whole interface pixels, which gives the two
 # axes slightly different scales and breaks whole-pixel artwork
-static func apply(window: Window, ui_scale: float) -> float:
+static func apply(window: Window, ui_scale: float, classic := false) -> float:
 	var window_size := window.size
 	var base_size := window.content_scale_size
-	var screen := screen_scale(ui_scale, window_size, base_size)
-	relative = content_scale_factor(ui_scale, window_size, base_size)
+	var screen := screen_scale(ui_scale, window_size, base_size, classic)
+	relative = screen / fit_scale(window_size, base_size)
 
 	if window.content_scale_mode != Window.CONTENT_SCALE_MODE_DISABLED:
 		window.content_scale_mode = Window.CONTENT_SCALE_MODE_DISABLED
@@ -78,3 +79,7 @@ static func apply(window: Window, ui_scale: float) -> float:
 	window.canvas_item_default_texture_filter = Viewport.DEFAULT_CANVAS_ITEM_TEXTURE_FILTER_NEAREST
 
 	return screen
+
+
+static func classic_pixel_filter() -> bool:
+	return AppUiTheme.is_classic() and is_equal_approx(ScreenPixels.scale, roundf(ScreenPixels.scale))

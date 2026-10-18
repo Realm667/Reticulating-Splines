@@ -6,14 +6,11 @@
 visible = true
 title = "Enter sign text..."
 dialog_text = "An empty value removes the sign."
-min_size = Vector2i(440, 170)
+min_size = Vector2i(440, 110)
 script = ExtResource("1_sign")
 
-[node name="TextInput" type="LineEdit" parent="."]
-anchors_preset = 10
-anchor_right = 1.0
-offset_left = 14.0
-offset_top = 58.0
-offset_right = -14.0
-offset_bottom = 92.0
+[node name="Fields" type="VBoxContainer" parent="."]
+
+[node name="TextInput" type="LineEdit" parent="Fields"]
+layout_mode = 2
 max_length = 23

@@ -10,6 +10,7 @@ var _palette_scroll: ScrollContainer
 var _rci_parent: Node
 var _rci_index := 0
 var _classic_layout := false
+var _bar_scrolls: Array[ScrollContainer] = []
 
 
 func _enter_tree() -> void:
@@ -38,6 +39,8 @@ func _ready() -> void:
 	$Page.visibility_changed.connect(_sync_camera_rect)
 	_sync_camera_rect.call_deferred()
 	_sync_classic_layout.call_deferred()
+	menu_bar.resized.connect(_fit_palette.call_deferred)
+	status_bar.resized.connect(_fit_palette.call_deferred)
 
 
 func set_editor_controls_visible(value: bool) -> void:
@@ -57,6 +60,24 @@ func _sync_classic_layout() -> void:
 	if not is_node_ready() or _classic_layout == AppUiTheme.is_classic():
 		return
 	_classic_layout = AppUiTheme.is_classic()
+	# Exact 2x classic pixels can make the fixed-width metric bars wider than
+	# the window. Scroll those bars rather than expanding/centering the whole
+	# workspace outside the viewport (which made File and map edges disappear).
+	if _bar_scrolls.is_empty():
+		for index in 2:
+			var scroll := ScrollContainer.new()
+			scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+			scroll.visible = false
+			$Page.add_child(scroll)
+			_bar_scrolls.append(scroll)
+	for index in 2:
+		var bar: Control = menu_bar if index == 0 else status_bar
+		var scroll := _bar_scrolls[index]
+		bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		bar.reparent(scroll if _classic_layout else $Page)
+		scroll.visible = _classic_layout
+		$Page.move_child(scroll if _classic_layout else bar, 0 if index == 0 else $Page.get_child_count() - 1)
+	$Page/Content/MapSpace.custom_minimum_size = Vector2.ZERO if _classic_layout else Vector2(560, 480)
 	toolbar.reparent(_palette_scroll if _classic_layout else $Page/Content)
 	if not _classic_layout:
 		$Page/Content.move_child(toolbar, 0)
@@ -73,8 +94,8 @@ func _sync_classic_layout() -> void:
 func _fit_palette() -> void:
 	if not _classic_layout:
 		return
-	var top := menu_bar.position.y + menu_bar.size.y + 12
-	var available := maxf(48, status_bar.position.y - top - 12)
+	var top := _bar_scrolls[0].global_position.y - global_position.y + _bar_scrolls[0].size.y + 12
+	var available := maxf(48, _bar_scrolls[1].global_position.y - global_position.y - top - 12)
 	var minimum := toolbar.get_combined_minimum_size()
 	_palette_scroll.position = Vector2(12, top)
 	_palette_scroll.size = Vector2(minimum.x + (16 if minimum.y > available else 0), minf(minimum.y, available))

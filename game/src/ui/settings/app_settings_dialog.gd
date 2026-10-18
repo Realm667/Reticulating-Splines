@@ -325,10 +325,18 @@ func _fit_to_viewport() -> void:
 		return
 
 	var viewport_size := Vector2i(get_parent().get_viewport().get_visible_rect().size)
+	# An exact classic 2x scale can leave less than 700 logical pixels. Keep
+	# tabs and controls reachable through scrolling instead of shrinking pixels.
+	var width_limit := maxi(1, int(viewport_size.x * 0.96) - 8)
+	min_size.x = mini(700, width_limit)
+	tabs.custom_minimum_size.x = mini(660, maxi(1, width_limit - 40))
+	for tab in tabs.get_children():
+		if tab is ScrollContainer:
+			tab.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
 	# include the embedded title bar in the 90% height allowance
 	var height_limit := maxi(1, int(viewport_size.y * 0.9) - get_theme_constant("title_height"))
-	max_size = Vector2i(0, height_limit)
-	size = Vector2i(700, mini(500, height_limit))
+	max_size = Vector2i(width_limit, height_limit)
+	size = Vector2i(mini(700, width_limit), mini(500, height_limit))
 
 	if visible:
 		position = (viewport_size - size) / 2

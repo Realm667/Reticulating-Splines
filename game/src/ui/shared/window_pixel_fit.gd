@@ -25,7 +25,7 @@ func _process(_delta: float) -> void:
 # no signal, so a moving window waits until it stops
 static func fit(window: Window) -> void:
 	# Embedded dialogs have their own canvas and do not inherit the main UI filter.
-	var filter := Viewport.DEFAULT_CANVAS_ITEM_TEXTURE_FILTER_NEAREST if AppUiTheme.is_classic() else Viewport.DEFAULT_CANVAS_ITEM_TEXTURE_FILTER_LINEAR
+	var filter := Viewport.DEFAULT_CANVAS_ITEM_TEXTURE_FILTER_NEAREST if AppUiScale.classic_pixel_filter() else Viewport.DEFAULT_CANVAS_ITEM_TEXTURE_FILTER_LINEAR
 	if window.canvas_item_default_texture_filter != filter:
 		window.canvas_item_default_texture_filter = filter
 

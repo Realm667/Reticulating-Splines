@@ -20,6 +20,7 @@ func run() -> void:
 	await process_frame
 	assert(workspace.map_view.size.is_equal_approx(initial_map_size + Vector2(320, 200)))
 	await _check_camera_bounds(workspace, host)
+	await _check_classic_fit(workspace, host)
 	workspace.free()
 	var assets := OriginalGameAssets.new()
 	assets.load_ui(ProjectSettings.globalize_path("res://../references/SIMCITY2000"))
@@ -101,3 +102,26 @@ func _check_camera_bounds(workspace: CityWorkspace, host: Control) -> void:
 
 	assert(is_equal_approx(map.zoom_factor, levels[0]) and not map.can_zoom_out())
 	assert(map.reset_zoom() and is_equal_approx(map.zoom_factor, 1.0))
+
+
+func _check_classic_fit(workspace: CityWorkspace, host: Control) -> void:
+	var selected := AppUiTheme.selected
+	for theme_id in ["classic_windows", "classic_dos", "classic_mac"]:
+		AppUiTheme.select(theme_id)
+		for logical_size in [Vector2(640, 400), Vector2(1500, 1000)]:
+			host.size = logical_size
+			for frame in 4:
+				await process_frame
+			var page: Control = workspace.get_node("Page")
+			assert(page.size == host.size, "Classic bars push the workspace outside the viewport")
+			for bar in [workspace.menu_bar, workspace.status_bar]:
+				var scroll := bar.get_parent() as ScrollContainer
+				assert(scroll != null and scroll.size.x == host.size.x)
+				assert(bar.size.x >= scroll.size.x, "Classic bar does not fill the viewport")
+			assert(workspace.map_view.camera_view_rect.end.y <= host.size.y)
+	AppUiTheme.select(selected)
+	host.size = Vector2(1600, 1000)
+	for frame in 4:
+		await process_frame
+	assert(workspace.menu_bar.get_parent() == workspace.get_node("Page"))
+	assert(workspace.status_bar.get_parent() == workspace.get_node("Page"))
