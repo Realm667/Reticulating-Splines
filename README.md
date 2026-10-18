@@ -25,8 +25,8 @@ ownership and municipal-account rules. Reticulating Splines does not patch or
 run the original SimCity 2000 executable.
 
 **Development status:** the project is in development; multiplayer is experimental.
-Public preview **0.3.0-rs.3** is based on Nicholas Ochoa's OpenSC2K 0.3.0
-with reviewed later upstream fixes. [Download the desktop packages](https://github.com/Realm667/Reticulating-Splines/releases/tag/v0.3.0-rs.3)
+Public preview **0.3.0-rs.4** is based on Nicholas Ochoa's OpenSC2K 0.3.0
+with reviewed later upstream fixes. [Download the desktop packages](https://github.com/Realm667/Reticulating-Splines/releases/tag/v0.3.0-rs.4)
 for Windows x64/ARM64, Linux x64/ARM64, or macOS (Intel and Apple Silicon).
 Replacement graphics, music and sounds are included; importing your own
 supported original game is optional. Extract Windows/Linux archives to a writable
