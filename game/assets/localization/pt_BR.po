@@ -30096,3 +30096,13 @@ msgstr "Verificar novamente"
 #. supplementary multiplayer connectivity, AI-assisted
 msgid "Router refused UPnP — allow automatic port forwarding for this computer"
 msgstr "O roteador recusou UPnP — permita o encaminhamento automático de porta para este computador"
+
+#. Supplementary desktop cheat feedback; AI-assisted translation.
+#: src/application/classic_cheats.gd
+msgid "Cheat activated: %s"
+msgstr "Truque ativado: %s"
+
+#. Supplementary desktop cheat feedback; AI-assisted translation.
+#: src/application/classic_cheats.gd
+msgid "Cheat unavailable: %s"
+msgstr "Truque indisponível: %s"

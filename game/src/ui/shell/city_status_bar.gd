@@ -163,7 +163,8 @@ func set_city_status(engine: SimulationEngine, paused: bool) -> void:
 func _refresh_report_text() -> void:
 	reports_label.theme_type_variation = status_style
 
-	if music_notice_seconds > 0.0 and not priority_status:
+	if music_notice_seconds > 0.0 and (not priority_status or bool(get_meta("notice_has_priority", false))):
+		reports_label.theme_type_variation = ""
 		reports_label.text = music_notice
 		reports_label.set_meta("status_tooltip_text", music_notice)
 
@@ -193,6 +194,11 @@ func _sync_overflow_tooltip(label: Label) -> void:
 
 
 func show_music_notice(message: String) -> void:
+	show_notice(message)
+
+
+func show_notice(message: String, priority := false) -> void:
+	set_meta("notice_has_priority", priority)
 	music_notice = message
 	music_notice_seconds = 5.0
 	_refresh_report_text()

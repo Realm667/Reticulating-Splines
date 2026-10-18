@@ -104,6 +104,7 @@ var route_edits: ApplicationRouteEdits = ApplicationRouteEdits.new(self)
 var debug: ApplicationDebug = ApplicationDebug.new(self)
 var debug_tools: ApplicationDebugTools = ApplicationDebugTools.new(self)
 var coop := ApplicationMultiplayer.new(self)
+var classic_cheats := ApplicationClassicCheats.new(self)
 var updates := ApplicationUpdates.new(preferences)
 var autosave: ApplicationAutosave = ApplicationAutosave.new(self)
 # the JavaScript runtime of mods and developer scripts
@@ -172,6 +173,7 @@ func _notification(what: int) -> void:
 	elif what == NOTIFICATION_WM_DPI_CHANGE:
 		settings.apply_ui_scale()
 	elif what == NOTIFICATION_APPLICATION_FOCUS_OUT:
+		classic_cheats.reset_input()
 		effects_audio.handle_application_focus_out()
 		current_tool.hold_tool(ApplicationCurrentTool.NO_TOOL)
 	elif what == NOTIFICATION_APPLICATION_FOCUS_IN:
@@ -199,6 +201,7 @@ func _exit_tree() -> void:
 func _process(delta: float) -> void:
 	if startup_progress != null:
 		return
+	classic_cheats.process()
 	frame.process(delta)
 	autosave.process(delta)
 	scripting.process(delta)
@@ -206,6 +209,9 @@ func _process(delta: float) -> void:
 
 func _input(event: InputEvent) -> void:
 	if startup_progress != null:
+		return
+	if classic_cheats.input(event):
+		get_viewport().set_input_as_handled()
 		return
 	camera_input.input(event)
 

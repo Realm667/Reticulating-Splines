@@ -8652,3 +8652,13 @@ msgstr ""
 #. supplementary multiplayer connectivity, AI-assisted
 msgid "Router refused UPnP — allow automatic port forwarding for this computer"
 msgstr ""
+
+#. Supplementary desktop cheat feedback; AI-assisted translation.
+#: src/application/classic_cheats.gd
+msgid "Cheat activated: %s"
+msgstr ""
+
+#. Supplementary desktop cheat feedback; AI-assisted translation.
+#: src/application/classic_cheats.gd
+msgid "Cheat unavailable: %s"
+msgstr ""

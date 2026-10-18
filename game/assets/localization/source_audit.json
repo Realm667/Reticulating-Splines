@@ -17,7 +17,8 @@
     "game/src/ui/settings/controls_binding_list.gd",
     "game/src/ui/shared/city_open_dialog.gd",
     "game/src/ui/shared/busy_overlay.gd",
-    "game/src/formats/city_save_backup.gd"
+    "game/src/formats/city_save_backup.gd",
+    "game/src/application/classic_cheats.gd"
   ],
   "non_display_literals": {
     "Authorization: Bearer ": "Internal HTTP authorization header; never display or translate.",

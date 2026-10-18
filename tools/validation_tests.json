@@ -1,5 +1,11 @@
 [
   {
+    "id": "classic_cheats_test",
+    "script": "tests/classic_cheats_test.gd",
+    "domain": "ui",
+    "lane": "product"
+  },
+  {
     "id": "enamel_sign_gpu_test",
     "script": "tests/enamel_sign_gpu_test.gd",
     "domain": "rendering",

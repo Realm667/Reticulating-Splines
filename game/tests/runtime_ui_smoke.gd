@@ -833,6 +833,55 @@ func _test_audio_focus(main: CityApplication, loaded_city: CityState) -> bool:
 	return true
 
 
+func _test_classic_cheats(main: CityApplication) -> bool:
+	var cheats := main.classic_cheats
+	var city := main.document_state.city
+	var misc := city.document.find_chunk("MISC")
+	var before := misc.decoded_payload.duplicate()
+	var funds := city.funds()
+	assert(not cheats.execute("ardo"))
+	for code in ApplicationClassicCheats.JACKPOTS:
+		assert(cheats.execute(code.to_upper()))
+		funds += 500000
+		assert(city.funds() == funds)
+	assert(cheats.execute("ardo"))
+	funds += 500000
+	assert(city.funds() == funds)
+	assert(not cheats.execute("topsguzzardo"))
+	assert(cheats.execute("pirn") and cheats.execute("topsguzzardo"))
+	funds += 500000
+	assert(city.funds() == funds)
+	assert(CityDebugActions.set_no_disasters(city, true).ok)
+	assert(cheats.execute("cass") and city.funds() == funds + 250)
+	assert(cheats.execute("priscilla") and main.debug_overlay.is_open)
+	assert(cheats.execute("priscilla") and main.debug_overlay.is_open, "The code opens, never toggles off")
+	assert(cheats.execute("oivaizmir") and main.debug_overlay.is_open)
+	for code in ["vers", "memy", "test", "porn", "klatu verata nictu", "joke"]:
+		assert(not cheats.execute(code))
+	var session := main.coop.session
+	var guarded := misc.decoded_payload.duplicate()
+	session.active = true
+	for code in ClassicCheatInput.CODES:
+		assert(not cheats.execute(code), "Multiplayer must reject " + code)
+	assert(not cheats.confirm_bond(city.document))
+	assert(misc.decoded_payload == guarded)
+	session.active = false
+	assert(not cheats.confirm_bond(EmptyCityTemplate.create(128)))
+	assert(not cheats.execute("ardo"), "Entering multiplayer invalidates the repeat-code state")
+	assert(cheats.confirm_bond(city.document))
+	assert(city.document.misc_u32(Sc2MiscLayout.BONDS) == BinaryData.read_u32_be(guarded, Sc2MiscLayout.BONDS) + 1)
+	var engine := main.simulation_state.simulation_engine
+	var active := engine.active_disaster_type
+	engine.active_disaster_type = DisasterStart.DISASTER_TORNADO
+	assert(not cheats.execute("moses") and engine.active_disaster_type == DisasterStart.DISASTER_TORNADO)
+	engine.active_disaster_type = active
+	assert(cheats.execute("uspa87419") and cheats.execute("vaudeville"))
+	cheats._effect.queue_free()
+	misc.set_decoded_payload(before)
+	main.interface.refresh_details()
+	return true
+
+
 func _test_debug_actions(main: CityApplication) -> bool:
 	var debug_overlay := main.get("debug_overlay") as CityDebugOverlay
 
@@ -863,6 +912,7 @@ func _test_debug_actions(main: CityApplication) -> bool:
 	var debug_misc_chunk := debug_city.document.find_chunk("MISC")
 	var debug_old_misc: PackedByteArray = debug_misc_chunk.decoded_payload.duplicate()
 	var debug_old_funds := debug_city.funds()
+	assert(_test_classic_cheats(main))
 	var money_result: ApplicationDebug.ActionResult = main.debug.call("debug_add_funds", 10000)
 	var unlock_result: ApplicationDebug.ActionResult = main.debug.call("debug_unlock_everything")
 	var unlocked := ToolAvailability.inspect(debug_city)

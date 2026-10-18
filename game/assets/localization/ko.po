@@ -8316,3 +8316,13 @@ msgstr "다시 확인"
 #. supplementary multiplayer connectivity, AI-assisted
 msgid "Router refused UPnP — allow automatic port forwarding for this computer"
 msgstr "라우터가 UPnP를 거부했습니다 — 이 컴퓨터의 자동 포트 전달을 허용하세요"
+
+#. Supplementary desktop cheat feedback; AI-assisted translation.
+#: src/application/classic_cheats.gd
+msgid "Cheat activated: %s"
+msgstr "치트 활성화: %s"
+
+#. Supplementary desktop cheat feedback; AI-assisted translation.
+#: src/application/classic_cheats.gd
+msgid "Cheat unavailable: %s"
+msgstr "사용할 수 없는 치트: %s"
