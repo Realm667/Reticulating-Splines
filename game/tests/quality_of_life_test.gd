@@ -1,6 +1,49 @@
 extends SceneTree
 
 
+func _check_photo_and_idle(app: CityApplication) -> void:
+	app.frame.select_speed(GameSpeedController.Speed.TURTLE)
+	var before: PackedByteArray = app.document_state.city.document.serialize().data
+	var settings := app.preferences.visual_enhancements.duplicate(true)
+	var old_edit := app.map_view.edit_enabled
+	var old_mode := app.map_view.selection_mode
+	var old_area := app.map_view.point_footprint_area
+	app.city_menu_bar.options_menu_requested.emit(CityMenuBar.MENU_PHOTO_MODE)
+	assert(app.photo_mode.active and app.frame._simulation_suspended())
+	assert(not app.map_view.edit_enabled and not app.city_workspace.get_node("Page").visible)
+	var key := InputEventKey.new()
+	key.keycode = KEY_B
+	key.pressed = true
+	assert(app.photo_mode.input(key), "Photo mode consumes build and cheat shortcuts")
+	app.map_view.interaction._run_button_action("map_context_menu", Vector2.ZERO, false)
+	assert(not app.map_view.context_menu.visible)
+	app.photo_mode.close()
+	assert(app.map_view.edit_enabled == old_edit and app.map_view.selection_mode == old_mode and app.map_view.point_footprint_area == old_area)
+	assert(app.city_workspace.get_node("Page").visible)
+	assert(app.simulation_state.speed_controller.speed == GameSpeedController.Speed.TURTLE)
+	assert(app.document_state.city.document.serialize().data == before)
+	assert(app.preferences.visual_enhancements == settings)
+	var idle := IdlePresentation.new(app)
+	var previous_limit := Engine.max_fps
+	Engine.max_fps = 60
+	app.frame.select_speed(GameSpeedController.Speed.PAUSED)
+	idle._process(2.1)
+	assert(Engine.max_fps == 15)
+	idle._input(InputEventMouseMotion.new())
+	assert(Engine.max_fps == 60)
+	idle._process(2.1)
+	app.frame.select_speed(GameSpeedController.Speed.TURTLE)
+	idle._process(0.1)
+	assert(Engine.max_fps == 60, "Resuming restores the original frame limit")
+	app.frame.select_speed(GameSpeedController.Speed.PAUSED)
+	Engine.max_fps = 10
+	idle._process(2.1)
+	assert(Engine.max_fps == 10, "Idle saving must not raise a lower user limit")
+	idle.restore()
+	Engine.max_fps = previous_limit
+	idle.free()
+
+
 func _initialize() -> void:
 	_run.call_deferred()
 
@@ -34,13 +77,14 @@ func _run() -> void:
 	app.city_files._load_city_unchecked(GeneratedCityFixture.path(128))
 	app.frame.select_speed(GameSpeedController.Speed.PAUSED)
 	app.interface.hide_main_menu()
+	_check_photo_and_idle(app)
 	var window_menu := app.city_menu_bar.windows_menu.get_popup()
 	for scenario_available in [false, true, false]:
 		app.city_menu_bar.set_scenario_available(scenario_available)
 		assert(window_menu.get_item_index(0x8400) < 0)
 		assert(window_menu.get_item_index(ApplicationQualityOfLife.MENU_MUSIC_BOX) < 0)
 	var options := app.city_menu_bar.options_menu.get_popup()
-	assert(options.get_item_index(CityMenuBar.MENU_MUSIC_BOX) + 1 == options.get_item_index(CityMenuBar.MENU_SETTINGS))
+	assert(options.get_item_index(CityMenuBar.MENU_PHOTO_MODE) >= 0)
 	options.id_pressed.emit(ApplicationQualityOfLife.MENU_MUSIC_BOX)
 	assert(qol.music_box.visible, "The real Options menu must open the music box after loading a city")
 	qol.music_box.hide()

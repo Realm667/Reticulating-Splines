@@ -44,6 +44,8 @@ func process(delta: float) -> void:
 	app.city_png_export.poll_export()
 
 	if app.coop.active():
+		if app.coop.session.hosting and app.coop.session.world != null:
+			app.coop.session.world.tree_growth_enabled = app.preferences.visual_enhancements.get("tree_growth_enabled", false)
 		if app.simulation_state.speed_controller != null:
 			_advance_palette_animation(delta, false)
 		return
@@ -54,6 +56,7 @@ func process(delta: float) -> void:
 	app.simulation_state.simulation_engine.midi_playback_active = app.effects_audio.music_playback_is_active()
 	var interaction_suspended := preparing or _simulation_suspended()
 	var result: SimulationTickResult
+	var previous_age := app.document_state.city.age_in_days()
 
 	if app.simulation_state.frame_simulation != null:
 		app.simulation_state.frame_simulation.budget_usec = FrameSimulationRunner.budget_for_frame(delta)
@@ -70,6 +73,9 @@ func process(delta: float) -> void:
 		return
 
 	_advance_palette_animation(delta, interaction_suspended)
+	if not ForestGrowth.advance(app.document_state.city, previous_age,
+			app.preferences.visual_enhancements.get("tree_growth_enabled", false)).is_empty():
+		app.simulation_state.simulation_map_dirty = true
 
 	consume_simulation_result(result)
 
@@ -79,7 +85,8 @@ func _simulation_suspended(include_camera_pan := true) -> bool:
 	if app.coop.active():
 		return false
 	return (
-		(app.map_view != null and (app.map_view.is_left_drag_active() or (include_camera_pan and app.map_view.is_panning())))
+		(app.photo_mode != null and app.photo_mode.active)
+		or (app.map_view != null and (app.map_view.is_left_drag_active() or (include_camera_pan and app.map_view.is_panning())))
 		or (app.city_dialogs != null and app.city_dialogs.blocks_simulation())
 		or (app.main_overlays != null and app.main_overlays.blocks_simulation())
 		# workflows create these file prompts outside the registries

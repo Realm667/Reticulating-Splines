@@ -5,7 +5,7 @@ extends RefCounted
 var app: CityApplication
 var phase := 0.5
 var season_phase := 1.0
-const SHARED_OPTIONS := ["day_enabled", "day_mode", "day_seconds", "day_hour",
+const SHARED_OPTIONS := ["tree_growth_enabled", "day_enabled", "day_mode", "day_seconds", "day_hour",
 	"season_enabled", "season_mode", "season_seconds", "season_fixed", "season_transition",
 	"weather_enabled", "weather_mode", "weather_fixed", "weather_seconds", "weather_transition",
 	"weather_strength", "cloud_enabled", "cloud_mode", "cloud_density", "cloud_speed",
@@ -17,6 +17,7 @@ var lut: ImageTexture
 var lut_size := 0.0
 var profiles := CityVisualLuts.new()
 var terrain_elevation := CityTerrainElevation.new()
+var edge_profile := CityEdgeProfile.new()
 var _options := {}
 var _city_id := 0
 var weather: CityVisualWeather
@@ -163,14 +164,14 @@ func _configure_nature(options: Dictionary, refresh := true) -> void:
 		app.map_render.refresh_map()
 
 
-func _nature_projection() -> Basis:
+func _nature_projection(view_coordinates := false) -> Basis:
 	var city := app.document_state.city
 	if city == null:
 		return Basis.IDENTITY
 	var scale := app.map_view.camera._view_scale()
 	var offset := app.map_view.camera._draw_offset(scale)
 	var canvas := app.map_view.get_global_transform() * Transform2D(Vector2(scale, 0), Vector2(0, scale), offset)
-	return CityVisualClouds.shader_basis(CityVisualClouds.source_to_grid(city.map_size, city.compass_rotation()) * Transform2D.IDENTITY.scaled(Vector2.ONE * source_coordinate_scale) * canvas.affine_inverse())
+	return CityVisualClouds.shader_basis(CityVisualClouds.source_to_grid(city.map_size, 0 if view_coordinates else city.compass_rotation()) * Transform2D.IDENTITY.scaled(Vector2.ONE * source_coordinate_scale) * canvas.affine_inverse())
 
 
 func process(delta: float) -> void:
@@ -245,6 +246,12 @@ func process(delta: float) -> void:
 	clouds.process(delta, weather_delta * factor, active, tint * weather.tint, lighting.night if options.day_enabled else 0.0, weather.kind)
 	weather.set_cloud_cover(clouds.precipitation_readiness)
 	var parameters := {
+		"artwork_color_strength": options.artwork_color_strength if active and options.artwork_color_enabled else 0.0,
+		"map_strata_enabled": active and options.map_strata_enabled,
+		"map_edge_size": float(city.map_size) if city != null else 128.0,
+		"map_edge_profile": edge_profile.texture_for(city) if active and (options.map_strata_enabled or options.water_depth_enabled) else null,
+		"edge_canvas_to_grid": _nature_projection(true),
+		"water_depth_enabled": active and options.water_depth_enabled,
 		"nature_terrain_enabled": active and options.nature_terrain_enabled,
 		"terrain_elevation_enabled": active and options.nature_terrain_enabled,
 		"terrain_elevation_range": terrain_elevation.range_for(city),

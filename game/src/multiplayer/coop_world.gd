@@ -39,6 +39,7 @@ var live_revision := -1
 var live_policy := -1
 var newspaper_sequence := 0
 var newspaper_paper := -1
+var tree_growth_enabled := false
 
 
 func open(document: Sc2File) -> bool:
@@ -84,6 +85,7 @@ func advance(delta: float) -> void:
 	if controller.speed == GameSpeedController.Speed.PAUSED:
 		return
 	var before := city.document.duplicate_document(true)
+	var previous_age := city.age_in_days()
 	# Continue annual accounting using existing funding while the mayor edits.
 	# This does not enable Auto-Budget or change the single-player controller.
 	if engine.pending_interaction == "annual_budget":
@@ -123,11 +125,12 @@ func advance(delta: float) -> void:
 	var pending := engine.pending_interaction
 	var blocked := controller.interaction_blocked
 	var result := controller.advance_time(minf(delta, 0.25) * 1000.0, Time.get_ticks_msec())
+	var grown := ForestGrowth.advance(city, previous_age, tree_growth_enabled) if result.ok else PackedInt32Array()
 	capture_newspaper(result)
 	if not result.ok:
 		error = result.error
 		controller.set_speed(GameSpeedController.Speed.PAUSED)
-	if result.base_ticks > 0 or not result.day_results.is_empty() or not result.launch_results.is_empty():
+	if result.base_ticks > 0 or not result.day_results.is_empty() or not result.launch_results.is_empty() or not grown.is_empty():
 		revision += 1
 		undo_document = null
 		prune_dispatch()

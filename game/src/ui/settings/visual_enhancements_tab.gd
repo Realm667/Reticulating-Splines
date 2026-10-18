@@ -1,6 +1,6 @@
 class_name VisualEnhancementsTab
 extends VBoxContainer
-## Presentation-only navigation and display units; saved options retain their original units.
+## Environment settings and display units; saved options retain their original units.
 
 signal changed
 signal reload_requested
@@ -16,17 +16,17 @@ const SECTIONS := [
 	["Weather & Clouds", "Weather and clouds have separate switches. Fog is part of Clouds. Fixed weather can show snow in any season.",
 		["weather_enabled", "weather_mode", "weather_fixed", "weather_seconds", "weather_transition", "weather_strength", "weather_lut_strength", "cloud_enabled", "cloud_mode", "cloud_density", "cloud_shadow_strength", "cloud_speed"]],
 	["Environment", "Forests, subtle terrain variation and water appearance. Seasonal water colors require Seasons.",
-		["nature_forests_enabled", "tree_shadows_enabled", "nature_terrain_enabled", "nature_terrain_strength", "water_reflections", "water_waves_enabled", "water_topography", "season_water_strength"]],
+		["nature_forests_enabled", "tree_growth_enabled", "tree_shadows_enabled", "nature_terrain_enabled", "nature_terrain_strength", "water_reflections", "water_waves_enabled", "water_topography", "water_depth_enabled", "map_strata_enabled", "season_water_strength", "artwork_color_enabled", "artwork_color_strength"]],
 	["Traffic & Movement", "Decorative cars and pedestrians, plus smoother movement for existing vehicles.",
 		["life_cars_enabled", "life_car_amount", "life_people_enabled", "life_people_amount", "traffic_vehicles_enabled", "traffic_shadows_enabled"]],
 	["Disaster Effects", "Extra effects for disasters and demolition. These settings do not change disaster frequency, damage or emergency response.",
 		["disaster_enabled", "disaster_strength", "disaster_crowds", "disaster_dust", "disaster_lights", "disaster_motion", "disaster_shake"]],
 	["Animation", "Cycle durations use Turtle speed when linked; otherwise they use real time. Weather and clouds always pause with the game. The pause option below controls the other environment cycles.",
-		["disaster_blending", "speed_link", "pause_freezes"]],
+		["disaster_blending", "speed_link", "pause_freezes", "idle_saving_enabled"]],
 	["Tilt shift", "Blur the top and bottom of the city view while keeping the center and interface sharp.",
 		["tilt_shift_enabled", "tilt_shift_strength", "tilt_shift_edge", "tilt_shift_transition"]],
 ]
-const PERCENT_FIELDS := ["tilt_shift_strength", "tilt_shift_edge", "tilt_shift_transition", "nature_terrain_strength", "day_lut_strength", "night_strength", "season_transition", "season_lut_strength",
+const PERCENT_FIELDS := ["artwork_color_strength", "tilt_shift_strength", "tilt_shift_edge", "tilt_shift_transition", "nature_terrain_strength", "day_lut_strength", "night_strength", "season_transition", "season_lut_strength",
 	"season_water_strength", "weather_strength", "weather_lut_strength", "cloud_density", "cloud_shadow_strength",
 	"disaster_strength", "disaster_lights", "disaster_shake"]
 const LABELS := {
@@ -45,6 +45,10 @@ const LABELS := {
 	"lut_path": "Custom color filter (LUT PNG)", "brightmap_folder": "Custom light masks (brightmaps)",
 }
 const HINTS := {
+	"tree_growth_enabled": "Changes the saved city: forests become denser every four years and spread to free adjacent land over eight years. No random numbers. In multiplayer, the host decides. Off by default.",
+	"artwork_color_strength": "Reduce saturation of the original indexed artwork only. Added effects, lightmaps and interface colors stay unchanged.",
+	"water_depth_enabled": "Light coastal shallows and dark deep water, including the exposed water at map edges.",
+	"idle_saving_enabled": "Limit refresh to 15 FPS after two seconds without input while paused. Input restores the previous limit. Multiplayer is unaffected.",
 	"tilt_shift_edge": "Height of each blurred edge as a percentage of the city view. The center stays sharp.",
 	"tilt_shift_transition": "Higher values create a gentler transition between sharp and blurred areas.",
 	"tree_shadows_enabled": "Tree shadows follow flat and sloping ground. Requires enhanced forests. Turning this off also skips shadow geometry preparation.",
@@ -91,6 +95,7 @@ const HINTS := {
 var controls: Dictionary = {}
 var terrain_strength_slider: HSlider
 var filling := false
+var host_controls_tree_growth := false
 var pages: Array[VBoxContainer] = []
 var category_buttons: Array[Button] = []
 var page_scroll: ScrollContainer
@@ -108,8 +113,8 @@ var action_category := ""
 func _ready() -> void:
 	name = "Visual Enhancements"
 	add_theme_constant_override("separation", 10)
-	var introduction := _help("Visual effects only. Changes apply immediately.")
-	introduction.autowrap_mode = TextServer.AUTOWRAP_OFF
+	var introduction := _help("Appearance changes apply immediately. Tree growth changes the saved city over time.")
+	introduction.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	add_child(introduction)
 	var body := HBoxContainer.new()
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -254,17 +259,19 @@ func _add_field(page: VBoxContainer, field: Array) -> void:
 		control.custom_minimum_size.x = 155
 	control.tooltip_text = HINTS.get(key, "")
 	row.tooltip_text = control.tooltip_text
-	if key == "nature_terrain_strength":
+	if key in ["nature_terrain_strength", "artwork_color_strength"]:
 		var spin := control as SpinBox
-		terrain_strength_slider = HSlider.new()
-		terrain_strength_slider.min_value = spin.min_value
-		terrain_strength_slider.max_value = spin.max_value
-		terrain_strength_slider.step = spin.step
-		terrain_strength_slider.custom_minimum_size.x = 120
-		terrain_strength_slider.tooltip_text = control.tooltip_text
-		terrain_strength_slider.value_changed.connect(func(value: float) -> void: spin.value = value)
-		spin.value_changed.connect(terrain_strength_slider.set_value_no_signal)
-		row.add_child(terrain_strength_slider)
+		var slider := HSlider.new()
+		slider.min_value = spin.min_value
+		slider.max_value = spin.max_value
+		slider.step = spin.step
+		slider.custom_minimum_size.x = 120
+		slider.tooltip_text = control.tooltip_text
+		slider.value_changed.connect(func(value: float) -> void: spin.value = value)
+		spin.value_changed.connect(slider.set_value_no_signal)
+		row.add_child(slider)
+		if key == "nature_terrain_strength":
+			terrain_strength_slider = slider
 		control.custom_minimum_size.x = 90
 	row.add_child(control)
 	controls[key] = control
@@ -456,6 +463,8 @@ func _update_availability() -> void:
 				relevant = values.weather_mode == 2
 			"weather_seconds":
 				relevant = values.weather_mode == 1
+		if key == "tree_growth_enabled" and host_controls_tree_growth:
+			available = false
 		control.get_parent().visible = relevant
 		if control is OptionButton:
 			var selection := (control as OptionButton).get_item_text((control as OptionButton).selected)

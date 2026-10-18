@@ -6,7 +6,7 @@ func _initialize() -> void:
 	profiles.reload("")
 	assert(profiles.issues.is_empty())
 	var options := VisualEnhancementOptions.normalize({})
-	var water_only := VisualEnhancementOptions.normalize({"water_reflections": 0, "water_topography": false, "water_waves_enabled": false})
+	var water_only := VisualEnhancementOptions.normalize({"water_reflections": 0, "water_topography": false, "water_waves_enabled": false, "water_depth_enabled": false})
 	assert(VisualEnhancementOptions.water_pass_enabled(water_only), "Seasonal water needs a pass with reflection and seabed off")
 	water_only.season_water_strength = 0.0
 	assert(not VisualEnhancementOptions.water_pass_enabled(water_only))

@@ -114,6 +114,8 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
 		_handle_bound_button(event)
 
 		return
+	if map.photo_mode_active:
+		return
 
 	var tile := map.camera._tile_at(event.position)
 	shift_pressed = event.shift_pressed
@@ -266,6 +268,8 @@ func _handle_bound_button(event: InputEventMouseButton) -> void:
 
 
 func _run_button_action(action: String, position: Vector2, wheel: bool) -> void:
+	if map.photo_mode_active and action not in ["zoom_in", "zoom_out", "zoom_reset", "map_center_on_tile", "rotate_clockwise", "rotate_counter_clockwise"]:
+		return
 	match action:
 		"zoom_in":
 			if wheel:

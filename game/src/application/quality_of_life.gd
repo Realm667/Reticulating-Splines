@@ -21,8 +21,13 @@ func _ready() -> void:
 	app.city_menu_bar.options_menu_requested.connect(_menu)
 	music_box = MusicBoxDialog.new(app)
 	app.add_child(music_box)
+	app.photo_mode = CityPhotoMode.new(app)
+	app.add_child(app.photo_mode)
+	app.add_child(IdlePresentation.new(app))
 
 
 func _menu(id: int) -> void:
 	if id == MENU_MUSIC_BOX:
 		music_box.open()
+	elif id == CityMenuBar.MENU_PHOTO_MODE:
+		app.photo_mode.open()

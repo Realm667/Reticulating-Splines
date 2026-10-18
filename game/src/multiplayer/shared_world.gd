@@ -103,6 +103,7 @@ func set_shared_speed(value: int) -> void:
 func advance(delta: float) -> void:
 	if controller.speed == GameSpeedController.Speed.PAUSED:
 		return
+	var previous_age := city.age_in_days()
 	var changed := false
 	var emergency := false
 	for child: CoopWorld in municipalities.values():
@@ -115,6 +116,7 @@ func advance(delta: float) -> void:
 		var before_policy := child.policy_revision
 		var before_error := child.error
 		var before_document := child.city.document.duplicate_document(true)
+		child.tree_growth_enabled = false # Grow the composed physical map once below.
 		child.advance(delta)
 		if child.revision != before:
 			for tile: int in changed_tiles(before_document, child.city.document):
@@ -127,6 +129,49 @@ func advance(delta: float) -> void:
 	controller = municipalities[host_actor].controller
 	if changed:
 		revision += 1
+	_grow_forest(previous_age)
+
+
+func _grow_forest(previous_age: int) -> void:
+	if not ForestGrowth.due(city, previous_age, tree_growth_enabled):
+		return
+	# Reuse the authoritative composition so forests can cross ownership borders
+	# without growing over another municipality's buildings or infrastructure.
+	snapshot_for(host_actor, true)
+	var document := city.document.duplicate_document()
+	for id: String in TILE_CHUNKS:
+		document.find_chunk(id).set_decoded_payload(composed_chunks[id])
+	var landscape := CityState.from_document(document)
+	var grown := ForestGrowth.advance(landscape, previous_age, true)
+	if grown.is_empty():
+		return
+	var sources: Array[PackedByteArray] = []
+	sources.append(template.find_chunk("XBLD").decoded_payload.duplicate())
+	for actor: String in actors:
+		sources.append(municipalities[actor].city.buildings.duplicate())
+	var touched := {}
+	for tile in grown:
+		var owner := owners[tile]
+		if protection[tile] == -1:
+			owner = 1
+		sources[owner][tile] = landscape.buildings[tile]
+		touched[owner] = true
+		tile_versions[tile] = revision + 1
+	for owner: int in touched:
+		if owner == 0:
+			ForestGrowth.apply_buildings(CityState.from_document(template), sources[0])
+		else:
+			var child: CoopWorld = municipalities[actors[owner - 1]]
+			ForestGrowth.apply_buildings(child.city, sources[owner])
+			child.revision += 1
+			child.undo_document = null
+			for tile in grown:
+				if owners[tile] == owner:
+					child.tile_versions[tile] = child.revision
+	# Neutral terrain comes from the template, not a municipal source buffer.
+	composed_chunks.erase("XBLD")
+	composition_sources.erase("XBLD")
+	revision += 1
 
 
 func command(actor: String, request: Dictionary) -> Dictionary:

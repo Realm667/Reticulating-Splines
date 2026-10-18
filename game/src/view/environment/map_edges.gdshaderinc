@@ -1,0 +1,63 @@
+uniform bool map_strata_enabled = false;
+uniform float map_edge_size = 128.0;
+uniform sampler2D map_edge_profile : filter_nearest, repeat_disable;
+uniform mat3 edge_canvas_to_grid = mat3(1.0);
+varying vec2 edge_grid;
+
+float edge_surface(float along, float face) {
+	// Cubic reconstruction keeps the smoothed diagonal profile continuous between
+	// tiles, without turning each individual tile into a flat horizontal terrace.
+	float position = along - 0.5;
+	float index = floor(position);
+	float t = fract(position);
+	float a = texture(map_edge_profile, vec2((index - 0.5) / map_edge_size, face)).a;
+	float b = texture(map_edge_profile, vec2((index + 0.5) / map_edge_size, face)).a;
+	float c = texture(map_edge_profile, vec2((index + 1.5) / map_edge_size, face)).a;
+	float d = texture(map_edge_profile, vec2((index + 2.5) / map_edge_size, face)).a;
+	return 31.0 * (b + 0.5 * t * (c - a + t * (2.0 * a - 5.0 * b + 4.0 * c - d + t * (3.0 * (b - c) + d - a))));
+}
+
+vec3 map_edge_color(vec3 original, float mask) {
+	bool soil = mask > 0.35 && mask < 0.45;
+	bool water = mask > 0.2 && mask < 0.3;
+	if ((!soil || !map_strata_enabled) && (!water || !water_depth_enabled)) { return original; }
+	// Inverse isometric projection of a vertical face. One altitude level
+	// displaces both grid coordinates by 12 / 16. This also works at the corner.
+	float rise = map_edge_size - 0.5 - max(edge_grid.x, edge_grid.y);
+	float altitude = rise / 0.75;
+	float along = min(edge_grid.x, edge_grid.y) + rise + 0.5;
+	bool right_face = edge_grid.x >= edge_grid.y;
+	vec3 profile = texture(map_edge_profile, vec2(along / map_edge_size, right_face ? 0.25 : 0.75)).rgb;
+	float land = round(profile.r * 31.0);
+	float level = round(profile.g * 31.0);
+	if (altitude < -0.15 || altitude > 31.1 || along < 0.0 || along > map_edge_size) { return original; }
+	vec3 color;
+	if (soil) {
+		float surface = edge_surface(along, right_face ? 0.25 : 0.75);
+		float below_surface = (surface - altitude) * 12.0;
+		// Fixed low-frequency variation: no animation or simulation RNG. Distance
+		// from the common corner keeps both faces joined at the same layer phase.
+		float distance = map_edge_size - along;
+		float warp = sin(distance * 0.37 + sin(distance * 0.11) * 1.7) * 1.25;
+		warp += sin(distance * 0.17 + below_surface * 0.035) * 0.6;
+		float band = mod(below_surface + warp, 23.0);
+		color = vec3(0.46, 0.35, 0.25);
+		if (band < 3.0) { color = vec3(0.64, 0.58, 0.43); }
+		else if (band < 6.0) { color = vec3(0.38, 0.37, 0.32); }
+		else if (band < 10.0) { color = vec3(0.56, 0.48, 0.34); }
+		else if (band < 12.0) { color = vec3(0.68, 0.63, 0.49); }
+		else if (band < 16.0) { color = vec3(0.36, 0.29, 0.23); }
+		float grain = fract(sin(dot(floor(vec2(along * 16.0, altitude * 12.0)), vec2(12.9898, 78.233))) * 43758.5453);
+		color *= 0.96 + grain * 0.08;
+	} else {
+		// Do not treat inland waterfalls as the exposed map boundary.
+		if (profile.b < 0.5 || altitude < land - 0.15 || altitude > level + 0.15) { return original; }
+		float depth = max(level - altitude, 0.0);
+		vec3 graded = water_depth_color(original, depth, 3.0);
+		color = environment_lut_linear_canvas ? lut_srgb(graded) : graded;
+		color *= 0.78 + 0.22 * exp(-depth * 0.4);
+		color = mix(color, vec3(0.36, 0.59, 0.66), (1.0 - smoothstep(0.0, 0.13, depth)) * 0.3);
+	}
+	color *= right_face ? 0.88 : 1.0;
+	return environment_lut_linear_canvas ? lut_linear(color) : color;
+}

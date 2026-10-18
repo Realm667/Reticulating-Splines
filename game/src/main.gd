@@ -43,6 +43,7 @@ var disaster_effects := CityDisasterEffects.new(self)
 var audio_controller: CityAudioController
 var map_view: CityMapControl
 var city_workspace: CityWorkspace
+var photo_mode: CityPhotoMode
 var city_menu_bar: CityMenuBar
 var status_label: Label
 var network_preview: NetworkPlacementPreview
@@ -210,6 +211,11 @@ func _process(delta: float) -> void:
 func _input(event: InputEvent) -> void:
 	if startup_progress != null:
 		return
+	if photo_mode != null and photo_mode.input(event):
+		get_viewport().set_input_as_handled()
+		return
+	if photo_mode != null and photo_mode.active:
+		return
 	if classic_cheats.input(event):
 		get_viewport().set_input_as_handled()
 		return
@@ -217,6 +223,8 @@ func _input(event: InputEvent) -> void:
 
 
 func _unhandled_key_input(event: InputEvent) -> void:
+	if photo_mode != null and photo_mode.active:
+		return
 	if startup_progress != null:
 		return
 	camera_input.unhandled_key_input(event)

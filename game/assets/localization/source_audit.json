@@ -18,9 +18,12 @@
     "game/src/ui/shared/city_open_dialog.gd",
     "game/src/ui/shared/busy_overlay.gd",
     "game/src/formats/city_save_backup.gd",
-    "game/src/application/classic_cheats.gd"
+    "game/src/application/classic_cheats.gd",
+    "game/src/application/photo_mode.gd"
   ],
   "non_display_literals": {
+    "FloatingPanel": "Internal Godot theme variation.",
+    "Page": "Internal workspace node path.",
     "Authorization: Bearer ": "Internal HTTP authorization header; never display or translate.",
     "SimCity 2000 (%s)": "Product and platform proper names; source package identity.",
     "CaptureOverlay": "Internal scene node name.",

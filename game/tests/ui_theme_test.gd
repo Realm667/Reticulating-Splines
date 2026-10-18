@@ -25,7 +25,7 @@ func _run() -> void:
 	main.frame.select_speed(GameSpeedController.Speed.PAUSED)
 	var before: PackedByteArray = main.document_state.city.document.serialize().data
 	var shared_theme := main.theme
-	for selected in [1, 2, 3, 0, 2, 1, 3]:
+	for selected in [1, 2, 3, 4, 0, 4, 2, 1, 3]:
 		main.settings.open_settings_dialog()
 		var dialog: AppSettingsDialog = main.main_overlays.settings_dialog
 		# a check box change applies at once and shows when Settings next opens

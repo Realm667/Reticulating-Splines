@@ -129,7 +129,7 @@ unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 32)
 layout_mode = 2
 tooltip_text = "Choose the appearance of menus and windows."
-item_count = 4
+item_count = 5
 selected = 0
 popup/item_0/text = "Light Theme"
 popup/item_0/id = 0
@@ -139,6 +139,8 @@ popup/item_2/text = "Classic Windows"
 popup/item_2/id = 2
 popup/item_3/text = "Classic DOS"
 popup/item_3/id = 3
+popup/item_4/text = "Classic Mac"
+popup/item_4/id = 4
 
 [node name="TranslucentMenusSpacer" type="Control" parent="Tabs/UI/Fields"]
 custom_minimum_size = Vector2(150, 32)

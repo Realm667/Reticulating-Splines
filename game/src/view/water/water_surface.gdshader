@@ -94,7 +94,11 @@ void fragment() {
 		float coast = water_has_seabed ? bottom.b * 255.0 / 8.0 : 32.0;
 		vec3 swell = water_waves_enabled && !water_geometry_preview
 			? water_swell(world, water_clock, water_rain, coast, round(surface.b * 255.0)) : vec3(0.0);
-		vec3 base = water_season_color(surface_color(UV, surface));
+		vec3 base = surface_color(UV, surface);
+		if (!water_geometry_preview && water_has_seabed) {
+			base = water_depth_color(base, depth, coast);
+		}
+		base = water_season_color(base);
 		if (!water_geometry_preview && (water_reflections_enabled || water_topography || water_waves_enabled)) {
 			base = water_body(base, bottom, depth, world, water_topography);
 			if (water_waves_enabled) {

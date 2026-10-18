@@ -1,10 +1,25 @@
 // Shared by horizontal water and the original vertical water-side sprites.
 // Include after environment_color so both paths share LUT and ambient rules.
 uniform bool water_enabled = false;
+uniform bool water_depth_enabled = false;
 uniform bool water_reflections_enabled = true;
 uniform bool water_topography = true;
 uniform bool water_waves_enabled = false;
 uniform float water_season_strength = 0.0;
+
+// Depth and distance from land are independent: a deep coast remains dark,
+// while a shallow lagoon stays light. Preserve fine palette-cycle detail.
+vec3 water_depth_color(vec3 original, float depth, float coast) {
+	if (!water_depth_enabled) { return original; }
+	vec3 input_color = environment_lut_linear_canvas ? lut_srgb(original) : original;
+	float shallow = exp(-max(depth, 0.0) * 0.32);
+	float shore = exp(-max(coast, 0.0) * 0.65) * shallow;
+	vec3 tone = mix(vec3(0.055, 0.19, 0.34), vec3(0.17, 0.43, 0.56), shallow);
+	tone = mix(tone, vec3(0.28, 0.57, 0.64), shore * 0.65);
+	float detail = dot(input_color, vec3(0.2126, 0.7152, 0.0722));
+	tone *= 0.91 + detail * 0.24;
+	return environment_lut_linear_canvas ? lut_linear(tone) : tone;
+}
 
 vec3 water_season_color(vec3 base) {
 	if (!environment_enabled || water_season_strength <= 0.0) { return base; }

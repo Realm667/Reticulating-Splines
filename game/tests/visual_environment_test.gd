@@ -18,6 +18,28 @@ func _run() -> void:
 	relief.set_land_altitude(0, 1, 18)
 	assert(elevation.range_for(relief) == Vector2(2, 18), "Terrain edits must refresh the display range")
 	var other := CityState.from_document(EmptyCityTemplate.create(16))
+	var profile := CityEdgeProfile.new()
+	other.set_land_altitude(15, 4, 8)
+	other.set_water_altitude(15, 4, 12)
+	other.set_terrain_id(15, 4, TerrainTileIds.DEEP_WATER_FLAT)
+	var strip := profile.texture_for(other)
+	assert(is_equal_approx(roundf(strip.get_image().get_pixel(4, 0).r * 31.0), 8.0))
+	assert(is_equal_approx(roundf(strip.get_image().get_pixel(4, 0).g * 31.0), 12.0))
+	assert(profile.texture_for(other) == strip, "Unchanged boundaries reuse the texture")
+	other.set_water_altitude(15, 4, 14)
+	profile.texture_for(other)
+	assert(roundf(profile.image.get_pixel(4, 0).g * 31.0) == 14.0)
+	other.set_tile_flag(15, 4, Sc2TileFlags.WATER, true)
+	profile.texture_for(other)
+	assert(profile.image.get_pixel(4, 0).b == 1.0, "Wet boundary flags refresh independently")
+	for along in 16:
+		other.set_land_altitude(15, along, 5 + mini(along, 10))
+		other.set_land_altitude(along, 15, 5 + mini(along, 10))
+	profile.texture_for(other)
+	var smooth := profile.image
+	assert(is_equal_approx(smooth.get_pixel(15, 0).a, smooth.get_pixel(15, 1).a), "Layers must join across the front corner")
+	assert(smooth.get_pixel(9, 0).a < smooth.get_pixel(11, 0).a, "Strata follow diagonal terrain")
+	assert(smooth.get_pixel(10, 0).a < smooth.get_pixel(10, 0).r, "Slope-to-flat joins are rounded")
 	assert(elevation.range_for(other) != Vector2(2, 18), "Changing cities must refresh elevation shading")
 	var defaults := VisualEnhancementOptions.normalize({})
 	assert(defaults.day_seconds == 600.0)
@@ -231,6 +253,7 @@ func _run() -> void:
 	main.preferences.visual_enhancements.water_reflections = 0
 	main.preferences.visual_enhancements.water_topography = false
 	main.preferences.visual_enhancements.water_waves_enabled = false
+	main.preferences.visual_enhancements.water_depth_enabled = false
 	main.visual_environment.configure()
 	assert(main.map_view.layers.environment_parameters.water_enabled)
 	assert(main.map_view.layers.environment_parameters.water_season_strength == 0.35)

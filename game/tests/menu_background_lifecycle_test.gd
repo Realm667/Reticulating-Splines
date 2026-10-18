@@ -110,7 +110,7 @@ func _check_options(background: MainMenuCityBackground) -> void:
 	var random_before := [engine.random.state, engine.lfsr_random.state, engine.game_random.state]
 	var options := VisualEnhancementOptions.normalize({"day_mode": 1, "day_hour": 12.0,
 		"season_enabled": false, "weather_enabled": false, "cloud_enabled": false,
-		"water_reflections": 0, "water_waves_enabled": false, "water_topography": false,
+		"water_reflections": 0, "water_waves_enabled": false, "water_topography": false, "water_depth_enabled": false,
 		"life_cars_enabled": false, "life_people_enabled": false, "brightmaps": false})
 	var saved_options := options.duplicate()
 	background.set_visual_options(options)

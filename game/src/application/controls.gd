@@ -50,6 +50,8 @@ static func key_id(event: InputEventKey) -> int:
 # down. Mouse events also carry the modifier keys, so a key release that the
 # window did not get still ends the held tool
 func update_held_tool(event: InputEvent) -> void:
+	if app.photo_mode != null and app.photo_mode.active:
+		return
 	if not (event is InputEventKey or event is InputEventMouse):
 		return
 

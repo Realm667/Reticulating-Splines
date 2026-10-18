@@ -60,6 +60,7 @@ func advance(delta: float) -> void:
 			continue
 		var previous := child.revision
 		var before := child.city.document.duplicate_document(true)
+		child.tree_growth_enabled = tree_growth_enabled
 		child.advance(delta)
 		if child.revision != previous:
 			revision += 1

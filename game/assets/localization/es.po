@@ -28742,6 +28742,82 @@ msgstr "Truco activado: %s"
 msgid "Cheat unavailable: %s"
 msgstr "Truco no disponible: %s"
 
+#. Supplementary RS presentation translation, AI-assisted.
+msgid "Classic Mac"
+msgstr "Mac clásico"
+
+#. Supplementary RS presentation translation, AI-assisted.
+msgid "Natural artwork colors"
+msgstr "Colores gráficos naturales"
+
+#. Supplementary RS presentation translation, AI-assisted.
+msgid "Artwork color reduction"
+msgstr "Reducción de saturación gráfica"
+
+#. Supplementary RS presentation translation, AI-assisted.
+msgid "Sediment layers at map edges"
+msgstr "Capas de sedimentos en los bordes"
+
+#. Supplementary RS presentation translation, AI-assisted.
+msgid "Depth-based water colors"
+msgstr "Colores del agua según profundidad"
+
+#. Supplementary RS presentation translation, AI-assisted.
+msgid "Reduce refresh rate while idle"
+msgstr "Reducir imágenes por segundo en reposo"
+
+#. Supplementary RS presentation translation, AI-assisted.
+msgid "Reduce saturation of the original indexed artwork only. Added effects, lightmaps and interface colors stay unchanged."
+msgstr "Reduce solo la saturación de los gráficos originales indexados. No cambia los efectos añadidos, los mapas de luz ni los colores de la interfaz."
+
+#. Supplementary RS presentation translation, AI-assisted.
+msgid "Light coastal shallows and dark deep water, including the exposed water at map edges."
+msgstr "Aguas costeras poco profundas claras y aguas profundas oscuras, también en los bordes expuestos del mapa."
+
+#. Supplementary RS presentation translation, AI-assisted.
+msgid "Limit refresh to 15 FPS after two seconds without input while paused. Input restores the previous limit. Multiplayer is unaffected."
+msgstr "Limita la actualización a 15 FPS tras dos segundos sin entrada durante la pausa. Una entrada restaura el límite anterior. No afecta al multijugador."
+
+#. Supplementary RS presentation translation, AI-assisted.
+msgid "Photo mode"
+msgstr "Modo foto"
+
+#. Supplementary RS presentation translation, AI-assisted.
+msgid "Save photo"
+msgstr "Guardar foto"
+
+#. Supplementary RS presentation translation, AI-assisted.
+msgid "Open photo folder"
+msgstr "Abrir carpeta de fotos"
+
+#. Supplementary RS presentation translation, AI-assisted.
+msgid "Exit photo mode"
+msgstr "Salir del modo foto"
+
+#. Supplementary RS presentation translation, AI-assisted.
+msgid "Close other dialogs before entering photo mode."
+msgstr "Cierra los demás diálogos antes de entrar en el modo foto."
+
+#. Supplementary RS presentation translation, AI-assisted.
+msgid "Pan and zoom to frame the photo. Escape exits. Multiplayer continues running."
+msgstr "Desplaza y amplía la vista para encuadrar la foto. Escape sale. El multijugador sigue funcionando."
+
+#. Supplementary RS presentation translation, AI-assisted.
+msgid "Pan and zoom to frame the photo. Escape exits. The city is paused."
+msgstr "Desplaza y amplía la vista para encuadrar la foto. Escape sale. La ciudad está en pausa."
+
+#. Supplementary RS presentation translation, AI-assisted.
+msgid "Photo saved: %s"
+msgstr "Foto guardada: %s"
+
+#. Supplementary RS presentation translation, AI-assisted.
+msgid "Could not save photo: %s"
+msgstr "No se pudo guardar la foto: %s"
+
+#. Supplementary RS presentation translation, AI-assisted.
+msgid "Could not open photo folder: %s"
+msgstr "No se pudo abrir la carpeta de fotos: %s"
+
 #. Multiplayer continuation and pre-join checks; supplementary translation.
 msgid "Continue saved game"
 msgstr "Continuar partida guardada"
@@ -28793,3 +28869,15 @@ msgstr "Compatible"
 #. Multiplayer continuation and pre-join checks; supplementary translation.
 msgid "Compatibility check failed. Check the host address and connection."
 msgstr "La comprobación de compatibilidad falló. Revisa la dirección del anfitrión y la conexión."
+
+#. Supplementary RS presentation translation, AI-assisted.
+msgid "Tree growth"
+msgstr "Crecimiento de árboles"
+
+#. Supplementary RS presentation translation, AI-assisted.
+msgid "Appearance changes apply immediately. Tree growth changes the saved city over time."
+msgstr "Los cambios visuales se aplican al instante. El crecimiento de árboles modifica la ciudad guardada con el tiempo."
+
+#. Supplementary RS presentation translation, AI-assisted.
+msgid "Changes the saved city: forests become denser every four years and spread to free adjacent land over eight years. No random numbers. In multiplayer, the host decides. Off by default."
+msgstr "Modifica la ciudad guardada: los bosques se densifican cada cuatro años y se extienden a terrenos libres adyacentes en ocho años. Sin números aleatorios. En multijugador decide el anfitrión. Desactivado por defecto."

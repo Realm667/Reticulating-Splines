@@ -6,6 +6,8 @@ const LIGHT_SELECTION := Color("dceaf3")
 
 
 static func build(value: String, _files := false, translucent_menus := true) -> Theme:
+	if value == "classic_mac":
+		return AppUiMacTheme.build()
 	if value in ["classic_windows", "classic_dos"]:
 		return AppUiClassicTheme.build(value)
 	var dark := value == "dark"

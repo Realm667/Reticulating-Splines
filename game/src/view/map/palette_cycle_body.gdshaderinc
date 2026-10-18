@@ -2,6 +2,8 @@
 #include "res://src/view/environment/environment_color.gdshaderinc"
 #include "res://src/view/clouds/cloud_field.gdshaderinc"
 #include "res://src/view/water/water_color.gdshaderinc"
+#include "res://src/view/environment/artwork_color.gdshaderinc"
+#include "res://src/view/environment/map_edges.gdshaderinc"
 
 uniform sampler2D palette_indices : filter_nearest, repeat_disable;
 uniform sampler2D animated_palette : source_color, filter_nearest, repeat_disable;
@@ -87,6 +89,7 @@ varying flat float hazard_opacity;
 
 void vertex() {
 	nature_grid = (nature_canvas_to_grid * vec3((MODEL_MATRIX * vec4(VERTEX, 0.0, 1.0)).xy, 1.0)).xy;
+	edge_grid = (edge_canvas_to_grid * vec3((MODEL_MATRIX * vec4(VERTEX, 0.0, 1.0)).xy, 1.0)).xy;
 	hazard_draw = float(COLOR.b == 0.25 || COLOR.b == 0.5 || COLOR.b == 0.125 || COLOR.b == 0.75);
 	hazard_phase = COLOR.r * 8.0;
 	hazard_opacity = COLOR.g;
@@ -293,7 +296,11 @@ void fragment() {
 			COLOR = base_color;
 		}
 
-		if (nature_forests_enabled && natural_mask.r > 0.5 && natural_mask.g > 0.05 && natural_mask.g < 0.35 && !dark_underground) {
+		bool enhanced_tree = nature_forests_enabled && natural_mask.r > 0.5 && natural_mask.g > 0.05 && natural_mask.g < 0.35;
+		if (!enhanced_tree && hazard_draw < 0.5 && fullbright_draw < 0.5 && !indexed_power_warning && !dark_underground) {
+			COLOR.rgb = artwork_color(COLOR.rgb);
+		}
+		if (enhanced_tree && !dark_underground) {
 			// Restore the selected artwork's dark greens after indexed palette
 			// lookup, which otherwise makes the imported greens unnaturally vivid.
 			float leaf = clamp((COLOR.g - 0.15) / 0.85, 0.0, 1.0);
@@ -362,6 +369,7 @@ void fragment() {
 					COLOR.rgb = water_body_tone(COLOR.rgb, 0.0, 0.0);
 				}
 			}
+			COLOR.rgb = map_edge_color(COLOR.rgb, natural_mask.b);
 			COLOR.rgb = environment_color_emission(cloud_shadow(COLOR.rgb, cloud_ground_grid), UV, building_emission);
 		}
 	} else if (artwork_kind > 2.5 && artwork_kind < 3.5) {
@@ -443,6 +451,7 @@ void fragment() {
 					COLOR.rgb = water_body_tone(COLOR.rgb, 0.0, 0.0);
 				}
 			}
+			COLOR.rgb = map_edge_color(COLOR.rgb, natural_mask.b);
 			COLOR.rgb = environment_color_emission(cloud_shadow(COLOR.rgb, cloud_ground_grid), center * pixel_size, building_emission);
 		}
 

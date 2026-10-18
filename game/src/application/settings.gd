@@ -71,7 +71,12 @@ func open_mods_folder() -> void:
 func open_settings_dialog() -> void:
 	show_mods()
 	app.main_overlays.settings_dialog.loading_values = true
-	app.main_overlays.settings_dialog.visual_tab.show_values(preferences.visual_enhancements)
+	var visual_values := preferences.visual_enhancements.duplicate(true)
+	var host_controls_growth := app.coop.active() and not app.coop.session.hosting
+	app.main_overlays.settings_dialog.visual_tab.host_controls_tree_growth = host_controls_growth
+	if host_controls_growth:
+		visual_values.tree_growth_enabled = app.visual_environment.remote_weather.get("options", {}).get("tree_growth_enabled", false)
+	app.main_overlays.settings_dialog.visual_tab.show_values(visual_values)
 	app.main_overlays.settings_dialog.dark_underground_check.button_pressed = preferences.dark_underground
 	app.main_overlays.settings_dialog.sprite_corrections_check.button_pressed = preferences.sprite_corrections
 	app.main_overlays.settings_dialog.show_hd_graphics(preferences.hd_graphics)
@@ -114,6 +119,8 @@ func open_settings_dialog() -> void:
 		elif control is Range:
 			control.set("editable", not locked)
 		control.tooltip_text = "Wird vom Host gesteuert" if locked else ""
+		if key == "tree_growth_enabled":
+			control.tooltip_text = tr(VisualEnhancementsTab.HINTS[key])
 
 	_refresh_settings_pack_names()
 

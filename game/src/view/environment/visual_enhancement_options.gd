@@ -3,6 +3,12 @@ extends RefCounted
 ## Local presentation preferences. No value is written to a city document.
 
 const FIELDS := [
+	["tree_growth_enabled", "Tree growth", "bool", false],
+	["artwork_color_enabled", "Natural artwork colors", "bool", false],
+	["artwork_color_strength", "Artwork color reduction", "number", 0.5, 0.0, 1.0, 0.05],
+	["map_strata_enabled", "Sediment layers at map edges", "bool", true],
+	["water_depth_enabled", "Depth-based water colors", "bool", true],
+	["idle_saving_enabled", "Reduce refresh rate while idle", "bool", true],
 	["tilt_shift_enabled", "Tilt-shift blur", "bool", true],
 	["tilt_shift_strength", "Blur strength", "number", 0.25, 0.0, 1.0, 0.05],
 	["tilt_shift_edge", "Blurred edge size", "number", 0.28, 0.05, 0.45, 0.01],
@@ -110,4 +116,4 @@ static func detail_lights_visible(options: Dictionary, zoom: float) -> bool:
 
 
 static func water_pass_enabled(options: Dictionary) -> bool:
-	return options.water_reflections == 1 or options.water_topography or options.get("water_waves_enabled", false) or (options.season_enabled and options.season_water_strength > 0.0)
+	return options.water_reflections == 1 or options.water_topography or options.get("water_depth_enabled", false) or options.get("water_waves_enabled", false) or (options.season_enabled and options.season_water_strength > 0.0)

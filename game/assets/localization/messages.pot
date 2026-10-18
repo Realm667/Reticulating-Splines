@@ -8663,6 +8663,82 @@ msgstr ""
 msgid "Cheat unavailable: %s"
 msgstr ""
 
+#. Supplementary RS presentation translation, AI-assisted.
+msgid "Classic Mac"
+msgstr ""
+
+#. Supplementary RS presentation translation, AI-assisted.
+msgid "Natural artwork colors"
+msgstr ""
+
+#. Supplementary RS presentation translation, AI-assisted.
+msgid "Artwork color reduction"
+msgstr ""
+
+#. Supplementary RS presentation translation, AI-assisted.
+msgid "Sediment layers at map edges"
+msgstr ""
+
+#. Supplementary RS presentation translation, AI-assisted.
+msgid "Depth-based water colors"
+msgstr ""
+
+#. Supplementary RS presentation translation, AI-assisted.
+msgid "Reduce refresh rate while idle"
+msgstr ""
+
+#. Supplementary RS presentation translation, AI-assisted.
+msgid "Reduce saturation of the original indexed artwork only. Added effects, lightmaps and interface colors stay unchanged."
+msgstr ""
+
+#. Supplementary RS presentation translation, AI-assisted.
+msgid "Light coastal shallows and dark deep water, including the exposed water at map edges."
+msgstr ""
+
+#. Supplementary RS presentation translation, AI-assisted.
+msgid "Limit refresh to 15 FPS after two seconds without input while paused. Input restores the previous limit. Multiplayer is unaffected."
+msgstr ""
+
+#. Supplementary RS presentation translation, AI-assisted.
+msgid "Photo mode"
+msgstr ""
+
+#. Supplementary RS presentation translation, AI-assisted.
+msgid "Save photo"
+msgstr ""
+
+#. Supplementary RS presentation translation, AI-assisted.
+msgid "Open photo folder"
+msgstr ""
+
+#. Supplementary RS presentation translation, AI-assisted.
+msgid "Exit photo mode"
+msgstr ""
+
+#. Supplementary RS presentation translation, AI-assisted.
+msgid "Close other dialogs before entering photo mode."
+msgstr ""
+
+#. Supplementary RS presentation translation, AI-assisted.
+msgid "Pan and zoom to frame the photo. Escape exits. Multiplayer continues running."
+msgstr ""
+
+#. Supplementary RS presentation translation, AI-assisted.
+msgid "Pan and zoom to frame the photo. Escape exits. The city is paused."
+msgstr ""
+
+#. Supplementary RS presentation translation, AI-assisted.
+msgid "Photo saved: %s"
+msgstr ""
+
+#. Supplementary RS presentation translation, AI-assisted.
+msgid "Could not save photo: %s"
+msgstr ""
+
+#. Supplementary RS presentation translation, AI-assisted.
+msgid "Could not open photo folder: %s"
+msgstr ""
+
 #. Multiplayer continuation and pre-join checks; supplementary translation.
 msgid "Continue saved game"
 msgstr ""
@@ -8713,4 +8789,16 @@ msgstr ""
 
 #. Multiplayer continuation and pre-join checks; supplementary translation.
 msgid "Compatibility check failed. Check the host address and connection."
+msgstr ""
+
+#. Supplementary RS presentation translation, AI-assisted.
+msgid "Tree growth"
+msgstr ""
+
+#. Supplementary RS presentation translation, AI-assisted.
+msgid "Appearance changes apply immediately. Tree growth changes the saved city over time."
+msgstr ""
+
+#. Supplementary RS presentation translation, AI-assisted.
+msgid "Changes the saved city: forests become denser every four years and spread to free adjacent land over eight years. No random numbers. In multiplayer, the host decides. Off by default."
 msgstr ""

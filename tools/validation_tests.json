@@ -1,5 +1,12 @@
 [
   {
+    "id": "presentation_colors_gpu_test",
+    "script": "tests/presentation_colors_gpu_test.gd",
+    "domain": "rendering",
+    "lane": "native",
+    "driver": "scene-batch"
+  },
+  {
     "id": "classic_cheats_test",
     "script": "tests/classic_cheats_test.gd",
     "domain": "ui",
@@ -2267,6 +2274,12 @@
     "domain": "ui",
     "lane": "product",
     "requires": ["ext/graphics/pack.json", "ext/data/pack.json"]
+  },
+  {
+    "id": "forest_growth_test",
+    "script": "tests/forest_growth_test.gd",
+    "domain": "simulation",
+    "lane": "product"
   },
   {
     "id": "multiplayer_timed_land_test",

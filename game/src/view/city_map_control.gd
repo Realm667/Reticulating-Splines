@@ -79,6 +79,7 @@ var dark_underground := false:
 var base_palette_lookup_all := false
 var signs_visible := true
 var edit_enabled := false
+var photo_mode_active := false
 var shift_rectangle_enabled := false
 var selection_mode := "rectangle"
 var point_footprint_area := 1

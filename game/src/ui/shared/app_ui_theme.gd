@@ -1,7 +1,7 @@
 class_name AppUiTheme
 extends RefCounted
 
-const IDS := ["light", "dark", "classic_windows", "classic_dos"]
+const IDS := ["light", "dark", "classic_windows", "classic_dos", "classic_mac"]
 
 static var selected := "dark"
 static var translucent_menus := true
@@ -60,7 +60,7 @@ static func normalize(value: String) -> String:
 
 
 static func is_classic(value := "") -> bool:
-	return (selected if value.is_empty() else value) in ["classic_windows", "classic_dos"]
+	return (selected if value.is_empty() else value) in ["classic_windows", "classic_dos", "classic_mac"]
 
 
 static func uses_translucency() -> bool:
