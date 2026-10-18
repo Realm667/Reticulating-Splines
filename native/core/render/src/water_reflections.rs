@@ -584,6 +584,33 @@ fn seabed_pixels(out: &mut [u8], bounds: Rect, city: &City, config: Config) {
                 520.0 + (x + y) as f32 * 8.0,
             ];
             let heights: [f32; 4] = std::array::from_fn(|n| (flat[n] - polygon[n][1]) / 12.0);
+            // The height-map also closes the two exposed front faces. Top
+            // polygons alone leave triangular holes at raised corners and
+            // cliffs; a zero-filled texel then looks like maximum water depth.
+            // Rasterize each wall down to its neighbour (or the map floor),
+            // before the top, in the same painter order as the terrain view.
+            for (side, nx, ny, near_corners, shade) in [(1, x + 1, y, [0, 3], 170), (2, x, y + 1, [1, 0], 155)] {
+                let mut lower = [flat[side], flat[side + 1]];
+                if nx < data.edge && ny < data.edge && data.visible(nx * data.edge + ny, true) {
+                    let neighbour = data.surface_polygon(nx, ny, true);
+                    lower = near_corners.map(|n| neighbour[n][1]);
+                }
+                let bottom = std::array::from_fn::<_, 2, _>(|n| {
+                    let p = polygon[side + n];
+                    [p[0], p[1].max(lower[n])]
+                });
+                let wall = [polygon[side], polygon[side + 1], bottom[1], bottom[0]];
+                let wall_heights = [
+                    heights[side],
+                    heights[side + 1],
+                    (flat[side + 1] - bottom[1][1]) / 12.0,
+                    (flat[side] - bottom[0][1]) / 12.0,
+                ];
+                for tri in [[0, 1, 2], [0, 2, 3]] {
+                    let vertices = tri.map(|n| wall[n].map(|v| v / config.divisor() as f32));
+                    seabed_triangle(out, bounds, vertices, tri.map(|n| wall_heights[n]), shade);
+                }
+            }
             let points = polygon.map(|p| [p[0] / config.divisor() as f32, p[1] / config.divisor() as f32]);
             for tri in [[0, 1, 2], [0, 2, 3]] {
                 let vertices = tri.map(|n| points[n]);
@@ -636,6 +663,36 @@ fn seabed_triangle(out: &mut [u8], bounds: Rect, p: [[f32; 2]; 3], h: [f32; 3], 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn submerged_slopes_and_cliffs_leave_no_depth_holes() {
+        for view in 0..3 {
+            let mut builder = fixture(view);
+            builder.city.altitude.fill(0);
+            builder.city.terrain.fill(0x10);
+            let c = builder.config;
+            let bounds = Rect::new(c.side(), c.top(), 160 / c.divisor(), 160 / c.divisor());
+            let mut flat = vec![0; (bounds.w * bounds.h * 4) as usize];
+            seabed_pixels(&mut flat, bounds, &builder.city, c);
+            let cell = builder.city.index(1, 1);
+            for height in [0, 1, 5] {
+                builder.city.altitude[cell] = height;
+                for shape in 0..14 {
+                    builder.city.terrain[cell] = 0x10 + shape;
+                    let mut actual = vec![0; flat.len()];
+                    seabed_pixels(&mut actual, bounds, &builder.city, c);
+                    for (pixel, (base, bed)) in flat.chunks_exact(4).zip(actual.chunks_exact(4)).enumerate() {
+                        if base[3] != 0 {
+                            assert_eq!(
+                                bed[3], 255,
+                                "depth hole: view {view}, shape {shape}, height {height}, pixel {pixel}"
+                            );
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     #[test]
     fn seabed_covers_cells_without_sprite_draws() {
