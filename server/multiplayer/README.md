@@ -85,6 +85,10 @@ Existing embeds keep the same script URL:
 The script now reads v2/activity once per minute while the page is visible.
 Names are inserted as text. The widget shows no IP addresses or passwords.
 CMS placeholder fallback and aggregate counters remain supported.
+The counters use a two-column table. The reporting explanation floats over the
+page when the card is hovered or its information button receives focus. The
+button also toggles the explanation on touch devices; Escape or clicking outside
+closes it. The explanation does not add height to the card.
 
 ## Validation and compatibility
 

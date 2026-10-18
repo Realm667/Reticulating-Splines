@@ -10,6 +10,7 @@ function element(tagName = 'DIV') {
     append(...nodes) { this.children.push(...nodes); },
     replaceChildren(...nodes) { this.children = nodes; },
     setAttribute() {},
+    addEventListener() {},
     hasChildNodes() { return this.children.length > 0 || this.textContent !== ''; },
     attachShadow() { assert.equal(this.shadowRoot, null); return this.shadowRoot = element(); },
   };
@@ -24,8 +25,9 @@ async function fixture({marked = true, loading = false, occupied = false, failur
   let requests = 0;
   const document = {currentScript: script, hidden: false, readyState: loading ? 'loading' : 'complete',
     querySelectorAll() { return marked ? [container] : []; },
-    createElement: element, addEventListener(event, fn) { assert.equal(event, 'DOMContentLoaded'); ready = fn; }};
-  const context = vm.createContext({document, URL, AbortSignal, setInterval() {}, clearInterval() {},
+    createElement: element, addEventListener(event, fn) { if (event === 'DOMContentLoaded') ready = fn; }, removeEventListener() {}};
+  const window = {addEventListener() {}, removeEventListener() {}};
+  const context = vm.createContext({document, window, URL, AbortSignal, setTimeout, clearTimeout, setInterval() {}, clearInterval() {},
     async fetch(url, options) {
       assert.equal(url, 'https://rs.realm667.com/api/multiplayer/v2/activity');
       assert.equal(options.credentials, 'omit');
@@ -42,7 +44,7 @@ test('standard embed renders empty directory and duplicate script is harmless', 
   const f = await fixture();
   assert.match(f.container.shadowRoot.children[1].children[0].textContent, /0 players online/);
   vm.runInContext(source, f.context);
-  assert.equal(f.container.shadowRoot.children.length, 2);
+  assert.equal(f.container.shadowRoot.children.length, 4);
 });
 test('CMS-stripped attribute uses the adjacent empty placeholder after DOM ready', async () => {
   const f = await fixture({marked: false, loading: true});
@@ -64,7 +66,8 @@ test('aggregate statistics render separately and tolerate older servers', async 
   const section = f.container.shadowRoot.children[1];
   const summary = section.children[3];
   assert.deepEqual(summary.children.map(cell => cell.children[1].textContent), ['1,234', '7', '16', '—', '—']);
-  assert.match(section.children[4].textContent, /2026-10-17/);
+  assert.match(f.container.shadowRoot.children[3].textContent, /2026-10-17/);
+  assert.equal(f.container.shadowRoot.children[3].hidden, true);
   const legacy = await fixture();
   assert.equal(legacy.container.shadowRoot.children[1].children.length, 3);
   const unavailable = await fixture({totals: {available: false}});
