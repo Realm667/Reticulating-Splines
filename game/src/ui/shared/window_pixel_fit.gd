@@ -24,6 +24,11 @@ func _process(_delta: float) -> void:
 # fits one window. the fit depends on the position, and a dragged window has
 # no signal, so a moving window waits until it stops
 static func fit(window: Window) -> void:
+	# Embedded dialogs have their own canvas and do not inherit the main UI filter.
+	var filter := Viewport.DEFAULT_CANVAS_ITEM_TEXTURE_FILTER_NEAREST if AppUiTheme.is_classic() else Viewport.DEFAULT_CANVAS_ITEM_TEXTURE_FILTER_LINEAR
+	if window.canvas_item_default_texture_filter != filter:
+		window.canvas_item_default_texture_filter = filter
+
 	var moving: bool = window.position != window.get_meta(&"pixel_fit_last_position", UNSEEN)
 	window.set_meta(&"pixel_fit_last_position", window.position)
 

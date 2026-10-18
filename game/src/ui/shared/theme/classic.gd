@@ -123,8 +123,8 @@ static func build(value: String) -> Theme:
 	result.set_stylebox("embedded_border", "Window", _window_frame(FACE if dos else NAVY))
 	result.set_stylebox("embedded_unfocused_border", "Window", _window_frame(FACE if dos else SHADOW))
 	result.set_constant("title_height", "Window", 26)
-	result.set_constant("close_h_offset", "Window", 18)
-	result.set_constant("close_v_offset", "Window", 14)
+	result.set_constant("close_h_offset", "Window", 22)
+	result.set_constant("close_v_offset", "Window", 24)
 	result.set_icon("close", "Window", _button_icon(Vector2i(18, 18), true))
 	result.set_icon("close_pressed", "Window", _button_icon(Vector2i(18, 18), true, true))
 	for entry in [["error", "800000"], ["warning", "805000"], ["map_canvas", "351800"], ["canvas", "c0c0c0"], ["ink", "000000"], ["paper", "ffffff"], ["chart_accent", "000080"], ["grid", "808080"], ["border", "808080"]]:
@@ -165,6 +165,9 @@ static func _font(bold: bool) -> Font:
 		return _fonts[bold]
 	var path := "res://assets/fonts/classic/ms_sans_serif_bold.ttf" if bold else "res://assets/fonts/classic/ms_sans_serif.ttf"
 	var font := load(path).duplicate() as FontFile
+	# Keep the authored pixel grid stable when a viewport requests fractional
+	# oversampling. The classic canvas repeats these texels without blending.
+	font.oversampling = 1.0
 	font.antialiasing = TextServer.FONT_ANTIALIASING_NONE
 	font.subpixel_positioning = TextServer.SUBPIXEL_POSITIONING_DISABLED
 	_fonts[bold] = AppLocalization.with_fallback(font, bold)

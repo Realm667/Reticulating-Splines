@@ -289,6 +289,7 @@ func apply_settings() -> void:
 		preferences.ui_theme = str(values.ui_theme)
 		preferences.translucent_menus = bool(values.translucent_menus)
 		AppUiTheme.select(preferences.ui_theme, preferences.translucent_menus)
+		_apply_theme_filter()
 
 	var ui_scale := AppUiScale.normalize(values.ui_scale)
 
@@ -489,6 +490,7 @@ func load_app_settings() -> void:
 	preferences.ui_theme = str(values.ui_theme)
 	preferences.translucent_menus = bool(values.translucent_menus)
 	AppUiTheme.select(preferences.ui_theme, preferences.translucent_menus)
+	_apply_theme_filter()
 	preferences.ui_scale = values.ui_scale
 	apply_ui_scale()
 	preferences.default_mayor_name = str(values.default_mayor_name)
@@ -518,6 +520,10 @@ func load_app_settings() -> void:
 
 	if preferences.fullscreen:
 		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
+
+
+func _apply_theme_filter() -> void:
+	app.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST if AppUiTheme.is_classic() else CanvasItem.TEXTURE_FILTER_LINEAR
 
 
 # scale the interface and keep pixel artwork on whole screen pixels. call this

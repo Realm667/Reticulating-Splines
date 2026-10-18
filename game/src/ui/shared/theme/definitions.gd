@@ -1,6 +1,9 @@
 class_name AppUiThemeDefinitions
 extends RefCounted
 
+const LIGHT_ACCENT := Color("256a97")
+const LIGHT_SELECTION := Color("dceaf3")
+
 
 static func build(value: String, _files := false, translucent_menus := true) -> Theme:
 	if value in ["classic_windows", "classic_dos"]:
@@ -35,7 +38,7 @@ static func build(value: String, _files := false, translucent_menus := true) -> 
 			if state == "_hovered":
 				background = Color("343a42") if dark else Color("e0e6eb")
 			elif state == "_pressed":
-				background = Color("3c4526") if dark else Color("e1edb8")
+				background = Color("3c4526") if dark else LIGHT_SELECTION
 
 			result.set_stylebox(direction + "_background" + state, "SpinBox", create_box(background, Color.TRANSPARENT, 0, 0, 0))
 
@@ -89,7 +92,7 @@ static func build(value: String, _files := false, translucent_menus := true) -> 
 	result.set_color("canvas", "AppPalette", Color("292d33") if dark else Color("edf0f2"))
 	result.set_color("ink", "AppPalette", Color("e0e5eb") if dark else Color("252c34"))
 	result.set_color("paper", "AppPalette", Color("1a1a1a") if dark else Color.WHITE)
-	result.set_color("chart_accent", "AppPalette", Color("dcf85e") if dark else Color("435b12"))
+	result.set_color("chart_accent", "AppPalette", Color("dcf85e") if dark else LIGHT_ACCENT)
 	result.set_color("grid", "AppPalette", Color("41474f") if dark else Color("ccd3da"))
 	result.set_color("border", "AppPalette", Color("555c66") if dark else Color("9aa4af"))
 
@@ -152,7 +155,7 @@ static func build(value: String, _files := false, translucent_menus := true) -> 
 		for state in ["normal", "hover", "pressed", "hover_pressed", "disabled"]:
 			var box := _copy_style(result, "Button", state)
 			if state != "disabled":
-				box.bg_color = Color("dcf85e") if role == "PrimaryButton" else Color("367074")
+				box.bg_color = (Color("dcf85e") if dark else LIGHT_ACCENT) if role == "PrimaryButton" else Color("367074")
 				if state == "hover":
 					box.bg_color = box.bg_color.lightened(0.1)
 				elif state in ["pressed", "hover_pressed"]:
@@ -160,7 +163,7 @@ static func build(value: String, _files := false, translucent_menus := true) -> 
 				box.border_color = box.bg_color
 			result.set_stylebox(state, role, box)
 		for color_name in ["font_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color", "font_focus_color"]:
-			result.set_color(color_name, role, Color("1a1a1a") if role == "PrimaryButton" else Color.WHITE)
+			result.set_color(color_name, role, Color("1a1a1a") if role == "PrimaryButton" and dark else Color.WHITE)
 
 	result.set_type_variation("ToolbarArtworkButton", "ArtworkButton")
 	# Neutral cool gray supports the matte edges of original toolbar art.
@@ -204,14 +207,14 @@ static func _apply_shared_layout(result: Theme, dark: bool) -> void:
 		var color := (Color("355265") if dark else Color("dce8ee")) if active else Color.TRANSPARENT
 		if state == "hover":
 			color = Color("343e49") if dark else Color("e0e7eb")
-		var box := create_box(color, Color("dcf85e") if dark else Color("52701a"), 0, 12, 7)
+		var box := create_box(color, Color("dcf85e") if dark else LIGHT_ACCENT, 0, 12, 7)
 		box.border_width_left = 3 if active else 0
 		result.set_stylebox(state, "NavigationButton", box)
 		result.set_color("font_" + state + "_color" if state != "normal" else "font_color", "NavigationButton", result.get_color("ink", "AppPalette"))
 	result.set_type_variation("UtilityPanel", "PanelContainer")
 	result.set_stylebox("panel", "UtilityPanel", create_box(result.get_color("canvas", "AppPalette"),
 		result.get_color("border", "AppPalette"), 1, 14, 14))
-	var focus := create_box(Color.TRANSPARENT, Color("dcf85e") if dark else Color("608018"), 2, 0, 0)
+	var focus := create_box(Color.TRANSPARENT, Color("dcf85e") if dark else LIGHT_ACCENT, 2, 0, 0)
 	focus.set_corner_radius_all(3)
 	for type_name in ["Button", "OptionButton", "LineEdit", "TextEdit", "ItemList", "Tree"]:
 		result.set_stylebox("focus", type_name, focus)
@@ -234,7 +237,7 @@ static func _website_theme(dark: bool) -> Theme:
 	var inset := (Color("1a1a1a") if dark else Color("ffffff"))
 	var border := (Color("555c66") if dark else Color("9aa4af"))
 	var ink := (Color("e0e5eb") if dark else Color("252c34"))
-	var accent := Color("dcf85e")
+	var accent := Color("dcf85e") if dark else LIGHT_ACCENT
 	var font := _website_font()
 	var heading := _website_font(800)
 	result.default_font = font
@@ -283,7 +286,7 @@ static func _website_theme(dark: bool) -> Theme:
 			tab.border_width_bottom = 2 if state == "tab_selected" else 1
 			tab.set_corner_radius_all(0)
 			result.set_stylebox(state, type_name, tab)
-		result.set_color("font_selected_color", type_name, accent if dark else Color("435b12"))
+		result.set_color("font_selected_color", type_name, accent if dark else LIGHT_ACCENT)
 	for type_name in ["Button", "OptionButton"]:
 		for state in ["normal", "hover", "pressed", "hover_pressed", "disabled"]:
 			var box := _copy_style(result, type_name, state)
@@ -292,7 +295,7 @@ static func _website_theme(dark: bool) -> Theme:
 			if state == "hover":
 				box.bg_color = (Color("343a42") if dark else Color("e0e6eb"))
 			elif state in ["pressed", "hover_pressed"]:
-				box.bg_color = (Color("3c4526") if dark else Color("e1edb8"))
+				box.bg_color = (Color("3c4526") if dark else LIGHT_SELECTION)
 				box.border_color = accent
 			elif state == "disabled":
 				box.bg_color = surface
@@ -312,7 +315,7 @@ static func _website_theme(dark: bool) -> Theme:
 				tint = (Color("8b929b") if dark else Color("727d89"))
 			if icon is DPITexture:
 				result.set_icon(icon_name, type_name, _recolored_svg(icon, func(color: Color) -> Color:
-					return tint if color.get_luminance() > 0.4 else Color("1a1a1a"), false))
+					return tint if color.get_luminance() > 0.4 else (Color("1a1a1a") if dark else Color.WHITE), false))
 	for type_name in ["LineEdit", "TextEdit"]:
 		for state in ["normal", "read_only"]:
 			var field := _copy_style(result, type_name, state)
@@ -321,9 +324,9 @@ static func _website_theme(dark: bool) -> Theme:
 			field.set_border_width_all(1)
 			field.set_corner_radius_all(3)
 			result.set_stylebox(state, type_name, field)
-		result.set_color("caret_color", type_name, accent if dark else Color("435b12"))
+		result.set_color("caret_color", type_name, accent if dark else LIGHT_ACCENT)
 		result.set_color("font_placeholder_color", type_name, (Color("ccd3db") if dark else Color("4c5865")))
-		result.set_color("selection_color", type_name, Color("367074") if dark else Color("d0e0d7"))
+		result.set_color("selection_color", type_name, Color("367074") if dark else LIGHT_SELECTION)
 	for type_name in ["ItemList", "Tree"]:
 		var panel := _copy_style(result, type_name, "panel")
 		panel.bg_color = inset
@@ -334,13 +337,13 @@ static func _website_theme(dark: bool) -> Theme:
 		for state in result.get_stylebox_list(type_name):
 			if not ("selected" in state or state.begins_with("cursor") or state == "hovered"):
 				continue
-			var selection := create_box((Color("363f27") if dark else Color("e1edb8")), accent, 0, 4, 4)
+			var selection := create_box((Color("363f27") if dark else LIGHT_SELECTION), accent, 0, 4, 4)
 			selection.border_width_left = 3
 			result.set_stylebox(state, type_name, selection)
-		result.set_color("font_selected_color", type_name, accent if dark else Color("435b12"))
-		result.set_color("font_hovered_selected_color", type_name, accent if dark else Color("435b12"))
+		result.set_color("font_selected_color", type_name, accent if dark else LIGHT_ACCENT)
+		result.set_color("font_hovered_selected_color", type_name, accent if dark else LIGHT_ACCENT)
 		result.set_color("guide_color", type_name, (Color("41474f") if dark else Color("ccd3da")))
-	result.set_stylebox("hover", "PopupMenu", create_box((Color("363f27") if dark else Color("e1edb8")), accent, 0, 4, 4))
+	result.set_stylebox("hover", "PopupMenu", create_box((Color("363f27") if dark else LIGHT_SELECTION), accent, 0, 4, 4))
 	for type_name in ["HSeparator", "VSeparator"]:
 		var separator := StyleBoxLine.new()
 		separator.color = (Color("41474f") if dark else Color("ccd3da"))
