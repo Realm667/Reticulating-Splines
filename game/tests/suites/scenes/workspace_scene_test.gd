@@ -123,5 +123,8 @@ func _check_classic_fit(workspace: CityWorkspace, host: Control) -> void:
 	host.size = Vector2(1600, 1000)
 	for frame in 4:
 		await process_frame
-	assert(workspace.menu_bar.get_parent() == workspace.get_node("Page"))
-	assert(workspace.status_bar.get_parent() == workspace.get_node("Page"))
+	for bar in [workspace.menu_bar, workspace.status_bar]:
+		var scroll := bar.get_parent() as ScrollContainer
+		assert(scroll != null and scroll.size.x == host.size.x)
+		assert(Rect2(Vector2.ZERO, host.size).encloses(scroll.get_rect()), "Modern bars remain reachable after a theme change")
+	assert(workspace.get_node("Page").size == host.size)
