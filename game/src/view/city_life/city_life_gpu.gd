@@ -23,7 +23,7 @@ var identities := PackedInt64Array()
 var mask_images: Array = []
 var mask_slots: Dictionary[Vector3i, int] = {}
 var _next_mask_slot := 0
-var cropped: Dictionary[Vector3i, Dictionary] = {}
+var cropped: Dictionary[Vector3i, MaskEntry] = {}
 var blank := Image.create(128, 128, false, Image.FORMAT_RGBA8)
 var blank_mask := Image.create(128, 128, false, Image.FORMAT_R8)
 var blend := 1.0
@@ -71,9 +71,8 @@ func render(canvas: CityLifeCanvas, entries: Array[Dictionary]) -> void:
 	# Mask addresses belong to world tiles, independently of painter-order groups.
 	# Reordering moving figures therefore does not upload unchanged silhouettes.
 	var live: Dictionary[Vector3i, bool] = {}
-	for entry: Dictionary in entries:
-		var figure: CityLifeController.Figure = entry.figure
-		live[Vector3i(figure.tile.x, figure.tile.y, figure.enter % 2)] = true
+	# The complete live set is needed only when a new tile must evict a slot.
+	var live_ready := false
 	var changed_layers: Dictionary[int, Dictionary] = {}
 	var mask_origins := PackedVector2Array()
 	var mask_layers := PackedInt32Array()
@@ -81,21 +80,35 @@ func render(canvas: CityLifeCanvas, entries: Array[Dictionary]) -> void:
 		var entry := entries[index]
 		var figure: CityLifeController.Figure = entry.figure
 		var key := Vector3i(figure.tile.x, figure.tile.y, figure.enter % 2)
-		var slot := _mask_slot(key, live)
 		var candidates: Array = entry.occluders
 		var version: int = candidates[0].image.get_instance_id() if not candidates.is_empty() else 0
-		var cached: Dictionary = cropped.get(key, {})
-		if cached.is_empty() or cached.version != version:
-			var point: Vector2i = canvas._occluder_bounds.get(key, Rect2i(entry.origin, Vector2i.ONE)).position - Vector2i(32, 32)
-			var image := blank if candidates.is_empty() else blank.duplicate()
-			for candidate: Dictionary in candidates:
-				image.blend_rect(candidate.image, Rect2i(Vector2i.ZERO, candidate.image.get_size()), candidate.origin - point)
-			cached = {"version": version, "image": blank_mask if image.is_invisible() else NativeVisualRaster.alpha_mask(image), "origin": point}
+		var cached: MaskEntry = cropped.get(key)
+		if cached == null:
+			if _next_mask_slot >= MASK_CAPACITY and not live_ready:
+				for current: Dictionary in entries:
+					var occupant: CityLifeController.Figure = current.figure
+					live[Vector3i(occupant.tile.x, occupant.tile.y, occupant.enter % 2)] = true
+				live_ready = true
+			cached = MaskEntry.new()
+			cached.slot = _mask_slot(key, live)
+			_ensure_mask_page(cached.slot / MASK_LAYERS)
 			cropped[key] = cached
-		var identity: int = cached.image.get_instance_id()
+		if cached.version != version:
+			var point: Vector2i = canvas._occluder_bounds.get(key, Rect2i(entry.origin, Vector2i.ONE)).position - Vector2i(32, 32)
+			cached.version = version
+			cached.image = blank_mask
+			if not candidates.is_empty():
+				var image := blank.duplicate()
+				for candidate: Dictionary in candidates:
+					image.blend_rect(candidate.image, Rect2i(Vector2i.ZERO, candidate.image.get_size()), candidate.origin - point)
+				if not image.is_invisible():
+					cached.image = NativeVisualRaster.alpha_mask(image)
+			cached.origin = point
+			cached.identity = cached.image.get_instance_id()
+		var slot := cached.slot
+		var identity := cached.identity
 		var page := slot / MASK_LAYERS
 		var layer := slot % MASK_LAYERS
-		_ensure_mask_page(page)
 		if identities[slot] != identity:
 			if not changed_layers.has(page):
 				changed_layers[page] = {}
@@ -247,3 +260,13 @@ static func _scaled(image: Image, size: Vector2i) -> Image:
 	var result: Image = image.duplicate()
 	result.resize(size.x, size.y, Image.INTERPOLATE_NEAREST)
 	return result
+
+
+class MaskEntry extends RefCounted:
+	# World-tile residency survives painter-order changes. Resolve the texture
+	# slot and image identity only when that tile's mask actually changes.
+	var slot := 0
+	var version := -1
+	var image: Image
+	var origin := Vector2i.ZERO
+	var identity := 0

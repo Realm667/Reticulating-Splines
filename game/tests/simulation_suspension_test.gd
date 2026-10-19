@@ -25,6 +25,7 @@ func _run() -> void:
 	_hide_all()
 	assert(not main.frame._simulation_suspended(), "No open window leaves the simulation running")
 
+	_check_window_lookup()
 	_check_every_window_is_classified()
 	_check_current_classification()
 	_check_scenario_goals()
@@ -354,3 +355,30 @@ class RecordingEffects extends ApplicationEffectsAudio:
 
 	func play_sound_ids(ids: Array[int]) -> void:
 		sound_ids.append_array(ids)
+
+
+func _check_window_lookup() -> void:
+	var registry: CityDialogRegistry = main.city_dialogs
+	assert(not registry.has_visible_window())
+	var container := Node.new()
+	var window := Window.new()
+	window.visible = false
+	container.add_child(window)
+	registry.add_child(container)
+	assert(not registry.has_visible_window())
+	window.show()
+	assert(registry.has_visible_window(), "Showing an existing nested window is immediate")
+	window.hide()
+	assert(not registry.has_visible_window(), "Hiding a window is immediate")
+	window.show()
+	container.reparent(main)
+	assert(not registry.has_visible_window(), "Reparented windows leave the registry")
+	container.reparent(registry)
+	assert(registry.has_visible_window(), "Reparenting a subtree adds its windows")
+	window.free()
+	assert(not registry.has_visible_window(), "Freed windows cannot remain in the lookup")
+	container.free()
+	var other := Control.new()
+	registry.add_child(other)
+	assert(not registry.has_visible_window(), "Visible controls do not block map keys")
+	other.free()

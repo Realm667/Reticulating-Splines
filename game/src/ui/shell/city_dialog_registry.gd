@@ -34,6 +34,9 @@ const LibraryWindowsView = preload("res://src/ui/city_windows/library_ruminate_w
 const ScenarioDialogView = preload("res://src/ui/startup/scenario_intro_dialog.tscn")
 const BudgetDialogView = preload("res://src/ui/city_windows/budget_dialog.tscn")
 
+var _windows: Array[Node] = []
+var _windows_dirty := true
+
 var dialog_groups: Dictionary = {}
 var blocking_windows: Array[Node] = []
 var modeless_windows: Array[Node] = []
@@ -79,6 +82,7 @@ func _init(assets: OriginalGameAssets = null) -> void:
 
 
 func _ready() -> void:
+	get_tree().tree_changed.connect(_invalidate_windows)
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_create_file_dialogs()
@@ -276,3 +280,19 @@ func _dialog_parent(group_name: String) -> Control:
 		dialog_groups[group_name] = group
 
 	return dialog_groups[group_name] as Control
+
+
+# Cache membership, never visibility: opening or closing a window takes effect
+# immediately. Tree changes cover nested prompts, removal and reparenting.
+func has_visible_window() -> bool:
+	if _windows_dirty:
+		_windows = find_children("*", "Window", true, false)
+		_windows_dirty = false
+	for window: Window in _windows:
+		if window.visible:
+			return true
+	return false
+
+
+func _invalidate_windows() -> void:
+	_windows_dirty = true

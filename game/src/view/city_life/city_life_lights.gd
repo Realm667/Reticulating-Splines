@@ -15,6 +15,7 @@ var visible_roads: Dictionary[Vector3i, Array] = {}
 var prepared_receivers := 0
 var geometry_reset := false
 var vehicle_planes: Dictionary[Vector4i, Vector4] = {}
+var sprite_shears: Dictionary[Vector4i, float] = {}
 var _geometry := CityLifeGeometry.new()
 var raster_scale := 1
 
@@ -35,6 +36,7 @@ func sync_geometry(city: CityState) -> Dictionary[Vector2i, bool]:
 	if geometry_reset:
 		roads.clear()
 		vehicle_planes.clear()
+		sprite_shears.clear()
 		clear_surfaces()
 		return changed
 	if changed.is_empty():
@@ -42,6 +44,9 @@ func sync_geometry(city: CityState) -> Dictionary[Vector2i, bool]:
 	for key in vehicle_planes.keys():
 		if changed.has(Vector2i(key.x, key.y)):
 			vehicle_planes.erase(key)
+	for key in sprite_shears.keys():
+		if changed.has(Vector2i(key.x, key.y)):
+			sprite_shears.erase(key)
 	for tile in changed:
 		for axis in 4:
 			var key := Vector3i(tile.x, tile.y, axis)
@@ -165,6 +170,13 @@ func _visible_road_patches(city: CityState, tile: Vector2i, enter: int, lookup: 
 		result.append({"image": pixels, "origin": road.origin})
 	visible_roads[key] = result
 	return result
+
+
+func cached_sprite_shear(city: CityState, tile: Vector2i, enter: int, exit: int) -> float:
+	var key := Vector4i(tile.x, tile.y, enter, exit)
+	if not sprite_shears.has(key):
+		sprite_shears[key] = CityLifePaths.sprite_shear(city, tile, enter, exit)
+	return sprite_shears[key]
 
 
 func cached_vehicle_world(city: CityState, figure: CityLifeController.Figure) -> Vector2:

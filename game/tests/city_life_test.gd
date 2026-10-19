@@ -94,6 +94,7 @@ func _check_application() -> void:
 	_check_budgeted_preparation(app)
 	_check_running_cache(app)
 	_check_day_emission(app)
+	_check_light_publication(app)
 	assert(app.asset_state.large_sprites.visual_city_life_traffic)
 	app.preferences.visual_enhancements.pause_freezes = true
 	app.simulation_state.speed_controller.speed = GameSpeedController.Speed.PAUSED
@@ -544,3 +545,29 @@ static func _check_sloped_atlas() -> void:
 	assert(atlas.image.get_pixel(24, 24).a == 0.0, "Foreground masks must still cover inclined vehicles")
 	assert(atlas.emission.get_pixel(20, 20).a > 0.0, "Headlights must tilt with the artwork")
 	assert(sprite.get_pixel(0, 2) == Color.RED and sprite.get_size() == Vector2i(5, 3), "Tilting must not modify shared source artwork")
+
+
+func _check_light_publication(app: CityApplication) -> void:
+	var canvas := CityLifeCanvas.new()
+	canvas.gpu_enabled = true
+	root.add_child(canvas)
+	var saved_night := app.visual_environment.night
+	var saved_smoothing: bool = app.preferences.visual_enhancements.traffic_vehicles_enabled
+	app.visual_environment.night = 1.0
+	canvas.interpolation = 0.0
+	assert(canvas.render(app, app.city_life.figures, app.city_life.sprites))
+	var headlights := canvas.road_layer as CityLifeHeadlights
+	assert(not headlights._pending_upload, "The first light batch must publish immediately")
+	app.preferences.visual_enhancements.traffic_vehicles_enabled = false
+	assert(canvas.render(app, app.city_life.figures, app.city_life.sprites))
+	assert(not headlights._pending_upload, "Unsmoothed vehicles and headlights must publish together")
+	app.preferences.visual_enhancements.traffic_vehicles_enabled = true
+	canvas.interpolation = 1.0
+	assert(canvas.render(app, app.city_life.figures, app.city_life.sprites))
+	assert(not headlights._pending_upload, "Paused endpoint publication cannot delay the lights")
+	canvas.interpolation = 0.0
+	assert(canvas.render(app, app.city_life.figures, app.city_life.sprites))
+	assert(headlights._pending_upload, "Interpolated GPU bodies leave the next frame for light uploads")
+	app.preferences.visual_enhancements.traffic_vehicles_enabled = saved_smoothing
+	app.visual_environment.night = saved_night
+	canvas.free()

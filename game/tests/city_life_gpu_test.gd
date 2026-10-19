@@ -280,7 +280,18 @@ func _check_headlight_batches(hdr: bool, raster_scale := 1) -> void:
 		var expected := viewport.get_texture().get_image()
 		reference.hide()
 		batch.set_night(0.65)
-		batch.render(city, figures, lights, offset, Callable())
+		var previous_buffer := batch.groups[0].multimesh.buffer if not batch.groups.is_empty() else PackedFloat32Array()
+		batch.render(city, figures, lights, offset, Callable(), {}, true)
+		if phase > 0:
+			assert(batch._pending_upload, "Warm receiver uploads should leave the body publication frame")
+			batch.set_interpolation(0.0)
+			assert(batch.groups[0].multimesh.buffer == previous_buffer, "A deferred batch must remain complete")
+			assert(batch.groups[0].material.get_shader_parameter("interpolation") == 1.0, "Old lights must stay at the new body's starting position")
+			await process_frame
+			batch.set_interpolation(1.0)
+			assert(not batch._pending_upload, "Receiver uploads must finish on the next presentation frame")
+		else:
+			assert(not batch._pending_upload, "First-visible headlights cannot wait for a previous batch")
 		batch.show()
 		await RenderingServer.frame_post_draw
 		var actual := viewport.get_texture().get_image()
@@ -299,6 +310,8 @@ func _check_headlight_batches(hdr: bool, raster_scale := 1) -> void:
 		assert(actual.get_data() == expected.get_data(), "Batched headlights differ from individual lights: hdr=%s phase=%d" % [hdr, phase])
 		assert(batch.groups.size() == (1 if raster_scale > 1 else 3) and batch.slots.size() == figures.size())
 		reference.free()
+	batch.render(city, figures, lights, offset + Vector2i.ONE, Callable(), {}, true)
+	assert(not batch._pending_upload, "A camera-origin change must publish transforms immediately")
 	viewport.queue_free()
 	await process_frame
 	print("PASS: batched headlights match individual GPU pixels at three zooms, including HDR, fades, movement and slot reuse")

@@ -17,11 +17,21 @@ var free_slots: Array[int] = []
 var night := 0.0
 var raster_scale := 1
 var previous_world: Dictionary[int, Vector2] = {}
+var _pending_images: Dictionary[int, Image] = {}
+var _pending_upload := false
+var _pending_frame := -1
+var _published := false
+var _offset := Vector2i.ZERO
 
 
 func set_interpolation(value: float) -> void:
+	if _pending_upload and Engine.get_process_frames() != _pending_frame:
+		_flush_uploads()
+	# While the new body batch starts at its previous positions, the old
+	# headlight batch must finish there, not restart its previous movement.
+	var fraction := 1.0 if _pending_upload else value
 	for group in groups:
-		(group.material as ShaderMaterial).set_shader_parameter("interpolation", value)
+		(group.material as ShaderMaterial).set_shader_parameter("interpolation", fraction)
 
 
 func set_night(value: float) -> void:
@@ -30,7 +40,11 @@ func set_night(value: float) -> void:
 		(group.material as ShaderMaterial).set_shader_parameter("night", night)
 
 
-func render(city: CityState, figures: Array, lights: CityLifeLights, offset: Vector2i, lookup: Callable, prepared: Dictionary = {}) -> void:
+func render(city: CityState, figures: Array, lights: CityLifeLights, offset: Vector2i, lookup: Callable, prepared: Dictionary = {}, defer_upload := false) -> void:
+	if _pending_upload:
+		_flush_uploads()
+	var can_defer := defer_upload and _published and offset == _offset
+	_offset = offset
 	var seen: Dictionary[int, bool] = {}
 	for figure: CityLifeController.Figure in figures:
 		if not figure.walking:
@@ -66,8 +80,7 @@ func render(city: CityState, figures: Array, lights: CityLifeLights, offset: Vec
 			var slot := slots[figure.id]
 			var layer := slot % GROUP_SIZE
 			if images[slot] != surface.image:
-				textures[group].update_layer(surface.image, layer)
-				images[slot] = surface.image
+				_pending_images[slot] = surface.image
 			var at := layer * STRIDE
 			var crop: Rect2i = surface.draw_rect
 			var point := Vector2(surface.origin - offset) + Vector2(crop.position) / raster_scale
@@ -94,9 +107,24 @@ func render(city: CityState, figures: Array, lights: CityLifeLights, offset: Vec
 			previous_world[figure.id] = world
 		buffers[group] = transforms
 		parameters[group] = values
+	_pending_upload = true
+	_pending_frame = Engine.get_process_frames()
+	if not can_defer:
+		_flush_uploads()
+
+
+func _flush_uploads() -> void:
+	# Publish the complete batch together. The next presentation frame has no
+	# body-buffer rebuild, leaving room for these receiver texture transfers.
+	for slot: int in _pending_images:
+		textures[slot / GROUP_SIZE].update_layer(_pending_images[slot], slot % GROUP_SIZE)
+		images[slot] = _pending_images[slot]
+	_pending_images.clear()
 	for index in groups.size():
 		groups[index].multimesh.buffer = buffers[index]
 		parameter_textures[index].update(Image.create_from_data(GROUP_SIZE, 3, false, Image.FORMAT_RGBAF, parameters[index].to_byte_array()))
+	_pending_upload = false
+	_published = true
 
 
 func _add_group() -> void:

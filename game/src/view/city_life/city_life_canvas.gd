@@ -84,8 +84,9 @@ func render(app: CityApplication, figures: Array, sprites: CityLifeSprites, prep
 		(material as ShaderMaterial).set_shader_parameter("vehicle_has_emission", light_active)
 	source_bounds = bounds
 	var city := app.document_state.city
-	if light_active:
-		lights.sync_geometry(city)
+	# Road inclination is also used by unlit vehicles. Reuse it until the
+	# shared geometry tracker reports an edit, rotation or replacement city.
+	lights.sync_geometry(city)
 	# Region publications also change while panning an unchanged city. Their
 	# affected silhouettes are invalidated separately by the map renderer.
 	var regions := app.render_caches.region_cache
@@ -137,7 +138,7 @@ func render(app: CityApplication, figures: Array, sprites: CityLifeSprites, prep
 			continue
 		var candidates := _candidates(app, figure.tile, figure.enter)
 		var opacity := figure.opacity()
-		var shear := 0.0 if figure.walking else CityLifePaths.sprite_shear(city, figure.tile, figure.enter, figure.exit)
+		var shear := 0.0 if figure.walking else lights.cached_sprite_shear(city, figure.tile, figure.enter, figure.exit)
 		if gpu_enabled:
 			var entry: Dictionary = _gpu_entries.get(figure, {})
 			if entry.is_empty():
@@ -177,7 +178,8 @@ func render(app: CityApplication, figures: Array, sprites: CityLifeSprites, prep
 				return _pending_frame(app, previous_bounds)
 	if light_active:
 		(road_layer as CityLifeHeadlights).render(city, figures, lights, source_bounds.position,
-			func(tile: Vector2i, enter: int) -> Array: return _light_candidates(app, tile, enter), receiver_inputs)
+			func(tile: Vector2i, enter: int) -> Array: return _light_candidates(app, tile, enter), receiver_inputs,
+			gpu_enabled and interpolation < 1.0 and bool(app.preferences.visual_enhancements.traffic_vehicles_enabled))
 	if gpu_enabled:
 		if gpu == null:
 			gpu = CityLifeGpu.new()
@@ -482,7 +484,7 @@ func _trim_working_set() -> void:
 			removed += 1
 			if removed >= 64:
 				break
-	for cache: Dictionary in [lights.roads, lights.visible_roads, lights.vehicle_planes, _light_occluders]:
+	for cache: Dictionary in [lights.roads, lights.visible_roads, lights.vehicle_planes, lights.sprite_shears, _light_occluders]:
 		if cache.size() <= 4096:
 			continue
 		var removed := 0

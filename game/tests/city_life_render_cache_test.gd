@@ -108,10 +108,13 @@ func _check_geometry_changes() -> void:
 	assert(lights.geometry_reset)
 	var tile := Vector2i(64, 64)
 	var before := lights.surface(city, tile, 0, 2)
+	var shear_before := lights.cached_sprite_shear(city, tile, 0, 2)
 	city.set_building_id(10, 10, 112)
 	lights.sync_geometry(city)
 	assert(not lights.geometry_reset and lights.surface(city, tile, 0, 2).texture == before.texture,
 		"Distant development must not rebuild unchanged road receivers")
+	assert(lights.sprite_shears.has(Vector4i(64, 64, 0, 2)) and lights.cached_sprite_shear(city, tile, 0, 2) == shear_before,
+		"Distant development must retain the road inclination")
 	city.set_tile_flag(64, 64, Sc2TileFlags.POWERED, true)
 	city.set_zone_id(64, 64, 2)
 	assert(lights.sync_geometry(city).is_empty(), "Power and zoning colors do not alter road geometry")
@@ -128,6 +131,11 @@ func _check_geometry_changes() -> void:
 			"corner":
 				city.set_building_corners(64, 64, 0x80)
 		assert(lights.sync_geometry(city).has(tile), "Changed geometry not detected: " + change)
+		assert(not lights.sprite_shears.has(Vector4i(64, 64, 0, 2)), "Road edits must invalidate vehicle inclination")
+		for enter in 4:
+			var exit := (enter + 2) % 4
+			assert(is_equal_approx(lights.cached_sprite_shear(city, tile, enter, exit),
+				CityLifePaths.sprite_shear(city, tile, enter, exit)), "Cached inclination differs after " + change)
 		var cached := lights.surface(city, tile, 0, 2)
 		var fresh := CityLifeLights.new().surface(city, tile, 0, 2)
 		assert(cached.image.get_data() == fresh.image.get_data(), "Local geometry update left stale road pixels: " + change)

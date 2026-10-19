@@ -35,13 +35,8 @@ func camera_keys_allowed(allow_text_focus := false, allow_place_print := false) 
 		if overlay != null and overlay.visible and not (allow_place_print and overlay == app.scurk_place_print):
 			return false
 
-	if app.city_dialogs != null:
-		for dialog in app.city_dialogs.find_children("*", "Window", true, false):
-			if dialog is Window and dialog.visible:
-				return false
-
-			if dialog is Control and dialog.visible and dialog.mouse_filter != Control.MOUSE_FILTER_IGNORE:
-				return false
+	if app.city_dialogs != null and app.city_dialogs.has_visible_window():
+		return false
 
 	for window in app.get_viewport().get_embedded_subwindows():
 		# the console can stay open beside the city. it takes the keys only while it has focus
