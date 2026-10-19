@@ -145,8 +145,6 @@ func capture() -> void:
 	if error == OK:
 		error = image.save_png(path) if image != null else ERR_CANT_CREATE
 	capturing = false
-	if error == OK and app.tutorial != null:
-		app.tutorial.mark("photo")
 	panel.show()
 	notice.text = tr("Photo saved: %s") % path if error == OK else tr("Could not save photo: %s") % error_string(error)
 

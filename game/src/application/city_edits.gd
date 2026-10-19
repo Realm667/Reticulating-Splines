@@ -201,8 +201,6 @@ func _apply_view_tool(finish: Vector2i) -> bool:
 	if tool.selected_group == CityToolIds.Group.QUERY:
 		if tool.selected_subtool == CityToolIds.Query.TRIP_REACH:
 			app.map_view.show_trip_reach(app.document_state.city, finish)
-			if app.tutorial != null:
-				app.tutorial.query(finish)
 		elif tool.selected_subtool == CityToolIds.Query.TILE_INSPECTOR:
 			app.debug_tools.pin_inspector(finish)
 		else:

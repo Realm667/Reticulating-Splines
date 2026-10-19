@@ -9,8 +9,6 @@ extends RefCounted
 
 @warning_ignore_start("integer_division")
 
-signal observed(type: String, detail: Dictionary)
-
 const API_PATH := "res://assets/scripting/api.js"
 # a relative path of the run command starts in this folder of the user data
 const SCRIPTS_FOLDER := "scripts"
@@ -495,7 +493,6 @@ func listens(type: String) -> bool:
 ## listeners, or an empty Dictionary when no script listens. A listener sets
 ## `cancelled` of a cancelable event; the later runtimes see it.
 func emit(type: String, detail: Dictionary = {}, cancelable := false) -> Dictionary:
-	observed.emit(type, detail)
 	if not listens(type):
 		return {}
 

@@ -180,8 +180,6 @@ func activate_document(
 		app.status_label.text = status_text
 
 	app.scripting.on_city_opened()
-	if app.tutorial != null:
-		app.tutorial.activated()
 
 	return true
 

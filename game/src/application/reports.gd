@@ -369,8 +369,6 @@ func _toggle_newspaper_option(id: int) -> void:
 
 
 func on_help_menu(id: int) -> void:
-	if id == CityMenuBar.MENU_LEARNING:
-		return
 	if id == CityMenuBarView.MENU_CHECK_FOR_UPDATES:
 		app.updates.check_now()
 	else:

@@ -24,8 +24,6 @@ func _ready() -> void:
 	app.photo_mode = CityPhotoMode.new(app)
 	app.add_child(app.photo_mode)
 	app.add_child(IdlePresentation.new(app))
-	app.tutorial = TutorialController.new(app)
-	app.add_child(app.tutorial)
 
 
 func _menu(id: int) -> void:

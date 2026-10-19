@@ -195,8 +195,6 @@ func cancel_sign() -> void:
 
 
 func open_query(point: Vector2i) -> void:
-	if app.tutorial != null:
-		app.tutorial.query(point)
 	var result := Queries.inspect(app.document_state.city, point)
 
 	if not result.ok:

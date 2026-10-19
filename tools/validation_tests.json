@@ -115,7 +115,10 @@
     "script": "tests/coop_ui_test.gd",
     "domain": "ui",
     "lane": "product",
-    "requires": ["ext/graphics/pack.json", "ext/data/pack.json"]
+    "requires": [
+      "ext/graphics/pack.json",
+      "ext/data/pack.json"
+    ]
   },
   {
     "id": "graded_network_lights_test",
@@ -253,7 +256,10 @@
     "script": "tests/visual_preparation_test.gd",
     "domain": "rendering",
     "lane": "product",
-    "requires": ["ext/graphics/pack.json", "ext/data/pack.json"]
+    "requires": [
+      "ext/graphics/pack.json",
+      "ext/data/pack.json"
+    ]
   },
   {
     "id": "detail_light_zoom_test",
@@ -589,7 +595,10 @@
     "script": "tests/overview_zoom_test.gd",
     "domain": "ui",
     "lane": "product",
-    "requires": ["ext/graphics/pack.json", "ext/data/pack.json"]
+    "requires": [
+      "ext/graphics/pack.json",
+      "ext/data/pack.json"
+    ]
   },
   {
     "id": "tile_count_test",
@@ -716,14 +725,20 @@
     "script": "tests/scripting_api_test.gd",
     "domain": "scripting",
     "lane": "product",
-    "requires": ["ext/graphics/pack.json", "ext/data/pack.json"]
+    "requires": [
+      "ext/graphics/pack.json",
+      "ext/data/pack.json"
+    ]
   },
   {
     "id": "scripting_examples_test",
     "script": "tests/scripting_examples_test.gd",
     "domain": "scripting",
     "lane": "product",
-    "requires": ["ext/graphics/pack.json", "ext/data/pack.json"]
+    "requires": [
+      "ext/graphics/pack.json",
+      "ext/data/pack.json"
+    ]
   },
   {
     "id": "mod_manifest_test",
@@ -736,7 +751,10 @@
     "script": "tests/mods_workflow_test.gd",
     "domain": "scripting",
     "lane": "product",
-    "requires": ["ext/graphics/pack.json", "ext/data/pack.json"]
+    "requires": [
+      "ext/graphics/pack.json",
+      "ext/data/pack.json"
+    ]
   },
   {
     "id": "scripting_types_test",
@@ -749,7 +767,10 @@
     "script": "tests/scripting_workflow_test.gd",
     "domain": "scripting",
     "lane": "product",
-    "requires": ["ext/graphics/pack.json", "ext/data/pack.json"]
+    "requires": [
+      "ext/graphics/pack.json",
+      "ext/data/pack.json"
+    ]
   },
   {
     "id": "control_binding_test",
@@ -768,14 +789,20 @@
     "script": "tests/control_dispatch_test.gd",
     "domain": "ui",
     "lane": "product",
-    "requires": ["ext/graphics/pack.json", "ext/data/pack.json"]
+    "requires": [
+      "ext/graphics/pack.json",
+      "ext/data/pack.json"
+    ]
   },
   {
     "id": "controls_settings_test",
     "script": "tests/controls_settings_test.gd",
     "domain": "ui",
     "lane": "product",
-    "requires": ["ext/graphics/pack.json", "ext/data/pack.json"]
+    "requires": [
+      "ext/graphics/pack.json",
+      "ext/data/pack.json"
+    ]
   },
   {
     "id": "ui_theme_test",
@@ -816,7 +843,10 @@
     "script": "tests/underground_visibility_test.gd",
     "domain": "rendering",
     "lane": "product",
-    "requires": ["ext/graphics/pack.json", "ext/data/pack.json"]
+    "requires": [
+      "ext/graphics/pack.json",
+      "ext/data/pack.json"
+    ]
   },
   {
     "id": "status_compass_test",
@@ -877,7 +907,10 @@
     "script": "tests/independent_startup_test.gd",
     "domain": "ui",
     "lane": "product",
-    "requires": ["ext/graphics/pack.json", "ext/data/pack.json"]
+    "requires": [
+      "ext/graphics/pack.json",
+      "ext/data/pack.json"
+    ]
   },
   {
     "id": "asset_source_original_test",
@@ -952,7 +985,10 @@
       "{references}",
       "--quick"
     ],
-    "requires": ["ext/graphics/pack.json", "ext/data/pack.json"]
+    "requires": [
+      "ext/graphics/pack.json",
+      "ext/data/pack.json"
+    ]
   },
   {
     "id": "debug_view_layers_test",
@@ -965,28 +1001,40 @@
     "script": "tests/debug_mode_workflow_test.gd",
     "domain": "ui",
     "lane": "product",
-    "requires": ["ext/graphics/pack.json", "ext/data/pack.json"]
+    "requires": [
+      "ext/graphics/pack.json",
+      "ext/data/pack.json"
+    ]
   },
   {
     "id": "debug_tools_workflow_test",
     "script": "tests/debug_tools_workflow_test.gd",
     "domain": "ui",
     "lane": "product",
-    "requires": ["ext/graphics/pack.json", "ext/data/pack.json"]
+    "requires": [
+      "ext/graphics/pack.json",
+      "ext/data/pack.json"
+    ]
   },
   {
     "id": "sc2kfix_tile_set_restore_test",
     "script": "tests/sc2kfix_tile_set_restore_test.gd",
     "domain": "scurk",
     "lane": "product",
-    "requires": ["ext/graphics/pack.json", "ext/data/pack.json"]
+    "requires": [
+      "ext/graphics/pack.json",
+      "ext/data/pack.json"
+    ]
   },
   {
     "id": "autosave_test",
     "script": "tests/autosave_test.gd",
     "domain": "ui",
     "lane": "product",
-    "requires": ["ext/graphics/pack.json", "ext/data/pack.json"]
+    "requires": [
+      "ext/graphics/pack.json",
+      "ext/data/pack.json"
+    ]
   },
   {
     "id": "expanded_limits_test",
@@ -1023,7 +1071,10 @@
     "script": "tests/facility_record_repair_test.gd",
     "domain": "simulation",
     "lane": "product",
-    "requires": ["ext/graphics/pack.json", "ext/data/pack.json"]
+    "requires": [
+      "ext/graphics/pack.json",
+      "ext/data/pack.json"
+    ]
   },
   {
     "id": "no_disasters_aircraft_test",
@@ -1125,7 +1176,10 @@
     "script": "tests/isometric_data_view_test.gd",
     "domain": "rendering",
     "lane": "product",
-    "requires": ["ext/graphics/pack.json", "ext/data/pack.json"],
+    "requires": [
+      "ext/graphics/pack.json",
+      "ext/data/pack.json"
+    ],
     "driver": "scene-batch"
   },
   {
@@ -1202,7 +1256,10 @@
     "script": "tests/large_city_ui_test.gd",
     "domain": "ui",
     "lane": "product",
-    "requires": ["ext/graphics/pack.json", "ext/data/pack.json"]
+    "requires": [
+      "ext/graphics/pack.json",
+      "ext/data/pack.json"
+    ]
   },
   {
     "id": "city_region_renderer_test",
@@ -1252,14 +1309,20 @@
     "script": "tests/toolbar_interaction_test.gd",
     "domain": "ui",
     "lane": "product",
-    "requires": ["ext/graphics/pack.json", "ext/data/pack.json"]
+    "requires": [
+      "ext/graphics/pack.json",
+      "ext/data/pack.json"
+    ]
   },
   {
     "id": "neighbor_connection_count_test",
     "script": "tests/neighbor_connection_count_test.gd",
     "domain": "simulation",
     "lane": "product",
-    "requires": ["ext/graphics/pack.json", "ext/data/pack.json"]
+    "requires": [
+      "ext/graphics/pack.json",
+      "ext/data/pack.json"
+    ]
   },
   {
     "id": "simulation_suspension_test",
@@ -1277,28 +1340,40 @@
     "script": "tests/city_png_export_test.gd",
     "domain": "ui",
     "lane": "product",
-    "requires": ["ext/graphics/pack.json", "ext/data/pack.json"]
+    "requires": [
+      "ext/graphics/pack.json",
+      "ext/data/pack.json"
+    ]
   },
   {
     "id": "usability_polish_test",
     "script": "tests/usability_polish_test.gd",
     "domain": "ui",
     "lane": "product",
-    "requires": ["ext/graphics/pack.json", "ext/data/pack.json"]
+    "requires": [
+      "ext/graphics/pack.json",
+      "ext/data/pack.json"
+    ]
   },
   {
     "id": "terrain_workflow_test",
     "script": "tests/terrain_workflow_test.gd",
     "domain": "tools",
     "lane": "product",
-    "requires": ["ext/graphics/pack.json", "ext/data/pack.json"]
+    "requires": [
+      "ext/graphics/pack.json",
+      "ext/data/pack.json"
+    ]
   },
   {
     "id": "new_city_workflow_test",
     "script": "tests/new_city_workflow_test.gd",
     "domain": "ui",
     "lane": "product",
-    "requires": ["ext/graphics/pack.json", "ext/data/pack.json"]
+    "requires": [
+      "ext/graphics/pack.json",
+      "ext/data/pack.json"
+    ]
   },
   {
     "id": "terrain_layout_test",
@@ -1329,21 +1404,30 @@
     "script": "tests/landscape_brush_test.gd",
     "domain": "tools",
     "lane": "product",
-    "requires": ["ext/graphics/pack.json", "ext/data/pack.json"]
+    "requires": [
+      "ext/graphics/pack.json",
+      "ext/data/pack.json"
+    ]
   },
   {
     "id": "city_nature_paint_test",
     "script": "tests/city_nature_paint_test.gd",
     "domain": "tools",
     "lane": "product",
-    "requires": ["ext/graphics/pack.json", "ext/data/pack.json"]
+    "requires": [
+      "ext/graphics/pack.json",
+      "ext/data/pack.json"
+    ]
   },
   {
     "id": "demolish_paint_test",
     "script": "tests/demolish_paint_test.gd",
     "domain": "tools",
     "lane": "product",
-    "requires": ["ext/graphics/pack.json", "ext/data/pack.json"]
+    "requires": [
+      "ext/graphics/pack.json",
+      "ext/data/pack.json"
+    ]
   },
   {
     "id": "landscape_editor_tools_test",
@@ -1357,14 +1441,20 @@
     "script": "tests/presentation_refinements_test.gd",
     "domain": "ui",
     "lane": "product",
-    "requires": ["ext/graphics/pack.json", "ext/data/pack.json"]
+    "requires": [
+      "ext/graphics/pack.json",
+      "ext/data/pack.json"
+    ]
   },
   {
     "id": "live_terrain_stretch_test",
     "script": "tests/live_terrain_stretch_test.gd",
     "domain": "tools",
     "lane": "product",
-    "requires": ["ext/graphics/pack.json", "ext/data/pack.json"]
+    "requires": [
+      "ext/graphics/pack.json",
+      "ext/data/pack.json"
+    ]
   },
   {
     "id": "frosted_tooltip_test",
@@ -1504,7 +1594,10 @@
     "script": "tests/city_foreground_cache_test.gd",
     "domain": "rendering",
     "lane": "product",
-    "requires": ["ext/graphics/pack.json", "ext/data/pack.json"]
+    "requires": [
+      "ext/graphics/pack.json",
+      "ext/data/pack.json"
+    ]
   },
   {
     "id": "update_check_test",
@@ -1517,7 +1610,10 @@
     "script": "tests/renderer_settings_test.gd",
     "domain": "rendering",
     "lane": "product",
-    "requires": ["ext/graphics/pack.json", "ext/data/pack.json"]
+    "requires": [
+      "ext/graphics/pack.json",
+      "ext/data/pack.json"
+    ]
   },
   {
     "id": "camera_query_settings_test",
@@ -1535,14 +1631,20 @@
     "script": "tests/large_city_busy_test.gd",
     "domain": "ui",
     "lane": "product",
-    "requires": ["ext/graphics/pack.json", "ext/data/pack.json"]
+    "requires": [
+      "ext/graphics/pack.json",
+      "ext/data/pack.json"
+    ]
   },
   {
     "id": "closer_zoom_test",
     "script": "tests/closer_zoom_test.gd",
     "domain": "rendering",
     "lane": "product",
-    "requires": ["ext/graphics/pack.json", "ext/data/pack.json"]
+    "requires": [
+      "ext/graphics/pack.json",
+      "ext/data/pack.json"
+    ]
   },
   {
     "id": "query_details_test",
@@ -1717,7 +1819,10 @@
     "script": "tests/pack_settings_test.gd",
     "domain": "ui",
     "lane": "product",
-    "requires": ["ext/graphics/pack.json", "ext/data/pack.json"]
+    "requires": [
+      "ext/graphics/pack.json",
+      "ext/data/pack.json"
+    ]
   },
   {
     "id": "scurk_editor_render_test",
@@ -1885,7 +1990,10 @@
     "script": "tests/saved_camera_test.gd",
     "domain": "ui",
     "lane": "product",
-    "requires": ["ext/graphics/pack.json", "ext/data/pack.json"]
+    "requires": [
+      "ext/graphics/pack.json",
+      "ext/data/pack.json"
+    ]
   },
   {
     "id": "trip_reach_test",
@@ -1910,7 +2018,10 @@
     "script": "tests/dialog_lifecycle_test.gd",
     "domain": "ui",
     "lane": "product",
-    "requires": ["ext/graphics/pack.json", "ext/data/pack.json"]
+    "requires": [
+      "ext/graphics/pack.json",
+      "ext/data/pack.json"
+    ]
   },
   {
     "id": "city_gpu_geometry_test_native",
@@ -1927,14 +2038,20 @@
     "script": "tests/moving_cadence_app_test.gd",
     "domain": "rendering",
     "lane": "product",
-    "requires": ["ext/graphics/pack.json", "ext/data/pack.json"]
+    "requires": [
+      "ext/graphics/pack.json",
+      "ext/data/pack.json"
+    ]
   },
   {
     "id": "vehicle_layer_test",
     "script": "tests/vehicle_layer_test.gd",
     "domain": "rendering",
     "lane": "product",
-    "requires": ["ext/graphics/pack.json", "ext/data/pack.json"]
+    "requires": [
+      "ext/graphics/pack.json",
+      "ext/data/pack.json"
+    ]
   },
   {
     "id": "moving_occlusion_native_test",
@@ -1951,7 +2068,10 @@
     "script": "tests/isometric_data_view_test.gd",
     "domain": "rendering",
     "lane": "native",
-    "requires": ["ext/graphics/pack.json", "ext/data/pack.json"],
+    "requires": [
+      "ext/graphics/pack.json",
+      "ext/data/pack.json"
+    ],
     "driver": "scene-batch"
   },
   {
@@ -2063,7 +2183,10 @@
     "script": "tests/golden_corpus_test.gd",
     "domain": "formats",
     "lane": "product",
-    "requires": ["references/SIMCITY2000", "ext/graphics/pack.json"]
+    "requires": [
+      "references/SIMCITY2000",
+      "ext/graphics/pack.json"
+    ]
   },
   {
     "id": "golden_corpus_import_test",
@@ -2170,18 +2293,5 @@
     "script": "tests/multiplayer_timed_land_test.gd",
     "domain": "simulation",
     "lane": "product"
-  },
-  {
-    "id": "tutorial_test",
-    "script": "tests/tutorial_test.gd",
-    "domain": "ui",
-    "lane": "product"
-  },
-  {
-    "id": "tutorial_workflow_test",
-    "script": "tests/tutorial_workflow_test.gd",
-    "domain": "ui",
-    "lane": "product",
-    "requires": ["ext/graphics", "ext/data"]
   }
 ]
