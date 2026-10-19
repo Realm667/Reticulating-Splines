@@ -32,6 +32,10 @@ static func prepare(archive: Sc2SpriteArchive, palette: Sc2Palette) -> void:
 		var entry := archive.find_sprite(id)
 		var pixels := entry.decode_indices().pixels
 		var image := Image.create(entry.width, entry.height, false, Image.FORMAT_RGBA8)
+		if land_side:
+			# Keep the material tag in transparent texels too: filtered artwork
+			# may cover them at fractional zoom. Alpha still follows the sprite.
+			image.fill(Color(0, 0, 0.4, 0))
 		for at in pixels.size():
 			if pixels[at] < 0:
 				continue

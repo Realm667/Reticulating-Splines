@@ -11,6 +11,8 @@ func _run() -> void:
 		await _check_water(hdr)
 		await _check_strata(hdr)
 		await _check_strata_water_join(hdr)
+	for spec in [[1.0, false, false], [1.5, false, false], [4.0, false, false], [4.0, true, true]]:
+		await _check_strata_bottom(spec[0], spec[1], spec[2])
 	print("PASS: artwork preserves effects and emission, depth water, terrain-following strata and disabled fallbacks in SDR/HDR")
 	quit()
 
@@ -180,5 +182,64 @@ func _check_strata_water_join(hdr: bool) -> void:
 		"The continuous wall profile must cross authored soil/water sprite boundaries without a color seam")
 	assert(land_sprite.get_pixel(64, 2) != land_sprite.get_pixel(64, 62),
 		"The joined wall must still distinguish water above from sediments below")
+	viewport.queue_free()
+	await process_frame
+
+
+func _check_strata_bottom(zoom: float, hd: bool, hdr: bool) -> void:
+	# Use the actual jagged sprite contour and the production indexed/artwork
+	# shader paths. A corner exposes both faces, including the shared tip.
+	var pack := FixtureGraphics.pack()
+	var archive := pack.large_sprites
+	CitySeasonColors.prepare(archive, pack.palette)
+	var entry := archive.find_sprite(1269)
+	var pixels: Image = entry.create_image(pack.palette).image
+	var viewport := SubViewport.new()
+	viewport.size = Vector2i(ceil(32 * zoom), ceil(32 * zoom))
+	viewport.transparent_bg = true
+	viewport.use_hdr_2d = hdr
+	viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	root.add_child(viewport)
+	var sprite := Sprite2D.new()
+	sprite.centered = false
+	sprite.scale = Vector2.ONE * zoom
+	sprite.texture = ImageTexture.create_from_image(pixels)
+	if hd:
+		sprite.modulate = Color(2.0 / 255.0, 0, 0, 1)
+	var material := ShaderMaterial.new()
+	material.shader = load("res://src/view/map/palette_cycle.gdshader")
+	material.set_shader_parameter("map_edge_size", 16.0)
+	material.set_shader_parameter("environment_lut_linear_canvas", hdr)
+	material.set_shader_parameter("environment_has_seasons", true)
+	material.set_shader_parameter("environment_season_mask", ImageTexture.create_from_image(archive.visual_seasons[1269]))
+	material.set_shader_parameter("edge_canvas_to_grid", Basis(
+		Vector3(1.0 / (32 * zoom), -1.0 / (32 * zoom), 0),
+		Vector3(1.0 / (16 * zoom), 1.0 / (16 * zoom), 0),
+		Vector3(15.0625 - entry.height / 16.0, 16.0625 - entry.height / 16.0, 1)))
+	var profile := Image.create(16, 2, false, Image.FORMAT_RGBAF)
+	profile.fill(Color(4.0 / 31.0, 0, 0, 4.0 / 31.0))
+	material.set_shader_parameter("map_edge_profile", ImageTexture.create_from_image(profile))
+	sprite.material = material
+	viewport.add_child(sprite)
+	await process_frame
+	await RenderingServer.frame_post_draw
+	var original := viewport.get_texture().get_image()
+	material.set_shader_parameter("map_strata_enabled", true)
+	await RenderingServer.frame_post_draw
+	var corrected := viewport.get_texture().get_image()
+	var blended := 0
+	for x in range(2, viewport.size.x - 2):
+		var edge_y := (entry.height - 2.0 - absf((x + 0.5) / zoom - 16.0) * 0.5) * zoom
+		for y in range(floori(edge_y) - 2, ceili(edge_y) + 3):
+			var alpha := corrected.get_pixel(x, y).a
+			var expected := clampf((edge_y - y - 0.5) / 1.5 + 0.5, 0, 1)
+			assert(absf(alpha - expected) < 0.06,
+				"Strata bottom must follow a continuous antialiased contour: zoom=%s hd=%s point=%s alpha=%s expected=%s" % [zoom, hd, Vector2i(x, y), alpha, expected])
+			if alpha > 0.05 and alpha < 0.95:
+				blended += 1
+	assert(blended > viewport.size.x / 2, "The bottom edge must retain subpixel coverage at integer and fractional zoom")
+	material.set_shader_parameter("map_strata_enabled", false)
+	await RenderingServer.frame_post_draw
+	assert(viewport.get_texture().get_image().get_data() == original.get_data(), "Disabling strata restores the original sprite contour exactly")
 	viewport.queue_free()
 	await process_frame
