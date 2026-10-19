@@ -73,7 +73,9 @@ func _run() -> void:
 			toolbar.surface_visibility_requested.disconnect(observe)
 			toolbar.layers_popup.hide()
 		else:
-			assert(toolbar.get_parent() is HBoxContainer)
+			var scroll := toolbar.get_parent() as ScrollContainer
+			assert(scroll != null and scroll.is_visible_in_tree())
+			assert(scroll.size.y > 0 and scroll.size.y <= main.size.y, "Toolbar stays accessible inside the viewport")
 			assert(toolbar.data_view_input.is_visible_in_tree())
 		assert(main.document_state.city.document.serialize().data == before)
 		var late := FileDialogFactory.city_open()
