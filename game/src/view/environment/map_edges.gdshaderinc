@@ -17,10 +17,10 @@ float edge_surface(float along, float face) {
 	return 31.0 * (b + 0.5 * t * (c - a + t * (2.0 * a - 5.0 * b + 4.0 * c - d + t * (3.0 * (b - c) + d - a))));
 }
 
-vec3 map_edge_color(vec3 original, float mask) {
+vec4 map_edge_color(vec3 original, float mask) {
 	bool soil = mask > 0.35 && mask < 0.45;
 	bool water = mask > 0.2 && mask < 0.3;
-	if ((!soil || !map_strata_enabled) && (!water || !water_depth_enabled)) { return original; }
+	if ((!soil || !map_strata_enabled) && (!water || !water_depth_enabled)) { return vec4(original, mask); }
 	// Inverse isometric projection of a vertical face. One altitude level
 	// displaces both grid coordinates by 12 / 16. This also works at the corner.
 	float rise = map_edge_size - 0.5 - max(edge_grid.x, edge_grid.y);
@@ -29,14 +29,25 @@ vec3 map_edge_color(vec3 original, float mask) {
 	bool right_face = edge_grid.x >= edge_grid.y;
 	vec3 profile = texture(map_edge_profile, vec2(along / map_edge_size, right_face ? 0.25 : 0.75)).rgb;
 	float land = round(profile.r * 31.0);
+	float surface = edge_surface(along, right_face ? 0.25 : 0.75);
 	float level = round(profile.g * 31.0);
 	// Sprite silhouettes extend a fraction of a logical pixel beyond the
 	// ideal wall. Grade those boundary texels too, instead of leaking blue.
 	vec3 fallback = water ? water_depth_color(original, 0.0, 0.0) : original;
-	if (altitude < -0.15 || altitude > 31.1 || along < 0.0 || along > map_edge_size) { return fallback; }
+	if (altitude < -0.15 || altitude > 31.1 || along < 0.0 || along > map_edge_size) { return vec4(fallback, mask); }
+	// Land and water sprites are stacked at integer tile heights. Reclassify
+	// their shared wall with the same continuous profile as the strata, so
+	// the material boundary cannot cut vertical steps through curved layers.
+	if (map_strata_enabled && water_depth_enabled && profile.b > 0.5) {
+		soil = altitude <= surface;
+		land = surface;
+		mask = soil ? 0.4 : 0.25;
+		// Procedural grading must not retain the different brightness of the
+		// original land/water artwork at the now invisible sprite boundary.
+		original = environment_lut_linear_canvas ? lut_linear(vec3(0.4)) : vec3(0.4);
+	}
 	vec3 color;
 	if (soil) {
-		float surface = edge_surface(along, right_face ? 0.25 : 0.75);
 		float below_surface = (surface - altitude) * 12.0;
 		// Fixed low-frequency variation: no animation or simulation RNG. Distance
 		// from the common corner keeps both faces joined at the same layer phase.
@@ -54,7 +65,7 @@ vec3 map_edge_color(vec3 original, float mask) {
 		color *= 0.96 + grain * 0.08;
 	} else {
 		// Do not treat inland waterfalls as the exposed map boundary.
-		if (profile.b < 0.5 || altitude < land - 0.15 || altitude > level + 0.15) { return fallback; }
+		if (profile.b < 0.5 || altitude < land - 0.15 || altitude > level + 0.15) { return vec4(fallback, mask); }
 		float depth = max(level - altitude, 0.0);
 		vec3 graded = water_depth_color(original, depth, 3.0);
 		color = environment_lut_linear_canvas ? lut_srgb(graded) : graded;
@@ -62,5 +73,5 @@ vec3 map_edge_color(vec3 original, float mask) {
 		color = mix(color, vec3(0.36, 0.59, 0.66), (1.0 - smoothstep(0.0, 0.13, depth)) * 0.3);
 	}
 	color *= right_face ? 0.88 : 1.0;
-	return environment_lut_linear_canvas ? lut_linear(color) : color;
+	return vec4(environment_lut_linear_canvas ? lut_linear(color) : color, mask);
 }

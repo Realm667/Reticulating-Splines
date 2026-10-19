@@ -10,6 +10,7 @@ func _run() -> void:
 		await _check_artwork(hdr)
 		await _check_water(hdr)
 		await _check_strata(hdr)
+		await _check_strata_water_join(hdr)
 	print("PASS: artwork preserves effects and emission, depth water, terrain-following strata and disabled fallbacks in SDR/HDR")
 	quit()
 
@@ -78,7 +79,7 @@ func _check_strata(hdr: bool) -> void:
 	viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	root.add_child(viewport)
 	var shader := Shader.new()
-	shader.code = 'shader_type canvas_item;\n#include "res://src/view/environment/environment_color.gdshaderinc"\n#include "res://src/view/water/water_color.gdshaderinc"\n#include "res://src/view/environment/map_edges.gdshaderinc"\nvoid vertex() { float rise = (10.0 - UV.y * 4.0) * 0.75; edge_grid = vec2(15.5 - rise, UV.x * 15.0 - rise); }\nvoid fragment() { COLOR = vec4(map_edge_color(vec3(0.4), 0.4), 1.0); }'
+	shader.code = 'shader_type canvas_item;\n#include "res://src/view/environment/environment_color.gdshaderinc"\n#include "res://src/view/water/water_color.gdshaderinc"\n#include "res://src/view/environment/map_edges.gdshaderinc"\nvoid vertex() { float rise = (10.0 - UV.y * 4.0) * 0.75; edge_grid = vec2(15.5 - rise, UV.x * 15.0 - rise); }\nvoid fragment() { COLOR = vec4(map_edge_color(vec3(0.4), 0.4).rgb, 1.0); }'
 	var material := ShaderMaterial.new()
 	material.shader = shader
 	material.set_shader_parameter("map_strata_enabled", true)
@@ -140,5 +141,44 @@ func _check_water(hdr: bool) -> void:
 	await RenderingServer.frame_post_draw
 	image = viewport.get_texture().get_image()
 	assert(image.get_pixel(8, 8) == image.get_pixel(48, 8), "Disabling depth colors restores the same authored color")
+	viewport.queue_free()
+	await process_frame
+
+
+func _check_strata_water_join(hdr: bool) -> void:
+	var viewport := SubViewport.new()
+	viewport.size = Vector2i(128, 64)
+	viewport.use_hdr_2d = hdr
+	viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	root.add_child(viewport)
+	var shader := Shader.new()
+	shader.code = 'shader_type canvas_item;\n#include "res://src/view/environment/environment_color.gdshaderinc"\n#include "res://src/view/water/water_color.gdshaderinc"\n#include "res://src/view/environment/map_edges.gdshaderinc"\nuniform float marker;\nvoid vertex() { float rise = (10.0 - UV.y * 8.0) * 0.75; edge_grid = vec2(15.5 - rise, UV.x * 15.0 - rise); }\nvoid fragment() { COLOR = vec4(map_edge_color(marker < 0.3 ? vec3(0.1, 0.2, 0.9) : vec3(0.6, 0.3, 0.1), marker).rgb, 1.0); }'
+	var material := ShaderMaterial.new()
+	material.shader = shader
+	material.set_shader_parameter("map_strata_enabled", true)
+	material.set_shader_parameter("water_depth_enabled", true)
+	material.set_shader_parameter("map_edge_size", 16.0)
+	material.set_shader_parameter("environment_lut_linear_canvas", hdr)
+	var profile := Image.create(16, 2, false, Image.FORMAT_RGBAF)
+	for x in 16:
+		for face in 2:
+			var land := 4.0 if x < 8 else 7.0
+			profile.set_pixel(x, face, Color(land / 31.0, 12.0 / 31.0, 1, (4.0 + x * 0.2) / 31.0))
+	material.set_shader_parameter("map_edge_profile", ImageTexture.create_from_image(profile))
+	var rect := ColorRect.new()
+	rect.size = viewport.size
+	rect.material = material
+	viewport.add_child(rect)
+	material.set_shader_parameter("marker", 0.4)
+	await process_frame
+	await RenderingServer.frame_post_draw
+	var land_sprite := viewport.get_texture().get_image()
+	material.set_shader_parameter("marker", 0.25)
+	await RenderingServer.frame_post_draw
+	var water_sprite := viewport.get_texture().get_image()
+	assert(land_sprite.get_data() == water_sprite.get_data(),
+		"The continuous wall profile must cross authored soil/water sprite boundaries without a color seam")
+	assert(land_sprite.get_pixel(64, 2) != land_sprite.get_pixel(64, 62),
+		"The joined wall must still distinguish water above from sediments below")
 	viewport.queue_free()
 	await process_frame

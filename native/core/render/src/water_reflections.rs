@@ -110,16 +110,19 @@ fn contact_row(draw: &Draw, column: i32, developed: bool) -> i32 {
 
 fn bridge(building: u8) -> bool {
     use crate::ids::building_tile_ids::*;
-    (SUSPENSION_BRIDGE_1..=POWER_BRIDGE).contains(&building) || [HIGHWAY_BRIDGE, REINFORCED_HIGHWAY_BRIDGE].contains(&building)
+    (SUSPENSION_BRIDGE_1..=POWER_BRIDGE).contains(&building)
+        || [HIGHWAY_STRAIGHT_1, HIGHWAY_STRAIGHT_2, HIGHWAY_BRIDGE, REINFORCED_HIGHWAY_BRIDGE].contains(&building)
 }
 
 fn contact_twice(draw: &Draw, column: i32, building: u8) -> i32 {
-    use crate::ids::building_tile_ids::DEVELOPED_FIRST;
+    use crate::ids::building_tile_ids::{DEVELOPED_FIRST, HIGHWAY_STRAIGHT_2};
     if bridge(building) {
         // A bridge stands along one isometric map axis, not at a point. Its
         // projected water contact has slope +/- 1/2, matching the deck and the
         // adjacent spans. Keep half-pixel contacts to avoid staircase seams.
-        let along = if draw.flip {
+        // Unreinforced highway bridges use the two ordinary elevated highway
+        // sprites. Their direction is encoded in the tile ID, not just FLIPPED.
+        let along = if draw.flip ^ (building == HIGHWAY_STRAIGHT_2) {
             column - draw.rect.w / 2
         } else {
             draw.rect.w / 2 - 1 - column
@@ -1189,66 +1192,88 @@ mod tests {
 
     #[test]
     fn bridge_sprite_pixels_reflect_without_rotating_in_both_directions() {
-        use crate::ids::{building_tile_ids::ROAD_BRIDGE, sc2tile_flags::FLIPPED};
-        for view in 0..3 {
-            for flip in [false, true] {
-                let mut builder = fixture(view);
-                let c = builder.config;
-                let width = c.hw() * 2;
-                let height = c.height() + 12 / c.divisor();
-                let mut image = Sprite {
-                    w: width,
-                    h: height,
-                    rgba: vec![0; (width * height * 4) as usize],
-                    la: vec![0; (width * height * 2) as usize],
-                };
-                for x in 0..width {
-                    let plane = (2 * height + width / 2 - 1 - x).div_euclid(2);
-                    let row = plane - 16 / c.divisor();
-                    let at = (row * width + x) as usize;
-                    let index = 40 + x as u8;
-                    image.rgba[at * 4..at * 4 + 4].copy_from_slice(&[index, index, index, 255]);
-                    image.la[at * 2..at * 2 + 2].copy_from_slice(&[index, 255]);
-                }
-                // A separated pier below one truss column must not shift that
-                // upper column away from the continuous diagonal reflection.
-                for y in height - 2..height {
-                    let at = (y * width + width * 3 / 4) as usize;
-                    image.rgba[at * 4..at * 4 + 4].copy_from_slice(&[200, 200, 200, 255]);
-                    image.la[at * 2..at * 2 + 2].copy_from_slice(&[200, 255]);
-                }
-                builder.city.buildings[0] = ROAD_BRIDGE;
-                builder.city.terrain[0] = 0x10;
-                builder.city.flags[0] = 4 | if flip { FLIPPED } else { 0 };
-                builder
-                    .sprites
-                    .images
-                    .insert(((c.base() + i32::from(ROAD_BRIDGE)) * 2) as u64, image);
-                let bounds = Rect::new(c.side(), c.top() - 32 / c.divisor(), 160 / c.divisor(), 160 / c.divisor());
-                let mut indices = [0; 256];
-                indices[96] = 1;
-                let out = builder.water_pixels(bounds, &indices, &HashMap::new(), &HashMap::new()).unwrap();
-                let draw = builder
-                    .collect(bounds)
-                    .unwrap()
-                    .into_iter()
-                    .find(|d| d.sprite == c.base() + i32::from(ROAD_BRIDGE))
-                    .unwrap();
-                let mut pixels = 0;
-                for x in 0..width {
-                    let original_x = if flip { width - 1 - x } else { x };
-                    let source_row = (2 * height + width / 2 - 1 - original_x).div_euclid(2) - 16 / c.divisor();
-                    let axis = 2 * (draw.rect.y + height) + if flip { x - width / 2 } else { width / 2 - 1 - x };
-                    let y = axis - (draw.rect.y + source_row) - 1;
-                    let at = (((y - bounds.y) * bounds.w + draw.rect.x + x - bounds.x) * 4) as usize;
-                    if out.surface[at + 3] == 0 {
-                        continue;
+        use crate::ids::{
+            building_tile_ids::{HIGHWAY_STRAIGHT_1, HIGHWAY_STRAIGHT_2, ROAD_BRIDGE},
+            sc2tile_flags::FLIPPED,
+        };
+        for building in [ROAD_BRIDGE, HIGHWAY_STRAIGHT_1, HIGHWAY_STRAIGHT_2] {
+            for view in 0..3 {
+                for flip in [false, true] {
+                    let mut builder = fixture(view);
+                    let c = builder.config;
+                    let width = c.hw() * 2;
+                    let height = c.height() + 12 / c.divisor();
+                    let mut image = Sprite {
+                        w: width,
+                        h: height,
+                        rgba: vec![0; (width * height * 4) as usize],
+                        la: vec![0; (width * height * 2) as usize],
+                    };
+                    for x in 0..width {
+                        let direction = if building == HIGHWAY_STRAIGHT_2 {
+                            x - width / 2
+                        } else {
+                            width / 2 - 1 - x
+                        };
+                        let plane = (2 * height + direction).div_euclid(2);
+                        let row = plane - 16 / c.divisor();
+                        let at = (row * width + x) as usize;
+                        let index = 40 + x as u8;
+                        image.rgba[at * 4..at * 4 + 4].copy_from_slice(&[index, index, index, 255]);
+                        image.la[at * 2..at * 2 + 2].copy_from_slice(&[index, 255]);
                     }
-                    assert_eq!(out.reflected[at], 40 + original_x as u8, "view {view}, flip {flip}, column {x}");
-                    assert!(out.reflected[at + 3] > 0);
-                    pixels += 1;
+                    // A separated pier below one truss column must not shift that
+                    // upper column away from the continuous diagonal reflection.
+                    for y in height - 2..height {
+                        let support = if building == HIGHWAY_STRAIGHT_2 { width / 4 } else { width * 3 / 4 };
+                        let at = (y * width + support) as usize;
+                        image.rgba[at * 4..at * 4 + 4].copy_from_slice(&[200, 200, 200, 255]);
+                        image.la[at * 2..at * 2 + 2].copy_from_slice(&[200, 255]);
+                    }
+                    builder.city.buildings[0] = building;
+                    builder.city.terrain[0] = 0x10;
+                    builder.city.flags[0] = 4 | if flip { FLIPPED } else { 0 };
+                    builder.sprites.images.insert(((c.base() + i32::from(building)) * 2) as u64, image);
+                    let bounds = Rect::new(c.side(), c.top() - 32 / c.divisor(), 160 / c.divisor(), 160 / c.divisor());
+                    let mut indices = [0; 256];
+                    indices[96] = 1;
+                    let out = builder.water_pixels(bounds, &indices, &HashMap::new(), &HashMap::new()).unwrap();
+                    let draw = builder
+                        .collect(bounds)
+                        .unwrap()
+                        .into_iter()
+                        .find(|d| d.sprite == c.base() + i32::from(building))
+                        .unwrap();
+                    let mut pixels = 0;
+                    for x in 0..width {
+                        let original_x = if flip { width - 1 - x } else { x };
+                        let direction = if building == HIGHWAY_STRAIGHT_2 {
+                            original_x - width / 2
+                        } else {
+                            width / 2 - 1 - original_x
+                        };
+                        let source_row = (2 * height + direction).div_euclid(2) - 16 / c.divisor();
+                        let axis = 2 * (draw.rect.y + height)
+                            + if flip ^ (building == HIGHWAY_STRAIGHT_2) {
+                                x - width / 2
+                            } else {
+                                width / 2 - 1 - x
+                            };
+                        let y = axis - (draw.rect.y + source_row) - 1;
+                        let at = (((y - bounds.y) * bounds.w + draw.rect.x + x - bounds.x) * 4) as usize;
+                        if out.surface[at + 3] == 0 {
+                            continue;
+                        }
+                        assert_eq!(
+                            out.reflected[at],
+                            40 + original_x as u8,
+                            "tile {building}, view {view}, flip {flip}, column {x}"
+                        );
+                        assert!(out.reflected[at + 3] > 0);
+                        pixels += 1;
+                    }
+                    assert!(pixels >= width / 2, "bridge reflection was clipped in view {view}, flip {flip}");
                 }
-                assert!(pixels >= width / 2, "bridge reflection was clipped in view {view}, flip {flip}");
             }
         }
     }

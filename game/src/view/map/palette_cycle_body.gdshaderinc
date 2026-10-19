@@ -363,7 +363,9 @@ void fragment() {
 		} else if (dark_underground) {
 			COLOR.rgb = texture(dark_underground_palette, vec2((float(palette_index) + 0.5) / 256.0, 0.5)).rgb;
 		} else if (fullbright_draw < 0.5 && !indexed_power_warning) {
-			COLOR.rgb = map_edge_color(COLOR.rgb, natural_mask.b);
+			vec4 edge_color = map_edge_color(COLOR.rgb, natural_mask.b);
+			COLOR.rgb = edge_color.rgb;
+			natural_mask.b = edge_color.a;
 			if (water_enabled && ((natural_mask.b > 0.2 && natural_mask.b < 0.3) || (natural_mask.b > 0.55 && natural_mask.b < 0.65))) {
 				if (natural_mask.b > 0.55) { COLOR.rgb = water_depth_color(COLOR.rgb, 0.0, 0.0); }
 				// Water sides keep their original shading/animation and painter
@@ -448,7 +450,9 @@ void fragment() {
 			// Authored waterfall frames use ANIMATION_TAG, not WATERFALL_TAG.
 			// Identify water from the shared mask so every frame gets grading.
 			vec4 natural_mask = environment_has_seasons ? environment_season_sample(center * pixel_size) : vec4(0.0);
-			COLOR.rgb = map_edge_color(COLOR.rgb, natural_mask.b);
+			vec4 edge_color = map_edge_color(COLOR.rgb, natural_mask.b);
+			COLOR.rgb = edge_color.rgb;
+			natural_mask.b = edge_color.a;
 			if (water_enabled && ((natural_mask.b > 0.2 && natural_mask.b < 0.3) || (natural_mask.b > 0.55 && natural_mask.b < 0.65))) {
 				if (natural_mask.b > 0.55) { COLOR.rgb = water_depth_color(COLOR.rgb, 0.0, 0.0); }
 				COLOR.rgb = water_season_color(COLOR.rgb);
