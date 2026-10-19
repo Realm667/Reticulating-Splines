@@ -38,6 +38,7 @@ func _run() -> void:
 	main.preferences.visual_enhancements.life_cars_enabled = false
 	assert(prepare.required_variants() == [0, 2, 4])
 	main.preferences.visual_enhancements.life_cars_enabled = true
+	main.asset_state.large_sprites.visual_tree_shadows_enabled = false
 	for view in 3:
 		var original := main.static_render.original_archive_for_view(view)
 		var id := view * 500 + 112
@@ -48,6 +49,7 @@ func _run() -> void:
 		var original := main.static_render.original_archive_for_view(index / 2)
 		assert(is_same(prepare.archives[index].visual_registration, original.visual_registration), "Preparation dropped pack canvas registration")
 		assert(is_same(prepare.archives[index].parcel_styles, original.parcel_styles), "Preparation dropped pack parcel metadata")
+		assert(prepare.archives[index].visual_tree_shadows_enabled == original.visual_tree_shadows_enabled)
 	assert(prepare.busy and not main.frame._simulation_suspended())
 	assert(prepare.owns(main.render_caches.region_cache), "Visible renderer must use the preparation bank before preload completes")
 	assert(main.static_render.sprite_archive_for_view(main.static_render.city_view_size()) == prepare.archive_for_view(main.static_render.city_view_size()),
@@ -104,6 +106,25 @@ func _run() -> void:
 	assert(not prepare.busy and not main.city_dialogs.visual_preparation_progress.visible)
 	assert(DocumentState.capture(city.document) == before, "Precache advanced or edited the city")
 	assert([engine.random.state, engine.lfsr_random.state, engine.game_random.state] == random_before)
+	for index in prepare.banks.size():
+		if index not in prepare.stages:
+			assert(prepare.banks[index].entries.is_empty(), "Initial preparation built an unused variant")
+	# Selecting already warm graphics must not close banks or cancel their work.
+	var retained_banks := prepare.banks.duplicate()
+	var retained_archives := prepare.archives.duplicate()
+	main.preferences.zoom_graphics = [2, 2, 2, 2, 2, 2]
+	await _finish_preparation(main)
+	main.preferences.zoom_graphics = [1, 2, 2, 2, 2, 2]
+	await _finish_preparation(main)
+	assert(prepare.banks == retained_banks and prepare.archives == retained_archives,
+		"A zoom assignment rebuilt unchanged graphics variants")
+	main.preferences.visual_enhancements.life_cars_enabled = false
+	await _finish_preparation(main)
+	assert(prepare.banks == retained_banks and prepare.archives == retained_archives, "Traffic choice destroyed reusable banks")
+	main.preferences.visual_enhancements.life_cars_enabled = true
+	await _finish_preparation(main)
+	assert(prepare.banks == retained_banks and prepare.archives == retained_archives, "Returning to traffic rebuilt warm banks")
+	await _settle(main)
 	main.frame.select_speed(GameSpeedController.Speed.PAUSED)
 	var lights := main.visual_environment.night_lighting
 	var snapshots := {}
@@ -115,8 +136,6 @@ func _run() -> void:
 	for index in prepare.banks.size():
 		var cache := prepare.banks[index]
 		assert(index not in prepare.stages or cache.prefetch_ready())
-		if index not in prepare.stages:
-			assert(cache.entries.is_empty(), "Unused traffic variant was prepared twice")
 	main.preferences.zoom_graphics = [1, 2, 2, 2, 2, 2]
 	for zoom in [0.25, 0.1, 0.5, 0.25]:
 		main.map_view.zoom_factor = zoom
@@ -193,6 +212,29 @@ func _run() -> void:
 	assert(prepare.busy and not main.frame._simulation_suspended())
 	assert(main.render_caches.region_cache != null or main.static_render_state.pending
 		or main.static_render_state.task != null or main.render_caches.static_city_image != null)
+	# Large cities prepare a camera-sized working set instead of all map regions.
+	var large := CityState.from_document(EmptyCityTemplate.create(512))
+	large.set_building_id(256, 256, BuildingTileIds.ROAD_CROSSROADS)
+	large.set_building_id(10, 10, BuildingTileIds.ROAD_CROSSROADS)
+	assert(main.city_session.activate_document(large.document))
+	main.map_view.zoom_factor = 1.0
+	main.map_view.center_on_tile(Vector2i(256, 256))
+	prepare.process()
+	assert(not prepare._prepare_whole_city())
+	prepare.work_budget.begin_frame(0.016)
+	main.frame.process(0.016)
+	for index in prepare.stages:
+		prepare._configure(index)
+		var bank := prepare.banks[index]
+		bank.update_viewport(main.map_view.visible_source_rect())
+		var whole := ceili(float(bank.native_size.x) / bank.region_edge) * ceili(float(bank.native_size.y) / bank.region_edge)
+		assert(not bank.prepare_entire_city and bank.wanted.size() * 4 < whole,
+			"Large-city startup queued the entire map")
+	await _finish_preparation(main)
+	for ground in main.visual_environment.night_lighting.ground_views.values():
+		assert(not ground.discovery_active and not ground.resident,
+			"Large-city lighting started a city-wide discovery")
+		assert(not ground.cache.has(Vector2i(10, 10)), "Large-city preparation built distant lights")
 	# Teardown cancels in-flight workers; a replacement document cannot inherit banks.
 	var old_banks := prepare.banks.duplicate()
 	assert(main.city_session.activate_document(EmptyCityTemplate.create(128)))
@@ -211,6 +253,16 @@ func _run() -> void:
 	await process_frame
 	print("PASS: full-city visual preparation, all zoom variants, cloud order, edits and zoom during background loading, playable frames and cancellation")
 	quit()
+
+
+func _finish_preparation(main: CityApplication) -> void:
+	var started := Time.get_ticks_msec()
+	while true:
+		main.frame.process(0.016)
+		assert(Time.get_ticks_msec() - started < 60000)
+		if main.visual_preparation.ready:
+			return
+		await process_frame
 
 
 func _settle(main: CityApplication) -> void:

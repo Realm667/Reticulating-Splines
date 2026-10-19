@@ -20,6 +20,7 @@ var title_label: Label
 var bar: ProgressBar
 var detail_label: Label
 var bottom_strip := false
+var _footer: Control
 
 
 func _ready() -> void:
@@ -48,13 +49,15 @@ func use_bottom_strip() -> void:
 	center.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
 	center.offset_top = -50.0
 	center.offset_bottom = -4.0
-	$Center/Panel/Rows/Title.hide()
+	# Keep the work being done visible; playful messages supplement the phase.
+	$Center/Panel/Rows/Title.show()
 	$Center/Panel/Rows.add_theme_constant_override("separation", 2)
 	bar.custom_minimum_size.y = 8.0
 	bar.show_percentage = false
 
 
 func avoid_footer(footer: Control) -> void:
+	_footer = footer
 	footer.resized.connect(_position_above_footer.bind(footer))
 	_position_above_footer(footer)
 
@@ -78,6 +81,8 @@ func show_progress(title: String, detail: String, fraction: float) -> void:
 		bar.value = clampf(fraction, 0.0, 1.0)
 
 	if bottom_strip:
+		if is_instance_valid(_footer):
+			_position_above_footer(_footer)
 		if not visible:
 			_next_preparation_message()
 			message_timer.start()

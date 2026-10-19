@@ -4,6 +4,7 @@ extends RefCounted
 @warning_ignore_start("integer_division")
 
 const VARIANTS := 6
+const FULL_CITY_PREPARATION_EDGE := 128
 const RETAINED_GPU_LIMIT := 1024 * 1024 * 1024
 var work_budget := VisualWorkBudget.new()
 var app: CityApplication
@@ -69,7 +70,6 @@ func _layout() -> Array:
 	return [city.document.get_instance_id(), city.map_size, city.compass_rotation(), city.visible_altitude_levels,
 		app.asset_state.large_sprites, app.asset_state.small_medium_sprites,
 		app.view_state.surface_visibility.duplicate(), app.preferences.city_renderer,
-		app.preferences.effective_zoom_graphics().duplicate(), app.preferences.effective_overview_graphics(), app.preferences.visual_enhancements.life_cars_enabled,
 		app.asset_state.large_sprites.visual_nature_enabled, app.asset_state.large_sprites.visual_terrain_enabled,
 		app.asset_state.small_medium_sprites.visual_nature_enabled, app.asset_state.small_medium_sprites.visual_terrain_enabled]
 
@@ -134,6 +134,7 @@ func begin() -> void:
 		archive.visual_nature = original.visual_nature
 		archive.visual_nature_masks = original.visual_nature_masks
 		archive.visual_nature_enabled = original.visual_nature_enabled
+		archive.visual_tree_shadows_enabled = original.visual_tree_shadows_enabled
 		archive.visual_terrain_enabled = original.visual_terrain_enabled
 		archive.visual_revision = original.visual_revision
 		archive.water_reflections = original.water_reflections
@@ -154,9 +155,37 @@ func begin() -> void:
 	_progress(0.0, "Preparing city graphics…")
 
 
+func _prepare_whole_city() -> bool:
+	return app.document_state.city.map_size <= FULL_CITY_PREPARATION_EDGE
+
+
+func _select_variants() -> void:
+	if banks.size() != VARIANTS:
+		return
+	var required := required_variants()
+	if stages == required:
+		return
+	# A zoom mapping or decorative traffic choice selects existing banks. It
+	# does not change their pixels, archive identity or in-flight job layout.
+	for cache in banks:
+		if cache.prepare_entire_city:
+			cache.prepare_entire_city = false
+			cache._viewport_valid = false
+			cache.update_viewport(app.map_view.visible_source_rect())
+	stages = required
+	stage = 0
+	completed = 0
+	total = stages.size()
+	progress = 0.0
+	lighting_started = false
+	preparing_lights.clear()
+	ready = false
+	busy = true
+
+
 func _progress(fraction: float, detail: String) -> void:
 	progress = maxf(progress, fraction)
-	app.city_dialogs.visual_preparation_progress.show_progress("Preparing Visual Enhancements", detail, progress)
+	app.city_dialogs.visual_preparation_progress.show_progress("Lighting" if lighting_started else "Preparing city graphics…", detail, progress)
 
 
 func process() -> bool:
@@ -171,6 +200,7 @@ func process() -> bool:
 	if layout != _layout():
 		begin()
 		return false
+	_select_variants()
 	if not work_budget.available():
 		return false
 	if not busy:
@@ -208,8 +238,8 @@ func process() -> bool:
 func _prepare_step() -> void:
 	var cache := banks[stages[stage]]
 	_configure(stages[stage])
-	if not cache.prepare_entire_city:
-		cache.prepare_entire_city = true
+	if cache.prepare_entire_city != _prepare_whole_city():
+		cache.prepare_entire_city = _prepare_whole_city()
 		cache._viewport_valid = false
 	# Keep actual camera regions first, including when this is the active bank.
 	cache.update_viewport(app.map_view.visible_source_rect())
@@ -232,15 +262,18 @@ func _prepare_step() -> void:
 			var lighting := app.visual_environment.night_lighting
 			lighting._select_ground(preparing_view)
 			var ground := lighting.ground
-			ground.resident = true
+			# Large cities warm the camera and its margin, then expand on demand.
+			# Preparing every region/light at every size scales with total map area.
+			ground.resident = _prepare_whole_city()
 			if not lighting_started:
 				ground.sync(app, 0.0, 0.0, true, maxi(1, work_budget.remaining()))
-				ground.begin_city_discovery(app.document_state.city)
+				if _prepare_whole_city():
+					ground.begin_city_discovery(app.document_state.city)
 				lighting_started = true
 			ground.sync(app, 0.0, 0.0, true, maxi(1, work_budget.remaining()))
 			if ground.discovery_active:
 				return
-			preparing_lights.assign(ground.discovered)
+			preparing_lights.assign(ground.discovered if _prepare_whole_city() else ground.visible_tiles)
 			var built_lights := 0
 			for tile in preparing_lights:
 				built_lights += int(ground.cache.has(tile))
