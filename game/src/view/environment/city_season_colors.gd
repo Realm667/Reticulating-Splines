@@ -1,6 +1,7 @@
 class_name CitySeasonColors
 extends RefCounted
-## Red/green mark natural artwork; blue 1 marks warnings, 0.25 water sides, 0.6 embedded water.
+## Red/green mark natural artwork. Blue marks warnings (1), water (0.25/0.6),
+## side walls (0.4), and front slope faces (0.7/0.8).
 
 @warning_ignore_start("integer_division")
 
@@ -54,12 +55,53 @@ static func prepare(archive: Sc2SpriteArchive, palette: Sc2Palette) -> void:
 				image.set_pixel(at % entry.width, at / entry.width, Color(0, 0, 0.6, 1))
 			elif foliage or soil or power_warning:
 				image.set_pixel(at % entry.width, at / entry.width, Color(float(foliage), float(soil), float(power_warning), 1))
+			if offset > 256 and offset <= 268:
+				var point := Vector2i(at % entry.width, at / entry.width)
+				var side := terrain_side(offset - 256, Vector2(point) + Vector2(0.5, 0.5), Vector2(entry.width, entry.height))
+				if side > 0.0:
+					var mark := image.get_pixelv(point)
+					mark.b = side
+					mark.a = 1.0
+					image.set_pixelv(point, mark)
 		if not image.is_invisible():
 			archive.visual_seasons[id] = image
 
 
 static func _is_soil(color: Color) -> bool:
 	return color.r > color.b * 1.3 and color.g > color.b * 1.15
+
+
+## The vertical front faces embedded in slope sprites. Keep the top surface,
+## including its shared rim, unchanged. Blue 0.7/0.8 identifies right/left;
+## the shader decides whether that face actually belongs to the map boundary.
+static func terrain_side(shape: int, point: Vector2, size: Vector2) -> float:
+	if shape <= 0 or shape > 12:
+		return 0.0
+	var corners := IsometricConstants.TERRAIN_SURFACE_CORNER_MASKS[shape]
+	var right := point.x >= size.x * 0.5
+	var outer_bit := 2 if right else 8
+	if corners & (outer_bit | 4) == 0:
+		return 0.0
+	var rise := size.x * 0.375
+	var bottom := size.y - 1.0 - (rise if corners & 4 else 0.0)
+	var outer := size.y - 1.0 - size.x * 0.25 - (rise if corners & outer_bit else 0.0)
+	var fraction := absf(point.x - size.x * 0.5) / (size.x * 0.5)
+	return (0.7 if right else 0.8) if point.y > lerpf(bottom, outer, fraction) + 0.5 else 0.0
+
+
+static func terrain_side_mask(source: Image, shape: int, size: Vector2) -> Image:
+	var result := source.duplicate() as Image
+	var scale := size / Vector2(source.get_size())
+	for y in source.get_height():
+		for x in source.get_width():
+			var mark := source.get_pixel(x, y)
+			if mark.a <= 0.0:
+				continue
+			var side := terrain_side(shape, (Vector2(x, y) + Vector2(0.5, 0.5)) * scale, size)
+			if side > 0.0:
+				mark.b = side
+				result.set_pixel(x, y, mark)
+	return result
 
 
 static func weights(phase: float, transition: float) -> Vector4:

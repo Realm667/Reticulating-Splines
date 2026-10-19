@@ -73,7 +73,7 @@ static func prepare(archive: Sc2SpriteArchive, palette: Sc2Palette, authored: Vi
 				# channels retain their shared foliage/ground/power contracts.
 				var rock := offset != 256 and color.g < color.r * 0.76
 				mask.set_pixel(at % entry.width, at / entry.width, Color(0, 1, 0, 0.55 if rock else (1.0 if offset == 256 else 0.92)))
-			archive.visual_nature_masks[id] = mask
+			archive.visual_nature_masks[id] = CitySeasonColors.terrain_side_mask(mask, offset - 256, Vector2(entry.width, entry.height))
 	if authored != null:
 		_apply_authored(archive, palette, authored)
 
@@ -90,6 +90,9 @@ static func _apply_authored(archive: Sc2SpriteArchive, palette: Sc2Palette, auth
 		if not key.begins_with("woodland/") and not key.begins_with("ground/"):
 			continue
 		var parts := key.split("/")
+		var season_mask: Image = frame.season_mask
+		if parts[0] == "ground" and season_mask != null:
+			season_mask = CitySeasonColors.terrain_side_mask(season_mask, int(parts[1]) - 1256, Vector2(frame.logical_size))
 		for view in 3:
 			if not archive.entries_by_id.has(view * 500 + 6):
 				continue
@@ -122,17 +125,17 @@ static func _apply_authored(archive: Sc2SpriteArchive, palette: Sc2Palette, auth
 					continue
 				id = FIRST + GROUND_VARIANT * SPAN + base_id
 				entry = Sc2SpriteArchive.entry_from_indices(id, size.x, size.y, ground.decode_indices().pixels)
-				if frame.season_mask != null:
-					archive.visual_nature_masks[base_id] = _logical_mask(frame.season_mask, size, divisor, frame.scale)
-					archive.visual_season_artwork[base_id] = frame.season_mask
+				if season_mask != null:
+					archive.visual_nature_masks[base_id] = _logical_mask(season_mask, size, divisor, frame.scale)
+					archive.visual_season_artwork[base_id] = season_mask
 			archive.visual_nature[id] = entry
 			var hd := HdSprite.new()
 			hd.image = frame.image
 			hd.height = size.y
 			archive.high_resolution[id] = hd
-			if frame.season_mask != null:
-				archive.visual_nature_masks[id] = _logical_mask(frame.season_mask, size, divisor, frame.scale)
-				archive.visual_season_artwork[id] = frame.season_mask
+			if season_mask != null:
+				archive.visual_nature_masks[id] = _logical_mask(season_mask, size, divisor, frame.scale)
+				archive.visual_season_artwork[id] = season_mask
 
 
 static func _logical_mask(source: Image, size: Vector2i, divisor: int, scale := 4) -> Image:

@@ -13,6 +13,8 @@ func _run() -> void:
 		await _check_strata_water_join(hdr)
 	for spec in [[1.0, false, false], [1.5, false, false], [4.0, false, false], [4.0, true, true]]:
 		await _check_strata_bottom(spec[0], spec[1], spec[2])
+	for hd in [false, true]:
+		await _check_strata_slopes(hd)
 	print("PASS: artwork preserves effects and emission, depth water, terrain-following strata and disabled fallbacks in SDR/HDR")
 	quit()
 
@@ -70,6 +72,76 @@ func _check_artwork(hdr: bool) -> void:
 	for index in range(1, 6):
 		assert(original.get_region(Rect2i(index * 16, 0, 16, 16)).get_data() == reduced.get_region(Rect2i(index * 16, 0, 16, 16)).get_data(),
 			"Color filter altered enhancement or light layer %d" % index)
+	viewport.queue_free()
+	await process_frame
+
+
+func _check_strata_slopes(hd: bool) -> void:
+	var elevation := 31.0 if hd else 6.0
+	var pack := FixtureGraphics.pack()
+	var archive := pack.large_sprites
+	CitySeasonColors.prepare(archive, pack.palette)
+	var viewport := SubViewport.new()
+	viewport.size = Vector2i(32, 32)
+	viewport.transparent_bg = true
+	viewport.use_hdr_2d = hd
+	viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	root.add_child(viewport)
+	var sprite := Sprite2D.new()
+	sprite.centered = false
+	sprite.modulate = Color((53.0 if hd else 54.0) / 255.0, elevation / 255.0, 0, 1)
+	var material := ShaderMaterial.new()
+	material.shader = load("res://src/view/map/palette_cycle.gdshader")
+	material.set_shader_parameter("map_edge_size", 16.0)
+	material.set_shader_parameter("environment_lut_linear_canvas", hd)
+	material.set_shader_parameter("environment_enabled", true)
+	material.set_shader_parameter("environment_has_seasons", true)
+	material.set_shader_parameter("environment_seasons", Vector4(0, 0, 0, 1))
+	material.set_shader_parameter("environment_frost", 1.0)
+	var profile := Image.create(16, 2, false, Image.FORMAT_RGBAF)
+	profile.fill(Color(elevation / 31.0, 0, 0, (elevation + 0.5) / 31.0))
+	material.set_shader_parameter("map_edge_profile", ImageTexture.create_from_image(profile))
+	sprite.material = material
+	viewport.add_child(sprite)
+	for shape in range(1, 13):
+		var entry := archive.find_sprite(1256 + shape)
+		var pixels: Image = entry.create_image(pack.palette).image
+		sprite.texture = ImageTexture.create_from_image(pixels)
+		var mask: Image = archive.visual_seasons[1256 + shape]
+		var transform := Basis(Vector3(1.0 / 32, -1.0 / 32, 0), Vector3(1.0 / 16, 1.0 / 16, 0),
+			Vector3(15.0625 - entry.height / 16.0 - elevation * 0.75, 16.0625 - entry.height / 16.0 - elevation * 0.75, 1))
+		material.set_shader_parameter("edge_canvas_to_grid", transform)
+		material.set_shader_parameter("environment_season_mask", ImageTexture.create_from_image(mask))
+		material.set_shader_parameter("map_strata_enabled", false)
+		await process_frame
+		await RenderingServer.frame_post_draw
+		var original := viewport.get_texture().get_image()
+		material.set_shader_parameter("map_strata_enabled", true)
+		await RenderingServer.frame_post_draw
+		var corrected := viewport.get_texture().get_image()
+		var wall := Image.create(entry.width, entry.height, false, Image.FORMAT_RGBA8)
+		wall.fill(Color(0, 0, 0.4, 1))
+		material.set_shader_parameter("environment_season_mask", ImageTexture.create_from_image(wall))
+		await RenderingServer.frame_post_draw
+		var reference := viewport.get_texture().get_image()
+		var covered := 0
+		for y in entry.height:
+			for x in entry.width:
+				if pixels.get_pixel(x, y).a < 1.0:
+					continue
+				if mask.get_pixel(x, y).b > 0.67:
+					covered += 1
+					assert(corrected.get_pixel(x, y).is_equal_approx(reference.get_pixel(x, y)),
+						"Slope rock must continue wall sediments without snow/elevation grading: shape=%d hd=%s point=%s" % [shape, hd, Vector2i(x, y)])
+				else:
+					assert(corrected.get_pixel(x, y) == original.get_pixel(x, y), "Terrain top must stay unchanged")
+		if shape != 9: # The top-only raised corner has no front vertical face.
+			assert(covered > 0, "Slope mask must include its vertical face")
+		material.set_shader_parameter("environment_season_mask", ImageTexture.create_from_image(mask))
+		transform.z -= Vector3(1, 1, 0)
+		material.set_shader_parameter("edge_canvas_to_grid", transform)
+		await RenderingServer.frame_post_draw
+		assert(viewport.get_texture().get_image().get_data() == original.get_data(), "Inland cliffs must retain original rock/snow")
 	viewport.queue_free()
 	await process_frame
 

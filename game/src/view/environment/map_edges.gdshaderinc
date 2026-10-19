@@ -4,6 +4,15 @@ uniform sampler2D map_edge_profile : filter_nearest, repeat_disable;
 uniform mat3 edge_canvas_to_grid = mat3(1.0);
 varying vec2 edge_grid;
 
+bool map_edge_slope(float mask, float elevation) {
+	if (!map_strata_enabled || elevation < 0.0 || mask < 0.67 || mask > 0.83) { return false; }
+	// Restore the base-height grid coordinate of this vertical face. An outer
+	// slope spans 0.75 tiles above its base; the next inland face is one tile
+	// behind it. Directional material tags keep the opposite face untouched.
+	float face = (mask < 0.75 ? edge_grid.x : edge_grid.y) + elevation * 0.75;
+	return face > map_edge_size - 1.375 && face < map_edge_size - 0.375;
+}
+
 float edge_surface(float along, float face) {
 	// Cubic reconstruction keeps the smoothed diagonal profile continuous between
 	// tiles, without turning each individual tile into a flat horizontal terrace.
@@ -44,7 +53,7 @@ vec4 map_edge_color(vec3 original, float mask) {
 	// Sprite silhouettes extend a fraction of a logical pixel beyond the
 	// ideal wall. Grade those boundary texels too, instead of leaking blue.
 	vec3 fallback = water ? water_depth_color(original, 0.0, 0.0) : original;
-	if (altitude < -0.15 || altitude > 31.1 || along < 0.0 || along > map_edge_size) { return vec4(fallback, mask); }
+	if (altitude < -0.15 || altitude > 32.1 || along < 0.0 || along > map_edge_size) { return vec4(fallback, mask); }
 	// Land and water sprites are stacked at integer tile heights. Reclassify
 	// their shared wall with the same continuous profile as the strata, so
 	// the material boundary cannot cut vertical steps through curved layers.

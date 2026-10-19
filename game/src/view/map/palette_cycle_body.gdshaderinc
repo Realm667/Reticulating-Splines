@@ -257,6 +257,7 @@ vec3 waterfall_flow(vec3 material) {
 #endif
 
 void fragment() {
+	bool sediment_slope = false;
 #ifdef USE_PAGED_ATLAS
 	vec2 pixel_size = vec2(1.0 / region_atlas_edge);
 #else
@@ -363,6 +364,8 @@ void fragment() {
 		} else if (dark_underground) {
 			COLOR.rgb = texture(dark_underground_palette, vec2((float(palette_index) + 0.5) / 256.0, 0.5)).rgb;
 		} else if (fullbright_draw < 0.5 && !indexed_power_warning) {
+			sediment_slope = map_edge_slope(natural_mask.b, terrain_elevation);
+			if (sediment_slope) { natural_mask.b = 0.4; }
 			COLOR.a *= map_edge_coverage(natural_mask.b);
 			vec4 edge_color = map_edge_color(COLOR.rgb, natural_mask.b);
 			COLOR.rgb = edge_color.rgb;
@@ -376,7 +379,8 @@ void fragment() {
 					COLOR.rgb = water_body_tone(COLOR.rgb, 0.0, 0.0);
 				}
 			}
-			COLOR.rgb = environment_color_emission(cloud_shadow(COLOR.rgb, cloud_ground_grid), UV, building_emission);
+			COLOR.rgb = sediment_slope ? environment_ambient(cloud_shadow(COLOR.rgb, cloud_ground_grid))
+				: environment_color_emission(cloud_shadow(COLOR.rgb, cloud_ground_grid), UV, building_emission);
 		}
 	} else if (artwork_kind > 2.5 && artwork_kind < 3.5) {
 		// an antialiased line along the edge of a tile
@@ -451,6 +455,8 @@ void fragment() {
 			// Authored waterfall frames use ANIMATION_TAG, not WATERFALL_TAG.
 			// Identify water from the shared mask so every frame gets grading.
 			vec4 natural_mask = environment_has_seasons ? environment_season_sample(center * pixel_size) : vec4(0.0);
+			sediment_slope = map_edge_slope(natural_mask.b, terrain_elevation);
+			if (sediment_slope) { natural_mask.b = 0.4; }
 			COLOR.a *= map_edge_coverage(natural_mask.b);
 			vec4 edge_color = map_edge_color(COLOR.rgb, natural_mask.b);
 			COLOR.rgb = edge_color.rgb;
@@ -462,7 +468,8 @@ void fragment() {
 					COLOR.rgb = water_body_tone(COLOR.rgb, 0.0, 0.0);
 				}
 			}
-			COLOR.rgb = environment_color_emission(cloud_shadow(COLOR.rgb, cloud_ground_grid), center * pixel_size, building_emission);
+			COLOR.rgb = sediment_slope ? environment_ambient(cloud_shadow(COLOR.rgb, cloud_ground_grid))
+				: environment_color_emission(cloud_shadow(COLOR.rgb, cloud_ground_grid), center * pixel_size, building_emission);
 		}
 
 		if (power_warning > 0.5 && artwork_frames.x < 1.5 && palette_cycle_enabled) {
@@ -471,7 +478,7 @@ void fragment() {
 		}
 	}
 
-	if (terrain_elevation >= 0.0 && environment_has_seasons) {
+	if (terrain_elevation >= 0.0 && environment_has_seasons && !sediment_slope) {
 		float soil = environment_season_sample(UV).g;
 		COLOR.rgb = terrain_elevation_color(COLOR.rgb, soil * clamp(nature_terrain_strength * 2.0, 0.0, 1.0));
 	}

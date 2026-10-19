@@ -160,7 +160,9 @@ func prepare(city: CityState, palette: Sc2Palette, sprites: Sc2SpriteArchive, vi
 			"individual_traffic": int(sprites.visual_city_life_traffic and not special_overlays),
 			"natural_forests": int(sprites.visual_nature_enabled and mode == CityViewMode.Mode.CITY),
 			"tree_shadows": int(sprites.visual_tree_shadows_enabled),
-			"natural_terrain": int(sprites.visual_terrain_enabled and mode == CityViewMode.Mode.CITY),
+			# Keep ground altitude tags available for edge strata even when meadow
+			# artwork is off. The variant inventory above still follows that option.
+			"natural_terrain": int(mode == CityViewMode.Mode.CITY),
 			"pipes": int(pipes), "subways": int(subways), "mains": int(water_mains), "tunnels": int(tunnels),
 			"redraw_ground": int(sprites.redraw_small_highway_ground), "atlas_edge": atlas_edge,
 			"building_ground": int(sprites.draw_building_ground),
