@@ -269,6 +269,23 @@ func _check_settings() -> void:
 	config.set_value("general", "ui_scale", "invalid")
 	assert(config.save(path) == OK)
 	assert(AppSettingsStore.load_values(path).ui_scale == AppUiScale.DEFAULT)
+	assert(AppSettingsStore.load_values(path).window_resolution == Vector2i.ZERO)
+	assert(not AppSettingsStore.load_values(path).exact_ui_scale)
+	scale_options.window_resolution = Vector2i(1920, 1080)
+	scale_options.exact_ui_scale = true
+	assert(AppSettingsStore.save_values(0.8, 0.8, false, path, scale_options) == OK)
+	assert(AppSettingsStore.load_values(path).window_resolution == Vector2i(1920, 1080))
+	assert(AppSettingsStore.load_values(path).exact_ui_scale)
+	# Other settings writers must preserve the display choice.
+	assert(AppSettingsStore.save_values(0.5, 0.5, false, path) == OK)
+	assert(AppSettingsStore.load_values(path).window_resolution == Vector2i(1920, 1080))
+	assert(AppDisplayOptions.normalize(Vector2i(999999, -1)) == Vector2i.ZERO)
+	assert(AppDisplayOptions.normalize("1920x1080") == Vector2i.ZERO)
+	assert(AppDisplayOptions.fit(Vector2i(1920, 1080), Vector2i(1280, 700)) == Vector2i(1280, 700))
+	scale_options.exact_ui_scale = false
+	scale_options.window_resolution = Vector2i.ZERO
+	scale_options.ui_scale = AppUiScale.DEFAULT
+	assert(AppSettingsStore.save_values(0.8, 0.8, false, path, scale_options) == OK)
 
 	# a 1280x800 window at 2x screen pixels, as on a high-density display
 	var window_size := root.size
@@ -313,6 +330,25 @@ func _check_settings() -> void:
 	root.size = Vector2i(1920, 1080)
 	await process_frame
 	assert(absf(root.get_final_transform().get_scale().x - 1.35) < 0.01, "Godot rounds the layout to whole interface pixels")
+	main.settings.open_settings_dialog()
+	var display_dialog: AppSettingsDialog = main.main_overlays.settings_dialog
+	display_dialog.exact_scale_check.button_pressed = true
+	display_dialog.resolution_selector.select(AppDisplayOptions.SIZES.find(Vector2i(1920, 1080)))
+	main.settings.apply_settings()
+	display_dialog.hide()
+	assert(is_equal_approx(root.get_final_transform().get_scale().x, 2.0), "1080p supports literal 2x UI scaling")
+	assert(AppSettingsStore.load_values(path).exact_ui_scale)
+	assert(AppSettingsStore.load_values(path).window_resolution == Vector2i(1920, 1080))
+	assert(main.texture_filter == CanvasItem.TEXTURE_FILTER_NEAREST, "Exact integer scaling preserves pixel icons")
+	main.settings.open_settings_dialog()
+	assert(display_dialog.exact_scale_check.button_pressed)
+	assert(display_dialog.resolution_selector.selected == AppDisplayOptions.SIZES.find(Vector2i(1920, 1080)))
+	display_dialog.hide()
+	await process_frame
+	await process_frame
+	var page := main.city_workspace.get_node("Page") as Control
+	assert(Rect2(Vector2.ZERO, root.get_visible_rect().size).encloses(page.get_global_rect()),
+		"Exact 2x UI must retain accessible menu, palette and status bars inside the viewport")
 	main.free()
 	root.size = window_size
 	root.content_scale_mode = Window.CONTENT_SCALE_MODE_CANVAS_ITEMS

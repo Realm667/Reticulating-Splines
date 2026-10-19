@@ -174,16 +174,16 @@ popup/item_1/id = 1
 popup/item_2/text = "2.0"
 popup/item_2/id = 2
 
-[node name="FullscreenSpacer" type="Control" parent="Tabs/UI/Fields"]
+[node name="ExactScaleSpacer" type="Control" parent="Tabs/UI/Fields"]
 custom_minimum_size = Vector2(150, 32)
 layout_mode = 2
 
-[node name="FullscreenCheck" type="CheckBox" parent="Tabs/UI/Fields"]
+[node name="ExactScaleCheck" type="CheckBox" parent="Tabs/UI/Fields"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 32)
 layout_mode = 2
-tooltip_text = "Run the game in full screen mode when enabled, otherwise run in a resizable window."
-text = "Fullscreen"
+tooltip_text = "Use the selected UI scale in screen pixels: 2.0 draws at exactly twice the size. Classic themes always use exact scaling. The city zoom stays independent."
+text = "Exact UI scale"
 
 [node name="Audio" type="ScrollContainer" parent="Tabs"]
 visible = false
@@ -345,6 +345,25 @@ size_flags_horizontal = 3
 theme_override_constants/h_separation = 14
 theme_override_constants/v_separation = 8
 columns = 2
+
+[node name="FullscreenSpacer" type="Control" parent="Tabs/Graphics/Content/PackFields"]
+layout_mode = 2
+
+[node name="FullscreenCheck" type="CheckBox" parent="Tabs/Graphics/Content/PackFields"]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "Run the game in full screen mode when enabled, otherwise run in a resizable window."
+text = "Fullscreen"
+
+[node name="ResolutionLabel" type="Label" parent="Tabs/Graphics/Content/PackFields"]
+layout_mode = 2
+text = "Window resolution"
+
+[node name="ResolutionSelector" type="OptionButton" parent="Tabs/Graphics/Content/PackFields"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+tooltip_text = "Window size in screen pixels. Fullscreen uses the monitor resolution. Oversized windows are fitted to the available desktop."
 
 [node name="RendererLabel" type="Label" parent="Tabs/Graphics/Content/PackFields"]
 custom_minimum_size = Vector2(150, 32)

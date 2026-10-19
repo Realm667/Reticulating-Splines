@@ -38,6 +38,8 @@ var settings_path := SettingsStore.default_path()
 var music_volume := 0.8
 var effects_volume := 0.8
 var fullscreen := false
+var window_resolution := Vector2i.ZERO
+var exact_ui_scale := false
 var graphics_source := "auto"
 var graphics_folder := ""
 # the pack.json of an HD sprite pack, or empty for the original sprites
@@ -71,6 +73,8 @@ func save_options(include_ui_scale := true) -> SettingsStore.SaveOptions:
 	options.music_soundfont_path = music_soundfont_path
 	options.default_mayor_name = default_mayor_name
 	options.overview_graphics = overview_graphics
+	options.window_resolution = window_resolution
+	options.exact_ui_scale = exact_ui_scale
 	options.ui_theme = ui_theme
 	options.ui_language = ui_language
 	options.dark_underground = dark_underground

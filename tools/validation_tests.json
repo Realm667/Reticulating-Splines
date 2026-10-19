@@ -245,6 +245,13 @@
     "driver": "scene-batch"
   },
   {
+    "id": "underground_cache_transition_test",
+    "script": "tests/underground_cache_transition_test.gd",
+    "domain": "rendering",
+    "lane": "product",
+    "requires": ["ext/graphics/pack.json", "ext/data/pack.json"]
+  },
+  {
     "id": "visual_preparation_test",
     "script": "tests/visual_preparation_test.gd",
     "domain": "rendering",

@@ -8802,3 +8802,23 @@ msgstr ""
 #. Supplementary RS presentation translation, AI-assisted.
 msgid "Changes the saved city: forests become denser every four years and spread to free adjacent land over eight years. No random numbers. In multiplayer, the host decides. Off by default."
 msgstr ""
+
+#. Supplementary RS display settings; AI-assisted translation.
+#: src/ui/settings/app_settings_dialog.tscn
+msgid "Exact UI scale"
+msgstr ""
+
+#. Supplementary RS display settings; AI-assisted translation.
+#: src/ui/settings/app_settings_dialog.tscn
+msgid "Window resolution"
+msgstr ""
+
+#. Supplementary RS display settings; AI-assisted translation.
+#: src/ui/settings/app_settings_dialog.tscn
+msgid "Use the selected UI scale in screen pixels: 2.0 draws at exactly twice the size. Classic themes always use exact scaling. The city zoom stays independent."
+msgstr ""
+
+#. Supplementary RS display settings; AI-assisted translation.
+#: src/ui/settings/app_settings_dialog.tscn
+msgid "Window size in screen pixels. Fullscreen uses the monitor resolution. Oversized windows are fitted to the available desktop."
+msgstr ""

@@ -71,6 +71,8 @@ static func load_values(
 	result.fullscreen = bool(
 		config.get_value("display", "fullscreen", result.fullscreen)
 	)
+	result.window_resolution = AppDisplayOptions.normalize(config.get_value("display", "window_resolution", Vector2i.ZERO))
+	result.exact_ui_scale = bool(config.get_value("display", "exact_ui_scale", false))
 	result.graphics_source = str(config.get_value("graphics", "source", "auto"))
 
 
@@ -306,6 +308,10 @@ static func save_values(
 	config.set_value("audio", "music_volume", clampf(music_volume, 0.0, 1.0))
 	config.set_value("audio", "effects_volume", clampf(effects_volume, 0.0, 1.0))
 	config.set_value("display", "fullscreen", fullscreen)
+	if options.window_resolution != null:
+		config.set_value("display", "window_resolution", AppDisplayOptions.normalize(options.window_resolution))
+	if options.exact_ui_scale != null:
+		config.set_value("display", "exact_ui_scale", bool(options.exact_ui_scale))
 
 	if options.city_renderer != null:
 		config.set_value("display", "city_renderer", normalize_renderer(options.city_renderer))
@@ -422,6 +428,8 @@ class Values extends RefCounted:
 	var music_volume := 0.8
 	var effects_volume := 0.8
 	var fullscreen := false
+	var window_resolution := Vector2i.ZERO
+	var exact_ui_scale := false
 	var graphics_source := "auto"
 	var graphics_folder := ""
 	var city_renderer := "gpu"
@@ -486,4 +494,6 @@ class SaveOptions extends RefCounted:
 	var data_pack_folder: Variant = null
 	var hd_pack_folder: Variant = null
 	var ui_scale: Variant = null
+	var window_resolution: Variant = null
+	var exact_ui_scale: Variant = null
 	var control_bindings: ControlBindings = null

@@ -220,6 +220,10 @@ func close_region_cache() -> void:
 
 func refresh_region_map(force: bool, dirty := Rect2i()) -> void:
 	var prepared := (app.visual_preparation.ready or app.visual_preparation.busy) and app.view_state.overlay_mode == CityViewMode.Mode.CITY
+	# Prepared banks belong to the surface view. Reconfiguring one for pipes
+	# races the background surface refresh and destroys its retained buildings.
+	if not prepared and app.visual_preparation.owns(caches.region_cache):
+		close_region_cache()
 	if prepared:
 		app.visual_preparation.refresh(dirty)
 		var selected := app.visual_preparation.selected_cache(app.static_render.city_view_size())

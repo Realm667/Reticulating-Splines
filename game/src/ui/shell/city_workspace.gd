@@ -7,6 +7,7 @@ var toolbar: CityToolbar
 var map_view: CityMapControl
 var status_bar: CityStatusBar
 var _palette_scroll: ScrollContainer
+var _dock_scroll: ScrollContainer
 var _rci_parent: Node
 var _rci_index := 0
 var _classic_layout := false
@@ -32,6 +33,11 @@ func _ready() -> void:
 	_palette_scroll.mouse_filter = Control.MOUSE_FILTER_PASS
 	_palette_scroll.visible = false
 	add_child(_palette_scroll)
+	_dock_scroll = ScrollContainer.new()
+	_dock_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_dock_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	$Page/Content.add_child(_dock_scroll)
+	$Page/Content.move_child(_dock_scroll, 0)
 	theme_changed.connect(_sync_classic_layout.call_deferred)
 	resized.connect(_fit_palette.call_deferred)
 	toolbar.minimum_size_changed.connect(_fit_palette.call_deferred)
@@ -57,10 +63,10 @@ func _sync_camera_rect() -> void:
 
 
 func _sync_classic_layout() -> void:
-	if not is_node_ready() or _classic_layout == AppUiTheme.is_classic():
+	if not is_node_ready() or (not _bar_scrolls.is_empty() and _classic_layout == AppUiTheme.is_classic()):
 		return
 	_classic_layout = AppUiTheme.is_classic()
-	# Exact 2x classic pixels can make the fixed-width metric bars wider than
+	# Exact 2x pixels can make the fixed-width metric bars wider than
 	# the window. Scroll those bars rather than expanding/centering the whole
 	# workspace outside the viewport (which made File and map edges disappear).
 	if _bar_scrolls.is_empty():
@@ -74,13 +80,13 @@ func _sync_classic_layout() -> void:
 		var bar: Control = menu_bar if index == 0 else status_bar
 		var scroll := _bar_scrolls[index]
 		bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		bar.reparent(scroll if _classic_layout else $Page)
-		scroll.visible = _classic_layout
-		$Page.move_child(scroll if _classic_layout else bar, 0 if index == 0 else $Page.get_child_count() - 1)
-	$Page/Content/MapSpace.custom_minimum_size = Vector2.ZERO if _classic_layout else Vector2(560, 480)
-	toolbar.reparent(_palette_scroll if _classic_layout else $Page/Content)
+		bar.reparent(scroll)
+		scroll.visible = true
+		$Page.move_child(scroll, 0 if index == 0 else $Page.get_child_count() - 1)
+	$Page/Content/MapSpace.custom_minimum_size = Vector2.ZERO
+	toolbar.reparent(_palette_scroll if _classic_layout else _dock_scroll)
+	_dock_scroll.visible = not _classic_layout
 	if not _classic_layout:
-		$Page/Content.move_child(toolbar, 0)
 		status_bar.rci_graph.reparent(_rci_parent)
 		_rci_parent.move_child(status_bar.rci_graph, _rci_index)
 	else:

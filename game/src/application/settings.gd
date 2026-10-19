@@ -85,6 +85,9 @@ func open_settings_dialog() -> void:
 	app.main_overlays.settings_dialog.language_selector.select(AppLocalization.codes().find(preferences.ui_language))
 	app.main_overlays.settings_dialog.translucent_menus_check.button_pressed = preferences.translucent_menus
 	app.main_overlays.settings_dialog.ui_scale_selector.select(AppUiScale.option_index(preferences.ui_scale))
+	app.main_overlays.settings_dialog.exact_scale_check.button_pressed = preferences.exact_ui_scale
+	app.main_overlays.settings_dialog.resolution_selector.select(AppDisplayOptions.SIZES.find(preferences.window_resolution))
+	app.main_overlays.settings_dialog.resolution_selector.disabled = preferences.fullscreen
 	app.main_overlays.settings_dialog.default_mayor_edit.text = preferences.default_mayor_name
 	app.main_overlays.settings_dialog.show_classic_zoom_graphics(preferences.use_classic_zoom_graphics)
 	app.main_overlays.settings_dialog.overview_graphics_selector.select(preferences.overview_graphics)
@@ -300,7 +303,8 @@ func apply_settings() -> void:
 
 	var ui_scale := AppUiScale.normalize(values.ui_scale)
 
-	if preferences.ui_scale != ui_scale:
+	if preferences.ui_scale != ui_scale or preferences.exact_ui_scale != values.exact_ui_scale:
+		preferences.exact_ui_scale = values.exact_ui_scale
 		preferences.ui_scale = ui_scale
 		apply_ui_scale()
 
@@ -347,6 +351,9 @@ func apply_settings() -> void:
 		app.audio_controller.set_soundtrack_folder(preferences.soundtrack_folder, (app.main_menu != null and app.main_menu.visible)
 				or (app.document_state.city != null and app.document_state.city.music_enabled()))
 
+	var resolution := AppDisplayOptions.normalize(values.window_resolution)
+	var display_changed := preferences.window_resolution != resolution or preferences.fullscreen != bool(values.fullscreen)
+	preferences.window_resolution = resolution
 	if preferences.fullscreen != bool(values.fullscreen):
 		preferences.fullscreen = bool(values.fullscreen)
 		DisplayServer.window_set_mode(
@@ -354,6 +361,9 @@ func apply_settings() -> void:
 			if preferences.fullscreen
 			else DisplayServer.WINDOW_MODE_WINDOWED
 		)
+
+	if display_changed and not preferences.fullscreen:
+		AppDisplayOptions.apply(app.get_window(), preferences.window_resolution)
 
 	_refresh_settings_pack_names()
 
@@ -499,6 +509,8 @@ func load_app_settings() -> void:
 	AppUiTheme.select(preferences.ui_theme, preferences.translucent_menus)
 	_apply_theme_filter()
 	preferences.ui_scale = values.ui_scale
+	preferences.exact_ui_scale = values.exact_ui_scale
+	preferences.window_resolution = values.window_resolution
 	apply_ui_scale()
 	preferences.default_mayor_name = str(values.default_mayor_name)
 	preferences.overview_graphics = int(values.overview_graphics)
@@ -527,10 +539,13 @@ func load_app_settings() -> void:
 
 	if preferences.fullscreen:
 		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
+	else:
+		AppDisplayOptions.apply(app.get_window(), preferences.window_resolution)
 
 
 func _apply_theme_filter() -> void:
-	app.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST if AppUiScale.classic_pixel_filter() else CanvasItem.TEXTURE_FILTER_LINEAR
+	var exact_pixels := preferences.exact_ui_scale and is_equal_approx(ScreenPixels.scale, roundf(ScreenPixels.scale))
+	app.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST if AppUiScale.classic_pixel_filter() or exact_pixels else CanvasItem.TEXTURE_FILTER_LINEAR
 
 
 # scale the interface and keep pixel artwork on whole screen pixels. call this
@@ -541,7 +556,7 @@ func apply_ui_scale() -> void:
 	if window == null:
 		return
 
-	var screen_pixels := AppUiScale.apply(window, preferences.ui_scale, AppUiTheme.is_classic())
+	var screen_pixels := AppUiScale.apply(window, preferences.ui_scale, AppUiTheme.is_classic() or preferences.exact_ui_scale)
 	# headless windows have no real pixels, so keep one artwork pixel for each
 	# interface pixel there
 	var headless := DisplayServer.get_name() == "headless"
@@ -596,6 +611,8 @@ func reset_controls() -> void:
 func set_fullscreen(enabled: bool) -> void:
 	preferences.fullscreen = enabled
 	DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN if enabled else DisplayServer.WINDOW_MODE_WINDOWED)
+	if not enabled:
+		AppDisplayOptions.apply(app.get_window(), preferences.window_resolution)
 	SettingsStore.save_values(preferences.music_volume, preferences.effects_volume, preferences.fullscreen, preferences.settings_path)
 
 

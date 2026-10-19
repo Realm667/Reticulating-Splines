@@ -8466,3 +8466,23 @@ msgstr "시각적 변경은 즉시 적용됩니다. 나무 성장은 시간이 �
 #. Supplementary RS presentation translation, AI-assisted.
 msgid "Changes the saved city: forests become denser every four years and spread to free adjacent land over eight years. No random numbers. In multiplayer, the host decides. Off by default."
 msgstr "저장된 도시를 변경합니다. 숲은 4년마다 빽빽해지고 8년에 걸쳐 인접한 빈 땅으로 퍼집니다. 난수를 사용하지 않습니다. 멀티플레이에서는 호스트가 결정합니다. 기본값은 꺼짐입니다."
+
+#. Supplementary RS display settings; AI-assisted translation.
+#: src/ui/settings/app_settings_dialog.tscn
+msgid "Exact UI scale"
+msgstr "정확한 UI 배율"
+
+#. Supplementary RS display settings; AI-assisted translation.
+#: src/ui/settings/app_settings_dialog.tscn
+msgid "Window resolution"
+msgstr "창 해상도"
+
+#. Supplementary RS display settings; AI-assisted translation.
+#: src/ui/settings/app_settings_dialog.tscn
+msgid "Use the selected UI scale in screen pixels: 2.0 draws at exactly twice the size. Classic themes always use exact scaling. The city zoom stays independent."
+msgstr "선택한 UI 배율을 화면 픽셀에 적용합니다. 2.0은 정확히 두 배 크기입니다. 클래식 테마는 항상 정확한 배율을 사용합니다. 도시 확대/축소는 별도로 유지됩니다."
+
+#. Supplementary RS display settings; AI-assisted translation.
+#: src/ui/settings/app_settings_dialog.tscn
+msgid "Window size in screen pixels. Fullscreen uses the monitor resolution. Oversized windows are fitted to the available desktop."
+msgstr "화면 픽셀 단위의 창 크기입니다. 전체 화면은 모니터 해상도를 사용합니다. 너무 큰 창은 사용 가능한 바탕 화면 영역에 맞춰집니다."

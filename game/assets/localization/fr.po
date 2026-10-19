@@ -39109,3 +39109,23 @@ msgstr "Les changements visuels sont immédiats. La croissance des arbres modifi
 #. Supplementary RS presentation translation, AI-assisted.
 msgid "Changes the saved city: forests become denser every four years and spread to free adjacent land over eight years. No random numbers. In multiplayer, the host decides. Off by default."
 msgstr "Modifie la ville sauvegardée : les forêts se densifient tous les quatre ans et s'étendent aux terrains voisins libres sur huit ans. Sans hasard. En multijoueur, l'hôte décide. Désactivé par défaut."
+
+#. Supplementary RS display settings; AI-assisted translation.
+#: src/ui/settings/app_settings_dialog.tscn
+msgid "Exact UI scale"
+msgstr "Échelle exacte de l’interface"
+
+#. Supplementary RS display settings; AI-assisted translation.
+#: src/ui/settings/app_settings_dialog.tscn
+msgid "Window resolution"
+msgstr "Résolution de la fenêtre"
+
+#. Supplementary RS display settings; AI-assisted translation.
+#: src/ui/settings/app_settings_dialog.tscn
+msgid "Use the selected UI scale in screen pixels: 2.0 draws at exactly twice the size. Classic themes always use exact scaling. The city zoom stays independent."
+msgstr "Applique l’échelle choisie en pixels d’écran : 2.0 double exactement la taille. Les thèmes classiques utilisent toujours une échelle exacte. Le zoom de la ville reste indépendant."
+
+#. Supplementary RS display settings; AI-assisted translation.
+#: src/ui/settings/app_settings_dialog.tscn
+msgid "Window size in screen pixels. Fullscreen uses the monitor resolution. Oversized windows are fitted to the available desktop."
+msgstr "Taille de la fenêtre en pixels d’écran. Le plein écran utilise la résolution du moniteur. Les fenêtres trop grandes sont ajustées à l’espace disponible sur le bureau."

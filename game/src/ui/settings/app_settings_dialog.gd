@@ -54,6 +54,8 @@ var hd_pack_loaded := false
 var hd_graphics_choice := true
 var recent_autosaves_check: CheckBox
 var fullscreen_check: CheckBox
+var resolution_selector: OptionButton
+var exact_scale_check: CheckBox
 var zoom_graphics_selectors: Array[OptionButton] = []
 var classic_zoom_check: CheckBox
 var overview_graphics_selector: OptionButton
@@ -117,6 +119,11 @@ func _ready() -> void:
 		_sync_hd_controls())
 	recent_autosaves_check = %RecentAutosavesCheck
 	fullscreen_check = %FullscreenCheck
+	exact_scale_check = %ExactScaleCheck
+	resolution_selector = %ResolutionSelector
+	for resolution in AppDisplayOptions.SIZES:
+		resolution_selector.add_item("Automatic" if resolution == Vector2i.ZERO else "%d × %d" % [resolution.x, resolution.y])
+	fullscreen_check.toggled.connect(func(enabled: bool) -> void: resolution_selector.disabled = enabled)
 	music_pack_edit = %MusicPackEdit
 	data_pack_edit = %DataPackEdit
 	hd_pack_edit = %HdPackEdit
@@ -443,6 +450,8 @@ func selected_values() -> AppSettingsStore.Values:
 	result.hd_graphics = hd_graphics_choice
 	result.recent_autosaves = recent_autosaves_check.button_pressed
 	result.fullscreen = fullscreen_check.button_pressed
+	result.window_resolution = AppDisplayOptions.SIZES[maxi(0, resolution_selector.selected)]
+	result.exact_ui_scale = exact_scale_check.button_pressed
 	result.check_for_updates = check_for_updates_check.button_pressed
 	result.control_bindings = controls_list.pending.duplicate_set()
 	result.graphics_source = "auto" if folder_edit.text.strip_edges().is_empty() else "folder"
@@ -580,10 +589,11 @@ func _build_classic_zoom_control() -> void:
 	classic_zoom_check.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	classic_zoom_check.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var spacer := Control.new()
+	var insertion := renderer_selector.get_index() + 1
 	fields.add_child(spacer)
-	fields.move_child(spacer, 2)
+	fields.move_child(spacer, insertion)
 	fields.add_child(classic_zoom_check)
-	fields.move_child(classic_zoom_check, 3)
+	fields.move_child(classic_zoom_check, insertion + 1)
 	classic_zoom_check.toggled.connect(show_classic_zoom_graphics)
 	show_classic_zoom_graphics(false)
 
