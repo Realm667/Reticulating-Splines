@@ -58,5 +58,13 @@ static func load_source(_base_root: String, mode: String, folder := "", override
 
 	result.graphics_name = pack.pack_name
 	result.uses_graphics_pack = true
+	complete_toolbar(result.assets, PackLibrary.bundled_folder("graphics"))
 
 	return result
+
+
+static func complete_toolbar(target: OriginalGameAssets, bundled_root: String) -> void:
+	# Some DOS distributions omit TOOL.RAW. Existing imports must recover on
+	# load as well, without another import or changing the selected city art.
+	if target.toolbar_art == null:
+		target.toolbar_art = GraphicsPack.load_toolbar(bundled_root)

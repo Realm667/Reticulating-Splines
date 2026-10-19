@@ -66,6 +66,19 @@ func _initialize() -> void:
 	var assets := OriginalGameAssets.new()
 	assert(loaded.apply_to(assets))
 	assert(assets.large_sprites == loaded.large_sprites)
+	var original_toolbar := assets.toolbar_art
+	GameAssetSource.complete_toolbar(assets, pack_root)
+	assert(assets.toolbar_art == original_toolbar, "Keep supplied DOS/Windows toolbar art")
+	assets.toolbar_art = null
+	GameAssetSource.complete_toolbar(assets, pack_root)
+	assert(assets.toolbar_art.get_pixel(2, 0) == Color8(40, 80, 120))
+	assert(assets.palette == loaded.palette and assets.large_sprites == loaded.large_sprites,
+		"UI fallback must not replace the selected city palette or sprites")
+	assert(Pack.load_toolbar(pack_root.path_join("absent")) == null)
+	manifest.ui.toolbar_art = "../sprite.png"
+	_write_manifest(pack_root, manifest)
+	assert(Pack.load_toolbar(pack_root) == null, "Fallback must enforce pack-relative paths")
+	manifest.ui.toolbar_art = "sprite.png"
 	_write_manifest(pack_root, manifest)
 	var standalone := GameAssetSource.load_source("", "folder", pack_root)
 	assert(standalone.error.is_empty(), standalone.error)
@@ -414,6 +427,7 @@ func _check_truecolor_pack() -> void:
 	assert(hd.image.get_data() == art.get_data(), "More than 256 colors and partial alpha must remain exact")
 	assert(hd.emission.get_data() == light.get_data(), "TrueColor emission must remain exact")
 	assert(pack.ui_images.toolbar_art.get_data() == art.get_data(), "UI must bypass indexed rendering")
+	assert(Pack.load_toolbar(folder).get_data() == art.get_data(), "RGBA toolbar fallback retains exact colors and alpha")
 	assert(hd.frames == 2 and hd.fps == 8)
 	assert(hd.animation.get_pixel(10, 42) == second.get_pixel(10, 10))
 	assert(pack.large_sprites.find_sprite(1364).decode_indices().pixels.has(200), "Water semantics must survive RGB conversion")

@@ -36,6 +36,27 @@ static func load_root(root: String, progress := Callable()) -> GraphicsPack:
 	return pack
 
 
+static func load_toolbar(root: String) -> Image:
+	# Read only the UI strip: loading a second city atlas would waste memory and
+	# must never replace the selected pack's palette or sprites.
+	var pack := GraphicsPack.new()
+	pack._root = (root.get_base_dir() if root.get_file() == "pack.json" else root).simplify_path()
+	var path := pack._root.path_join("pack.json")
+	if not FileAccess.file_exists(path):
+		return null
+	var json := JSON.new()
+	if json.parse(FileAccess.get_file_as_string(path)) != OK or not json.data is Dictionary:
+		return null
+	var manifest: Dictionary = json.data
+	if manifest.get("format") != "opensc2k-graphics" or manifest.get("version") != 1:
+		return null
+	var ui: Variant = manifest.get("ui", {})
+	if not ui is Dictionary or not ui.has("toolbar_art"):
+		return null
+	# PNG decoding preserves the strip's own colors for indexed and RGBA packs.
+	return pack._read_rgba_png(ui.toolbar_art)
+
+
 func apply_to(assets: OriginalGameAssets) -> bool:
 	if not error.is_empty():
 		return false

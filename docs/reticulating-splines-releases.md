@@ -8,6 +8,24 @@ Windows and Linux packages use a writable `data` directory next to the executabl
 
 Each archive has a SHA-256 entry in `SHA256SUMS.txt` and its build commit is recorded in `build-info.json`. Every completed archive is extracted or mounted and verified before a native startup and replacement-pack manifest/reference check. macOS is tested on separate Intel and Apple Silicon runners. Tests use Dummy audio and disposable runners/profiles. Startup checks do not replace graphical playtesting or prove compatibility with every Linux distribution.
 
+## macOS graphics compatibility
+
+macOS defaults to the Compatibility (OpenGL) renderer. Reports from Apple M4
+systems running macOS 27.0.1 describe grayscale indexed DOS graphics and a
+`version_get_shader` null-version error in rs.4/rs.5 with the Metal renderer.
+The correct PNG export reported alongside this failure points to the GPU
+palette path; the trailing error alone does not identify the failing shader.
+Using the existing Compatibility renderer is a workaround, not a verified
+Metal compiler fix. A graphical test on the affected Mac is still required.
+The Metal path remains available for diagnosis with `--rendering-method mobile
+--rendering-driver metal`; `--rendering-method gl_compatibility` selects the
+workaround explicitly on older releases as well.
+
+Missing DOS toolbar artwork is a separate issue: incomplete graphics imports
+now use the bundled replacement toolbar when available. Supplied original
+toolbar images, city sprites and their palettes keep precedence. No reimport
+is needed for this fallback.
+
 ## macOS signing
 
 `none` creates an ad-hoc-signed preview. It is not Apple-notarized and Gatekeeper can require user approval. `optional` signs and notarizes only when the required repository secrets exist; `required` fails if any are absent. The upstream maintainer's certificate cannot be reused. Configure your own `MACOS_CERTIFICATE_P12`, `MACOS_CERTIFICATE_PASSWORD`, `APPLE_API_KEY_P8`, `APPLE_API_KEY_ID` and `APPLE_API_ISSUER_ID` through GitHub Secrets, never in source or chat. See `ci.md` for the inherited signing setup.

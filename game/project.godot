@@ -39,7 +39,7 @@ window/stretch/aspect="expand"
 [rendering]
 
 renderer/rendering_method="gl_compatibility"
-renderer/rendering_method.macos="mobile"
+renderer/rendering_method.macos="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
 rendering_device/driver.macos="metal"
 rendering_device/fallback_to_opengl3=true
