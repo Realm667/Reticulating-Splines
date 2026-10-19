@@ -111,3 +111,9 @@ Technical checks do not replace native-speaker editorial review of every random
 phrase combination. Supplementary wording is identified for direct review.
 AI-assisted using Codex for extraction, supplementary translation,
 implementation and validation.
+
+The learning companion and city adviser add original supplementary English
+explanations and translations in de/es/fr/it/ko/pt_BR. These are AI-assisted
+Reticulating Splines texts, not transcriptions of the SimCity 2000 manuals.
+Lesson conditions were checked against the implemented simulation; technical
+catalog and UI checks do not replace native-speaker editorial review.

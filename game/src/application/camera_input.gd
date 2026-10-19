@@ -68,10 +68,14 @@ func update_keyboard_camera(delta: float) -> void:
 	app.view_state.camera_tap = Vector2.ZERO
 
 	if app.map_view != null:
+		var tracking := app.tutorial != null and app.tutorial.active() and enabled and not direction.is_zero_approx()
+		var before := app.map_view.center_tile() if tracking else Vector2i(-1, -1)
 		# the camera speed is in map pixels at 100% zoom, so the UI scale does
 		# not change how fast the city moves
 		app.map_view.pan_screen(app.view_state.camera_motion.step(direction, delta, enabled and not app.map_view.is_panning()
 				and not app.map_view.is_left_drag_active(), app.controls.camera_speed_scale()) * app.map_view.map_pixel_ratio)
+		if tracking and before != app.map_view.center_tile():
+			app.tutorial.mark("pan")
 
 
 func input(event: InputEvent) -> void:
@@ -305,6 +309,8 @@ func rotate_city(counter_clockwise: bool) -> void:
 
 	if app.simulation_state.simulation_engine != null:
 		app.simulation_state.simulation_engine.rotate_runtime_coordinates(counter_clockwise)
+	if app.tutorial != null:
+		app.tutorial.rotate_targets(counter_clockwise)
 
 	app.tool_state.last_edit_command = null
 	app.map_view.clear_trip_reach()

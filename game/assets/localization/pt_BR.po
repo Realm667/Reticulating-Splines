@@ -30266,3 +30266,913 @@ msgstr "Usa a escala escolhida em pixels da tela: 2.0 exibe exatamente o dobro d
 #: src/ui/settings/app_settings_dialog.tscn
 msgid "Window size in screen pixels. Fullscreen uses the monitor resolution. Oversized windows are fitted to the available desktop."
 msgstr "Tamanho da janela em pixels da tela. A tela cheia usa a resolução do monitor. Janelas grandes demais são ajustadas à área disponível da área de trabalho."
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Your first settlement"
+msgstr "Seu primeiro povoado"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Utilities"
+msgstr "Serviços básicos"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Growth and budget"
+msgstr "Crescimento e orçamento"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Solving problems"
+msgstr "Solução de problemas"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Independent play"
+msgstr "Jogo independente"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Transport"
+msgstr "Transportes"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Disaster practice"
+msgstr "Treino de desastres"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Late development"
+msgstr "Desenvolvimento avançado"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Move the map and zoom"
+msgstr "Mova o mapa e ajuste o zoom"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Rotate the city and return"
+msgstr "Gire a cidade e volte à orientação inicial"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Try Pause and Turtle speed"
+msgstr "Experimente Pausa e velocidade Tartaruga"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Query a tile"
+msgstr "Consulte um terreno"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Choose a flat building site"
+msgstr "Escolha um terreno plano"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Build an available power plant"
+msgstr "Construa uma usina disponível"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Build a short road"
+msgstr "Construa um trecho de estrada"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Zone homes and workplaces"
+msgstr "Zoneie moradias e locais de trabalho"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Supply the residential zone with power"
+msgstr "Forneça energia à zona residencial"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Let the first residents arrive"
+msgstr "Espere os primeiros moradores"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Compare surface and underground"
+msgstr "Compare a superfície e o subsolo"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Build a water pump"
+msgstr "Construa uma bomba de água"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Connect pipes to the residential zone"
+msgstr "Conecte canos à zona residencial"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Confirm water delivery"
+msgstr "Confirme o fornecimento de água"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Distinguish demand from density"
+msgstr "Diferencie demanda e densidade"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Extend a zone with positive demand"
+msgstr "Amplie uma zona com demanda positiva"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Read the budget forecast"
+msgstr "Leia a previsão do orçamento"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Compare taxes and service funding"
+msgstr "Compare impostos e financiamento"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Understand bonds without borrowing"
+msgstr "Entenda os títulos sem contrair dívida"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Review a completed budget period"
+msgstr "Analise um período orçamentário concluído"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Restore power in the practice district"
+msgstr "Restaure a energia no bairro de treino"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Restore water in the practice district"
+msgstr "Restaure a água no bairro de treino"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Separate demand from access problems"
+msgstr "Diferencie demanda e acesso"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Prioritize a projected deficit"
+msgstr "Priorize um déficit previsto"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Use a data view and query a building"
+msgstr "Use uma visão de dados e consulte um prédio"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Save your city under your own name"
+msgstr "Salve a cidade com um nome próprio"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Distinguish city and learning progress"
+msgstr "Diferencie a cidade e o progresso de aprendizagem"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Choose your adviser preferences"
+msgstr "Configure o consultor"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Finish the course and keep building"
+msgstr "Conclua o curso e continue construindo"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Inspect traffic and a reachable destination"
+msgstr "Examine o trânsito e um destino acessível"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Build and connect a railway"
+msgstr "Construa e conecte uma ferrovia"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Explore highways and neighbor connections"
+msgstr "Explore rodovias e conexões com vizinhos"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Compare service coverage views"
+msgstr "Compare a cobertura dos serviços"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Inspect a funded city service"
+msgstr "Examine um serviço municipal financiado"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Balance service costs and need"
+msgstr "Equilibre custos e necessidades"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Compare pollution and land value"
+msgstr "Compare poluição e valor do terreno"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Add a park and inspect its surroundings"
+msgstr "Adicione um parque e examine os arredores"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Distinguish evidence from possible causes"
+msgstr "Diferencie evidências e causas possíveis"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Start a separate disaster exercise"
+msgstr "Inicie um treino de desastre separado"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Pause and dispatch emergency services"
+msgstr "Pause e envie serviços de emergência"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Inspect damage and plan rebuilding"
+msgstr "Examine os danos e planeje a reconstrução"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Open the advanced practice city"
+msgstr "Abra a cidade de treino avançado"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Compare later power plants and their costs"
+msgstr "Compare usinas avançadas e seus custos"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Inspect ports, airports and rewards"
+msgstr "Examine portos, aeroportos e recompensas"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Explore themes, packs and visual effects"
+msgstr "Explore temas, pacotes e efeitos visuais"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Take a photo of your city"
+msgstr "Tire uma foto da cidade"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Understand saved tree growth and host rules"
+msgstr "Entenda o crescimento salvo das árvores e as regras do anfitrião"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Move, zoom and rotate using the toolbar or your configured controls. Try Pause, then Turtle."
+msgstr "Mova, amplie e gire pela barra de ferramentas ou pelos controles configurados. Experimente Pausa e depois Tartaruga."
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Open Settings > Controls to see your actual bindings. Rotation returns to the initial direction after four quarter turns."
+msgstr "Em Configurações > Controles, veja suas teclas atuais. Quatro quartos de volta retornam à orientação inicial."
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Pausing stops simulation. Zoom changes the view, not construction costs or the size of a tile."
+msgstr "A pausa interrompe a simulação. O zoom muda a visão, não os custos nem o tamanho de um terreno."
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Query a tile to inspect its contents and the city data behind the graphics."
+msgstr "Consulte um terreno para examinar seu conteúdo e os dados por trás dos gráficos."
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Use the Query tool and the View menu. Compare the selected tile with the relevant data view."
+msgstr "Use a ferramenta de consulta e o menu Exibir. Compare o terreno com a visão de dados adequada."
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "A colored overlay is an observation, not a command. Return to City view to build with the normal artwork."
+msgstr "Uma camada colorida mostra uma observação, não uma ordem. Volte à visão Cidade para construir com os gráficos normais."
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Choose flat, empty land with space for homes, jobs, roads and utilities."
+msgstr "Escolha terreno plano e livre com espaço para moradias, empregos, estradas e serviços."
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Query the site first. Leave room beside the settlement for a power plant and water supply."
+msgstr "Consulte o local primeiro. Reserve espaço ao lado do povoado para uma usina e o abastecimento de água."
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Suggested locations are optional. Any valid site and working connection can satisfy the lesson."
+msgstr "Os locais sugeridos são opcionais. Qualquer local válido e conexão funcional podem cumprir a lição."
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Build a power plant that is available in this year, then connect it to your residential zone."
+msgstr "Construa uma usina disponível neste ano e conecte-a à zona residencial."
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Use Power Lines and the Power view. Check the entire route from the plant to the zone."
+msgstr "Use linhas elétricas e a visão de energia. Verifique todo o caminho entre a usina e a zona."
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "A wire alone is not proof of supply. Let the regular power calculation finish; the residential target must actually be powered."
+msgstr "Um fio não comprova o fornecimento. Aguarde o cálculo normal de energia: o alvo residencial precisa estar realmente abastecido."
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Build a powered water pump and connect pipes to your residential zone."
+msgstr "Construa uma bomba com energia e conecte canos à zona residencial."
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Compare Underground and Water views. Fresh water beside a pump can improve production; check its actual supply."
+msgstr "Compare as visões Subsolo e Água. Água doce ao lado da bomba pode aumentar a produção; confira o abastecimento real."
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Pipes and delivered water are different. Check power, the source and continuity, then wait for the regular water calculation."
+msgstr "Canos e água fornecida são coisas diferentes. Verifique energia, fonte e continuidade, depois aguarde o cálculo normal da água."
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Zone homes and workplaces near transport. Read RCI demand before expanding."
+msgstr "Zoneie moradias e empregos perto do transporte. Leia a demanda RCI antes de expandir."
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Positive demand indicates interest in a zone type. Density is the permitted development intensity, not current demand."
+msgstr "Demanda positiva indica interesse por um tipo de zona. Densidade é a intensidade de desenvolvimento permitida, não a demanda atual."
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "If development stalls, check power, transport access and demand. Even with these present, growth is evaluated by the normal simulation and is not guaranteed immediately."
+msgstr "Se o crescimento parar, verifique energia, acesso e demanda. Mesmo com tudo isso, a simulação normal avalia o crescimento, que não é garantido imediatamente."
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Open Budget and distinguish construction spending, ongoing costs, cash and the annual forecast."
+msgstr "Abra Orçamento e diferencie gastos de construção, custos recorrentes, caixa e previsão anual."
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Compare tax rates with service funding. A forecast is an estimate, not money already earned."
+msgstr "Compare alíquotas e financiamento de serviços. Uma previsão é uma estimativa, não dinheiro já recebido."
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Review a completed month before judging a change. A projected deficit calls for checking recurring costs and income before more construction."
+msgstr "Analise um mês concluído antes de avaliar uma mudança. Com déficit previsto, examine custos e receitas recorrentes antes de construir mais."
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "A bond brings cash now and creates interest obligations. This lesson does not require borrowing."
+msgstr "Um título fornece dinheiro agora e cria obrigações de juros. Esta lição não exige empréstimos."
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Open Budget to inspect bond payments. Example: a $10,000 bond at 5% costs $500 per year in interest."
+msgstr "Veja os pagamentos de títulos no orçamento. Exemplo: 10.000 dólares a 5% custam 500 dólares anuais de juros."
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "The example is arithmetic, not an offered rate. Read the actual loan terms and repayment requirements before accepting a bond."
+msgstr "O exemplo é um cálculo, não uma oferta. Leia as condições reais e as exigências de pagamento antes de aceitar."
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Save the city through File > Save City As. Choose your own file name."
+msgstr "Salve em Arquivo > Salvar cidade como. Escolha seu próprio nome de arquivo."
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "The city file holds the simulation. Local learning records hold lesson completion and hint preferences separately."
+msgstr "O arquivo da cidade contém a simulação. Os registros locais guardam separadamente as lições concluídas e as preferências de ajuda."
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Identical renamed or copied saves retain their local learning record. Older or changed saves are checked again; a missing record never prevents loading the city."
+msgstr "Cópias idênticas ou renomeadas mantêm o aprendizado local. Saves antigos ou alterados são verificados novamente; a falta do registro nunca impede carregar a cidade."
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "The optional adviser shows at most three current topics, with a reason and a useful next action."
+msgstr "O consultor opcional mostra até três assuntos atuais, com motivo e uma próxima ação útil."
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Choose Off, Important only or All hints. You can dismiss a topic for this session or hide its type."
+msgstr "Escolha Desligado, Apenas importantes ou Todas as dicas. Você pode dispensar um assunto nesta sessão ou ocultar seu tipo."
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Confirmed utility outages take priority over the budget forecast and development checks. The adviser never builds, borrows or changes speed for you."
+msgstr "Falhas confirmadas de abastecimento têm prioridade sobre orçamento e crescimento. O consultor nunca constrói, toma empréstimos ou muda a velocidade por você."
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Connect homes and workplaces with transport. Inspect Traffic and use Trip Query for a selected origin."
+msgstr "Conecte moradias e empregos pelo transporte. Examine Trânsito e consulte uma viagem a partir de uma origem."
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Rail, highways and public transport have different construction and maintenance costs. Check availability before planning them."
+msgstr "Ferrovias, rodovias e transporte público têm custos diferentes de construção e manutenção. Verifique a disponibilidade."
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "A nearby road is not proof of a successful trip. Use the existing trip inspection; neighbor connections need a route that reaches the map boundary."
+msgstr "Uma estrada próxima não comprova uma viagem completa. Use a consulta existente; conexões com vizinhos exigem uma rota até a borda do mapa."
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Compare Police and Fire coverage and query existing services. Review their funding in Budget."
+msgstr "Compare a cobertura policial e dos bombeiros e consulte os serviços existentes. Examine o financiamento no orçamento."
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Health and education are long-term services. Build according to observed needs and affordable running costs."
+msgstr "Saúde e educação são serviços de longo prazo. Construa conforme necessidades observadas e custos sustentáveis."
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Do not add every service at once. A building, its funding and its measured coverage are distinct facts."
+msgstr "Não adicione todos os serviços de uma vez. Prédio, financiamento e cobertura medida são fatos distintos."
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Compare Pollution and Land Value views before and after a change."
+msgstr "Compare Poluição e Valor do terreno antes e depois de uma mudança."
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Parks, surrounding development and terrain can affect attractiveness. Inspect a specific location instead of assuming a single citywide cause."
+msgstr "Parques, construções próximas e relevo podem afetar a atratividade. Examine um local específico, sem presumir uma única causa para toda a cidade."
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "A correlation is not proof of the cause. Allow normal recalculation and compare the same location; the adviser does not promise immediate growth."
+msgstr "Correlação não prova causa. Aguarde o recálculo normal e compare o mesmo local; o consultor não promete crescimento imediato."
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "This exercise uses a separate practice city. Start Fire explicitly from Disasters when you are ready."
+msgstr "Este exercício usa uma cidade separada. Inicie Incêndio no menu Desastres quando estiver pronto."
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Pause to inspect the situation, select emergency dispatch and place a unit. Resume deliberately to observe its work."
+msgstr "Pause para inspecionar, selecione o envio de emergência e coloque uma unidade. Retome conscientemente para observar sua atuação."
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Inspect damage with Query and plan rebuilding. No disaster is triggered automatically in a personal city."
+msgstr "Consulte os danos e planeje a reconstrução. Nenhum desastre é acionado automaticamente em uma cidade pessoal."
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Use the separate 2050 practice city to explore later tools without waiting decades."
+msgstr "Use a cidade separada de 2050 para explorar ferramentas avançadas sem esperar décadas."
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Compare power plant output, cost and lifetime in the existing chooser. Inspect ports, airports and rewards."
+msgstr "Compare produção, custo e vida útil no seletor de usinas. Examine portos, aeroportos e recompensas."
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "A later year does not grant every reward. Population milestones, available space, connections and normal unlock rules still apply."
+msgstr "Um ano avançado não concede todas as recompensas. Marcos populacionais, espaço, conexões e regras normais continuam valendo."
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Open Settings to explore themes, graphics packs and Visual Enhancements. Try Photo mode from Options."
+msgstr "Abra Configurações para explorar temas, pacotes gráficos e melhorias visuais. Experimente o modo Foto em Opções."
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Color adjustments affect artwork; lighting and other effects have their own controls. Photo mode hides the interface for the saved picture."
+msgstr "Ajustes de cor afetam a arte; iluminação e outros efeitos têm controles próprios. O modo Foto esconde a interface na imagem salva."
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Tree growth is a saved simulation option, off by default. In multiplayer the host decides. Guided lessons run only in single-player; multiplayer roles and continuation remain in the existing lobby."
+msgstr "O crescimento de árvores é uma opção salva da simulação, desligada por padrão. No multijogador, o anfitrião decide. As lições são individuais; papéis e continuação permanecem no lobby existente."
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Learning & city adviser"
+msgstr "Aprendizado e consultor"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Learn to play"
+msgstr "Aprenda a jogar"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Learning journal"
+msgstr "Diário de aprendizado"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "City adviser"
+msgstr "Consultor municipal"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Lesson"
+msgstr "Lição"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Reference"
+msgstr "Referência"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Move panel"
+msgstr "Mover painel"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Would you like to learn how to build a city? You can return through Help at any time."
+msgstr "Quer aprender a construir uma cidade? Você pode voltar por Ajuda a qualquer momento."
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Learn by building a separate practice city, or use the adviser in your current city. No hidden money or faster growth."
+msgstr "Aprenda numa cidade de treino separada ou use o consultor na sua cidade. Sem dinheiro oculto ou crescimento acelerado."
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Start the guided course"
+msgstr "Iniciar o curso guiado"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Quick start: first settlement"
+msgstr "Início rápido: primeiro povoado"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Use the current city"
+msgstr "Usar a cidade atual"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Continue lesson"
+msgstr "Continuar lição"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Advanced practice chapters"
+msgstr "Capítulos de treino avançado"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Learning is available in single-player cities."
+msgstr "O aprendizado está disponível em cidades de um jogador."
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Choose a lesson in the journal or start a practice city."
+msgstr "Escolha uma lição no diário ou inicie uma cidade de treino."
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Foundation: %s"
+msgstr "Fundamento: %s"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Next hint"
+msgstr "Próxima dica"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Show tool"
+msgstr "Mostrar ferramenta"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Show location"
+msgstr "Mostrar local"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "More information"
+msgstr "Mais informações"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Choose adviser preferences"
+msgstr "Configurar consultor"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Start this practice chapter"
+msgstr "Iniciar este capítulo de treino"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "I am ready to build independently"
+msgstr "Estou pronto para construir por conta própria"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Resume at Turtle speed"
+msgstr "Retomar na velocidade Tartaruga"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "End tutorial"
+msgstr "Encerrar tutorial"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Return to chapter start"
+msgstr "Voltar ao início do capítulo"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Review lesson"
+msgstr "Revisar lição"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Important only"
+msgstr "Apenas importantes"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "All hints"
+msgstr "Todas as dicas"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Advice reads the current city. It never changes buildings, money or speed."
+msgstr "O consultor lê a cidade atual. Nunca muda prédios, dinheiro ou velocidade."
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Dismiss for this session"
+msgstr "Dispensar nesta sessão"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Hide this topic"
+msgstr "Ocultar este assunto"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Restore hidden topics"
+msgstr "Restaurar assuntos ocultos"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "No confirmed advice to show. Simulation-dependent checks may still be pending."
+msgstr "Nenhum conselho confirmado. Algumas verificações podem ainda depender da simulação."
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Checking the current city…"
+msgstr "Verificando a cidade atual…"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Goal confirmed. Continue when you are ready."
+msgstr "Objetivo confirmado. Continue quando estiver pronto."
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "The city is paused. Resume when you are ready to check the simulation."
+msgstr "A cidade está pausada. Retome quando quiser verificar a simulação."
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Waiting for the regular simulation calculation. Building a connection alone is not enough."
+msgstr "Aguardando o cálculo normal. Construir uma conexão não basta."
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Need help? Try the next hint."
+msgstr "Precisa de ajuda? Experimente a próxima dica."
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Read the explanation and try again."
+msgstr "Leia a explicação e tente novamente."
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Start a separate practice city?"
+msgstr "Iniciar uma cidade de treino separada?"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "This replaces the current view. Unsaved changes can be saved first. Practice uses Easy, 1900 (2050 for late development), a flat 128×128 map and no automatic disasters. Prepared chapters include normally priced starting buildings."
+msgstr "Isso substitui a visão atual. Você pode salvar as alterações antes. O treino usa Fácil, 1900 (2050 no desenvolvimento avançado), mapa plano 128×128 e sem desastres automáticos. Capítulos preparados incluem prédios iniciais pagos pelo preço normal."
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "The practice city could not be opened."
+msgstr "Não foi possível abrir a cidade de treino."
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Learning progress could not be saved. The city is still playable."
+msgstr "Não foi possível salvar o aprendizado. A cidade continua jogável."
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Completed"
+msgstr "Concluído"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Skipped"
+msgstr "Ignorado"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Saving"
+msgstr "Salvamento"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Is the budget forecast an estimate rather than guaranteed income?"
+msgstr "A previsão é uma estimativa, e não uma receita garantida?"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Does a positive RCI bar mean that the zone is already densely built?"
+msgstr "Uma barra RCI positiva significa que a zona já está densamente construída?"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Are tax rates and the funding of a service the same setting?"
+msgstr "Alíquotas e financiamento de serviços são a mesma configuração?"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Does borrowing create future interest obligations?"
+msgstr "Um empréstimo cria obrigações futuras de juros?"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Can an unpowered zone fail to grow even with positive demand?"
+msgstr "Uma zona sem energia pode não crescer mesmo com demanda positiva?"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Should you inspect recurring costs before expanding a city with a projected deficit?"
+msgstr "Você deve verificar custos recorrentes antes de expandir com déficit previsto?"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Is tutorial progress stored separately from the city simulation?"
+msgstr "O progresso do tutorial é salvo separadamente da simulação?"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Does a road next to a home guarantee a successful trip?"
+msgstr "Uma estrada ao lado de uma casa garante uma viagem completa?"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Does every available service need to be built immediately?"
+msgstr "Todo serviço disponível precisa ser construído imediatamente?"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Does a high land value guarantee immediate growth?"
+msgstr "Um alto valor do terreno garante crescimento imediato?"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Should a disaster exercise replace a personal city without asking?"
+msgstr "Um treino de desastre deve substituir uma cidade pessoal sem perguntar?"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Does reaching a later year automatically award every special building?"
+msgstr "Chegar a um ano avançado concede automaticamente todos os prédios especiais?"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Does tree growth change saved forest tiles rather than only their appearance?"
+msgstr "O crescimento de árvores altera florestas salvas, e não só sua aparência?"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Collapse"
+msgstr "Recolher"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Start"
+msgstr "Início"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Not now"
+msgstr "Agora não"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Open Budget"
+msgstr "Abrir orçamento"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Continue"
+msgstr "Continuar"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Skip"
+msgstr "Pular"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Growth"
+msgstr "Crescimento"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Learning City"
+msgstr "Cidade de aprendizado"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Residential target"
+msgstr "Alvo residencial"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Water source"
+msgstr "Fonte de água"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Power source"
+msgstr "Fonte de energia"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Confirmed supply"
+msgstr "Abastecimento confirmado"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Homes without power: %d"
+msgstr "Terrenos residenciais sem energia: %d"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Homes without water: %d"
+msgstr "Terrenos residenciais sem água: %d"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Projected annual balance: %s"
+msgstr "Saldo anual previsto: %s"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Unbuilt zone tiles: %d"
+msgstr "Terrenos zoneados não construídos: %d"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Show relevant view"
+msgstr "Mostrar visão pertinente"
+
+#. Tutorial source, AI-assisted supplementary translation.
+#: game/src/tutorial
+msgid "Return to your saved chapter start? Later practice changes will be replaced. You can save the current city first."
+msgstr "Voltar ao início salvo do capítulo? As alterações posteriores serão substituídas. Você pode salvar a cidade atual primeiro."

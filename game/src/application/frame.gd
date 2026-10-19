@@ -120,6 +120,8 @@ func _advance_palette_animation(delta: float, suspended: bool) -> void:
 
 
 func consume_simulation_result(result: SimulationTickResult) -> void:
+	if app.tutorial != null:
+		app.tutorial.observe_result(result)
 	app.disaster_effects.observe_simulation_result(result)
 	if result.base_ticks > 0:
 		sync_speed_ui()

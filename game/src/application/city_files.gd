@@ -273,6 +273,8 @@ func request_city_exit(action: String, path := "") -> void:
 
 func _perform_city_exit(action: String, path := "") -> void:
 	match action:
+		"tutorial_city":
+			app.tutorial.start_training()
 		"multiplayer_copy":
 			if pending_multiplayer_copy != null and app.city_session.activate_document(pending_multiplayer_copy, null, tr("Single-player copy opened. Save it as a new city."), true):
 				document_state.current_save_path = ""

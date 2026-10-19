@@ -110,6 +110,7 @@ var updates := ApplicationUpdates.new(preferences)
 var autosave: ApplicationAutosave = ApplicationAutosave.new(self)
 # the JavaScript runtime of mods and developer scripts
 var scripting: ApplicationScripting = ApplicationScripting.new(self)
+var tutorial: TutorialController
 
 
 func _ready() -> void:

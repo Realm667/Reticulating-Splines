@@ -1,6 +1,7 @@
 class_name MainMenuControl
 extends ColorRect
 
+signal learning_requested
 signal button_clicked
 signal import_assets_requested
 signal continue_requested
@@ -42,6 +43,16 @@ func _ready() -> void:
 
 	city_background = $CityBackground
 	var content: VBoxContainer = $Center/Panel/Content
+	var learn := Button.new()
+	learn.text = "Learn to play"
+	learn.custom_minimum_size.y = content.get_node("StartNewCity").custom_minimum_size.y
+	learn.theme_type_variation = content.get_node("StartNewCity").theme_type_variation
+	learn.add_theme_font_size_override("font_size", content.get_node("StartNewCity").get_theme_font_size("font_size"))
+	learn.pressed.connect(button_clicked.emit)
+	learn.pressed.connect(learning_requested.emit)
+	content.add_child(learn)
+	game_buttons.append(learn)
+	content.move_child(learn, content.get_node("StartNewCity").get_index() + 1)
 	import_button = content.get_node("ImportAssets")
 	_refresh_import_style()
 	theme_changed.connect(_refresh_import_style)
