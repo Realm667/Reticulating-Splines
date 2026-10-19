@@ -22,6 +22,9 @@ var moving_revision := -1
 var fades := CityLightFade.new()
 var detail_enabled := true
 var moving_detail_enabled := true
+var _warm_source: CityMapSource
+var _warm_size := Vector2i.ZERO
+var _warm_figure_groups := -1
 
 
 func _init(application: CityApplication) -> void:
@@ -31,6 +34,9 @@ func _init(application: CityApplication) -> void:
 func reset() -> void:
 	fades.reset()
 	source = null
+	_warm_source = null
+	_warm_size = Vector2i.ZERO
+	_warm_figure_groups = -1
 	moving_revision = -1
 	for receiver in ground_views.values():
 		receiver.reset()
@@ -43,7 +49,8 @@ func process(active: bool, night: float, options: Dictionary, elapsed := 0.0, pr
 	var enabled := active and night > 0.001 and app.map_view.city_source != null
 	var glow := enabled and float(options.night_glow) > 0.0
 	var prepare := active and detail_enabled and app.map_view.city_source != null and float(options.night_ground) > 0.0
-	if output == null and not enabled and not prepare:
+	var prepare_glow := active and app.map_view.city_source != null and float(options.night_glow) > 0.0
+	if output == null and not enabled and not prepare and not prepare_glow:
 		return
 	if output == null:
 		_create()
@@ -62,7 +69,7 @@ func process(active: bool, night: float, options: Dictionary, elapsed := 0.0, pr
 			app.map_view.move_child(ground, before.get_index())
 		if output.get_index() > before.get_index():
 			app.map_view.move_child(output, before.get_index())
-	if not glow:
+	if not glow and not prepare_glow:
 		return
 	var map := app.map_view
 	var bounds := map.camera._camera_rect()
@@ -74,6 +81,19 @@ func process(active: bool, night: float, options: Dictionary, elapsed := 0.0, pr
 	var emission_reduction := minf(1.0 if master_art else 0.5, (2048.0 if master_art else 1024.0) / maxf(padded.size.x, padded.size.y))
 	var reduction := emission_reduction * 0.5
 	var size := Vector2i((padded.size * reduction).ceil())
+	var figures := app.city_life.canvas
+	var figure_groups := figures.gpu.groups.size() if figures != null and figures.gpu != null else 0
+	if not glow:
+		if _warm_source == map.city_source and _warm_size == size and _warm_figure_groups == figure_groups:
+			return
+		# Render the real emission/blur path once while its output is hidden.
+		# Keep the allocated targets and shaders for the first night; daytime
+		# frames do no recurring off-screen glow work when the inputs are stable.
+		for buffer in buffers:
+			buffer.render_target_update_mode = SubViewport.UPDATE_ONCE
+	_warm_source = map.city_source
+	_warm_size = size
+	_warm_figure_groups = figure_groups
 	buffers[0].size = Vector2i((padded.size * emission_reduction).ceil())
 	for index in range(1, buffers.size()):
 		buffers[index].size = size

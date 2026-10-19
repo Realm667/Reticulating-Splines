@@ -9,6 +9,7 @@ const SHADER := preload("res://src/view/city_life/city_life_headlights.gdshader"
 var groups: Array[MultiMeshInstance2D] = []
 var textures: Array[Texture2DArray] = []
 var buffers: Array[PackedFloat32Array] = []
+var bounds: Array[Rect2] = []
 var parameters: Array[PackedFloat32Array] = []
 var parameter_textures: Array[ImageTexture] = []
 var images: Array[Image] = []
@@ -22,6 +23,7 @@ var _pending_upload := false
 var _pending_frame := -1
 var _published := false
 var _offset := Vector2i.ZERO
+var _pending_origin_shift := Vector2.ZERO
 
 
 func set_interpolation(value: float) -> void:
@@ -43,7 +45,8 @@ func set_night(value: float) -> void:
 func render(city: CityState, figures: Array, lights: CityLifeLights, offset: Vector2i, lookup: Callable, prepared: Dictionary = {}, defer_upload := false) -> void:
 	if _pending_upload:
 		_flush_uploads()
-	var can_defer := defer_upload and _published and offset == _offset
+	var can_defer := defer_upload and _published
+	var previous_offset := _offset
 	_offset = offset
 	var seen: Dictionary[int, bool] = {}
 	for figure: CityLifeController.Figure in figures:
@@ -72,6 +75,7 @@ func render(city: CityState, figures: Array, lights: CityLifeLights, offset: Vec
 		while grouped.size() <= group:
 			grouped.append([])
 		grouped[group].append(figure)
+	bounds.fill(Rect2())
 	for group in grouped.size():
 		var transforms := buffers[group]
 		var values := parameters[group]
@@ -84,6 +88,8 @@ func render(city: CityState, figures: Array, lights: CityLifeLights, offset: Vec
 			var at := layer * STRIDE
 			var crop: Rect2i = surface.draw_rect
 			var point := Vector2(surface.origin - offset) + Vector2(crop.position) / raster_scale
+			var extent := Rect2(point, Vector2(crop.size) / raster_scale)
+			bounds[group] = bounds[group].merge(extent) if bounds[group].has_area() else extent
 			var world := lights.cached_vehicle_world(city, figure)
 			# Keep world coordinates in a full-precision texture: Compatibility
 			# rendering can reduce instance custom data precision.
@@ -109,8 +115,25 @@ func render(city: CityState, figures: Array, lights: CityLifeLights, offset: Vec
 		parameters[group] = values
 	_pending_upload = true
 	_pending_frame = Engine.get_process_frames()
-	if not can_defer:
+	if can_defer:
+		# Keep the complete previous light batch in world space during camera
+		# changes too. Its uploads can then use the next presentation frame.
+		_pending_origin_shift = Vector2(previous_offset - offset) * scale
+		position += _pending_origin_shift
+	else:
 		_flush_uploads()
+
+
+func prepare_surface(figure: CityLifeController.Figure, surface: Dictionary) -> void:
+	# Only use allocated capacity. Normal publication reclaims departed figures.
+	if not slots.has(figure.id):
+		if free_slots.is_empty():
+			return
+		slots[figure.id] = free_slots.pop_back()
+	var slot := slots[figure.id]
+	if images[slot] != surface.image:
+		textures[slot / GROUP_SIZE].update_layer(surface.image, slot % GROUP_SIZE)
+		images[slot] = surface.image
 
 
 func _flush_uploads() -> void:
@@ -121,8 +144,16 @@ func _flush_uploads() -> void:
 		images[slot] = _pending_images[slot]
 	_pending_images.clear()
 	for index in groups.size():
+		# All quad corners are already known on the CPU. Publishing their bounds
+		# with the buffer avoids the renderer's automatic MultiMesh bounds path.
+		# Keep the previous bounds intact until this deferred batch is complete.
+		var area := bounds[index].grow(1.0)
+		groups[index].multimesh.custom_aabb = AABB(Vector3(area.position.x, area.position.y, -1.0), Vector3(area.size.x, area.size.y, 2.0))
+		groups[index].visible = bounds[index].has_area()
 		groups[index].multimesh.buffer = buffers[index]
 		parameter_textures[index].update(Image.create_from_data(GROUP_SIZE, 3, false, Image.FORMAT_RGBAF, parameters[index].to_byte_array()))
+	position -= _pending_origin_shift
+	_pending_origin_shift = Vector2.ZERO
 	_pending_upload = false
 	_published = true
 
@@ -139,6 +170,7 @@ func _add_group() -> void:
 	geometry.center_offset = Vector3(48, 48, 0)
 	var multi := MultiMesh.new()
 	multi.transform_format = MultiMesh.TRANSFORM_2D
+	multi.custom_aabb = AABB(Vector3(-1, -1, -1), Vector3(2, 2, 2))
 	multi.mesh = geometry
 	multi.instance_count = GROUP_SIZE
 	var shader := ShaderMaterial.new()
@@ -162,8 +194,40 @@ func _add_group() -> void:
 	images.resize(start + GROUP_SIZE)
 	for slot in range(start + GROUP_SIZE - 1, start - 1, -1):
 		free_slots.append(slot)
+	if groups.is_empty():
+		_warm_draw(geometry, shader)
 	groups.append(group)
 	textures.append(texture)
 	buffers.append(buffer)
+	bounds.append(Rect2())
 	parameters.append(values)
 	parameter_textures.append(parameter_texture)
+
+
+func _warm_draw(geometry: QuadMesh, material: ShaderMaterial) -> void:
+	if not is_inside_tree():
+		return
+	# Daytime uploads alone leave the instanced headlight shader unused. Draw
+	# a small hidden instance once, before the first visible night batch.
+	var warm := SubViewport.new()
+	warm.disable_3d = true
+	warm.size = Vector2i(64, 64)
+	warm.transparent_bg = true
+	warm.use_hdr_2d = get_viewport().use_hdr_2d
+	warm.world_2d = World2D.new()
+	warm.render_target_update_mode = SubViewport.UPDATE_ONCE
+	get_viewport().add_child(warm)
+	var multi := MultiMesh.new()
+	multi.transform_format = MultiMesh.TRANSFORM_2D
+	multi.custom_aabb = AABB(Vector3(-1, -1, -1), Vector3(98, 98, 2))
+	multi.mesh = geometry
+	multi.instance_count = GROUP_SIZE
+	multi.set_instance_transform_2d(0, Transform2D.IDENTITY)
+	var instance := MultiMeshInstance2D.new()
+	instance.multimesh = multi
+	instance.scale = Vector2.ONE * 0.5
+	var shader := material.duplicate() as ShaderMaterial
+	shader.set_shader_parameter("night", 1.0)
+	instance.material = shader
+	warm.add_child(instance)
+	RenderingServer.frame_post_draw.connect(warm.queue_free, CONNECT_ONE_SHOT)

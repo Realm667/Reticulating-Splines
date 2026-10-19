@@ -24,6 +24,9 @@ var mask_images: Array = []
 var mask_slots: Dictionary[Vector3i, int] = {}
 var _next_mask_slot := 0
 var cropped: Dictionary[Vector3i, MaskEntry] = {}
+var _mask_banks: Dictionary[int, Dictionary] = {}
+var _mask_signature: Array = []
+var _mask_binding_changed := false
 var blank := Image.create(128, 128, false, Image.FORMAT_RGBA8)
 var blank_mask := Image.create(128, 128, false, Image.FORMAT_R8)
 var blend := 1.0
@@ -68,15 +71,51 @@ func render(canvas: CityLifeCanvas, entries: Array[Dictionary]) -> void:
 	var count := entries.size()
 	while groups.size() * GROUP < count:
 		add_group(canvas)
+	prepare_masks(canvas, entries)
+	if _mask_binding_changed:
+		for node in groups + emissions:
+			if is_instance_valid(node):
+				_apply_mask_pages(node.material as ShaderMaterial)
+		_mask_binding_changed = false
+	var mask_origins := PackedVector2Array()
+	var mask_layers := PackedInt32Array()
+	for entry in entries:
+		var figure: CityLifeController.Figure = entry.figure
+		var cached: MaskEntry = cropped[Vector3i(figure.tile.x, figure.tile.y, figure.enter % 2)]
+		mask_origins.append(Vector2(cached.origin))
+		mask_layers.append(cached.slot)
+	var streams := NativeVisualRaster.figure_buffers(entries, rectangles, mask_origins, mask_layers, origin, artwork_scale, GROUP)
+	for group in streams.size() / 2:
+		buffers[group] = streams[group * 2]
+		data[group] = streams[group * 2 + 1]
+		data[group].resize(GROUP * 16)
+		for slot in mini(GROUP, count - group * GROUP):
+			data[group][GROUP * 12 + slot * 4] = entries[group * GROUP + slot].get("shear", 0.0)
+	for index in groups.size():
+		var visible_count := clampi(count - index * GROUP, 0, GROUP)
+		groups[index].multimesh.visible_instance_count = visible_count
+		groups[index].visible = visible_count > 0
+		if not groups[index].visible:
+			continue
+		groups[index].multimesh.buffer = buffers[index]
+		textures[index].update(Image.create_from_data(GROUP, 4, false, Image.FORMAT_RGBAF, data[index].to_byte_array()))
+		upload_bytes += GROUP * (STRIDE + 16) * 4
+
+
+func prepare_masks(canvas: CityLifeCanvas, entries: Array[Dictionary], budget_usec := 0) -> bool:
+	_select_mask_bank(canvas._occlusion_signature)
+	var count := entries.size()
 	# Mask addresses belong to world tiles, independently of painter-order groups.
 	# Reordering moving figures therefore does not upload unchanged silhouettes.
 	var live: Dictionary[Vector3i, bool] = {}
 	# The complete live set is needed only when a new tile must evict a slot.
 	var live_ready := false
 	var changed_layers: Dictionary[int, Dictionary] = {}
-	var mask_origins := PackedVector2Array()
-	var mask_layers := PackedInt32Array()
+	var preparation_usec := 0
+	var complete := true
 	for index in count:
+		var started := Time.get_ticks_usec()
+		var prepared := false
 		var entry := entries[index]
 		var figure: CityLifeController.Figure = entry.figure
 		var key := Vector3i(figure.tile.x, figure.tile.y, figure.enter % 2)
@@ -94,6 +133,7 @@ func render(canvas: CityLifeCanvas, entries: Array[Dictionary]) -> void:
 			_ensure_mask_page(cached.slot / MASK_LAYERS)
 			cropped[key] = cached
 		if cached.version != version:
+			prepared = true
 			var point: Vector2i = canvas._occluder_bounds.get(key, Rect2i(entry.origin, Vector2i.ONE)).position - Vector2i(32, 32)
 			cached.version = version
 			cached.image = blank_mask
@@ -110,14 +150,18 @@ func render(canvas: CityLifeCanvas, entries: Array[Dictionary]) -> void:
 		var page := slot / MASK_LAYERS
 		var layer := slot % MASK_LAYERS
 		if identities[slot] != identity:
+			prepared = true
 			if not changed_layers.has(page):
 				changed_layers[page] = {}
 			changed_layers[page][layer] = cached.image
 			mask_images[page][layer] = cached.image
 			identities[slot] = identity
 			upload_bytes += 128 * 128
-		mask_origins.append(Vector2(cached.origin))
-		mask_layers.append(slot)
+		if prepared:
+			preparation_usec += Time.get_ticks_usec() - started
+		if prepared and budget_usec > 0 and preparation_usec >= budget_usec:
+			complete = index + 1 == count
+			break
 	for page: int in changed_layers:
 		var changed := changed_layers[page]
 		if changed.size() >= GROUP:
@@ -125,29 +169,44 @@ func render(canvas: CityLifeCanvas, entries: Array[Dictionary]) -> void:
 			var images: Array[Image] = mask_images[page]
 			replacement.create_from_images(images)
 			masks[page] = replacement
-			for node in groups + emissions:
-				if is_instance_valid(node):
-					_apply_mask_pages(node.material as ShaderMaterial)
+			_mask_binding_changed = true
 			upload_bytes += (MASK_LAYERS - changed.size()) * 128 * 128
 		else:
 			for layer: int in changed:
 				masks[page].update_layer(changed[layer], layer)
-	var streams := NativeVisualRaster.figure_buffers(entries, rectangles, mask_origins, mask_layers, origin, artwork_scale, GROUP)
-	for group in streams.size() / 2:
-		buffers[group] = streams[group * 2]
-		data[group] = streams[group * 2 + 1]
-		data[group].resize(GROUP * 16)
-		for slot in mini(GROUP, count - group * GROUP):
-			data[group][GROUP * 12 + slot * 4] = entries[group * GROUP + slot].get("shear", 0.0)
-	for index in groups.size():
-		var visible_count := clampi(count - index * GROUP, 0, GROUP)
-		groups[index].multimesh.visible_instance_count = visible_count
-		groups[index].visible = visible_count > 0
-		if not groups[index].visible:
-			continue
-		groups[index].multimesh.buffer = buffers[index]
-		textures[index].update(Image.create_from_data(GROUP, 4, false, Image.FORMAT_RGBAF, data[index].to_byte_array()))
-		upload_bytes += GROUP * (STRIDE + 16) * 4
+	return complete
+
+
+func _select_mask_bank(signature: Array) -> void:
+	if signature == _mask_signature:
+		return
+	# Three artwork sizes, each capped at 768 R8 layers (12 MiB on the GPU).
+	# Keep the old draw's bindings until the complete new batch is published.
+	if not _mask_signature.is_empty():
+		_mask_banks[_mask_signature[3]] = {"signature": _mask_signature, "masks": masks,
+			"images": mask_images, "identities": identities, "slots": mask_slots,
+			"next": _next_mask_slot, "cropped": cropped}
+		if signature[0] != _mask_signature[0]:
+			_mask_banks.clear()
+	var bank: Dictionary = _mask_banks.get(signature[3], {})
+	if not bank.is_empty() and bank.signature == signature:
+		masks = bank.masks
+		mask_images = bank.images
+		identities = bank.identities
+		mask_slots = bank.slots
+		_next_mask_slot = bank.next
+		cropped = bank.cropped
+	else:
+		masks = []
+		mask_images = []
+		identities = PackedInt64Array()
+		identities.resize(MASK_CAPACITY)
+		mask_slots = {}
+		_next_mask_slot = 0
+		cropped = {}
+	_mask_signature = signature
+	_mask_binding_changed = true
+	_ensure_mask_page(0)
 
 
 func sync(app: CityApplication, lights: bool, fraction: float) -> void:
@@ -244,9 +303,7 @@ func _ensure_mask_page(page: int) -> void:
 		var texture := Texture2DArray.new()
 		texture.create_from_images(layers)
 		masks.append(texture)
-		for node in groups + emissions:
-			if is_instance_valid(node):
-				_apply_mask_pages(node.material as ShaderMaterial)
+		_mask_binding_changed = true
 
 
 func _apply_mask_pages(shader: ShaderMaterial) -> void:

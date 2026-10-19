@@ -7,6 +7,7 @@ func _initialize() -> void:
 	_check_stamp_pixels()
 	_check_road_pixels()
 	_check_local_invalidation()
+	_check_zoom_banks()
 	_check_surface_budget()
 	_check_network_search()
 	_check_geometry_changes()
@@ -265,6 +266,18 @@ func _check_local_invalidation() -> void:
 	canvas._sync_visible_regions(regions)
 	assert(canvas._occluders.is_empty() and canvas.lights.surfaces.is_empty(),
 		"Regions that leave the viewport must release cached silhouettes and dependent lights")
+	regions.resident = true
+	regions.visible.assign([Vector2i(1, 1)])
+	regions.visible_keys.assign({Vector2i(1, 1): true})
+	canvas._occluders[far] = []
+	canvas._occluder_bounds[far] = Rect2i(500, 500, 64, 48)
+	canvas._sync_visible_regions(regions)
+	regions.visible.clear()
+	regions.visible_keys.clear()
+	canvas._sync_visible_regions(regions)
+	assert(canvas._occluders.has(far), "Resident silhouettes survive leaving the viewport")
+	canvas.invalidate_occlusion([Rect2i(500, 500, 64, 48)])
+	assert(not canvas._occluders.has(far), "Real edits invalidate resident silhouettes outside the viewport")
 	canvas.free()
 	app.free()
 
@@ -365,3 +378,33 @@ func _check_publication_budget() -> void:
 	assert(budget.allowance_usec < 1500)
 	budget.upload_bytes = VisualWorkBudget.UPLOAD_LIMIT
 	assert(not budget.available())
+
+
+func _check_zoom_banks() -> void:
+	var canvas := CityLifeCanvas.new()
+	var source := RefCounted.new()
+	var key := Vector3i(4, 5, 0)
+	var medium: Array = [7, 1, source, 1, 2]
+	var large: Array = [7, 1, source, 2, 2]
+	canvas._select_occlusion_bank(medium, 1)
+	canvas._occluders[key] = []
+	canvas._occluder_bounds[key] = Rect2i(100, 100, 64, 48)
+	var original := canvas.lights
+	canvas._select_occlusion_bank(large, 1)
+	assert(canvas._occluders.is_empty() and canvas.lights != original)
+	canvas._select_occlusion_bank(medium, 1)
+	assert(canvas._occluders.has(key) and canvas.lights == original, "Returning to an unchanged artwork size must reuse masks and receivers")
+	canvas._select_occlusion_bank(large, 1)
+	canvas.invalidate_occlusion([Rect2i(100, 100, 64, 48)])
+	canvas._select_occlusion_bank(medium, 1)
+	assert(not canvas._occluders.has(key), "Edits must also invalidate hidden artwork sizes")
+	for i in 12:
+		original.surfaces[Vector4i(i, 0, 0, 0)] = {}
+	canvas._select_occlusion_bank(large, 1)
+	canvas._trim_inactive_banks(0)
+	assert(original.surfaces.size() == 4, "Inactive memory reclamation must be bounded per publication")
+	canvas._trim_inactive_banks(0)
+	assert(original.surfaces.is_empty())
+	canvas._select_occlusion_bank([8, 1, source, 1, 2], 1)
+	assert(canvas._occlusion_banks.size() == 1 and canvas.lights != original, "A replacement city must not retain former artwork banks")
+	canvas.free()

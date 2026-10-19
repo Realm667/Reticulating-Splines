@@ -30,6 +30,8 @@ var _light_occluders: Dictionary[Vector3i, Array] = {}
 var _occluders: Dictionary[Vector3i, Array] = {}
 var _occluder_bounds: Dictionary[Vector3i, Rect2i] = {}
 var _occlusion_signature: Array = []
+# At most the three original artwork sizes; source/epoch/layout validate reuse.
+var _occlusion_banks: Dictionary[int, Dictionary] = {}
 var _visible_regions: Array[Vector2i] = []
 var _emission_active := false
 var include_cached_regions := false
@@ -86,7 +88,6 @@ func render(app: CityApplication, figures: Array, sprites: CityLifeSprites, prep
 	var city := app.document_state.city
 	# Road inclination is also used by unlit vehicles. Reuse it until the
 	# shared geometry tracker reports an edit, rotation or replacement city.
-	lights.sync_geometry(city)
 	# Region publications also change while panning an unchanged city. Their
 	# affected silhouettes are invalidated separately by the map renderer.
 	var regions := app.render_caches.region_cache
@@ -96,13 +97,8 @@ func render(app: CityApplication, figures: Array, sprites: CityLifeSprites, prep
 	var layout: Variant = regions._layout_generation if regions != null else app.render_caches.static_visual_signature
 	var signature := [app.document_state.city.document.get_instance_id(), app.static_render_state.epoch,
 		source, app.static_render.city_view_size(), layout]
-	if signature != _occlusion_signature:
-		_gpu_entries.clear()
-		_occluders.clear()
-		_occluder_bounds.clear()
-		_light_occluders.clear()
-		lights.clear_surfaces()
-		_occlusion_signature = signature
+	_select_occlusion_bank(signature, raster_scale)
+	lights.sync_geometry(city)
 	_sync_visible_regions(app.render_caches.region_cache)
 	_trim_working_set()
 	figures.sort_custom(func(a: CityLifeController.Figure, b: CityLifeController.Figure) -> bool:
@@ -176,6 +172,8 @@ func render(app: CityApplication, figures: Array, sprites: CityLifeSprites, prep
 			if (road_layer as CityLifeHeadlights).groups.size() * CityLifeHeadlights.GROUP_SIZE < vehicles:
 				(road_layer as CityLifeHeadlights)._add_group()
 				return _pending_frame(app, previous_bounds)
+	if preparation_budget_usec > 0 and gpu_enabled and not gpu.prepare_masks(self, entries, 1500):
+		return _pending_frame(app, previous_bounds)
 	if light_active:
 		(road_layer as CityLifeHeadlights).render(city, figures, lights, source_bounds.position,
 			func(tile: Vector2i, enter: int) -> Array: return _light_candidates(app, tile, enter), receiver_inputs,
@@ -193,6 +191,33 @@ func render(app: CityApplication, figures: Array, sprites: CityLifeSprites, prep
 	show()
 	queue_redraw()
 	return true
+
+
+func _select_occlusion_bank(signature: Array, raster_scale: int) -> void:
+	if signature == _occlusion_signature:
+		return
+	if not _occlusion_signature.is_empty() and signature[0] != _occlusion_signature[0]:
+		_occlusion_banks.clear()
+	_gpu_entries.clear()
+	var view: int = signature[3]
+	var bank: Dictionary = _occlusion_banks.get(view, {})
+	if bank.is_empty() or bank.signature != signature or bank.lights.raster_scale != raster_scale:
+		_occluders = {}
+		_occluder_bounds = {}
+		_light_occluders = {}
+		_visible_regions = []
+		lights = CityLifeLights.new()
+		lights.set_raster_scale(raster_scale)
+		bank = {"signature": signature, "occluders": _occluders, "bounds": _occluder_bounds,
+			"light_occluders": _light_occluders, "visible_regions": _visible_regions, "lights": lights}
+		_occlusion_banks[view] = bank
+	else:
+		_occluders = bank.occluders
+		_occluder_bounds = bank.bounds
+		_light_occluders = bank.light_occluders
+		_visible_regions = bank.visible_regions
+		lights = bank.lights
+	_occlusion_signature = signature
 
 
 func _pending_frame(app: CityApplication, previous_bounds: Rect2i) -> bool:
@@ -247,9 +272,12 @@ func prepare_lights(app: CityApplication, figures: Array, budget_usec := 1500) -
 		_light_preparation_cursor += 1
 		if not figure.walking:
 			var road := CityLifeLights.road_key(city, figure.tile, figure.enter)
-			if not lights.surfaces.has(Vector4i(road.x, road.y, road.z, figure.direction)):
-				lights.surface(city, figure.tile, figure.enter, figure.direction,
+			var key := Vector4i(road.x, road.y, road.z, figure.direction)
+			var surface: Dictionary = lights.surfaces.get(key, {})
+			if surface.is_empty():
+				surface = lights.surface(city, figure.tile, figure.enter, figure.direction,
 					func(tile: Vector2i, enter: int) -> Array: return _light_candidates(app, tile, enter), false)
+			headlights.prepare_surface(figure, surface)
 		if Time.get_ticks_usec() - started >= budget_usec:
 			break
 
@@ -275,7 +303,7 @@ func _candidates(app: CityApplication, tile: Vector2i, enter: int = 0) -> Array:
 		and CityLifePaths.edge_height(city, tile, enter) < city.land_altitude(tile.x, tile.y) + 1.0
 	var candidates: Array = []
 	var commands := app.moving_sprites.static_occlusion_candidates(bounds)
-	if include_cached_regions and app.render_caches.region_cache != null:
+	if app.render_caches.region_cache != null and (include_cached_regions or app.render_caches.region_cache.resident):
 		commands = app.render_caches.region_cache.occlusion_candidates(bounds, true)
 	for command in commands:
 		var command_tile := Vector2i(command.depth_order % city.map_size, 0)
@@ -312,7 +340,9 @@ func _candidates(app: CityApplication, tile: Vector2i, enter: int = 0) -> Array:
 
 
 func _sync_visible_regions(cache: CityRegionCache) -> void:
-	if cache == null:
+	if cache == null or cache.resident:
+		# Resident-bank queries include hidden regions. Camera visibility cannot
+		# change these silhouettes; actual publications invalidate them separately.
 		_visible_regions.clear()
 		return
 	# Queries include visible regions only. Publications report arriving regions;
@@ -327,24 +357,32 @@ func _sync_visible_regions(cache: CityRegionCache) -> void:
 
 
 func invalidate_occlusion(changes: Array[Rect2i]) -> void:
-	if changes.is_empty() or _occluder_bounds.is_empty():
+	_invalidate_bank(changes, _occluders, _occluder_bounds, _light_occluders, lights)
+	for bank: Dictionary in _occlusion_banks.values():
+		if bank.lights != lights:
+			_invalidate_bank(changes, bank.occluders, bank.bounds, bank.light_occluders, bank.lights)
+
+
+static func _invalidate_bank(changes: Array[Rect2i], occluders: Dictionary, bounds: Dictionary,
+		light_occluders: Dictionary, receivers: CityLifeLights) -> void:
+	if changes.is_empty() or bounds.is_empty():
 		return
 	var invalidated := {}
-	for key in _occluder_bounds:
+	for key in bounds:
 		for changed in changes:
-			if _occluder_bounds[key].intersects(changed):
+			if bounds[key].intersects(changed):
 				invalidated[key] = true
 				break
 	for key in invalidated:
-		_occluders.erase(key)
-		_occluder_bounds.erase(key)
-		_light_occluders.erase(key)
-		lights.visible_roads.erase(key)
-		lights.visible_roads.erase(key + Vector3i(0, 0, 2))
-	for key in lights.surfaces.keys():
-		for dependency in lights.surfaces[key].occlusion_keys:
+		occluders.erase(key)
+		bounds.erase(key)
+		light_occluders.erase(key)
+		receivers.visible_roads.erase(key)
+		receivers.visible_roads.erase(key + Vector3i(0, 0, 2))
+	for key in receivers.surfaces.keys():
+		for dependency in receivers.surfaces[key].occlusion_keys:
 			if invalidated.has(dependency):
-				lights.surfaces.erase(key)
+				receivers.surfaces.erase(key)
 				break
 
 
@@ -473,6 +511,7 @@ static func hidden_at(point: Vector2i, occluders: Array) -> bool:
 
 
 func _trim_working_set() -> void:
+	_trim_inactive_banks()
 	if _occluders.size() > 4096:
 		var removed := 0
 		for key in _occluder_bounds.keys():
@@ -496,3 +535,31 @@ func _trim_working_set() -> void:
 			removed += 1
 			if removed >= 64:
 				break
+
+
+func _trim_inactive_banks(budget_bytes := 128 * 1024 * 1024) -> void:
+	var retained := 0
+	for bank: Dictionary in _occlusion_banks.values():
+		if bank.lights != lights:
+			var receivers: CityLifeLights = bank.lights
+			var bytes := 96 * 96 * receivers.raster_scale * receivers.raster_scale * (16 if receivers.raster_scale == 1 else 4)
+			retained += receivers.surfaces.size() * bytes + bank.occluders.size() * 128 * 128 * 4
+	var removed := 0
+	for bank: Dictionary in _occlusion_banks.values():
+		if bank.lights == lights:
+			continue
+		var receivers: CityLifeLights = bank.lights
+		var bytes := 96 * 96 * receivers.raster_scale * receivers.raster_scale * (16 if receivers.raster_scale == 1 else 4)
+		for key in receivers.surfaces.keys():
+			if retained <= budget_bytes or removed >= 8:
+				return
+			receivers.surfaces.erase(key)
+			retained -= bytes
+			removed += 1
+		for key in bank.bounds.keys():
+			if retained <= budget_bytes or removed >= 8:
+				return
+			var changed: Array[Rect2i] = [bank.bounds[key]]
+			_invalidate_bank(changed, bank.occluders, bank.bounds, bank.light_occluders, receivers)
+			retained -= 128 * 128 * 4
+			removed += 1

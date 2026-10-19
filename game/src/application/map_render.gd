@@ -335,7 +335,7 @@ func _invalidate_region_foregrounds(changes: Array[Rect2i], occluder_changes: Ar
 	if app.coop.active() and app.coop.windows != null:
 		app.coop.windows.map_overlay.invalidate_occlusion(occluder_changes)
 	if app.city_life.canvas != null:
-		app.city_life.canvas.invalidate_occlusion(occluder_changes)
+		app.city_life.canvas.invalidate_occlusion(occluder_changes if lighting_changes == null else lighting_changes)
 	app.disaster_effects.invalidate_occlusion(occluder_changes)
 	if app.visual_environment != null:
 		app.visual_environment.night_lighting.invalidate_regions(occluder_changes if lighting_changes == null else lighting_changes)

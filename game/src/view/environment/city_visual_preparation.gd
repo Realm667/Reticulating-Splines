@@ -30,6 +30,7 @@ var evicted_banks: Dictionary[int, bool] = {}
 var bank_visits: Dictionary[int, int] = {}
 var visit_serial := 0
 var trim_frames := 0
+var _draw_warmup: SubViewport
 
 
 func _init(application: CityApplication) -> void:
@@ -37,6 +38,9 @@ func _init(application: CityApplication) -> void:
 
 
 func reset() -> void:
+	if is_instance_valid(_draw_warmup):
+		_draw_warmup.queue_free()
+	_draw_warmup = null
 	busy = false
 	ready = false
 	preparing_view = -1
@@ -189,6 +193,10 @@ func _progress(fraction: float, detail: String) -> void:
 
 
 func process() -> bool:
+	if is_instance_valid(_draw_warmup) and _draw_warmup.render_target_update_mode == SubViewport.UPDATE_DISABLED:
+		# The completed warm draw must not keep evicted region textures alive.
+		_draw_warmup.queue_free()
+		_draw_warmup = null
 	if app.document_state.city == null or app.asset_state.large_sprites == null or app.asset_state.small_medium_sprites == null:
 		if not banks.is_empty():
 			reset()
@@ -284,6 +292,7 @@ func _prepare_step() -> void:
 			if built_lights < preparing_lights.size():
 				_progress((stage + fraction) / total, detail)
 				return
+		_prepare_gpu_draw(cache)
 		prepared_light_views[preparing_view] = true
 		cache.prepare_entire_city = false
 		cache._viewport_valid = false
@@ -299,6 +308,38 @@ func _prepare_step() -> void:
 			ready = true
 			busy = false
 	_progress((completed + fraction) / total, detail)
+
+
+func _prepare_gpu_draw(cache: CityRegionCache) -> void:
+	if not cache.gpu_enabled:
+		return
+	if _draw_warmup == null:
+		_draw_warmup = SubViewport.new()
+		_draw_warmup.disable_3d = true
+		_draw_warmup.size = Vector2i(64, 64)
+		_draw_warmup.transparent_bg = true
+		_draw_warmup.use_hdr_2d = app.map_view.get_viewport().use_hdr_2d
+		_draw_warmup.world_2d = World2D.new()
+		app.map_view.add_child(_draw_warmup)
+	for child in _draw_warmup.get_children():
+		child.free()
+	var source := cache.texture()
+	var scale := 64.0 / maxf(source.size.x, source.size.y)
+	# Uploading an atlas alone does not exercise its draw pipeline. Submit the
+	# prepared artwork once off screen, including the night material variant.
+	for entry in source.meshes:
+		var node := MeshInstance2D.new()
+		node.mesh = entry.mesh
+		node.texture = entry.texture
+		node.position = Vector2(entry.position) * scale
+		node.scale = Vector2.ONE * scale * entry.divisor
+		node.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		var shader := app.map_view.layers.visual_material(entry.emission, entry.seasons, entry.texture_pages).duplicate() as ShaderMaterial
+		shader.set_shader_parameter("environment_enabled", true)
+		shader.set_shader_parameter("environment_night", 1.0)
+		node.material = shader
+		_draw_warmup.add_child(node)
+	_draw_warmup.render_target_update_mode = SubViewport.UPDATE_ONCE
 
 
 func _configure(index: int, dirty := Rect2i()) -> void:

@@ -134,6 +134,15 @@ func _check_running_cache(app: CityApplication) -> void:
 	app.map_render.refresh_map(false)
 	canvas.render(app, app.city_life.figures, app.city_life.sprites)
 	assert(canvas._occluders.has(key), "Traffic-density updates discarded unchanged city-life silhouettes")
+	var bounds := Rect2i(100, 100, 20, 20)
+	canvas._occluder_bounds[key] = bounds
+	var changes: Array[Rect2i] = [bounds]
+	var unchanged: Array[Rect2i] = []
+	app.map_render._invalidate_region_foregrounds(changes, changes, unchanged)
+	assert(canvas._occluders.has(key), "Resident camera visibility must retain unchanged figure masks")
+	app.map_render._invalidate_region_foregrounds(changes, changes, changes)
+	assert(not canvas._occluders.has(key), "Actual resident publications must invalidate figure masks")
+	canvas._occluders[key] = []
 	app.render_caches.region_cache._layout_generation += 1
 	canvas.render(app, app.city_life.figures, app.city_life.sprites)
 	assert(not canvas._occluders.has(key), "A replacement region layout must discard old masks")

@@ -41,6 +41,17 @@ func _run() -> void:
 	options.detail_lights_min_zoom = 0
 	lights.process(true, 1.0, options, 0.0, 0.0)
 	assert(lights.ground.visible, "Explicit all-zoom setting still blocks 10 percent")
+	lights.process(true, 0.0, options, 0.0, 0.0)
+	assert(not lights.output.visible, "Prepared glow must not appear during the day")
+	var prepared_size := lights.buffers[0].size
+	assert(prepared_size.x > 8 and prepared_size.y > 8, "Prepare full-sized light targets before the first night")
+	lights.process(true, 0.0, options, 0.0, 0.0)
+	assert(lights.buffers.all(func(buffer: SubViewport) -> bool: return buffer.render_target_update_mode == SubViewport.UPDATE_DISABLED),
+		"Stable daytime inputs must not keep rendering hidden glow")
+	lights.process(true, 1.0, options, 0.0, 0.0)
+	assert(lights.buffers[0].size == prepared_size and lights.output.visible, "Night must reuse its prepared targets")
+	lights.reset()
+	assert(lights._warm_source == null, "Changing cities must release prepared glow source references")
 	var tab := VisualEnhancementsTab.new()
 	root.add_child(tab)
 	await process_frame

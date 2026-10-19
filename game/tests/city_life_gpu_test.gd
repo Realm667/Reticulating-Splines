@@ -227,6 +227,7 @@ func _check_headlight_batches(hdr: bool, raster_scale := 1) -> void:
 	var offset := Vector2i(CityLifePaths.point(city, Vector2i(64, 64), 0, 2, 0.5, false)) - Vector2i(256, 150)
 	for phase in 3:
 		if phase == 1:
+			offset += Vector2i(7, 3)
 			for figure: CityLifeController.Figure in figures:
 				figure.progress = 0.75
 				figure.position = CityLifePaths.point(city, figure.tile, figure.enter, figure.exit, figure.progress, false)
@@ -280,18 +281,37 @@ func _check_headlight_batches(hdr: bool, raster_scale := 1) -> void:
 		var expected := viewport.get_texture().get_image()
 		reference.hide()
 		batch.set_night(0.65)
+		var previous_bounds := batch.groups[0].multimesh.custom_aabb if not batch.groups.is_empty() else AABB()
 		var previous_buffer := batch.groups[0].multimesh.buffer if not batch.groups.is_empty() else PackedFloat32Array()
+		if phase == 0:
+			batch._add_group()
+			var first: CityLifeController.Figure = figures[0]
+			var prepared := lights.surface(city, first.tile, first.enter, first.direction, Callable(), false)
+			batch.prepare_surface(first, prepared)
+			assert(batch.images[batch.slots[first.id]] == prepared.image, "Daytime preparation must retain uploaded receiver images")
 		batch.render(city, figures, lights, offset, Callable(), {}, true)
 		if phase > 0:
 			assert(batch._pending_upload, "Warm receiver uploads should leave the body publication frame")
 			batch.set_interpolation(0.0)
 			assert(batch.groups[0].multimesh.buffer == previous_buffer, "A deferred batch must remain complete")
+			assert(batch.groups[0].multimesh.custom_aabb == previous_bounds, "Deferred geometry must retain its matching culling bounds")
 			assert(batch.groups[0].material.get_shader_parameter("interpolation") == 1.0, "Old lights must stay at the new body's starting position")
 			await process_frame
 			batch.set_interpolation(1.0)
 			assert(not batch._pending_upload, "Receiver uploads must finish on the next presentation frame")
 		else:
 			assert(not batch._pending_upload, "First-visible headlights cannot wait for a previous batch")
+		for group in batch.groups.size():
+			var box := batch.groups[group].multimesh.custom_aabb
+			var transforms := batch.buffers[group]
+			assert(box.size.z > 0.0, "Empty batches must not re-enable automatic bounds")
+			for slot in CityLifeHeadlights.GROUP_SIZE:
+				var at := slot * CityLifeHeadlights.STRIDE
+				if transforms[at] == 0.0 or transforms[at + 5] == 0.0:
+					continue
+				var corner := Vector3(transforms[at + 3], transforms[at + 7], 0.0)
+				assert(box.has_point(corner) and box.has_point(corner + Vector3(transforms[at] * 96, transforms[at + 5] * 96, 0)),
+					"Explicit culling bounds must include every receiver after zoom, movement and slot reuse")
 		batch.show()
 		await RenderingServer.frame_post_draw
 		var actual := viewport.get_texture().get_image()
@@ -311,7 +331,11 @@ func _check_headlight_batches(hdr: bool, raster_scale := 1) -> void:
 		assert(batch.groups.size() == (1 if raster_scale > 1 else 3) and batch.slots.size() == figures.size())
 		reference.free()
 	batch.render(city, figures, lights, offset + Vector2i.ONE, Callable(), {}, true)
-	assert(not batch._pending_upload, "A camera-origin change must publish transforms immediately")
+	assert(batch._pending_upload and batch._pending_origin_shift == -batch.scale,
+		"Deferred lights must compensate for the new camera origin")
+	await process_frame
+	batch.set_interpolation(1.0)
+	assert(not batch._pending_upload and batch._pending_origin_shift == Vector2.ZERO)
 	viewport.queue_free()
 	await process_frame
 	print("PASS: batched headlights match individual GPU pixels at three zooms, including HDR, fades, movement and slot reuse")
@@ -350,6 +374,12 @@ func _check_instances(hdr: bool, count := 150) -> void:
 	for phase in (4 if count > CityLifeGpu.MASK_LAYERS else 3):
 		if phase == 1:
 			entries.reverse()
+			var original_pages := canvas.gpu.masks.duplicate()
+			var signature := canvas._occlusion_signature
+			canvas.gpu._select_mask_bank([7, 1, null, 2, 1])
+			assert(canvas.gpu.masks[0] != original_pages[0])
+			canvas.gpu._select_mask_bank(signature)
+			assert(canvas.gpu.masks == original_pages, "Zoom must restore the existing GPU mask pages")
 		elif phase == 2:
 			mask.fill_rect(Rect2i(90, 0, 5, 300), Color.TRANSPARENT)
 			mask = mask.duplicate()
@@ -367,6 +397,14 @@ func _check_instances(hdr: bool, count := 150) -> void:
 		for entry in entries:
 			CityLifeCanvas.stamp(pixels, Vector2i.ZERO, entry.sprite, entry.origin, entry.occluders)
 		reference.texture = ImageTexture.create_from_image(pixels)
+		if phase == 0:
+			canvas._occlusion_signature = [7, 1, null, 1, 1]
+			var steps := 0
+			while not canvas.gpu.prepare_masks(canvas, entries, 250):
+				steps += 1
+				assert(steps <= entries.size(), "Budgeted mask preparation failed to progress")
+				await process_frame
+			assert(steps > 0 and canvas.gpu.groups.is_empty(), "Cold masks must prepare before publishing a new draw")
 		canvas.gpu.render(canvas, entries)
 		assert(canvas.gpu.mask_slots.size() <= CityLifeGpu.MASK_CAPACITY and canvas.gpu.cropped.size() <= CityLifeGpu.MASK_CAPACITY)
 		if phase == 1:
