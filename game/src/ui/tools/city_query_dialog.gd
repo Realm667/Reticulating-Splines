@@ -3,6 +3,7 @@ extends ColorRect
 
 signal close_requested(commit_rename: bool)
 signal action_requested
+signal growth_requested
 
 const NeighborhoodPreview = preload("res://src/ui/tools/query_neighborhood_preview.gd")
 
@@ -16,6 +17,7 @@ var neighborhood_view: NeighborhoodPreview
 var rename_button: Button
 var action_button: Button
 var ok_button: Button
+var growth_button: Button
 
 
 func _ready() -> void:
@@ -34,6 +36,12 @@ func _ready() -> void:
 	rename_button = get_node("Center/QueryDialog/Content/Buttons/Rename")
 	action_button = get_node("Center/QueryDialog/Content/Buttons/Action")
 	ok_button = get_node("Center/QueryDialog/Content/Buttons/OK")
+	growth_button = Button.new()
+	growth_button.text = "Why is nothing growing here?"
+	growth_button.pressed.connect(growth_requested.emit)
+	ok_button.get_parent().add_child(growth_button)
+	ok_button.get_parent().move_child(growth_button, 0)
+	resized.connect(_fit)
 	rename_button.pressed.connect(_enable_rename)
 	action_button.pressed.connect(action_requested.emit)
 	ok_button.pressed.connect(func() -> void:
@@ -65,6 +73,7 @@ func show_query(
 	rename_button.visible = is_specific
 	action_button.visible = not action_text.is_empty()
 	action_button.text = action_text
+	growth_button.visible = info != null and info.zone_id >= 1 and info.zone_id <= 6
 	_populate_summary(details_text, info)
 	_populate_details(info)
 	tabs.current_tab = 0
@@ -74,7 +83,15 @@ func show_query(
 	neighborhood_view.selection_texture = selection_texture
 	neighborhood_view.visible = neighborhood_texture != null
 	show()
+	_fit()
 	ok_button.grab_focus()
+
+
+func _fit() -> void:
+	# Keep the query actions reachable at 1080p with literal classic 2x UI.
+	var panel: PanelContainer = $Center/QueryDialog
+	panel.custom_minimum_size.y = minf(600, maxf(240, size.y - 24))
+	panel.reset_size()
 
 
 func rename_is_enabled() -> bool:

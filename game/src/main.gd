@@ -44,6 +44,7 @@ var audio_controller: CityAudioController
 var map_view: CityMapControl
 var city_workspace: CityWorkspace
 var photo_mode: CityPhotoMode
+var knowledge: ApplicationKnowledge
 var city_menu_bar: CityMenuBar
 var status_label: Label
 var network_preview: NetworkPlacementPreview

@@ -10,6 +10,7 @@ var label: Label
 var city_progress: ProgressOverlay
 var city_preview: TextureRect
 var city_logo: TextureRect
+var knowledge_requested: Callable
 
 
 func _init(message := "") -> void:
@@ -73,6 +74,9 @@ func show_city(title: String, image: Image, detail := "Loading city…", fractio
 	city_preview.visible = image != null
 	_layout_city()
 	city_progress.show_progress(title, detail, fraction)
+	if knowledge_requested.is_valid():
+		knowledge_requested.call(city_progress.get_node("Center/Panel/Rows"))
+		_layout_city()
 	show()
 
 
@@ -85,4 +89,7 @@ func _layout_city() -> void:
 	city_logo.custom_minimum_size.y = minf(size.x * 0.3, 420) / 2.4
 	city_logo.custom_minimum_size.x = 0
 	city_preview.custom_minimum_size.y = minf(size.y * 0.4, 380)
+	if knowledge_requested.is_valid():
+		city_logo.custom_minimum_size.y = minf(city_logo.custom_minimum_size.y, size.y * 0.12)
+		city_preview.custom_minimum_size.y = minf(city_preview.custom_minimum_size.y, maxf(64.0, size.y * 0.2))
 	panel.reset_size()

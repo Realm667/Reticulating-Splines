@@ -164,6 +164,8 @@ func activate_document(
 	app.status_label.text = status_text if not status_text.is_empty() else "City ready."
 	app.map_render.refresh_map()
 	app.debug_tools.on_city_activated()
+	if app.knowledge != null:
+		app.knowledge.activated(loaded_from_file)
 	app.current_tool.update_edit_state()
 
 	if not app.document_state.city.music_enabled():

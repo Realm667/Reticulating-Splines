@@ -312,15 +312,16 @@ func _check_help_menu() -> void:
 			help = menu
 
 	var popup := help.get_popup()
-	assert(popup.item_count == 3)
-	assert(popup.get_item_id(0) == CityMenuBar.MENU_CHECK_FOR_UPDATES)
-	assert(popup.is_item_separator(1))
-	assert(popup.get_item_id(2) == CityMenuBar.MENU_ABOUT)
+	for id in [CityMenuBar.MENU_KNOWLEDGE, CityMenuBar.MENU_CHECK_FOR_UPDATES, CityMenuBar.MENU_ABOUT]:
+		var index := popup.get_item_index(id)
+		assert(index >= 0 and not popup.is_item_disabled(index))
 	var requested: Array[int] = []
 	menu_bar.help_menu_requested.connect(func(id: int) -> void:
 		requested.append(id))
 	popup.id_pressed.emit(CityMenuBar.MENU_CHECK_FOR_UPDATES)
 	assert(requested == [CityMenuBar.MENU_CHECK_FOR_UPDATES])
+	popup.id_pressed.emit(CityMenuBar.MENU_KNOWLEDGE)
+	assert(requested == [CityMenuBar.MENU_CHECK_FOR_UPDATES, CityMenuBar.MENU_KNOWLEDGE])
 	menu_bar.free()
 	await process_frame
 

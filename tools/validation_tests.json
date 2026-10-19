@@ -1,5 +1,17 @@
 [
   {
+    "id": "knowledge_workflow_test",
+    "script": "tests/knowledge_workflow_test.gd",
+    "domain": "ui",
+    "lane": "product"
+  },
+  {
+    "id": "knowledge_test",
+    "script": "tests/knowledge_test.gd",
+    "domain": "ui",
+    "lane": "product"
+  },
+  {
     "id": "presentation_colors_gpu_test",
     "script": "tests/presentation_colors_gpu_test.gd",
     "domain": "rendering",

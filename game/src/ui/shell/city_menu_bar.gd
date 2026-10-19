@@ -25,6 +25,7 @@ const MENU_CONSOLE := 0x8306
 const MENU_MUSIC_BOX := 0x8401
 const MENU_PHOTO_MODE := 0x8402
 const MENU_ABOUT := 0
+const MENU_KNOWLEDGE := 0x8403
 const MENU_AUTO_BUDGET := 0x8004
 const MENU_AUTO_GOTO := 0x8005
 const MENU_SOUND_EFFECTS := 0x8006
@@ -209,7 +210,7 @@ func _ready() -> void:
 	debug_menu = _add_menu(menu_row, "Debug", [], _on_debug_menu)
 	CityDebugMenu.populate(debug_menu.get_popup(), _on_debug_menu)
 	debug_menu.visible = DebugMode.enabled
-	_add_menu(menu_row, "Help", [["Check for updates", MENU_CHECK_FOR_UPDATES], ["", -1], ["About", MENU_ABOUT]], _on_help_menu)
+	_add_menu(menu_row, "Help", [["Tips & Knowledge", MENU_KNOWLEDGE], ["", -1], ["Check for updates", MENU_CHECK_FOR_UPDATES], ["", -1], ["About", MENU_ABOUT]], _on_help_menu)
 	refresh_shortcut_hints(bindings)
 
 	var menu_spacer := Control.new()

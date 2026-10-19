@@ -19,7 +19,9 @@
     "game/src/ui/shared/busy_overlay.gd",
     "game/src/formats/city_save_backup.gd",
     "game/src/application/classic_cheats.gd",
-    "game/src/application/photo_mode.gd"
+    "game/src/application/photo_mode.gd",
+    "game/src/ui/knowledge/*.gd",
+    "game/src/application/knowledge.gd"
   ],
   "non_display_literals": {
     "FloatingPanel": "Internal Godot theme variation.",
@@ -75,6 +77,8 @@
     "Content-Type: application/json": "Internal HTTP content type header; never displayed.",
     "NewInternalClient": "UPnP SOAP protocol field, never displayed.",
     "NewInternalPort": "UPnP SOAP protocol field, never displayed.",
-    "NewPortMappingDescription": "UPnP SOAP protocol field, never displayed."
+    "NewPortMappingDescription": "UPnP SOAP protocol field, never displayed.",
+    "General/Fields": "Existing scene node path; not displayed.",
+    "Center/NewCityDialog/Content/Body/Preview": "Existing scene node path; not displayed."
   }
 }

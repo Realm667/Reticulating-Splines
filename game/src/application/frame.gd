@@ -14,6 +14,8 @@ func _init(application: CityApplication) -> void:
 
 
 func process(delta: float) -> void:
+	if app.knowledge != null:
+		app.knowledge.invalidate_edits()
 	app.visual_preparation.work_budget.begin_frame(delta)
 	var preparing := app.visual_preparation.process()
 	if not preparing:
@@ -120,6 +122,8 @@ func _advance_palette_animation(delta: float, suspended: bool) -> void:
 
 
 func consume_simulation_result(result: SimulationTickResult) -> void:
+	if app.knowledge != null:
+		app.knowledge.observe(result)
 	app.disaster_effects.observe_simulation_result(result)
 	if result.base_ticks > 0:
 		sync_speed_ui()

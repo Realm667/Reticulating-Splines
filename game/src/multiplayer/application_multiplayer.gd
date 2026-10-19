@@ -416,6 +416,8 @@ func apply_display(state: Dictionary, prepared: MultiplayerDisplayJob = null) ->
 		app.frame.sync_speed_ui()
 		refresh_budget_view()
 		receive_newspaper(state)
+		if app.knowledge != null:
+			app.knowledge.observe_host(state)
 		return
 	var document := prepared.document if prepared != null else MultiplayerDocument.restore(state, last_live_state, app.document_state.current_document) if live else Sc2File.new()
 	if document == null or (not live and not document.parse(Marshalls.base64_to_raw(state.city))) or not document.is_sc2x() or document.map_size not in Sc2File.MAP_SIZES:
@@ -491,6 +493,8 @@ func apply_display(state: Dictionary, prepared: MultiplayerDisplayJob = null) ->
 	refresh_budget_view()
 	receive_newspaper(state)
 	save_identity()
+	if app.knowledge != null:
+		app.knowledge.observe_host(state)
 
 
 func apply_selection(start: Vector2i, finish: Vector2i, path: Array[Vector2i], dragged: bool) -> void:

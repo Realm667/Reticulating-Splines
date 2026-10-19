@@ -27310,3 +27310,479 @@ msgstr "Verwendet die gewählte UI-Skalierung in Bildschirmpixeln: 2.0 zeigt exa
 #: src/ui/settings/app_settings_dialog.tscn
 msgid "Window size in screen pixels. Fullscreen uses the monitor resolution. Oversized windows are fitted to the available desktop."
 msgstr "Fenstergröße in Bildschirmpixeln. Vollbild verwendet die Monitorauflösung. Zu große Fenster werden an den verfügbaren Desktop angepasst."
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Start small. Grow with purpose."
+msgstr "Klein anfangen. Gezielt wachsen."
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Plan small residential, commercial and industrial areas with power and transport access. Keep an eye on running costs."
+msgstr "Plane zunächst kleine Wohn-, Gewerbe- und Industriegebiete mit Strom und Verkehrsanbindung. Behalte dabei deine laufenden Ausgaben im Blick."
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Use demand to decide what to expand next. Give new areas time to develop before zoning more land."
+msgstr "Orientiere den nächsten Ausbau an der Nachfrage. Gib neuen Gebieten Zeit zur Entwicklung, bevor du weitere Flächen ausweist."
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Demand shows a direction"
+msgstr "Nachfrage zeigt dir die Richtung"
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Follow residential, commercial and industrial demand instead of a fixed ratio of zones."
+msgstr "Folge der Nachfrage nach Wohn-, Gewerbe- und Industriegebieten statt einem festen Flächenverhältnis."
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Positive demand does not guarantee growth at every location. Check the site's power, access and land value too."
+msgstr "Positive Nachfrage garantiert kein Wachstum an jedem Standort. Prüfe dort auch Strom, Verkehrsanbindung und Bodenwert."
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Check your existing zones"
+msgstr "Prüfe deine vorhandenen Zonen"
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Before zoning more land, inspect areas that are still empty."
+msgstr "Sieh dir noch leere Gebiete an, bevor du weitere Flächen ausweist."
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "More zoning does not repair a missing connection. The query tool helps you inspect a specific site."
+msgstr "Neue Zonen beheben keine fehlende Verbindung. Mit dem Abfragewerkzeug kannst du einen bestimmten Standort prüfen."
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Density sets a limit"
+msgstr "Die Dichte setzt eine Grenze"
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Light and dense zones allow different building sizes. Dense zoning alone does not guarantee tall buildings."
+msgstr "Leichte und dichte Zonen erlauben unterschiedliche Gebäudegrößen. Dichte Zonierung allein garantiert keine Hochhäuser."
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Further development also depends on the site and the growth rules for its zone type."
+msgstr "Weitere Entwicklung hängt auch vom Standort und den Wachstumsregeln des Zonentyps ab."
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Development takes time"
+msgstr "Entwicklung braucht Zeit"
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "The simulation visits different parts of the city in stages. A new connection may not produce an immediate change."
+msgstr "Die Simulation prüft die Stadt abschnittsweise. Eine neue Verbindung muss nicht sofort eine sichtbare Veränderung bewirken."
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Let the relevant simulation phases finish before judging a repair. Pausing the city also pauses development."
+msgstr "Warte nach einer Reparatur die zuständigen Simulationsphasen ab. Bei pausierter Stadt ruht auch die Entwicklung."
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Some buildings lack power"
+msgstr "Einigen Gebäuden fehlt Strom"
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Check both generation and connections in the power view. Spare capacity does not help an isolated area."
+msgstr "Prüfe in der Stromansicht sowohl Erzeugung als auch Anschlüsse. Freie Kapazität hilft einem isolierten Gebiet nicht."
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "A high usage percentage alone does not prove a citywide outage. Inspect the affected connections before building another plant."
+msgstr "Hohe Auslastung allein beweist keinen stadtweiten Stromausfall. Prüfe zuerst die betroffenen Verbindungen."
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Choose an available power source"
+msgstr "Wähle eine verfügbare Stromquelle"
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "The power menu shows which plant types are currently available."
+msgstr "Das Strommenü zeigt, welche Kraftwerkstypen derzeit verfügbar sind."
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Compare construction cost, capacity and the needs of your city before committing your funds."
+msgstr "Vergleiche Baukosten, Leistung und den Bedarf deiner Stadt, bevor du dein Geld investierst."
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Plan for power plant replacement"
+msgstr "Plane den Kraftwerksersatz"
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Power plants can reach the end of their service life. Keep funds available for replacement."
+msgstr "Kraftwerke können das Ende ihrer Lebensdauer erreichen. Halte Geld für Ersatz bereit."
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Inspect plant information and the city's existing notices. Replacing a plant must also restore its network connections."
+msgstr "Prüfe die Kraftwerksinformationen und vorhandene Meldungen. Beim Ersatz müssen auch die Netzverbindungen wiederhergestellt werden."
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Some buildings lack water"
+msgstr "Einigen Gebäuden fehlt Wasser"
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Buildings are unserved. Check their connection and available supply in the water view."
+msgstr "Gebäude sind unversorgt. Prüfe in der Wasseransicht den Anschluss und die verfügbare Förderleistung."
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "A pipe alone is not enough: it must connect to a working water supply. Then check whether that supply is sufficient."
+msgstr "Eine Leitung allein genügt nicht: Sie muss mit einer funktionierenden Wasserversorgung verbunden sein. Prüfe danach deren Leistung."
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Pump output can vary"
+msgstr "Pumpenleistung kann schwanken"
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Location and weather matter to water supply. Inspect actual output before adding more pumps."
+msgstr "Standort und Wetter beeinflussen die Wasserversorgung. Prüfe die tatsächliche Leistung, bevor du weitere Pumpen baust."
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Use the water view to distinguish a supply problem from a disconnected part of the network."
+msgstr "Unterscheide in der Wasseransicht zwischen fehlender Förderleistung und einem abgetrennten Netzbereich."
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Water facilities have different jobs"
+msgstr "Wasseranlagen haben verschiedene Aufgaben"
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Pumps, towers, desalination and treatment are not interchangeable."
+msgstr "Pumpen, Wassertürme, Entsalzung und Aufbereitung sind nicht austauschbar."
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Read the selected facility's information. Storage or treatment alone is not a substitute for a connected water source."
+msgstr "Lies die Informationen zur gewählten Anlage. Speicher oder Aufbereitung allein ersetzen keine angeschlossene Wasserquelle."
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Access is more than a nearby road"
+msgstr "Eine nahe Straße genügt nicht immer"
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "A nearby transport route and a reachable destination are different requirements."
+msgstr "Ein naher Verkehrsweg und ein erreichbares Ziel sind unterschiedliche Voraussetzungen."
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Use the query tool to inspect access. A positive local check does not promise that every simulated journey succeeds."
+msgstr "Prüfe den Anschluss mit dem Abfragewerkzeug. Ein positiver lokaler Befund garantiert nicht den Erfolg jeder simulierten Fahrt."
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Connect your transport networks"
+msgstr "Verbinde deine Verkehrsnetze"
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Separate rail, subway and highway sections need suitable connections to work together."
+msgstr "Bahn, U-Bahn und Autobahn benötigen geeignete Verbindungen, um zusammenzuwirken."
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Check junctions and stations rather than assuming that two nearby networks are connected."
+msgstr "Prüfe Übergänge und Stationen. Zwei nahe beieinanderliegende Netze sind nicht automatisch verbunden."
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Traffic also has a cost"
+msgstr "Verkehr kostet auch Geld"
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Watch traffic patterns and transport maintenance as the city expands."
+msgstr "Beobachte beim Stadtausbau Verkehr und Unterhaltskosten."
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Use the traffic map and budget together before choosing where to add or improve routes."
+msgstr "Betrachte Verkehrskarte und Haushalt gemeinsam, bevor du Verkehrswege ausbaust."
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Land value can limit density"
+msgstr "Der Bodenwert kann die Dichte begrenzen"
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Residential and commercial buildings can need a higher local land value for their next density level."
+msgstr "Wohn- und Gewerbegebäude können für die nächste Dichtestufe einen höheren lokalen Bodenwert benötigen."
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "The threshold depends on the building's current density. This rule does not apply identically to industry or a zone already at its density limit."
+msgstr "Die Schwelle hängt von der aktuellen Gebäudedichte ab. Diese Regel gilt nicht genauso für Industrie oder bereits maximal dichte Zonen."
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Inspect local conditions"
+msgstr "Prüfe die örtlichen Bedingungen"
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "City averages can hide local pollution or crime problems."
+msgstr "Städtische Durchschnittswerte können lokale Umwelt- oder Kriminalitätsprobleme verdecken."
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Compare the relevant maps around the affected site before deciding which service or connection to improve."
+msgstr "Vergleiche die Karten rund um den betroffenen Standort, bevor du Dienste oder Verbindungen verbesserst."
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "A building is not the whole service"
+msgstr "Ein Gebäude ist nicht der ganze Dienst"
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Service buildings, their funding and their local effect are separate questions."
+msgstr "Dienstgebäude, ihre Finanzierung und ihre lokale Wirkung sind getrennte Fragen."
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Inspect coverage and the budget before adding another service building."
+msgstr "Prüfe Abdeckung und Haushalt, bevor du ein weiteres Dienstgebäude errichtest."
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Watch long-term trends"
+msgstr "Beobachte langfristige Entwicklungen"
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Education and health should be assessed over time, not just immediately after construction."
+msgstr "Bildung und Gesundheit solltest du über längere Zeit beurteilen, nicht unmittelbar nach einem Neubau."
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Use the population reports and graphs to compare longer-term changes."
+msgstr "Vergleiche längerfristige Veränderungen in Bevölkerungsberichten und Diagrammen."
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Cash is not the annual balance"
+msgstr "Kontostand ist nicht Jahresbilanz"
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Check running costs and the annual forecast before large projects. A healthy bank balance can temporarily hide a deficit."
+msgstr "Prüfe vor größeren Bauvorhaben laufende Kosten und Jahresprognose. Ein gut gefülltes Konto kann ein Defizit vorübergehend verdecken."
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "The budget separates income and expenses. Include the ongoing cost of new facilities in your plans."
+msgstr "Der Haushalt trennt Einnahmen und Ausgaben. Berücksichtige auch die laufenden Kosten neuer Einrichtungen."
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Borrowing has ongoing costs"
+msgstr "Kredite verursachen laufende Kosten"
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "A bond provides cash now and creates debt and interest obligations."
+msgstr "Eine Anleihe bringt sofort Geld, aber auch Schulden und Zinsverpflichtungen."
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Check existing debt and the budget before borrowing again. Keep repayment in your longer-term plan."
+msgstr "Prüfe bestehende Schulden und den Haushalt vor einer weiteren Anleihe. Plane auch die Rückzahlung ein."
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Review ordinance costs"
+msgstr "Prüfe die Kosten von Verordnungen"
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Ordinances can change the city's finances and conditions."
+msgstr "Verordnungen können Finanzen und Bedingungen deiner Stadt verändern."
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Read each ordinance's description and check its budget effect instead of enabling every option."
+msgstr "Lies jede Beschreibung und prüfe die Haushaltswirkung, statt alle Optionen einzuschalten."
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Growth has several constraints"
+msgstr "Wachstum hat mehrere Grenzen"
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Recreation, outside connections and city development can matter alongside demand."
+msgstr "Neben Nachfrage können Freizeitangebote, Außenverbindungen und Stadtentwicklung eine Rolle spielen."
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Inspect the relevant reports before expanding. Population growth, appearance and quality of life are different valid goals."
+msgstr "Prüfe vor dem Ausbau die passenden Berichte. Bevölkerungswachstum, Gestaltung und Lebensqualität sind unterschiedliche berechtigte Ziele."
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "New opportunities"
+msgstr "Neue Möglichkeiten"
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Inventions and rewards can make new tools or buildings available."
+msgstr "Erfindungen und Belohnungen können neue Werkzeuge oder Gebäude verfügbar machen."
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Check the updated menus and the city's notice before planning around a new option."
+msgstr "Prüfe die aktualisierten Menüs und die Stadtmeldung, bevor du mit einer neuen Option planst."
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Check the city after an event"
+msgstr "Prüfe die Stadt nach einem Ereignis"
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "After a disaster, inspect damaged connections and services. In a scenario, also review its actual objectives."
+msgstr "Untersuche nach einer Katastrophe beschädigte Verbindungen und Dienste. Prüfe in einem Szenario auch dessen tatsächliche Ziele."
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Restore essential connections before expanding. Scenario goals and deadlines belong to the loaded scenario, not a universal checklist."
+msgstr "Stelle wichtige Verbindungen vor weiterem Ausbau wieder her. Ziele und Fristen hängen vom geladenen Szenario ab."
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Tips & Knowledge"
+msgstr "Tipps & Wissen"
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "More information"
+msgstr "Mehr erfahren"
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Less information"
+msgstr "Weniger anzeigen"
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Keep open"
+msgstr "Angeheftet lassen"
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Tip options"
+msgstr "Hinweisoptionen"
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Hide this topic"
+msgstr "Dieses Thema ausblenden"
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Open view"
+msgstr "Ansicht öffnen"
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Open water view"
+msgstr "Wasseransicht öffnen"
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Open power view"
+msgstr "Stromansicht öffnen"
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Show land value"
+msgstr "Bodenwert anzeigen"
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Open budget"
+msgstr "Haushalt öffnen"
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Tips off"
+msgstr "Hinweise aus"
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Start and loading only"
+msgstr "Nur beim Start und Laden"
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Also during play"
+msgstr "Auch während des Spiels"
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Automatic tips"
+msgstr "Automatische Hinweise"
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Bottom right"
+msgstr "Unten rechts"
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Top right"
+msgstr "Oben rechts"
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Tip position"
+msgstr "Hinweisposition"
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Reset hidden topics"
+msgstr "Ausgeblendete Themen zurücksetzen"
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Search knowledge"
+msgstr "Wissen durchsuchen"
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "All topics"
+msgstr "Alle Themen"
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Recently shown"
+msgstr "Zuletzt angezeigt"
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Utilities"
+msgstr "Versorgung"
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Why is nothing growing here?"
+msgstr "Warum wächst hier nichts?"
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Power supply"
+msgstr "Stromversorgung"
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Transport access"
+msgstr "Verkehrszugang"
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Available"
+msgstr "Vorhanden"
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Missing"
+msgstr "Fehlt"
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Not checked"
+msgstr "Nicht geprüft"
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Positive"
+msgstr "Positiv"
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Not positive"
+msgstr "Nicht positiv"
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Sufficient"
+msgstr "Ausreichend"
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Too low"
+msgstr "Zu niedrig"
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "No density threshold"
+msgstr "Keine Dichteschwelle"
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Destination reachability"
+msgstr "Zielerreichbarkeit"
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "This is a snapshot of the current conditions, not a promise of growth next month."
+msgstr "Dies ist eine Momentaufnahme der aktuellen Bedingungen, keine Wachstumsgarantie für den nächsten Monat."
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Configure tips"
+msgstr "Hinweise einstellen"
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Cannot save tip preferences: %s"
+msgstr "Hinweiseinstellungen konnten nicht gespeichert werden: %s"
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Another tip"
+msgstr "Anderer Tipp"
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Explain the connection"
+msgstr "Zusammenhang erklären"
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Power is missing at this site."
+msgstr "An diesem Standort fehlt Strom."
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Land value limits the next density level here."
+msgstr "Der Bodenwert begrenzt hier die nächste Dichtestufe."
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "This tile is not currently visited for growth. Check access or query the building's anchor tile."
+msgstr "Dieses Feld wird derzeit nicht für Wachstum geprüft. Prüfe den Verkehrszugang oder frage das Ankerfeld des Gebäudes ab."
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "The current zoning or building density limits further expansion."
+msgstr "Die aktuelle Zonierung oder Gebäudedichte begrenzt den weiteren Ausbau."
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "No blocker was found in these checks. Destination reachability and the next growth visit still matter."
+msgstr "Bei diesen Prüfungen wurde kein Hindernis gefunden. Zielerreichbarkeit und der nächste Wachstumsdurchlauf spielen weiterhin eine Rolle."
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Growth"
+msgstr "Wachstum"
+
+#. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
+msgid "Water supply"
+msgstr "Wasserversorgung"
