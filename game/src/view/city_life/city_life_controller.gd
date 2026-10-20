@@ -89,6 +89,9 @@ func process(delta: float) -> void:
 		if changed_view:
 			# Rotations and altitude cutaways replace the coordinate space.
 			figures.clear()
+			_deferred_render = false
+			if canvas != null:
+				canvas.hide()
 		elif changed_geometry:
 			_revalidate_lanes(city)
 		_activity_signature.clear()
@@ -112,9 +115,11 @@ func process(delta: float) -> void:
 	elapsed = VisualEnhancementOptions.animation_delta(elapsed, options, speed)
 	_elapsed += elapsed
 	_spawn_elapsed += elapsed
+	var spawned := false
 	if _spawn_elapsed >= 0.8:
 		_spawn_elapsed = 0.0
 		_spawn(city, options)
+		spawned = true
 	var advanced := false
 	if _elapsed >= UPDATE_SECONDS:
 		advanced = true
@@ -129,7 +134,7 @@ func process(delta: float) -> void:
 	_render_elapsed += maxf(delta, 0.0)
 	# Cold preparation may shift the publication phase. Keep full figure
 	# advancement and buffer publication on separate frames once art is present.
-	if (_render_elapsed >= UPDATE_SECONDS or canvas.texture == null) and (not advanced or canvas.texture == null or _deferred_render):
+	if (_render_elapsed >= UPDATE_SECONDS or canvas.texture == null) and ((not advanced and not spawned) or canvas.texture == null or _deferred_render):
 		_deferred_render = false
 		_render_elapsed = 0.0
 		canvas.interpolation = 0.0 if elapsed > 0.0 else 1.0

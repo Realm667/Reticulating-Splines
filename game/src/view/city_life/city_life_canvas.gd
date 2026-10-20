@@ -30,7 +30,7 @@ var _light_occluders: Dictionary[Vector3i, Array] = {}
 var _occluders: Dictionary[Vector3i, Array] = {}
 var _occluder_bounds: Dictionary[Vector3i, Rect2i] = {}
 var _occlusion_signature: Array = []
-# At most the three original artwork sizes; source/epoch/layout validate reuse.
+# Three artwork sizes in four directions; source/epoch/layout validate reuse.
 var _occlusion_banks: Dictionary[int, Dictionary] = {}
 var _visible_regions: Array[Vector2i] = []
 var _emission_active := false
@@ -96,7 +96,7 @@ func render(app: CityApplication, figures: Array, sprites: CityLifeSprites, prep
 	# the changed bounds; only a replacement layout needs a complete reset.
 	var layout: Variant = regions._layout_generation if regions != null else app.render_caches.static_visual_signature
 	var signature := [app.document_state.city.document.get_instance_id(), app.static_render_state.epoch,
-		source, app.static_render.city_view_size(), layout]
+		source, app.static_render.city_view_size(), layout, city.compass_rotation()]
 	_select_occlusion_bank(signature, raster_scale)
 	lights.sync_geometry(city)
 	_sync_visible_regions(app.render_caches.region_cache)
@@ -210,7 +210,7 @@ func _select_occlusion_bank(signature: Array, raster_scale: int) -> void:
 	if not _occlusion_signature.is_empty() and signature[0] != _occlusion_signature[0]:
 		_occlusion_banks.clear()
 	_gpu_entries.clear()
-	var view: int = signature[3]
+	var view := occlusion_bank_key(signature)
 	var bank: Dictionary = _occlusion_banks.get(view, {})
 	if bank.is_empty() or bank.signature != signature or bank.lights.raster_scale != raster_scale:
 		_occluders = {}
@@ -229,6 +229,10 @@ func _select_occlusion_bank(signature: Array, raster_scale: int) -> void:
 		_visible_regions = bank.visible_regions
 		lights = bank.lights
 	_occlusion_signature = signature
+
+
+static func occlusion_bank_key(signature: Array) -> int:
+	return int(signature[3]) + (int(signature[5]) * 3 if signature.size() > 5 else 0)
 
 
 func _pending_frame(app: CityApplication, previous_bounds: Rect2i) -> bool:

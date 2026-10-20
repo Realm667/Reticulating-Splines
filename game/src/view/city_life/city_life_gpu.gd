@@ -205,15 +205,15 @@ func prepare_masks(canvas: CityLifeCanvas, entries: Array[Dictionary], budget_us
 func _select_mask_bank(signature: Array) -> void:
 	if signature == _mask_signature:
 		return
-	# Three artwork sizes, each capped at 768 R8 layers (12 MiB on the GPU).
+	# Three sizes in four directions, each capped at 768 R8 layers (12 MiB).
 	# Keep the old draw's bindings until the complete new batch is published.
 	if not _mask_signature.is_empty():
-		_mask_banks[_mask_signature[3]] = {"signature": _mask_signature, "masks": masks,
+		_mask_banks[CityLifeCanvas.occlusion_bank_key(_mask_signature)] = {"signature": _mask_signature, "masks": masks,
 			"images": mask_images, "identities": identities, "slots": mask_slots,
 			"next": _next_mask_slot, "cropped": cropped}
 		if signature[0] != _mask_signature[0]:
 			_mask_banks.clear()
-	var bank: Dictionary = _mask_banks.get(signature[3], {})
+	var bank: Dictionary = _mask_banks.get(CityLifeCanvas.occlusion_bank_key(signature), {})
 	if not bank.is_empty() and bank.signature == signature:
 		masks = bank.masks
 		mask_images = bank.images

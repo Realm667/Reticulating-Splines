@@ -19,6 +19,7 @@ func _init(application: CityApplication) -> void:
 
 
 func refresh_map(force := true) -> void:
+	app.visual_preparation.select_direction()
 	if app.visual_preparation.busy:
 		app.visual_preparation.refresh()
 	if app.city_status_bar != null:

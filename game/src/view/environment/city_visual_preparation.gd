@@ -31,6 +31,18 @@ var bank_visits: Dictionary[int, int] = {}
 var visit_serial := 0
 var trim_frames := 0
 var _draw_warmup: SubViewport
+var _warmed_layouts: Dictionary[int, Array] = {}
+var direction := -1
+var directions: Dictionary[int, Direction] = {}
+
+
+class Direction extends RefCounted:
+	var banks: Array[CityRegionCache] = []
+	var lights: Dictionary[int, CityNightGround] = {}
+	var prepared_lights: Dictionary[int, bool] = {}
+	var light_rescan: Dictionary[int, bool] = {}
+	var evicted: Dictionary[int, bool] = {}
+	var visits: Dictionary[int, int] = {}
 
 
 func _init(application: CityApplication) -> void:
@@ -41,15 +53,25 @@ func reset() -> void:
 	if is_instance_valid(_draw_warmup):
 		_draw_warmup.queue_free()
 	_draw_warmup = null
+	_warmed_layouts.clear()
 	busy = false
 	ready = false
 	preparing_view = -1
 	preparing_traffic = -1
 	if owns(app.render_caches.region_cache):
 		app.render_caches.region_cache = null
-	for cache in banks:
-		cache.close()
-	banks.clear()
+	for retained: Direction in directions.values():
+		for cache in retained.banks:
+			cache.close()
+		for receiver in retained.lights.values():
+			app.visual_environment.night_lighting.release_receiver(receiver)
+	for receiver in app.visual_environment.night_lighting.ground_views.values():
+		app.visual_environment.night_lighting.release_receiver(receiver)
+	app.visual_environment.night_lighting.ground_views = {}
+	app.visual_environment.night_lighting.ground = null
+	directions.clear()
+	direction = -1
+	banks = []
 	archives.clear()
 	stages.clear()
 	prepared_light_views.clear()
@@ -60,18 +82,20 @@ func reset() -> void:
 	layout.clear()
 	if app.city_dialogs != null and app.city_dialogs.visual_preparation_progress != null:
 		app.city_dialogs.visual_preparation_progress.hide()
-	for ground in app.visual_environment.night_lighting.ground_views.values():
-		ground.resident = false
-		ground.prepare_entire_city = false
 
 
 func owns(cache: CityRegionCache) -> bool:
-	return cache != null and cache in banks
+	if cache == null:
+		return false
+	for retained: Direction in directions.values():
+		if cache in retained.banks:
+			return true
+	return false
 
 
 func _layout() -> Array:
 	var city := app.document_state.city
-	return [city.document.get_instance_id(), city.map_size, city.compass_rotation(), city.visible_altitude_levels,
+	return [city.document.get_instance_id(), city.map_size, city.visible_altitude_levels,
 		app.asset_state.large_sprites, app.asset_state.small_medium_sprites,
 		app.view_state.surface_visibility.duplicate(), app.preferences.city_renderer,
 		app.asset_state.large_sprites.visual_nature_enabled, app.asset_state.large_sprites.visual_terrain_enabled,
@@ -149,26 +173,77 @@ func begin() -> void:
 		archive.draw_building_ground = original.draw_building_ground
 		archive.visual_city_life_traffic = index % 2 == 1
 		archives.append(archive)
-		var cache := CityRegionCache.new()
-		cache.gpu_enabled = CityRegionCache.gpu_supported(app.preferences.city_renderer)
-		cache.resident = true
-		cache.background_preparation = true
-		cache.work_budget = work_budget
-		banks.append(cache)
-	busy = true
+	select_direction()
 	# The visible renderer and the preloader own the same resources immediately.
 	app.map_render.refresh_map(false)
 	_progress(0.0, "Preparing city graphics…")
+
+
+func select_direction() -> void:
+	# Called before any map refresh can configure the old direction with rotated
+	# tiles. Each bank keeps its owned before-image and native atlas context.
+	if app.document_state.city == null or archives.size() != VARIANTS or layout != _layout():
+		return
+	var next := app.document_state.city.compass_rotation()
+	if next == direction:
+		return
+	if owns(app.render_caches.region_cache):
+		app.render_caches.region_cache = null
+	var lighting := app.visual_environment.night_lighting
+	if lighting.ground != null:
+		lighting.ground.hide()
+	lighting.ground = null
+	if not directions.has(next):
+		var retained := Direction.new()
+		for index in VARIANTS:
+			var cache := CityRegionCache.new()
+			cache.gpu_enabled = CityRegionCache.gpu_supported(app.preferences.city_renderer)
+			cache.resident = true
+			cache.background_preparation = true
+			cache.work_budget = work_budget
+			retained.banks.append(cache)
+		directions[next] = retained
+	direction = next
+	var selected := directions[next]
+	banks = selected.banks
+	prepared_light_views = selected.prepared_lights
+	light_rescan = selected.light_rescan
+	evicted_banks = selected.evicted
+	bank_visits = selected.visits
+	lighting.ground_views = selected.lights
+	stages = _preparation_variants()
+	stage = 0
+	completed = 0
+	total = stages.size()
+	progress = 0.0
+	lighting_started = false
+	preparing_lights.clear()
+	ready = true
+	for index in stages:
+		ready = ready and banks[index].prefetch_ready() and prepared_light_views.has(index / 2)
+	busy = not ready
+	if ready:
+		app.city_dialogs.visual_preparation_progress.hide()
+	_trim_banks()
 
 
 func _prepare_whole_city() -> bool:
 	return app.document_state.city.map_size <= FULL_CITY_PREPARATION_EDGE
 
 
+func _preparation_variants() -> Array[int]:
+	# Warm all zoom sizes on first entry. Once directions compete for memory,
+	# do not evict a visited direction to speculate on unvisited zoom sizes.
+	# Existing sizes remain resident and keep receiving local edits.
+	if directions.size() <= 1:
+		return required_variants()
+	return [_index(app.static_render.city_view_size())]
+
+
 func _select_variants() -> void:
 	if banks.size() != VARIANTS:
 		return
-	var required := required_variants()
+	var required := _preparation_variants()
 	if stages == required:
 		return
 	# A zoom mapping or decorative traffic choice selects existing banks. It
@@ -210,7 +285,11 @@ func process() -> bool:
 	if layout != _layout():
 		begin()
 		return false
+	select_direction()
 	_select_variants()
+	trim_frames += 1
+	if trim_frames % 120 == 0:
+		_trim_banks()
 	if not work_budget.available():
 		return false
 	if not busy:
@@ -315,6 +394,9 @@ func _prepare_step() -> void:
 func _prepare_gpu_draw(cache: CityRegionCache) -> void:
 	if not cache.gpu_enabled:
 		return
+	var key := [cache._layout_generation, app.map_view.get_viewport().use_hdr_2d]
+	if _warmed_layouts.get(cache.get_instance_id(), []) == key:
+		return
 	if _draw_warmup == null:
 		_draw_warmup = SubViewport.new()
 		_draw_warmup.disable_3d = true
@@ -329,7 +411,14 @@ func _prepare_gpu_draw(cache: CityRegionCache) -> void:
 	var scale := 64.0 / maxf(source.size.x, source.size.y)
 	# Uploading an atlas alone does not exercise its draw pipeline. Submit the
 	# prepared artwork once off screen, including the night material variant.
+	var materials_seen := {}
 	for entry in source.meshes:
+		var resources := [entry.texture, entry.emission, entry.seasons, entry.texture_pages]
+		if materials_seen.has(resources):
+			continue
+		materials_seen[resources] = true
+		# One mesh per atlas/material exercises the same pipeline as every other
+		# region. Recreating hundreds of equivalent nodes stalls rotation frames.
 		var node := MeshInstance2D.new()
 		node.mesh = entry.mesh
 		node.texture = entry.texture
@@ -342,6 +431,8 @@ func _prepare_gpu_draw(cache: CityRegionCache) -> void:
 		node.material = shader
 		_draw_warmup.add_child(node)
 	_draw_warmup.render_target_update_mode = SubViewport.UPDATE_ONCE
+	if not source.meshes.is_empty():
+		_warmed_layouts[cache.get_instance_id()] = key
 
 
 func _configure(index: int, dirty := Rect2i()) -> void:
@@ -351,7 +442,7 @@ func _configure(index: int, dirty := Rect2i()) -> void:
 	signature.append(archives[index].get_instance_id())
 	var changed: Array[Rect2i] = []
 	var listed := false
-	if not cache.signature.is_empty() and cache.signature != signature:
+	if not cache.signature.is_empty() and cache.signature != signature and cache.signature[9] == signature[9]:
 		listed = ApplicationStaticRender.changed_source_rects(app.document_state.city, cache.source_payloads, archives[index], view, changed)
 	var previous_generation := cache.generation
 	cache.artwork_palette = app.asset_state.palette if not archives[index].high_resolution.is_empty() else null
@@ -375,9 +466,6 @@ func refresh(dirty := Rect2i()) -> void:
 
 
 func _background() -> void:
-	trim_frames += 1
-	if trim_frames % 120 == 0:
-		_trim_banks()
 	# Visible work has its normal frame budget. One hidden bank catches up per
 	# frame, updating only regions whose source tiles changed.
 	background_cursor = (background_cursor + 1) % VARIANTS
@@ -420,18 +508,60 @@ func _background() -> void:
 
 
 func _trim_banks(limit := RETAINED_GPU_LIMIT) -> void:
+	_trim_lights()
 	var bytes := 0
-	var ranked: Array[int] = []
-	for index in banks.size():
-		bytes += banks[index]._gpu_atlas_bytes()
-		if banks[index] != app.render_caches.region_cache and not banks[index]._gpu_pending():
-			ranked.append(index)
+	var ranked: Array[Dictionary] = []
+	for retained: Direction in directions.values():
+		for index in retained.banks.size():
+			var cache := retained.banks[index]
+			bytes += _retained_graphics_bytes(cache)
+			var selected := cache == banks[_index(app.static_render.city_view_size())] if not banks.is_empty() else false
+			var preparing := busy and stage < stages.size() and cache == banks[stages[stage]]
+			if cache != app.render_caches.region_cache and not selected and not preparing and not cache._gpu_pending():
+				ranked.append({"state": retained, "index": index, "visit": retained.visits.get(index, 0)})
 	if bytes <= limit:
 		return
-	ranked.sort_custom(func(a: int, b: int) -> bool: return bank_visits.get(a, 0) < bank_visits.get(b, 0))
-	for index in ranked:
+	ranked.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a.visit < b.visit)
+	for candidate in ranked:
 		if bytes <= limit:
 			break
-		bytes -= banks[index]._gpu_atlas_bytes()
-		banks[index].close()
-		evicted_banks[index] = true
+		var retained: Direction = candidate.state
+		var index: int = candidate.index
+		bytes -= _retained_graphics_bytes(retained.banks[index])
+		retained.banks[index].close()
+		retained.evicted[index] = true
+
+
+func _retained_graphics_bytes(cache: CityRegionCache) -> int:
+	if cache.gpu_enabled:
+		return cache._gpu_atlas_bytes()
+	# CPU rendering retains both pixels and their uploaded textures. Count each
+	# image conservatively at RGBA size; directions must not bypass the cap.
+	var bytes := 0
+	for entry in cache.entries.values():
+		for image: Image in [entry.image, entry.artwork_image, entry.emission_image, entry.season_image]:
+			if image != null:
+				bytes += image.get_width() * image.get_height() * 8
+	return bytes
+
+
+func _trim_lights() -> void:
+	var bytes := 0
+	var ranked: Array[Dictionary] = []
+	for rotation in directions:
+		var retained := directions[rotation]
+		for view in retained.lights:
+			var receiver := retained.lights[view]
+			bytes += receiver.texture_bytes
+			if rotation != direction:
+				ranked.append({"state": retained, "view": view,
+					"visit": maxi(retained.visits.get(view * 2, 0), retained.visits.get(view * 2 + 1, 0))})
+	ranked.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a.visit < b.visit)
+	for candidate in ranked:
+		if bytes <= CityNightGround.MAX_TEXTURE_BYTES:
+			break
+		var retained: Direction = candidate.state
+		var view: int = candidate.view
+		bytes -= retained.lights[view].texture_bytes
+		retained.lights[view].reset()
+		retained.prepared_lights.erase(view)

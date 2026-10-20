@@ -691,6 +691,10 @@ func close() -> void:
 	source_payloads.clear()
 	_snapshot = null
 	display_city = null
+	# Retired CPU banks must release native geometry and decoded art as well as
+	# their published images. A later configure starts from a fresh context.
+	_cpu_context = CityGpuBuildContext.new()
+	_artwork_context = CityGpuBuildContext.new()
 
 
 static func _render(city: CityState, palette: Sc2Palette, sprites: Sc2SpriteArchive, bounds: Rect2i, view: int,

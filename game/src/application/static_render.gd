@@ -252,6 +252,12 @@ static func changed_source_rects(city: CityState, old_payloads: Dictionary, spri
 		if chunk != null:
 			before[chunk_id] = old_payloads[chunk_id]
 
+	# Rotation advances revisions even when we return to identical tile data.
+	# Packed-array equality avoids rebuilding sprite bounds and native inputs
+	# for each retained graphics size when no source byte changed.
+	if before == after:
+		return true
+
 	var configuration := IsometricRenderer.view_configuration(view_size)
 	var building_sprites := PackedInt32Array()
 	building_sprites.resize(BuildingTileIds.COUNT * 2)

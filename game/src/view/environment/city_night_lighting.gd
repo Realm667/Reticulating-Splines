@@ -148,6 +148,20 @@ func invalidate_regions(changes: Array[Rect2i]) -> void:
 func invalidate_all() -> void:
 	for receiver in ground_views.values():
 		receiver.invalidate_all()
+	# Non-current directions compare owned geometry when revisited. Explicit
+	# style changes, however, must also invalidate those retained masks.
+	for retained in app.visual_preparation.directions.values():
+		for receiver in retained.lights.values():
+			if receiver not in ground_views.values():
+				receiver.invalidate_all()
+
+
+func release_receiver(receiver: CityNightGround) -> void:
+	if not is_instance_valid(receiver) or receiver.is_queued_for_deletion():
+		return
+	app.map_view.layers.ground_receivers.erase(receiver)
+	receiver.hide()
+	receiver.queue_free()
 
 
 func _create() -> void:
@@ -198,6 +212,32 @@ func _create() -> void:
 	life_material.set_shader_parameter("has_emission", true)
 	life.material = life_material
 	scene.add_child(life)
+	_warm_glow(material)
+
+
+func _warm_glow(material: ShaderMaterial) -> void:
+	# Daytime preparation renders emission and blur, but the final additive
+	# output stays hidden. Exercise that last pipeline before the first night.
+	var warm := SubViewport.new()
+	warm.disable_3d = true
+	warm.size = Vector2i(64, 64)
+	warm.transparent_bg = true
+	warm.use_hdr_2d = app.map_view.get_viewport().use_hdr_2d
+	warm.world_2d = World2D.new()
+	warm.render_target_update_mode = SubViewport.UPDATE_ONCE
+	app.map_view.add_child(warm)
+	var rect := TextureRect.new()
+	rect.texture = output.texture
+	rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	rect.size = Vector2(64, 64)
+	rect.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	var shader := material.duplicate() as ShaderMaterial
+	shader.set_shader_parameter("strength", 1.0)
+	shader.set_shader_parameter("sample_scale", Vector2.ONE)
+	shader.set_shader_parameter("sample_offset", Vector2.ZERO)
+	rect.material = shader
+	warm.add_child(rect)
+	RenderingServer.frame_post_draw.connect(warm.queue_free, CONNECT_ONE_SHOT)
 
 
 func _rebuild(value: CityMapSource) -> void:
