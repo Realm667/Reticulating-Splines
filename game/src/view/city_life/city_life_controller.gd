@@ -43,6 +43,7 @@ func _init(application: CityApplication) -> void:
 
 
 func process(delta: float) -> void:
+	var started := Time.get_ticks_usec()
 	var map := app.map_view
 	if map == null:
 		return
@@ -129,8 +130,12 @@ func process(delta: float) -> void:
 		_deferred_render = _render_elapsed >= UPDATE_SECONDS
 		canvas.interpolation = clampf(_render_elapsed / UPDATE_SECONDS, 0.0, 1.0) if elapsed > 0.0 else 1.0
 		canvas.sync_view(app)
-		if not advanced:
-			canvas.prepare_lights(app, figures)
+	# Moving cars can reach new receivers faster than idle-only preparation.
+	# Use remaining CPU headroom after either movement or body publication,
+	# without adding work to an already expensive figure frame.
+	var preparation_headroom := 8000 - int(Time.get_ticks_usec() - started)
+	if preparation_headroom >= 500 and canvas.texture != null:
+		canvas.prepare_lights(app, figures, mini(1500, preparation_headroom))
 
 
 func _sync_traffic(enhanced: bool) -> void:
@@ -344,16 +349,21 @@ func _advance(city: CityState, elapsed: float) -> void:
 
 
 func _crowded(figure: Figure, position: Vector2, spawning: bool = true) -> bool:
-	var center := _bucket(position)
 	var direction := figure.heading()
 	var world := CityLifePaths.forward(direction)
 	var forward := Vector2((world.x - world.y) * 16, (world.x + world.y) * 8)
 	var base_spacing := 3.0 if spawning or figure.walking else 5.0
 	if not figure.walking:
 		base_spacing += figure.extra_spacing()
-	for x in range(-1, 2):
-		for y in range(-1, 2):
-			for other: Figure in _buckets.get(center + Vector2i(x, y), EMPTY_BUCKET):
+	# A bus contributes the largest extra spacing. Every possible blocker is
+	# inside this rectangle; only impossible buckets are excluded. The exact
+	# distance, heading and right-of-way predicates below remain unchanged.
+	var reach := base_spacing + (1.5 if not figure.walking else 0.0)
+	var first := _bucket(position - Vector2.ONE * reach)
+	var last := _bucket(position + Vector2.ONE * reach)
+	for x in range(first.x, last.x + 1):
+		for y in range(first.y, last.y + 1):
+			for other: Figure in _buckets.get(Vector2i(x, y), EMPTY_BUCKET):
 				if other == figure or other.walking != figure.walking or other.age >= other.lifetime:
 					continue
 				var separation := other.position - position

@@ -275,9 +275,10 @@ func prepare_lights(app: CityApplication, figures: Array, budget_usec := 1500) -
 	if headlights.groups.size() * CityLifeHeadlights.GROUP_SIZE < vehicles:
 		headlights._add_group()
 		return
-	# Use idle presentation frames to warm the next night. A small rotating
-	# sample avoids rescanning the complete working set on every display frame.
-	for index in mini(32, figures.size()):
+	# Warm cache hits are cheap. Scan far enough to keep up with moving cars,
+	# while retaining the time limit and a separate cap on texture transfers.
+	var uploads := 0
+	for index in figures.size():
 		_light_preparation_cursor %= figures.size()
 		var figure: CityLifeController.Figure = figures[_light_preparation_cursor]
 		_light_preparation_cursor += 1
@@ -288,8 +289,8 @@ func prepare_lights(app: CityApplication, figures: Array, budget_usec := 1500) -
 			if surface.is_empty():
 				surface = lights.surface(city, figure.tile, figure.enter, figure.direction,
 					func(tile: Vector2i, enter: int) -> Array: return _light_candidates(app, tile, enter), false)
-			headlights.prepare_surface(figure, surface)
-		if Time.get_ticks_usec() - started >= budget_usec:
+			uploads += int(headlights.prepare_surface(figure, surface))
+		if uploads >= 8 or Time.get_ticks_usec() - started >= budget_usec:
 			break
 
 

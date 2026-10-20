@@ -94,6 +94,7 @@ func _check_application() -> void:
 	_check_budgeted_preparation(app)
 	_check_running_cache(app)
 	_check_day_emission(app)
+	_check_day_light_budget(app)
 	await _check_light_publication(app)
 	assert(app.asset_state.large_sprites.visual_city_life_traffic)
 	app.preferences.visual_enhancements.pause_freezes = true
@@ -351,6 +352,59 @@ static func _check_spacing() -> void:
 	life._rebuild_buckets()
 	assert(life._crowded(a, Vector2.ZERO, false), "A longer vehicle needs more following space")
 	life.app.free()
+	_check_crowding_search()
+
+
+static func _check_crowding_search() -> void:
+	var life := CityLifeController.new(CityApplication.new())
+	var random := RandomNumberGenerator.new()
+	random.seed = 17423
+	for i in 120:
+		var figure := CityLifeController.Figure.new()
+		figure.id = i
+		figure.walking = i % 4 == 0
+		figure.vehicle_kind = i % 3
+		figure.enter = i % 4
+		figure.exit = (i + 2) % 4
+		figure.progress = random.randf()
+		figure.position = Vector2(random.randf_range(-32.0, 32.0), random.randf_range(-32.0, 32.0))
+		if i % 5 == 0:
+			figure.position = Vector2((i % 4 - 2) * 16, (i % 3 - 1) * 16)
+		figure.age = figure.lifetime if i % 13 == 0 else 0.0
+		life.figures.append(figure)
+	life._rebuild_buckets()
+	for figure in life.figures:
+		for spawning in [false, true]:
+			for shift in [Vector2.ZERO, Vector2(7.999, -8.001), Vector2(-0.001, 0.001)]:
+				var position: Vector2 = figure.position + shift
+				assert(life._crowded(figure, position, spawning) == _all_figure_blockers(life.figures, figure, position, spawning),
+					"Bucket bounds must preserve all distance, lane, age and right-of-way decisions, including negative coordinates")
+	life.app.free()
+
+
+static func _all_figure_blockers(figures: Array[CityLifeController.Figure], figure: CityLifeController.Figure, position: Vector2, spawning: bool) -> bool:
+	# Independent exhaustive search: no buckets or search-radius shortcut.
+	var heading := figure.heading()
+	var world := CityLifePaths.forward(heading)
+	var forward := Vector2((world.x - world.y) * 16, (world.x + world.y) * 8)
+	for other in figures:
+		if other == figure or other.walking != figure.walking or other.age >= other.lifetime:
+			continue
+		var spacing := 3.0 if spawning or figure.walking else 5.0
+		if not figure.walking:
+			spacing += figure.extra_spacing() + other.extra_spacing()
+		var difference := other.position - position
+		if difference.length_squared() >= spacing * spacing:
+			continue
+		if not spawning:
+			if CityLifePaths.opposite(heading) == other.heading():
+				continue
+			if heading == other.heading() and difference.dot(forward) <= 0.0:
+				continue
+			if heading != other.heading() and figure.id < other.id:
+				continue
+		return true
+	return false
 
 
 static func _check_vehicle_mix() -> void:
@@ -554,6 +608,39 @@ static func _check_sloped_atlas() -> void:
 	assert(atlas.image.get_pixel(24, 24).a == 0.0, "Foreground masks must still cover inclined vehicles")
 	assert(atlas.emission.get_pixel(20, 20).a > 0.0, "Headlights must tilt with the artwork")
 	assert(sprite.get_pixel(0, 2) == Color.RED and sprite.get_size() == Vector2i(5, 3), "Tilting must not modify shared source artwork")
+
+
+func _check_day_light_budget(app: CityApplication) -> void:
+	var canvas := CityLifeCanvas.new()
+	canvas.gpu_enabled = true
+	root.add_child(canvas)
+	var saved_night := app.visual_environment.night
+	app.visual_environment.night = 0.0
+	assert(canvas.render(app, [], app.city_life.sprites))
+	var headlights := canvas.road_layer as CityLifeHeadlights
+	headlights._add_group()
+	var figures: Array = []
+	for i in 40:
+		var figure := CityLifeController.Figure.new()
+		figure.id = i + 10000
+		figure.tile = Vector2i(64, 64)
+		figure.enter = 0
+		figure.exit = 2
+		figure.direction = 2
+		figures.append(figure)
+	var uploaded := 0
+	for step in 12:
+		canvas.prepare_lights(app, figures, 1000000)
+		var ready := headlights.images.size() - headlights.images.count(null)
+		assert(ready - uploaded <= 8, "Day preparation must cap transfers even when its CPU budget has room")
+		uploaded = ready
+		if uploaded == figures.size():
+			break
+	assert(uploaded == figures.size(), "Bounded preparation must progress past the warm prefix")
+	assert(not headlights._published and not headlights._pending_upload,
+		"Day preparation must not publish visible light geometry")
+	app.visual_environment.night = saved_night
+	canvas.free()
 
 
 func _check_light_publication(app: CityApplication) -> void:
