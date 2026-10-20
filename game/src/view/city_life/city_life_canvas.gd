@@ -114,20 +114,31 @@ func render(app: CityApplication, figures: Array, sprites: CityLifeSprites, prep
 	_entries.clear()
 	var entries := _entries
 	var receiver_inputs: Dictionary[int, Dictionary] = {}
+	var receiver_uploads := 0
 	for figure: CityLifeController.Figure in figures:
 		var preparation_started := Time.get_ticks_usec()
 		var cold := not _occluders.has(Vector3i(figure.tile.x, figure.tile.y, figure.enter % 2))
 		var receivers := lights.prepared_receivers
+		var receiver_uploaded := false
 		if light_active and not figure.walking:
 			receiver_inputs[figure.id] = lights.surface(city, figure.tile, figure.enter, figure.direction,
 				func(tile: Vector2i, enter: int) -> Array: return _light_candidates(app, tile, enter), false)
+			# Before the first light batch there is no displayed receiver to
+			# preserve. Stage its textures alongside bounded CPU preparation,
+			# rather than upload every newly prepared surface on publication.
+			var headlights := road_layer as CityLifeHeadlights
+			if gpu_enabled and preparation_budget_usec > 0 and not headlights._published:
+				receiver_uploaded = headlights.prepare_surface(figure, receiver_inputs[figure.id])
+				receiver_uploads += int(receiver_uploaded)
+				if receiver_uploads >= 8:
+					return _pending_frame(app, previous_bounds)
 		var sprite := sprites.sprite(figure.walking, figure.variant, figure.direction, int(figure.distance * 8.0) % 2, figure.vehicle_kind)
 		if not _sprite_sizes.has(sprite):
 			_sprite_sizes[sprite] = sprite.get_size()
 		var size := _sprite_sizes[sprite]
 		var origin := Vector2i(figure.position.round()) - Vector2i(size.x / 2, size.y - 1)
 		if not source_bounds.intersects(Rect2i(origin, size)):
-			if lights.prepared_receivers != receivers:
+			if receiver_uploaded or lights.prepared_receivers != receivers:
 				preparation_usec += Time.get_ticks_usec() - preparation_started
 			if preparation_budget_usec > 0 and preparation_usec >= preparation_budget_usec:
 				return _pending_frame(app, previous_bounds)
@@ -150,7 +161,7 @@ func render(app: CityApplication, figures: Array, sprites: CityLifeSprites, prep
 			var mask: Image = sprites.lamp_image(sprite, lights, figure.vehicle_kind, figure.direction) if light_active and not figure.walking else null
 			entries.append({"sprite": sprite, "origin": origin, "occluders": candidates, "opacity": opacity, "lamps": mask, "figure": figure, "shear": shear,
 				"master": sprites.master_image(sprite), "master_lamps": sprites.lamp_image(sprite, lights, figure.vehicle_kind, figure.direction, true) if mask != null else null})
-		if cold or lights.prepared_receivers != receivers:
+		if cold or receiver_uploaded or lights.prepared_receivers != receivers:
 			preparation_usec += Time.get_ticks_usec() - preparation_started
 		if preparation_budget_usec > 0 and preparation_usec >= preparation_budget_usec:
 			return _pending_frame(app, previous_bounds)

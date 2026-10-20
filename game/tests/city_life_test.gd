@@ -94,7 +94,7 @@ func _check_application() -> void:
 	_check_budgeted_preparation(app)
 	_check_running_cache(app)
 	_check_day_emission(app)
-	_check_light_publication(app)
+	await _check_light_publication(app)
 	assert(app.asset_state.large_sprites.visual_city_life_traffic)
 	app.preferences.visual_enhancements.pause_freezes = true
 	app.simulation_state.speed_controller.speed = GameSpeedController.Speed.PAUSED
@@ -562,11 +562,17 @@ func _check_light_publication(app: CityApplication) -> void:
 	root.add_child(canvas)
 	var saved_night := app.visual_environment.night
 	var saved_smoothing: bool = app.preferences.visual_enhancements.traffic_vehicles_enabled
+	app.preferences.visual_enhancements.traffic_vehicles_enabled = true
 	app.visual_environment.night = 1.0
 	canvas.interpolation = 0.0
 	assert(canvas.render(app, app.city_life.figures, app.city_life.sprites))
 	var headlights := canvas.road_layer as CityLifeHeadlights
-	assert(not headlights._pending_upload, "The first light batch must publish immediately")
+	assert(headlights._pending_upload and not headlights._published, "The first smoothed light batch must leave the body publication frame")
+	canvas.sync_view(app)
+	assert(headlights._pending_upload, "Same-frame view synchronization cannot flush the staged first batch")
+	await process_frame
+	canvas.sync_view(app)
+	assert(not headlights._pending_upload and headlights._published, "First lights must be complete on the next presentation frame")
 	app.preferences.visual_enhancements.traffic_vehicles_enabled = false
 	assert(canvas.render(app, app.city_life.figures, app.city_life.sprites))
 	assert(not headlights._pending_upload, "Unsmoothed vehicles and headlights must publish together")

@@ -284,23 +284,38 @@ func _check_headlight_batches(hdr: bool, raster_scale := 1) -> void:
 		var previous_bounds := batch.groups[0].multimesh.custom_aabb if not batch.groups.is_empty() else AABB()
 		var previous_buffer := batch.groups[0].multimesh.buffer if not batch.groups.is_empty() else PackedFloat32Array()
 		if phase == 0:
-			batch._add_group()
 			var first: CityLifeController.Figure = figures[0]
 			var prepared := lights.surface(city, first.tile, first.enter, first.direction, Callable(), false)
-			batch.prepare_surface(first, prepared)
+			assert(not batch.prepare_surface(first, prepared), "Preparation must not allocate an unbounded texture array")
+			batch._add_group()
+			assert(batch.prepare_surface(first, prepared))
+			assert(not batch.prepare_surface(first, prepared), "An unchanged receiver must not be uploaded twice")
 			assert(batch.images[batch.slots[first.id]] == prepared.image, "Daytime preparation must retain uploaded receiver images")
+			# Cold first-night receivers can be transferred over several frames
+			# while no incomplete geometry is visible. Final pixels stay exact.
+			for i in figures.size():
+				var figure: CityLifeController.Figure = figures[i]
+				if not batch.slots.has(figure.id) and batch.free_slots.is_empty():
+					batch._add_group()
+				batch.prepare_surface(figure, lights.surface(city, figure.tile, figure.enter, figure.direction, Callable(), false))
+				if i % 8 == 7:
+					await process_frame
+			assert(not batch._published and not batch._pending_upload)
+			for group in batch.groups:
+				assert(group.multimesh.buffer.count(0.0) == group.multimesh.buffer.size(),
+					"Staging receivers must not publish partial light geometry")
 		batch.render(city, figures, lights, offset, Callable(), {}, true)
+		assert(batch._pending_upload, "Initial and warm uploads should leave the body publication frame")
+		batch.set_interpolation(0.0)
 		if phase > 0:
-			assert(batch._pending_upload, "Warm receiver uploads should leave the body publication frame")
-			batch.set_interpolation(0.0)
 			assert(batch.groups[0].multimesh.buffer == previous_buffer, "A deferred batch must remain complete")
 			assert(batch.groups[0].multimesh.custom_aabb == previous_bounds, "Deferred geometry must retain its matching culling bounds")
 			assert(batch.groups[0].material.get_shader_parameter("interpolation") == 1.0, "Old lights must stay at the new body's starting position")
-			await process_frame
-			batch.set_interpolation(1.0)
-			assert(not batch._pending_upload, "Receiver uploads must finish on the next presentation frame")
 		else:
-			assert(not batch._pending_upload, "First-visible headlights cannot wait for a previous batch")
+			assert(not batch._published, "First-night staging must keep the initial empty geometry")
+		await process_frame
+		batch.set_interpolation(1.0)
+		assert(not batch._pending_upload and batch._published, "Receiver uploads must finish on the next presentation frame")
 		for group in batch.groups.size():
 			var box := batch.groups[group].multimesh.custom_aabb
 			var transforms := batch.buffers[group]

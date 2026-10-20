@@ -45,7 +45,7 @@ func set_night(value: float) -> void:
 func render(city: CityState, figures: Array, lights: CityLifeLights, offset: Vector2i, lookup: Callable, prepared: Dictionary = {}, defer_upload := false) -> void:
 	if _pending_upload:
 		_flush_uploads()
-	var can_defer := defer_upload and _published
+	var can_defer := defer_upload
 	var previous_offset := _offset
 	_offset = offset
 	var seen: Dictionary[int, bool] = {}
@@ -116,24 +116,27 @@ func render(city: CityState, figures: Array, lights: CityLifeLights, offset: Vec
 	_pending_upload = true
 	_pending_frame = Engine.get_process_frames()
 	if can_defer:
-		# Keep the complete previous light batch in world space during camera
-		# changes too. Its uploads can then use the next presentation frame.
+		# Keep the complete previous light batch (or initial empty batch) in
+		# world space. First-night publication also belongs on the following
+		# presentation frame, apart from the body-buffer rebuild.
 		_pending_origin_shift = Vector2(previous_offset - offset) * scale
 		position += _pending_origin_shift
 	else:
 		_flush_uploads()
 
 
-func prepare_surface(figure: CityLifeController.Figure, surface: Dictionary) -> void:
+func prepare_surface(figure: CityLifeController.Figure, surface: Dictionary) -> bool:
 	# Only use allocated capacity. Normal publication reclaims departed figures.
 	if not slots.has(figure.id):
 		if free_slots.is_empty():
-			return
+			return false
 		slots[figure.id] = free_slots.pop_back()
 	var slot := slots[figure.id]
 	if images[slot] != surface.image:
 		textures[slot / GROUP_SIZE].update_layer(surface.image, slot % GROUP_SIZE)
 		images[slot] = surface.image
+		return true
+	return false
 
 
 func _flush_uploads() -> void:
