@@ -91,7 +91,9 @@ func required_variants() -> Array[int]:
 
 
 func _index(view: int) -> int:
-	var traffic := preparing_traffic if preparing_traffic >= 0 else int(app.static_render.original_archive_for_view(view).visual_city_life_traffic)
+	# Zoom callbacks run before the figure controller updates the original
+	# archives. Select the current view directly, never last frame's traffic.
+	var traffic := preparing_traffic if preparing_traffic >= 0 else int(app.city_life.individual_cars_visible())
 	return view * 2 + traffic
 
 

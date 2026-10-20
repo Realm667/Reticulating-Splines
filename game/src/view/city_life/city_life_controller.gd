@@ -42,6 +42,18 @@ func _init(application: CityApplication) -> void:
 	random.seed = 0x5343324b
 
 
+func _active_view() -> bool:
+	var map := app.map_view
+	return map != null and app.document_state.city != null and map.city_source != null \
+		and app.view_state.overlay_mode == CityViewMode.Mode.CITY and not app.tool_state.landscape_editor \
+		and bool(app.view_state.surface_visibility.networks) and map.zoom_factor >= 0.5 \
+		and CityLifeCanvas.supports_view(map.visible_source_rect())
+
+
+func individual_cars_visible() -> bool:
+	return _active_view() and bool(app.preferences.visual_enhancements.life_cars_enabled)
+
+
 func process(delta: float) -> void:
 	var started := Time.get_ticks_usec()
 	var map := app.map_view
@@ -49,9 +61,7 @@ func process(delta: float) -> void:
 		return
 	var city := app.document_state.city
 	var options := app.preferences.visual_enhancements
-	var active := city != null and map.city_source != null and app.view_state.overlay_mode == CityViewMode.Mode.CITY \
-		and not app.tool_state.landscape_editor and bool(app.view_state.surface_visibility.networks) and map.zoom_factor >= 0.5 \
-		and CityLifeCanvas.supports_view(map.visible_source_rect())
+	var active := _active_view()
 	_sync_traffic(active and bool(options.life_cars_enabled))
 	if not active or (not options.life_cars_enabled and not options.life_people_enabled):
 		if canvas != null:

@@ -141,6 +141,10 @@ func _run() -> void:
 		main.map_view.zoom_factor = zoom
 		main.camera_input.on_city_zoom_changed(roundi(zoom * 100))
 		main.map_view.center_on_tile(Vector2i(12, 18))
+		var expected_bank := main.static_render.city_view_size() * 2 + int(zoom >= 0.5)
+		assert(main.render_caches.region_cache == prepare.banks[expected_bank],
+			"Zoom selected last frame's traffic bank before the next frame")
+		assert(main.render_caches.region_cache.ready(), "Immediate zoom selected an unprepared bank")
 		main.frame.process(0.016)
 		var view := main.static_render.city_view_size()
 		assert(main.render_caches.region_cache.ready(), "Zoom exposed a cold region")
