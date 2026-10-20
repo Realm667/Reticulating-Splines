@@ -6,6 +6,8 @@ func _initialize() -> void:
 
 
 func _run() -> void:
+	await _check_origin_changes(false)
+	await _check_origin_changes(true)
 	var viewport := SubViewport.new()
 	viewport.size = Vector2i(64, 24)
 	viewport.transparent_bg = true
@@ -530,3 +532,77 @@ func _check_inclines() -> void:
 	viewport.queue_free()
 	await process_frame
 	print("PASS: cars, trucks and buses follow uphill/downhill projection without replacing their artwork")
+
+
+func _check_origin_changes(hdr: bool) -> void:
+	var viewport := SubViewport.new()
+	viewport.size = Vector2i(400, 300)
+	viewport.transparent_bg = true
+	viewport.use_hdr_2d = hdr
+	viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	root.add_child(viewport)
+	var expected_viewport := SubViewport.new()
+	expected_viewport.size = viewport.size
+	expected_viewport.transparent_bg = true
+	expected_viewport.use_hdr_2d = hdr
+	expected_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	root.add_child(expected_viewport)
+	var canvas := CityLifeCanvas.new()
+	canvas._occlusion_signature = [7, 1, null, 1, 1]
+	viewport.add_child(canvas)
+	var sprites := CityLifeSprites.new()
+	canvas.gpu = CityLifeGpu.new()
+	canvas.gpu.prepare(sprites, canvas.lights)
+	var entries: Array[Dictionary] = []
+	var reference_image := Image.create(400, 300, false, Image.FORMAT_RGBA8)
+	var camera := Vector2i(3100, 2000)
+	# Fill one entire group: unused zero transforms in a partial group can
+	# conceal stale automatic bounds by keeping the old rectangle oversized.
+	for index in CityLifeGpu.GROUP + 1:
+		var figure := CityLifeController.Figure.new()
+		figure.id = index
+		figure.tile = Vector2i(index, 0)
+		figure.position = Vector2(3300 + (40 if index == CityLifeGpu.GROUP else 0), 2100)
+		var sprite := sprites.sprite(false, index % 18, 1, 0)
+		var origin := Vector2i(figure.position)
+		entries.append({"figure": figure, "sprite": sprite, "origin": origin, "opacity": 1.0, "occluders": []})
+		CityLifeCanvas.stamp(reference_image, camera, sprite, origin, [])
+	var reference := Sprite2D.new()
+	reference.centered = false
+	reference.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	reference.texture = ImageTexture.create_from_image(reference_image)
+	expected_viewport.add_child(reference)
+	for step in 6:
+		var offset := Vector2i(3000, 2000) if step % 2 else Vector2i.ZERO
+		var zoom := 1.0 if step % 2 else 0.5
+		canvas.source_bounds = Rect2i(offset, Vector2i(400, 300))
+		canvas.position = Vector2(offset - camera) * zoom
+		canvas.scale = Vector2.ONE * zoom
+		reference.scale = canvas.scale
+		canvas.gpu.render(canvas, entries)
+		await RenderingServer.frame_post_draw
+		var expected := expected_viewport.get_texture().get_image()
+		assert(not expected.is_invisible())
+		var actual := viewport.get_texture().get_image()
+		assert(actual.get_data() == expected.get_data(),
+			"Vehicle bodies vanished after origin/zoom change: step %d HDR %s" % [step, hdr])
+	# The bounds must also cover shader-only motion and both incline directions.
+	for shear in [-0.5, 0.5]:
+		for entry in entries:
+			entry.shear = shear
+			entry.figure.previous_position = entry.figure.position + Vector2(-12, 9)
+			entry.figure.has_previous_position = true
+		canvas.gpu.render(canvas, entries)
+		for index in entries.size():
+			var entry := entries[index]
+			var bounds := canvas.gpu.groups[index / CityLifeGpu.GROUP].multimesh.custom_aabb
+			var size := Vector2(entry.sprite.get_size())
+			for blend in [Vector2.ZERO, Vector2(-12, 9)]:
+				for x in [0.0, size.x + 1.0]:
+					for y in [0.0, size.y + 1.0]:
+						var point: Vector2 = Vector2(entry.origin - canvas.source_bounds.position) + blend + Vector2(x, y + shear * (x - floorf(size.x * 0.5)))
+						assert(bounds.has_point(Vector3(point.x, point.y, 0.0)), "Culling must include interpolated and inclined sprite corners")
+	expected_viewport.queue_free()
+	viewport.queue_free()
+	await process_frame
+	print("PASS: full and partial vehicle groups survive repeated 50/100 percent zoom and origin changes, HDR ", hdr)

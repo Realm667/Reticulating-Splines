@@ -97,9 +97,34 @@ func render(canvas: CityLifeCanvas, entries: Array[Dictionary]) -> void:
 		groups[index].visible = visible_count > 0
 		if not groups[index].visible:
 			continue
+		# Publish bounds with the new local origin. Automatic MultiMesh bounds
+		# can remain stale for 2D culling after a zoom or camera-origin change.
+		groups[index].multimesh.custom_aabb = _draw_bounds(buffers[index], data[index], visible_count)
 		groups[index].multimesh.buffer = buffers[index]
 		textures[index].update(Image.create_from_data(GROUP, 4, false, Image.FORMAT_RGBAF, data[index].to_byte_array()))
 		upload_bytes += GROUP * (STRIDE + 16) * 4
+
+
+static func _draw_bounds(transforms: PackedFloat32Array, parameters: PackedFloat32Array, count: int) -> AABB:
+	var first := Vector2(INF, INF)
+	var last := Vector2(-INF, -INF)
+	for slot in count:
+		var at := slot * STRIDE
+		var size := Vector2(transforms[at], transforms[at + 5])
+		var point := Vector2(transforms[at + 3], transforms[at + 7])
+		var shear := parameters[GROUP * 12 + slot * 4]
+		var left := -floorf(size.x * 0.5) * shear
+		var right := (size.x + 1.0 - floorf(size.x * 0.5)) * shear
+		# Include the shader's extra raster texel, road incline and both ends
+		# of interpolation. A one-pixel guard also covers snapped movement.
+		var low := point + Vector2(0.0, minf(left, right))
+		var high := point + size + Vector2(1.0, 1.0 + maxf(left, right))
+		var delta := Vector2(parameters[GROUP * 4 + slot * 4 + 2], parameters[GROUP * 4 + slot * 4 + 3])
+		first = first.min(low.min(low + delta))
+		last = last.max(high.max(high + delta))
+	first -= Vector2.ONE
+	last += Vector2.ONE
+	return AABB(Vector3(first.x, first.y, -1.0), Vector3(last.x - first.x, last.y - first.y, 2.0))
 
 
 func prepare_masks(canvas: CityLifeCanvas, entries: Array[Dictionary], budget_usec := 0) -> bool:
@@ -245,6 +270,7 @@ func add_group(parent: Node2D) -> void:
 	geometry.center_offset = Vector3(0.5, 0.5, 0)
 	var mesh := MultiMesh.new()
 	mesh.transform_format = MultiMesh.TRANSFORM_2D
+	mesh.custom_aabb = AABB(Vector3(-1, -1, -1), Vector3(2, 2, 2))
 	mesh.mesh = geometry
 	mesh.instance_count = GROUP
 	var buffer := PackedFloat32Array()
