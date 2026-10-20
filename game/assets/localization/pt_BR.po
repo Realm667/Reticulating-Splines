@@ -30296,12 +30296,12 @@ msgid "Check your existing zones"
 msgstr "Verifique as zonas existentes"
 
 #. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
-msgid "Before zoning more land, inspect areas that are still empty."
-msgstr "Inspecione as áreas vazias antes de zonear mais terrenos."
+msgid "Empty zones? Check power and transport connections. For industry, a reachable residential or commercial zone can provide a destination."
+msgstr "As zonas continuam vazias? Verifique a energia e as conexões de transporte. Para a indústria, uma zona residencial ou comercial acessível pode servir de destino."
 
 #. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
-msgid "More zoning does not repair a missing connection. The query tool helps you inspect a specific site."
-msgstr "Mais zonas não corrigem uma conexão ausente. A ferramenta de consulta ajuda a examinar cada local."
+msgid "Commerce is not mandatory for industrial growth: a reachable residential zone can also be a destination, even before it has buildings. A nearby road alone is not enough. Check demand and allow time for development. The query tool checks local conditions, but does not verify the full route."
+msgstr "O comércio não é obrigatório para o crescimento industrial: uma zona residencial acessível também pode servir de destino, mesmo sem edifícios. Uma estrada por perto não basta. Verifique a demanda e dê tempo ao desenvolvimento. A ferramenta de consulta verifica as condições locais, mas não o trajeto completo."
 
 #. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
 msgid "Density sets a limit"

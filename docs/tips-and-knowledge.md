@@ -53,6 +53,15 @@ not perform that check. A non-anchor tile is not diagnosed as an isolated
 building. Thresholds are not generalized from residential/commercial to industry.
 Results are a snapshot, not a guarantee of construction on the next visit.
 
+The existing `vacant` card includes an industrial-startup example: power and
+transport connections to a reachable residential **or** commercial zone.
+Commerce is not a mandatory unlock; the trip destination check uses zone type,
+not whether the destination already has buildings. This is conditional advice,
+not a diagnosis that industry is stalled. It uses the existing general growth
+trigger, loading rotation and searchable catalog, with no additional city scan.
+Evidence: `trip.rs` (`DESTINATION_ZONE_MASKS`, `has_walking_destination`) and
+`growth/mod.rs` (`process_rci_tile`, `record_trip`, `try_advance_density`).
+
 ## Editorial provenance
 
 All displayed prose is authored paraphrase, not copied guide text. Historical

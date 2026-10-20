@@ -8852,11 +8852,11 @@ msgid "Check your existing zones"
 msgstr ""
 
 #. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
-msgid "Before zoning more land, inspect areas that are still empty."
+msgid "Empty zones? Check power and transport connections. For industry, a reachable residential or commercial zone can provide a destination."
 msgstr ""
 
 #. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
-msgid "More zoning does not repair a missing connection. The query tool helps you inspect a specific site."
+msgid "Commerce is not mandatory for industrial growth: a reachable residential zone can also be a destination, even before it has buildings. A nearby road alone is not enough. Check demand and allow time for development. The query tool checks local conditions, but does not verify the full route."
 msgstr ""
 
 #. Tips & Knowledge: supplementary translation from authored English; AI-assisted.

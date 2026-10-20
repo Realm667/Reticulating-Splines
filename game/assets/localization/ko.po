@@ -8516,12 +8516,12 @@ msgid "Check your existing zones"
 msgstr "기존 구역을 확인하세요"
 
 #. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
-msgid "Before zoning more land, inspect areas that are still empty."
-msgstr "구역을 더 지정하기 전에 아직 비어 있는 곳을 살펴보세요."
+msgid "Empty zones? Check power and transport connections. For industry, a reachable residential or commercial zone can provide a destination."
+msgstr "구역이 계속 비어 있나요? 전력과 교통 연결을 확인하세요. 공업 구역은 도달 가능한 주거 구역이나 상업 구역을 목적지로 삼을 수 있습니다."
 
 #. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
-msgid "More zoning does not repair a missing connection. The query tool helps you inspect a specific site."
-msgstr "구역을 늘려도 끊어진 연결은 복구되지 않습니다. 조회 도구로 특정 위치를 확인하세요."
+msgid "Commerce is not mandatory for industrial growth: a reachable residential zone can also be a destination, even before it has buildings. A nearby road alone is not enough. Check demand and allow time for development. The query tool checks local conditions, but does not verify the full route."
+msgstr "공업 성장에 상업 구역이 반드시 필요한 것은 아닙니다. 도달 가능한 주거 구역도 건물이 아직 없어도 목적지가 될 수 있습니다. 근처에 도로가 있는 것만으로는 충분하지 않습니다. 수요를 확인하고 개발할 시간을 주세요. 조회 도구는 해당 위치의 조건을 확인하지만 전체 경로는 검사하지 않습니다."
 
 #. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
 msgid "Density sets a limit"
