@@ -111,6 +111,7 @@ func _run() -> void:
 	var activity: Array[bool] = []
 	audio.music_activity_changed.connect(func(value: bool) -> void: activity.append(value))
 	var box := qol.music_box
+	_shuffle_in_music_box(box)
 	box.track_tabs.current_tab = 1
 	box.favorites.assign([10002, 10003])
 	box.play_track(10002, true)
@@ -425,6 +426,7 @@ func _custom_music(box: MusicBoxDialog, audio: CityAudioController, activity: Ar
 		assert(DirAccess.copy_absolute(fixture, folder.path_join(id)) == OK)
 	_tagged_mp3(folder.path_join(first), "Abend in Köln — 서울 " + "Long title ".repeat(60), "Music From SimCity 3000")
 	_tagged_mp3(folder.path_join(second), "Same title")
+	await _automatic_titles(folder.path_join(first), folder.path_join(second))
 	_tagged_mp3(folder.path_join("Other/Second.mp3"), "Same title")
 	assert(DirAccess.make_dir_recursive_absolute(folder.path_join("Empty")) == OK)
 	box.custom_music = CustomMusicLibrary.new(folder)
@@ -461,13 +463,21 @@ func _custom_music(box: MusicBoxDialog, audio: CityAudioController, activity: Ar
 	var original_director := audio.music_director.general_track_index
 	box.play_track(first, true)
 	await create_timer(0.45).timeout
+	if box._fade != null and box._fade.is_running():
+		await box._fade.finished
 	assert(box.active and box.playback.track_key() == first)
+	assert(box.playback.current_track_name == box.song_title(first))
+	assert(box.app.city_status_bar.music_notice == "Playing: " + box.song_title(first))
+	audio.music_notice.emit("Inaudible automatic song")
+	assert(box.app.city_status_bar.music_notice == "Playing: " + box.song_title(first), "The silent controller cannot overwrite the audible title")
 	assert(box.playback.recording_player.stream is AudioStreamMP3)
 	assert(box.playback.recording_player.stream.get_length() > 1.0)
 	assert(box.size.x <= root.get_visible_rect().size.x and box.size.y <= root.get_visible_rect().size.y)
 	box._toggle_pause()
 	assert(box.playback.music_paused and box.playback.recording_player.stream_paused)
+	assert(box.app.city_status_bar.music_notice == "Paused: " + box.song_title(first))
 	box._toggle_pause()
+	assert(box.app.city_status_bar.music_notice == "Playing: " + box.song_title(first))
 	box.playback.application_has_focus = false
 	box.playback.set_background_audio(false)
 	assert(box.playback.recording_player.stream_paused)
@@ -483,6 +493,7 @@ func _custom_music(box: MusicBoxDialog, audio: CityAudioController, activity: Ar
 	box.playback.recording_player.finished.emit()
 	await create_timer(0.35).timeout
 	assert(box.playback.track_key() == second)
+	assert(box.app.city_status_bar.music_notice == "Playing: Same title")
 	box.step(1)
 	await create_timer(0.3).timeout
 	assert(box.playback.track_key() == 10002, "Mixed favorites wrap to original tracks")
@@ -499,6 +510,9 @@ func _custom_music(box: MusicBoxDialog, audio: CityAudioController, activity: Ar
 	box.automatic()
 	await create_timer(0.3).timeout
 	assert(box.playback.custom_track.is_empty() and box.playback.recording_player.stream == null)
+	assert(audio.music_notices_enabled)
+	if audio.music_playback_is_active():
+		assert(box.app.city_status_bar.music_notice.ends_with(audio.current_track_name))
 	assert(audio.current_track_id == original_track and audio.music_director.general_track_index == original_director)
 	assert(activity.is_empty(), "Custom MP3 playback must not signal the simulation")
 	box.rescan()
@@ -543,3 +557,47 @@ func _picker() -> void:
 	old.set_value("controls", "binding/map_center_on_tile", PackedStringArray(["mouse:Middle"]))
 	old.set_value("controls", "bindings_version", 2)
 	assert(AppSettingsStore.load_bindings(old).action_for(mouse, [ControlActions.KIND_CLICK]) == "map_pick_tool")
+
+
+func _shuffle_in_music_box(box: MusicBoxDialog) -> void:
+	var app := box.app
+	var stored := ConfigFile.new()
+	var original := app.preferences.shuffle_music
+	for enabled in [true, false]:
+		box.shuffle_music_check.button_pressed = enabled
+		assert(app.preferences.shuffle_music == enabled and app.audio_controller.shuffle_music == enabled)
+		assert(stored.load(app.preferences.settings_path) == OK)
+		assert(stored.get_value("audio", "shuffle_music") == enabled)
+		box.hide()
+		box.open()
+		assert(box.shuffle_music_check.button_pressed == enabled)
+		app.settings.open_settings_dialog()
+		app.settings.apply_settings()
+		assert(app.preferences.shuffle_music == enabled and app.audio_controller.shuffle_music == enabled, "Other settings must preserve shuffle")
+		assert(stored.load(app.preferences.settings_path) == OK)
+		assert(stored.get_value("audio", "shuffle_music") == enabled)
+	box.shuffle_music_check.button_pressed = original
+	box.hide()
+	assert(MusicTrackTitle.resolve("10018.MID", 10018, true) == "Key of Success")
+	assert(MusicTrackTitle.resolve("plain-file.mp3") == "plain-file")
+
+
+func _automatic_titles(first: String, second: String) -> void:
+	var player := CityAudioController.new()
+	root.add_child(player)
+	player.setup("", 0.0, 0.0, false)
+	player.music_pack.files[10002] = first
+	assert(player.play_music_track(10002, false, true))
+	assert(player.current_track_name == Mp3Title.read(first))
+	# The asynchronous result can select a later candidate; display that file's title.
+	player.recording_loader.queue(PackedStringArray(["unsupported.xyz", second]))
+	for frame in 120:
+		await process_frame
+		if player.recording_player.stream != null:
+			break
+	assert(player.recording_player.stream != null and player.current_track_name == "Same title")
+	player.music_pack.import_revision = 1
+	assert(player.play_music_track(10002, false, true))
+	assert(player.current_track_name == "The SIM Magic for (ENIAC)")
+	player.queue_free()
+	await process_frame

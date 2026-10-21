@@ -29,7 +29,8 @@ func play_custom(id: String, path: String) -> bool:
 		return false
 	stop_music()
 	custom_track = id
-	current_track_name = id.get_file().get_basename()
+	current_track_name = MusicTrackTitle.resolve(path)
+	announce_music()
 	recording_loader.queue(PackedStringArray([path]))
 	return true
 
@@ -43,6 +44,8 @@ func _process(delta: float) -> void:
 		if result.stream == null:
 			_fail_custom()
 			return
+		current_track_name = MusicTrackTitle.resolve(result.path)
+		announce_music()
 		recording_player.stream = result.stream
 		recording_player.play()
 		_sync_music_pause()

@@ -5,29 +5,7 @@ extends QolDialog
 
 @warning_ignore_start("integer_division")
 
-# Soundtrack titles, keyed by Windows MIDI resource ID, not album track order.
-# These proper names stay unchanged across locales. See docs/quality-of-life.md.
-const ORIGINAL_TRACK_TITLES: Dictionary[int, String] = {
-	10000: "Dawn of City",
-	10001: "Dancing Megalopolis",
-	10002: "The SIM Magic for (ENIAC)",
-	10003: "The SIM Magic: Experience MODE",
-	10004: "The Construction: MAXIS",
-	10005: "The Construction: LAKELAND",
-	10006: "Selfish Citizen",
-	10007: "Skyscrapers",
-	10008: "Tax & Money",
-	10009: "Pale City",
-	10010: "Growing Up Town ~ Prologue",
-	10011: "Growing Up Town ~ Theme",
-	10012: "Work Work Work!",
-	10013: "Ultimate City",
-	10014: "Buildings",
-	10015: "Melancholic Mayor",
-	10016: "The Construction: HAPPYLAND",
-	10017: "Misty Lake",
-	10018: "Key of Success",
-}
+const ORIGINAL_TRACK_TITLES = MusicTrackTitle.ORIGINAL
 
 var app: CityApplication
 var playback: MusicBoxPlayback
@@ -40,7 +18,7 @@ var progress: ProgressBar
 var elapsed: Label
 var track_tabs: TabContainer
 var music_library := MusicBoxLibrary.new()
-var playing_title := ""
+var shuffle_music_check: CheckBox
 var custom_music := CustomMusicLibrary.new()
 var favorites: Array = []
 var favorite_index := -1
@@ -144,6 +122,12 @@ func _init(application: CityApplication) -> void:
 		_effects_save_delay = 0.5)
 	levels.add_child(effects)
 	button(row(), "Automatic music", automatic)
+	shuffle_music_check = CheckBox.new()
+	shuffle_music_check.text = "Shuffle all music"
+	shuffle_music_check.tooltip_text = "Play all 19 tracks, including menu and special music, once per shuffle cycle."
+	shuffle_music_check.set_pressed_no_signal(app.preferences.shuffle_music)
+	shuffle_music_check.toggled.connect(_set_shuffle_music)
+	column.add_child(shuffle_music_check)
 	var folders := row()
 	button(folders, "Open music folder", _open_music_folder)
 	button(folders, "Rescan", rescan)
@@ -158,6 +142,9 @@ func _ready() -> void:
 	app.audio_controller.set_music_output_gain(volume.value / 100.0)
 	playback.song_finished.connect(func(id: Variant) -> void: step(1, id))
 	playback.custom_failed.connect(_custom_failed)
+	playback.music_notice.connect(func(message: String) -> void:
+		if active and app.city_status_bar != null:
+			app.city_status_bar.show_music_notice(message))
 	playback.music_activity_changed.connect(func(playing: bool) -> void:
 		if not playing and playback.current_track_id >= 0:
 			_recover_failed_playback.call_deferred())
@@ -227,6 +214,12 @@ func _available(id: Variant) -> bool:
 	return id is String and CustomMusicLibrary.valid_id(id) and not custom_music.resolve(id).is_empty()
 
 
+func _manual_track_name() -> String:
+	var key: Variant = playback.track_key()
+	var source := _source_name(music_library.tracks[key].source) if music_library.tracks.has(key) else tr("My music")
+	return source + " — " + playback.current_track_name
+
+
 func _automatic_track_name(player: CityAudioController) -> String:
 	var id := player.current_track_id
 	if id < MusicDirector.FIRST_TRACK_ID:
@@ -237,7 +230,7 @@ func _automatic_track_name(player: CityAudioController) -> String:
 	if not path.is_empty():
 		var source := MusicBoxLibrary.source_for(pack)
 		var source_name := _source_name(source) if source != "pack" else pack.pack_name
-		var name: String = ORIGINAL_TRACK_TITLES.get(id, player.current_track_name) if source == "original" else Mp3Title.read(path)
+		var name := player.current_track_name
 		return source_name + " — " + name
 	var recordings := RecordedSoundtrack.find_tracks(player.soundtrack_folder, id)
 	if not recordings.is_empty():
@@ -275,6 +268,7 @@ func _refresh_favorites() -> void:
 
 
 func open() -> void:
+	shuffle_music_check.set_pressed_no_signal(app.preferences.shuffle_music)
 	rescan()
 	_refresh_favorites()
 	popup_centered(Vector2i(760, 620))
@@ -341,6 +335,7 @@ func play_track(id: Variant, from_favorites := false) -> void:
 		_fade.kill()
 	_sync_source()
 	active = true
+	app.audio_controller.music_notices_enabled = false
 	_playing_favorites = from_favorites
 	playback.music_paused = false
 	_fade = create_tween()
@@ -355,7 +350,6 @@ func play_track(id: Variant, from_favorites := false) -> void:
 		status.text = tr("This music track is not available.")
 		return
 	var started := playback.play_pack(id, music_library.tracks[id]) if music_library.tracks.has(id) else playback.play_custom(id, custom_music.resolve(id))
-	playing_title = track_name(id)
 	if not started:
 		if id is String and CustomMusicLibrary.valid_id(id):
 			_custom_failed()
@@ -416,7 +410,10 @@ func automatic() -> void:
 	if _fade != null:
 		_fade.kill()
 	active = false
+	app.audio_controller.music_notices_enabled = true
 	playback.stop_music()
+	if app.audio_controller.music_playback_is_active():
+		app.audio_controller.announce_music()
 	_fade = create_tween()
 	_fade.tween_method(app.audio_controller.set_music_output_gain, app.audio_controller.music_output_gain, volume.value / 100.0, 0.2)
 
@@ -460,7 +457,7 @@ func _process(delta: float) -> void:
 		return
 	_refresh_elapsed = 0.0
 	var player: CityAudioController = playback if active else app.audio_controller
-	var track := playing_title if active else _automatic_track_name(player)
+	var track := _manual_track_name() if active else _automatic_track_name(player)
 	var current: Variant = playback.track_key() if active else MusicBoxLibrary.key_for(player.music_pack, player.current_track_id)
 	if typeof(current) != typeof(_highlighted_key) or current != _highlighted_key:
 		_highlighted_key = current
@@ -479,6 +476,19 @@ func _process(delta: float) -> void:
 	now_playing.tooltip_text = now_playing.text
 
 
+func _set_shuffle_music(enabled: bool) -> void:
+	var options := AppSettingsStore.SaveOptions.new()
+	options.shuffle_music = enabled
+	var error := AppSettingsStore.save_values(app.preferences.music_volume, app.preferences.effects_volume,
+		app.preferences.fullscreen, app.preferences.settings_path, options)
+	if error != OK:
+		shuffle_music_check.set_pressed_no_signal(app.preferences.shuffle_music)
+		status.text = tr("Cannot save music preferences: %s") % error_string(error)
+		return
+	app.preferences.shuffle_music = enabled
+	app.audio_controller.set_shuffle_music(enabled)
+
+
 func _save() -> void:
 	config.set_value("player", "favorites", favorites.duplicate())
 	config.set_value("player", "favorites_version", 1)
@@ -491,6 +501,7 @@ func _save() -> void:
 func _exit_tree() -> void:
 	_save_effects()
 	if is_instance_valid(app.audio_controller):
+		app.audio_controller.music_notices_enabled = true
 		app.audio_controller.set_music_output_gain(1.0)
 
 

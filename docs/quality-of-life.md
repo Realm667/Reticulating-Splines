@@ -99,6 +99,16 @@ An empty Favorites collection never falls through to all tracks. Previous, Play 
 Next also work through the configured media keys while the music box is active.
 Automatic music returns to the original game selection. Closing the window keeps
 the current playback. Disabling Music in Options stops custom playback.
+Shuffle all music is in the Music box beside the automatic playback controls.
+It keeps the saved audio preference and the existing automatic cycle through
+all 19 tracks, including menu and special cues. Manual collections and Favorites
+retain their order. Other settings do not reset this preference.
+
+The lower toolbar uses the same song-title resolver as the Music box. Track
+changes and pause/resume notices use the audible player's ID3 title or known
+original title, with the filename as fallback. An asynchronous recording fallback
+updates the title to the file actually loaded. The muted automatic controller
+cannot overwrite notices while a manual track is playing.
 
 Music changes fade briefly. The music-box volume controls the audible output
 without changing the original controller's music activity or simulation timing.

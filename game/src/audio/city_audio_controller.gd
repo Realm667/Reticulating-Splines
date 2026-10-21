@@ -36,6 +36,7 @@ var focus_paused := false
 var shuffle_music := false
 var shuffle_order := MusicShuffle.new()
 var current_track_name := ""
+var music_notices_enabled := true
 var application_has_focus := true
 var background_audio := false
 var tool_loop_player: AudioStreamPlayer
@@ -52,6 +53,8 @@ func _process(_delta: float) -> void:
 		recording_player.stream = result.stream
 
 		if recording_player.stream != null:
+			_set_track_title(result.path)
+			announce_music()
 			recording_player.play()
 			recording_player.stream_paused = music_paused or focus_paused
 			_music_started()
@@ -192,12 +195,8 @@ func play_music_track(track_id: int, choose_shuffle := true, immediate := false)
 
 	stop_music()
 	current_track_id = track_id
-	current_track_name = "Track %d" % track_id
-
-	if not recordings.is_empty():
-		current_track_name = recordings[0].get_file().get_basename().trim_prefix("%d - " % track_id)
-
-	music_notice.emit("Playing: " + current_track_name)
+	_set_track_title(recordings[0] if not recordings.is_empty() else replacement)
+	announce_music()
 
 	if AudioServer.get_driver_name() == "Dummy":
 		dummy_music_active = true
@@ -230,11 +229,22 @@ func _play_midi_fallback() -> bool:
 	music_player.set_paused(music_paused or focus_paused)
 
 	if result.ok:
+		_set_track_title(midi_path, str(music_pack.files.get(current_track_id, "")).get_extension().to_lower() not in ["mid", "midi"])
+		announce_music()
 		_music_started()
 
 	music_activity_changed.emit(bool(result.ok))
 
 	return bool(result.ok)
+
+
+func _set_track_title(path: String, original_fallback := false) -> void:
+	current_track_name = MusicTrackTitle.resolve(path, current_track_id,
+		original_fallback or music_pack.import_revision >= 0 or (path.is_empty() and original_media_enabled))
+
+
+func announce_music() -> void:
+	music_notice.emit(tr("Paused: %s") % current_track_name if music_paused else tr("Playing: %s") % current_track_name)
 
 
 func _music_started() -> void:
@@ -472,7 +482,7 @@ func _set_music_paused(value: bool) -> void:
 	if not value and not music_playback_is_active():
 		play_music_track(Music.MAIN_THEME_TRACK)
 	else:
-		music_notice.emit(("Paused: " if value else "Playing: ") + current_track_name)
+		announce_music()
 
 
 static func validate_media_packs(sound_folder: String, music_folder: String) -> String:

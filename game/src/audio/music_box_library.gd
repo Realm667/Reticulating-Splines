@@ -54,7 +54,7 @@ func _add_pack(pack: MediaPack, allow_original: bool) -> void:
 			continue
 		var key: Variant = key_for(pack, id)
 		tracks[key] = {"source": source, "name": name, "path": path, "id": id, "pack": pack,
-			"title": Mp3Title.read(path)}
+			"title": MusicTrackTitle.resolve(path, id, source == "original")}
 		sources[source] = name
 
 

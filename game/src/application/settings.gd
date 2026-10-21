@@ -93,7 +93,6 @@ func open_settings_dialog() -> void:
 	app.main_overlays.settings_dialog.overview_graphics_selector.select(preferences.overview_graphics)
 	app.main_overlays.settings_dialog.check_for_updates_check.button_pressed = preferences.check_for_updates
 	app.main_overlays.settings_dialog.set_update_status(preferences.update_checked_at, preferences.update_error)
-	app.main_overlays.settings_dialog.shuffle_music_check.button_pressed = preferences.shuffle_music
 	app.main_overlays.settings_dialog.show_soundfont(preferences.music_soundfont, preferences.music_soundfont_path,
 		app.audio_controller.music_player.synth_status if app.audio_controller != null and app.audio_controller.music_player != null else "")
 	app.main_overlays.settings_dialog.toolbar_sounds_check.button_pressed = preferences.toolbar_sounds
@@ -330,7 +329,6 @@ func apply_settings() -> void:
 	if app.asset_state.assets_ready and app.audio_controller != null and media_packs_changed:
 		app.audio_controller.set_media_packs(preferences.sound_pack_folder, preferences.music_pack_folder)
 
-	preferences.shuffle_music = bool(values.shuffle_music)
 	preferences.music_soundfont = SoundFontCatalog.normalize(str(values.music_soundfont))
 	preferences.music_soundfont_path = str(values.music_soundfont_path)
 	preferences.background_audio = bool(values.background_audio)

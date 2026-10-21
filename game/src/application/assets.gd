@@ -71,7 +71,7 @@ func initialize_runtime() -> void:
 	app.audio_controller.set_shuffle_music(app.preferences.shuffle_music)
 	app.audio_controller.music_activity_changed.connect(app.effects_audio.on_music_activity_changed)
 	app.audio_controller.music_notice.connect(func(message: String) -> void:
-		if app.city_status_bar != null:
+		if app.city_status_bar != null and app.audio_controller.music_notices_enabled:
 			app.city_status_bar.show_music_notice(message)
 	)
 	app.add_child(app.audio_controller)

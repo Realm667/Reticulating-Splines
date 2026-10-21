@@ -20,7 +20,6 @@ const DATA_TAB := 5
 const MODS_TAB := 6
 
 var pack_error_label: Label
-var shuffle_music_check: CheckBox
 var soundfont_selector: OptionButton
 var soundfont_edit: LineEdit
 var soundfont_status_label: Label
@@ -132,7 +131,6 @@ func _ready() -> void:
 	overview_graphics_selector = %OverviewGraphicsSelector
 	pack_error_label = %PackErrorLabel
 	renderer_selector = %RendererSelector
-	shuffle_music_check = %ShuffleMusicCheck
 	soundfont_selector = %SoundFontSelector
 	soundfont_edit = %SoundFontEdit
 	soundfont_status_label = %SoundFontStatus
@@ -433,7 +431,6 @@ func selected_values() -> AppSettingsStore.Values:
 	result.overview_graphics = overview_graphics_selector.selected
 	result.toolbar_sounds = toolbar_sounds_check.button_pressed
 	result.city_sounds = maxi(0, city_sounds_selector.selected)
-	result.shuffle_music = shuffle_music_check.button_pressed
 	result.music_soundfont = selected_soundfont()
 	result.music_soundfont_path = soundfont_edit.text.strip_edges()
 	result.sound_pack_folder = sound_pack_edit.text.strip_edges()

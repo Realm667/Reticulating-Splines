@@ -273,18 +273,6 @@ tooltip_text = "Play a click sound when you select a toolbar or main menu button
 button_pressed = true
 text = "Play interface sounds"
 
-[node name="BackgroundAudioSpacer" type="Label" parent="Tabs/Audio/Content/PackFields"]
-custom_minimum_size = Vector2(150, 32)
-layout_mode = 2
-vertical_alignment = 1
-
-[node name="ShuffleMusicCheck" type="CheckBox" parent="Tabs/Audio/Content/PackFields"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 32)
-layout_mode = 2
-tooltip_text = "Play all 19 tracks, including menu and special music, once per shuffle cycle."
-text = "Shuffle all music"
-
 [node name="SoundFontLabel" type="Label" parent="Tabs/Audio/Content/PackFields"]
 custom_minimum_size = Vector2(150, 32)
 layout_mode = 2
