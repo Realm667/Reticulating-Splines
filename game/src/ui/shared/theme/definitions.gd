@@ -5,11 +5,11 @@ const LIGHT_ACCENT := Color("256a97")
 const LIGHT_SELECTION := Color("dceaf3")
 
 
-static func build(value: String, _files := false, translucent_menus := true) -> Theme:
+static func build(value: String, files := false, translucent_menus := true) -> Theme:
 	if value == "classic_mac":
-		return AppUiMacTheme.build()
+		return AppUiMacTheme.build(files)
 	if value in ["classic_windows", "classic_dos"]:
-		return AppUiClassicTheme.build(value)
+		return AppUiClassicTheme.build(value, true, files)
 	var dark := value == "dark"
 	var result := _website_theme(dark)
 	result.set_color("default_color", "RichTextLabel", result.get_color("font_color", "Label"))
@@ -341,6 +341,8 @@ static func _website_theme(dark: bool) -> Theme:
 				continue
 			var selection := create_box((Color("363f27") if dark else LIGHT_SELECTION), accent, 0, 4, 4)
 			selection.border_width_left = 3
+			# ItemList draws its cursor after the icon and text.
+			selection.draw_center = not state.begins_with("cursor")
 			result.set_stylebox(state, type_name, selection)
 		result.set_color("font_selected_color", type_name, accent if dark else LIGHT_ACCENT)
 		result.set_color("font_hovered_selected_color", type_name, accent if dark else LIGHT_ACCENT)

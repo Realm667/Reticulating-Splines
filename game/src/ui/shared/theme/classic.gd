@@ -8,7 +8,7 @@ const NAVY := Color("000080")
 static var _fonts: Dictionary[bool, Font] = {}
 
 
-static func build(value: String, dos_details := true) -> Theme:
+static func build(value: String, dos_details := true, files := false) -> Theme:
 	var dos := value == "classic_dos"
 	var selection := Color.BLACK if dos else NAVY
 	var result := ThemeDB.get_default_theme().duplicate(true) as Theme
@@ -28,7 +28,14 @@ static func build(value: String, dos_details := true) -> Theme:
 			if "outline" in name or "shadow" in name:
 				result.set_color(name, type_name, Color.TRANSPARENT)
 		for name in result.get_icon_list(type_name):
-			result.set_icon(name, type_name, _ink_icon(result.get_icon(name, type_name)))
+			# Neutral folder artwork stays visible on both white lists and
+			# dark selections; a black silhouette disappears in DOS/Mac selection.
+			if type_name == "FileDialog" and name in ["folder", "folder_thumbnail"]:
+				continue
+			# File toolbar buttons tint white masks per state. Baked black pixels
+			# cannot become white when a flat button selects its dark background.
+			var stateful := type_name == "FileDialog" and name not in ["file", "file_thumbnail"] and not name.begins_with("menu_")
+			result.set_icon(name, type_name, _ink_icon(result.get_icon(name, type_name), stateful))
 	for type_name in ["Label", "Button", "MenuButton", "OptionButton", "CheckBox", "CheckButton", "PopupMenu", "LineEdit", "TextEdit", "Tree", "ItemList"]:
 		result.set_font("font", type_name, regular)
 		result.set_font_size("font_size", type_name, 11)
@@ -55,6 +62,13 @@ static func build(value: String, dos_details := true) -> Theme:
 			result.set_stylebox(state + "_mirrored", type_name, box)
 		for name in ["font_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color", "font_focus_color"]:
 			result.set_color(name, type_name, Color.BLACK)
+		for state in ["normal", "hover", "pressed", "hover_pressed", "focus", "disabled"]:
+			result.set_color("icon_" + state + "_color", type_name, SHADOW if state == "disabled" else Color.BLACK)
+	# Godot's FileDialog explicitly overrides toolbar icons with Button colors,
+	# bypassing FlatButton for hover/pressed. Keep this local to file dialogs.
+	if files:
+		for state in ["hover", "pressed", "hover_pressed"]:
+			result.set_color("icon_" + state + "_color", "Button", Color.WHITE)
 	var focus := flat(Color.TRANSPARENT, 0)
 	focus.border_color = Color.BLACK
 	focus.set_border_width_all(1)
@@ -74,7 +88,12 @@ static func build(value: String, dos_details := true) -> Theme:
 		result.set_stylebox("panel", type_name, bevel(Color.WHITE, true, 4))
 		for state in result.get_stylebox_list(type_name):
 			if "selected" in state or state.begins_with("cursor"):
-				result.set_stylebox(state, type_name, flat(selection, 3))
+				var highlight := flat(selection, 3)
+				if state.begins_with("cursor"):
+					highlight.draw_center = false
+					highlight.border_color = selection
+					highlight.set_border_width_all(1)
+				result.set_stylebox(state, type_name, highlight)
 			elif state == "hovered":
 				result.set_stylebox(state, type_name, flat(FACE, 3))
 		result.set_color("font_selected_color", type_name, Color.WHITE)
@@ -91,6 +110,7 @@ static func build(value: String, dos_details := true) -> Theme:
 			var active: bool = state in ["hover", "pressed", "hover_pressed"]
 			result.set_stylebox(state, type_name, flat(selection if active else FACE, 4))
 			result.set_color("font_color" if state == "normal" else "font_" + state + "_color", type_name, Color.WHITE if active else Color.BLACK)
+			result.set_color("icon_" + state + "_color", type_name, Color.WHITE if active else (SHADOW if state == "disabled" else Color.BLACK))
 	for type_name in ["TabContainer", "TabBar"]:
 		for state in ["tab_selected", "tab_unselected", "tab_hovered", "tab_disabled"]:
 			result.set_stylebox(state, type_name, bevel(FACE, false, 6))
@@ -176,7 +196,7 @@ static func _font(bold: bool) -> Font:
 	return _fonts[bold]
 
 
-static func _ink_icon(source: Texture2D) -> Texture2D:
+static func _ink_icon(source: Texture2D, stateful := false) -> Texture2D:
 	if source is DPITexture:
 		var colors := RegEx.create_from_string("#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})\\b")
 		var svg: String = source.get_source()
@@ -185,6 +205,8 @@ static func _ink_icon(source: Texture2D) -> Texture2D:
 		for found in matches:
 			# Keep the negative space of multicolor icons, such as the file grid.
 			var ink := "#000000" if Color(found.get_string()).get_luminance() > 0.4 else "#c0c0c0"
+			if stateful:
+				ink = "#ffffff" if Color(found.get_string()).get_luminance() > 0.4 else "#ffffff00"
 			svg = svg.left(found.get_start()) + ink + svg.substr(found.get_end())
 		return DPITexture.create_from_string(svg)
 	var image := source.get_image()
@@ -192,7 +214,9 @@ static func _ink_icon(source: Texture2D) -> Texture2D:
 		return source
 	for y in image.get_height():
 		for x in image.get_width():
-			image.set_pixel(x, y, Color(0, 0, 0, image.get_pixel(x, y).a))
+			var ink := Color.WHITE if stateful else Color.BLACK
+			ink.a = image.get_pixel(x, y).a
+			image.set_pixel(x, y, ink)
 	return ImageTexture.create_from_image(image)
 
 

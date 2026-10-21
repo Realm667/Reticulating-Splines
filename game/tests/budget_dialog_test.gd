@@ -149,6 +149,7 @@ func _run() -> void:
 		valuation_city.document.set_misc_u32(0x1f0 + entry[0] * 4, 0)
 	_test_advice()
 	print("PASS: Budget reports, mixed rates, group edits, history, bond controls, annual state and advisors")
+	await _check_window_stability()
 	quit()
 
 
@@ -269,3 +270,31 @@ func _test_advice() -> void:
 	assert(_advice(7) == 0)
 	_set_budget(10, Budget.BUDGET_CURRENT, 2001)
 	assert(_advice(7) == 32)
+
+
+func _check_window_stability() -> void:
+	var memory := WindowLayoutMemory.new()
+	memory.storage_path = "user://budget-window-layout-test.cfg"
+	root.add_child(memory)
+	ScreenPixels.set_scale(1.35)
+	var dialog := (load("res://src/ui/city_windows/budget_dialog.tscn") as PackedScene).instantiate() as BudgetDialog
+	root.add_child(dialog)
+	dialog.set_city(city)
+	for viewport_size in [Vector2i(640, 360), Vector2i(960, 540), Vector2i(1280, 720)]:
+		root.size = viewport_size
+		dialog.open_budget(values, false, false)
+		for frame in 8:
+			await process_frame
+		var settled := Rect2i(dialog.position, dialog.size)
+		for frame in 20:
+			memory._clamp(dialog)
+			WindowPixelFit.fit(dialog)
+			await process_frame
+			assert(Rect2i(dialog.position, dialog.size) == settled, "Budget layout oscillates")
+		assert(dialog.size.x <= viewport_size.x and dialog.size.y <= viewport_size.y - 30)
+		assert(dialog.get_ok_button().get_global_rect().end.y <= dialog.size.y)
+		dialog.hide()
+	dialog.queue_free()
+	memory.queue_free()
+	ScreenPixels.set_scale(0.0)
+	await process_frame

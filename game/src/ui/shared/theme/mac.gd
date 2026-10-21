@@ -3,8 +3,8 @@ extends RefCounted
 ## System 7-inspired monochrome chrome, using the bundled free pixel font.
 
 
-static func build() -> Theme:
-	var result := AppUiClassicTheme.build("classic_dos", false)
+static func build(files := false) -> Theme:
+	var result := AppUiClassicTheme.build("classic_dos", false, files)
 	var paper := Color("eeeeee")
 	result.set_color("title_background", "AppPalette", Color.WHITE)
 	result.set_color("canvas", "AppPalette", paper)
@@ -18,6 +18,8 @@ static func build() -> Theme:
 			result.set_stylebox(state + "_mirrored", type_name, box)
 		result.set_color("font_pressed_color", type_name, Color.WHITE)
 		result.set_color("font_hover_pressed_color", type_name, Color.WHITE)
+		result.set_color("icon_pressed_color", type_name, Color.WHITE)
+		result.set_color("icon_hover_pressed_color", type_name, Color.WHITE)
 	for type_name in ["Panel", "PanelContainer", "AcceptDialog", "PopupPanel", "PopupMenu", "TabContainer"]:
 		result.set_stylebox("panel", type_name, _box(Color.WHITE if type_name == "PopupMenu" else paper, 8))
 	for type_name in ["FloatingPanel", "MainMenuPanel", "CityToolbarPanel", "CityMenuBarPanel", "CityStatusBarPanel", "InformationPanel", "UtilityPanel"]:

@@ -90,6 +90,9 @@ func _ready() -> void:
 	_style_actions()
 	AppUiTheme.current().changed.connect(_style_actions)
 	AppUiTheme.current().changed.connect(_refresh_heading)
+	about_to_popup.connect(_fit_to_viewport)
+	if get_parent() != null:
+		get_parent().get_viewport().size_changed.connect(_fit_to_viewport)
 
 	for caption in ["Year to date", "Year-end cash flow", "Current funds", "Year-end funds"]:
 		var column := VBoxContainer.new()
@@ -216,7 +219,18 @@ func open_budget(values: PackedInt32Array, annual: bool, auto_budget: bool) -> v
 	_show_details(false)
 	tabs.current_tab = 0
 	refresh_report()
-	popup_centered(Vector2i(940, 700))
+	_fit_to_viewport()
+	popup_centered(size)
+
+
+func _fit_to_viewport() -> void:
+	# Content scrolls inside a bounded window. Its minimum size must never fight
+	# the desktop clamp or pixel fitting on subsequent frames.
+	var available := Vector2i(get_parent().get_viewport().get_visible_rect().size)
+	var limit := Vector2i(maxi(1, available.x - 32), maxi(1, available.y - 64))
+	min_size = Vector2i(420, 280).min(limit)
+	max_size = limit
+	size = Vector2i(940, 700).min(limit)
 
 
 func funding_values() -> PackedInt32Array:
