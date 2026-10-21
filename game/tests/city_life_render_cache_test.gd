@@ -411,6 +411,16 @@ func _check_zoom_banks() -> void:
 	assert(original.surfaces.size() == 4, "Inactive memory reclamation must be bounded per publication")
 	canvas._trim_inactive_banks(0)
 	assert(original.surfaces.is_empty())
+	canvas._select_occlusion_bank(medium, 1)
+	for i in 12:
+		var overlapping := Vector3i(i, 0, 0)
+		canvas._occluders[overlapping] = []
+		canvas._occluder_bounds[overlapping] = Rect2i(100, 100, 64, 48)
+	canvas._select_occlusion_bank(large, 1)
+	canvas._trim_inactive_banks(0)
+	canvas._select_occlusion_bank(medium, 1)
+	assert(canvas._occluders.is_empty() and canvas._occluder_bounds.is_empty(),
+		"Evicting overlapping inactive masks must tolerate neighbours removed in the same batch")
 	canvas._select_occlusion_bank([8, 1, source, 1, 2], 1)
 	assert(canvas._occlusion_banks.size() == 1 and canvas.lights != original, "A replacement city must not retain former artwork banks")
 	canvas.free()

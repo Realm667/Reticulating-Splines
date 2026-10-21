@@ -575,7 +575,12 @@ func _trim_inactive_banks(budget_bytes := 128 * 1024 * 1024) -> void:
 		for key in bank.bounds.keys():
 			if retained <= budget_bytes or removed >= 8:
 				return
+			# One invalidation also removes overlapping masks. This key snapshot
+			# can therefore contain neighbours already reclaimed above.
+			if not bank.bounds.has(key):
+				continue
 			var changed: Array[Rect2i] = [bank.bounds[key]]
+			var previous_count: int = bank.occluders.size()
 			_invalidate_bank(changed, bank.occluders, bank.bounds, bank.light_occluders, receivers)
-			retained -= 128 * 128 * 4
+			retained -= (previous_count - bank.occluders.size()) * 128 * 128 * 4
 			removed += 1
