@@ -3,6 +3,53 @@ extends SceneTree
 @warning_ignore_start("integer_division")
 
 
+func _check_original_facades() -> void:
+	var pack := FixtureGraphics.pack()
+	for view in 3:
+		var divisor := 4 >> view
+		var archive := pack.large_sprites if view == 2 else pack.small_medium_sprites
+		for spec in [[147,77.0,11.0,11.0,32.0,21.5,57.0,9.0,48.0], [183,117.0,17.0,16.0,47.0,31.0,78.0,15.5,73.0]]:
+			for flipped in [false, true]:
+				var data := fixture(view)
+				var id: int = view * 500 + spec[0]
+				var source := archive.find_sprite(id).create_image(Sc2Palette.index_encoding()).image
+				data.artwork[id] = source
+				data.request.buildings[0] = spec[0]
+				data.request.flags[0] = Sc2TileFlags.FLIPPED if flipped else 0
+				var builder: NativeCityRegionBuilder = data.builder
+				assert(str(builder.configure(data.request, data.artwork, 0)).is_empty())
+				var draws := builder.tile_draws(PackedInt32Array([0,0]))
+				var record := -1
+				for at in range(0, draws.records.size(), 14):
+					if draws.records[at + 5] == id:
+						record = at
+				assert(record >= 0)
+				var origin := Vector2i(draws.records[record], draws.records[record + 1])
+				var image: Image = draws.images[draws.records[record + 4]]
+				var water: Dictionary = builder.water_reflections(data.bounds, data.indices, {}, {})
+				var matched := 0
+				for x in image.get_width():
+					var authored_x := (float(image.get_width() - 1 - x if flipped else x) + 0.5) * divisor
+					if authored_x < spec[2] or authored_x >= spec[6]:
+						continue
+					var a := 2 if authored_x < spec[4] else 4
+					var roof: float = lerpf(spec[a+1], spec[a+3], (authored_x - spec[a]) / (spec[a+2] - spec[a]))
+					var top: float = (roof - spec[1]) / divisor + image.get_height()
+					var foot: float = top + spec[8] / divisor
+					for y in image.get_height():
+						if y + 0.5 < top or y + 0.5 >= foot or image.get_pixel(x,y).a == 0.0:
+							continue
+						var target: Vector2i = Vector2i(origin.x + x, roundi(2 * (origin.y + foot)) - origin.y - y - 1) - data.bounds.position
+						if not Rect2i(Vector2i.ZERO, data.bounds.size).has_point(target):
+							continue
+						var color: Color = water.reflected.get_pixelv(target)
+						if color.a > 0.0:
+							assert(color.r8 == image.get_pixel(x,y).r8, "Facade lost its physical contact: %d flip %s" % [id,flipped])
+							matched += 1
+				assert(matched > 4, "Verified facade did not reach the water: %d" % id)
+	print("PASS: original cuboid facade planes at three art sizes and both orientations")
+
+
 static func fixture(view := 2) -> Dictionary:
 	var divisor := 4 >> view
 	var width: int = 32 / divisor
@@ -51,6 +98,7 @@ static func fixture(view := 2) -> Dictionary:
 
 
 func _initialize() -> void:
+	_check_original_facades()
 	for view in 3:
 		var data := fixture(view)
 		var builder: NativeCityRegionBuilder = data.builder

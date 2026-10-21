@@ -1,7 +1,7 @@
 //! Indexed sprite reflections on visible, horizontal water. Display snapshots only.
 //! Pixel centres reflect about each column's projected footprint at the receiving
 //! water altitude. No simulation state, random state or original pixels change.
-use crate::{Builder, City, Config, Draw, Rect, sprites::Sprite};
+use crate::{Builder, City, Config, Draw, Rect, reflection_facades::Facade, sprites::Sprite};
 use std::collections::HashMap;
 
 pub struct WaterPixels {
@@ -309,12 +309,19 @@ impl Builder {
             let sprite = &self.sprites.images[&draw.image];
             let altitude = self.city.object(i);
             let building = self.city.buildings[i];
-            self.water_lights(&mut out, bounds, draw, emission, &levels);
+            let facade = if self.sprites.artwork_source(draw.image).is_none() {
+                Facade::for_sprite(draw, sprite)
+            } else {
+                None
+            };
+            self.water_lights(&mut out, bounds, draw, emission, &levels, facade);
             let footprint = self.sprites.footprint_draw(draw);
             let (left, _) = self.sprites.canvas_padding(draw.image);
             let contacts: Vec<_> = (0..sprite.w)
                 .map(|x| {
-                    let axis = contact_twice(&footprint, x - left, building);
+                    let axis = facade
+                        .and_then(|f| f.column(draw, x))
+                        .map_or_else(|| contact_twice(&footprint, x - left, building), |v| v.2);
                     let foot = if bridge(building) {
                         contact_twice_at_foot(draw, x, building, sprite)
                     } else {
@@ -342,11 +349,18 @@ impl Builder {
                 let first = (bounds.x - draw.rect.x).max(0);
                 let last = (bounds.x + bounds.w - draw.rect.x).min(sprite.w);
                 for sx in first..last {
+                    let facade_column = facade.and_then(|f| f.column(draw, sx));
+                    if facade.is_some() && facade_column.is_none() {
+                        continue;
+                    }
                     let (axis, foot, pier) = contacts[sx as usize];
                     // Land obstructions are checked once per column and receiver
                     // tile span, rather than once for every reflected pixel.
                     let mut visibility = HashMap::new();
                     for sy in 0..sprite.h {
+                        if facade_column.is_some_and(|(top, foot, _)| (sy as f32 + 0.5) < top || sy as f32 + 0.5 >= foot) {
+                            continue;
+                        }
                         let contact = if sy >= pier { foot } else { axis };
                         let plane = (contact + lift).div_euclid(2);
                         let src = ((sy * sprite.w + sx) * 4) as usize;
@@ -400,7 +414,15 @@ impl Builder {
 
     // Cache a light envelope per authored brightmap column. Only the shader's
     // small wave modulation changes per frame. No simulated light or water state.
-    fn water_lights(&self, out: &mut WaterPixels, bounds: Rect, draw: &Draw, emission: &HashMap<u64, Sprite>, levels: &[bool; 32]) {
+    fn water_lights(
+        &self,
+        out: &mut WaterPixels,
+        bounds: Rect,
+        draw: &Draw,
+        emission: &HashMap<u64, Sprite>,
+        levels: &[bool; 32],
+        facade: Option<Facade>,
+    ) {
         let i = cell(&self.city, draw.depth).expect("validated building draw");
         if draw.emission_disabled || self.city.buildings[i] < crate::ids::building_tile_ids::DEVELOPED_FIRST {
             return;
@@ -416,11 +438,18 @@ impl Builder {
         let footprint = self.sprites.footprint_draw(draw);
         let (left, _) = self.sprites.canvas_padding(draw.image);
         for sx in (bounds.x - draw.rect.x).max(0)..(bounds.x + bounds.w - draw.rect.x).min(sprite.w) {
-            let contact = contact_row(&footprint, sx - left, true);
+            let facade_column = facade.and_then(|f| f.column(draw, sx));
+            if facade.is_some() && facade_column.is_none() {
+                continue;
+            }
+            let contact = facade_column.map_or_else(|| contact_row(&footprint, sx - left, true), |v| v.2.div_euclid(2));
             let mut color = [0.0_f32; 3];
             let mut energy = 0.0_f32;
             let mut height = 0;
             for sy in 0..sprite.h {
+                if facade_column.is_some_and(|(top, foot, _)| (sy as f32 + 0.5) < top || sy as f32 + 0.5 >= foot) {
+                    continue;
+                }
                 if sprite.rgba[((sy * sprite.w + sx) * 4 + 3) as usize] == 0 || draw.rect.y + sy >= contact {
                     continue;
                 }

@@ -15,6 +15,7 @@ pub mod painter;
 mod parcel;
 pub mod raster;
 pub mod rect_index;
+mod reflection_facades;
 pub mod region;
 pub mod region_plan;
 pub mod sprites;
