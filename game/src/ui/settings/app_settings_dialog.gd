@@ -196,6 +196,8 @@ func _ready() -> void:
 	mods_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	mods_scroll.add_child(mods_panel)
 	tabs.add_child(mods_scroll)
+	# Keep the script mod implementation available for later; omit its settings tab for now.
+	tabs.set_tab_hidden(tabs.get_tab_idx_from_control(mods_scroll), true)
 	_watch_clicks(mods_panel)
 	controls_list.bindings_changed.connect(_notify_change)
 	# closing the dialog applies a text field that still has focus

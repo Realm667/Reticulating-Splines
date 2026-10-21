@@ -1,5 +1,9 @@
 # Mods in Reticulating Splines
 
+The Mods settings tab is currently hidden. The script mod backend and console
+commands remain available; the menu instructions below describe the retained
+interface for a future return of the tab.
+
 This is the inherited OpenSC2K modding guide, maintained for Reticulating Splines.
 The JavaScript API and examples remain compatible; see [Scripting](scripting.md)
 and [example mods](../examples/mods).
