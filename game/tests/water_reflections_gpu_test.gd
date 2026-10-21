@@ -1,4 +1,5 @@
 extends "res://tests/support/scene_test_case.gd"
+@warning_ignore_start("integer_division")
 
 const SHADER := preload("res://src/view/water/water_surface.gdshader")
 
@@ -8,6 +9,7 @@ func _initialize() -> void:
 
 
 func _run() -> void:
+	await _check_soft_reflection()
 	await _check_hd_surface_sampling()
 	_check_moving_texture_reuse()
 	await _check_unlit_ship_regions()
@@ -269,9 +271,10 @@ func _check_surface_details(viewport: SubViewport, sprite: Sprite2D, material: S
 			"Ripple displaced a reflection's water contact")
 
 	# Away from the fixed contact, changing time must move the silhouette,
-	# not merely brighten an otherwise static reflection.
+	# not merely brighten an otherwise static reflection. Use a broad facade edge
+	# 20 artwork pixels from contact, before the new far-distance fade removes it.
 	for x in 32:
-		mirror.fill_rect(Rect2i(x, 0, 1, 32), Color((40.0 if x % 2 == 0 else 96.0) / 255.0, 0, 0, 0.7))
+		mirror.fill_rect(Rect2i(x, 0, 1, 32), Color((40.0 if x % 8 < 4 else 96.0) / 255.0, 0, 0, 235.0 / 255.0))
 	(sprite.texture as ImageTexture).update(mirror)
 	var differences: Array[float] = []
 	for time in [0.0, 3.0, 9.0]:
@@ -573,3 +576,82 @@ func _check_hd_surface_sampling() -> void:
 	assert(hd.get_pixel(23, 12).g > hd.get_pixel(23, 12).r, "Shore interpolation must not sample invalid palette indices")
 	viewport.queue_free()
 	await process_frame
+
+
+func _check_soft_reflection() -> void:
+	# Alternate facade columns expose palette-index interpolation and lost blur.
+	# A solid strip separately tests attenuation, independent of window contrast.
+	for divisor: int in [1, 2, 4]:
+		var viewport := SubViewport.new()
+		viewport.size = Vector2i(96, 112)
+		viewport.transparent_bg = true
+		viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+		root.add_child(viewport)
+		var palette := Image.create(256, 1, false, Image.FORMAT_RGBA8)
+		palette.fill(Color.MAGENTA)
+		palette.set_pixel(96, 0, Color(0.08, 0.2, 0.3))
+		palette.set_pixel(40, 0, Color(0.9, 0.5, 0.2))
+		palette.set_pixel(42, 0, Color(0.05, 0.1, 0.15))
+		var surface := Image.create(96, 112, false, Image.FORMAT_RGBA8)
+		surface.fill(Color(6.0 / 255.0, 96.0 / 255.0, 0, 1))
+		surface.fill_rect(Rect2i(80, 0, 16, 112), Color.TRANSPARENT)
+		var mirror := Image.create(96, 112, false, Image.FORMAT_RGBA8)
+		for y in 112:
+			for x in range(8, 80):
+				var index := 40 if x >= 40 or x % 2 == 0 else 42
+				mirror.set_pixel(x, y, Color(float(index) / 255.0, 0, 0,
+					maxf(0.0, 1.0 - float(y * divisor) / 255.0)))
+		var sprite := Sprite2D.new()
+		sprite.centered = false
+		sprite.texture = ImageTexture.create_from_image(mirror)
+		var material := ShaderMaterial.new()
+		material.shader = SHADER
+		material.set_shader_parameter("water_enabled", true)
+		material.set_shader_parameter("water_topography", false)
+		material.set_shader_parameter("water_divisor", float(divisor))
+		material.set_shader_parameter("animated_palette", ImageTexture.create_from_image(palette))
+		material.set_shader_parameter("water_surface", ImageTexture.create_from_image(surface))
+		sprite.material = material
+		viewport.add_child(sprite)
+		await RenderingServer.frame_post_draw
+		var softened := viewport.get_texture().get_image()
+		sprite.texture = ImageTexture.create_from_image(Image.create(96, 112, false, Image.FORMAT_RGBA8))
+		await RenderingServer.frame_post_draw
+		var plain := viewport.get_texture().get_image()
+		var near_row := maxi(4, 8 / divisor)
+		var middle_row := 40 / divisor
+		var far_row := 84 / divisor
+		var near_energy := softened.get_pixel(60, near_row).r - plain.get_pixel(60, near_row).r
+		var middle_energy := softened.get_pixel(60, middle_row).r - plain.get_pixel(60, middle_row).r
+		assert(near_energy > 0.04, "Soft reflection lost its waterline contact")
+		assert(middle_energy > 0.005 and middle_energy < near_energy * 0.8, "Reflection must fade progressively")
+		assert(softened.get_pixel(60, far_row).is_equal_approx(plain.get_pixel(60, far_row)),
+			"Far geometric tip must dissolve fully into unchanged water")
+		assert(softened.get_pixel(84, middle_row).a == 0.0, "Reflection blur escaped onto land")
+		assert(softened.get_pixel(1, middle_row).a == 0.0, "Reflection blur drew the padded gutter")
+		assert(softened.get_pixel(20, middle_row).b < 0.4, "Blur interpolated indices into the magenta palette entry")
+		if divisor == 1:
+			var near_contrast := absf(softened.get_pixel(20, near_row).r - softened.get_pixel(21, near_row).r) / near_energy
+			var middle_contrast := absf(softened.get_pixel(20, middle_row).r - softened.get_pixel(21, middle_row).r) / middle_energy
+			assert(near_contrast > 0.15 and middle_contrast < near_contrast * 0.35,
+				"Facade detail must blur more with distance, independently of fading")
+		# Adjacent native regions contain overlapping gutters, not a shared texture.
+		# Blurring must give the same pixels through their join as a whole image.
+		material.set_shader_parameter("water_reflections_enabled", true)
+		sprite.texture = ImageTexture.create_from_image(mirror.get_region(Rect2i(0, 0, 51, 112)))
+		material.set_shader_parameter("water_surface", ImageTexture.create_from_image(surface.get_region(Rect2i(0, 0, 51, 112))))
+		var right := Sprite2D.new()
+		right.centered = false
+		right.position.x = 45
+		right.texture = ImageTexture.create_from_image(mirror.get_region(Rect2i(45, 0, 51, 112)))
+		right.material = material.duplicate()
+		(right.material as ShaderMaterial).set_shader_parameter("water_surface", ImageTexture.create_from_image(surface.get_region(Rect2i(45, 0, 51, 112))))
+		(right.material as ShaderMaterial).set_shader_parameter("water_origin", Vector2(45 * divisor, 0))
+		viewport.add_child(right)
+		await RenderingServer.frame_post_draw
+		var joined := viewport.get_texture().get_image()
+		for x in range(44, 53):
+			for y in range(4, 100):
+				assert(joined.get_pixel(x, y).is_equal_approx(softened.get_pixel(x, y)), "Blur produced a region seam")
+		viewport.queue_free()
+		await process_frame

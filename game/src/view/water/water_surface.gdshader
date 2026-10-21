@@ -58,7 +58,12 @@ vec4 mirror_sample(vec4 source, vec2 uv, float level, float shade) {
 	if (any(lessThan(uv, vec2(0.0))) || any(greaterThanEqual(uv, vec2(1.0)))
 			|| abs(receiver.r - level) > 0.001 || receiver.a < 0.5) { return vec4(0.0); }
 	if (source.a <= 0.0) { return vec4(0.0); }
-	return vec4(environment_color(palette_color(source.r) * shade, uv) * source.a, source.a);
+	// Geometry stores distance from the waterline in alpha at full artwork scale.
+	// Fade the resolved reflection, including emission, rather than tinting the water.
+	float distance = (1.0 - source.a) * 255.0;
+	float coverage = source.a * (water_geometry_preview ? 1.0 : 1.0 - smoothstep(6.0, 80.0, distance));
+	if (coverage <= 0.0) { return vec4(0.0); }
+	return vec4(environment_color(palette_color(source.r) * shade, uv) * coverage, coverage);
 }
 
 vec4 shore_light(vec2 uv, float level) {
@@ -129,11 +134,28 @@ void fragment() {
 			float contact = max(original_reflection.a, max(texture(TEXTURE, UV + vec2(1.0, 0.0) / dimensions).a,
 				texture(TEXTURE, UV - vec2(1.0, 0.0) / dimensions).a));
 			float detached = smoothstep(0.004, 0.08, 1.0 - contact);
-			float offset = water_geometry_preview || !water_waves_enabled ? 0.0 : clamp(swell.y * detached, -2.0, 2.0) / water_divisor;
+			// Six resolved-color taps combine the ripple and horizontal blur. Their
+			// union fits the existing three-texel region gutter, including at zoom-out.
+			float offset = water_geometry_preview || !water_waves_enabled ? 0.0
+				: clamp(swell.y * detached, -0.99, 0.99) / water_divisor;
 			vec2 first_uv = UV + vec2(floor(offset), 0.0) / dimensions;
-			vec2 second_uv = first_uv + vec2(1.0, 0.0) / dimensions;
-			vec4 reflected = mix(mirror_sample(texture(TEXTURE, first_uv), first_uv, surface.r, cloud_shade),
-				mirror_sample(texture(TEXTURE, second_uv), second_uv, surface.r, cloud_shade), fract(offset));
+			vec4 reflected = vec4(0.0);
+			if (water_geometry_preview) {
+				reflected = mirror_sample(original_reflection, UV, surface.r, cloud_shade);
+			} else {
+				float distance = (1.0 - contact) * 255.0;
+				float sigma = mix(0.35, 1.25, smoothstep(2.0, 48.0, distance)) / water_divisor;
+				float weight_sum = 0.0;
+				for (int tap = -2; tap <= 3; tap++) {
+					float delta = (float(tap) - fract(offset)) / sigma;
+					float weight = exp(-0.5 * delta * delta);
+					if (weight < 0.001) { continue; }
+					vec2 uv = first_uv + vec2(float(tap), 0.0) / dimensions;
+					reflected += mirror_sample(texture(TEXTURE, uv), uv, surface.r, cloud_shade) * weight;
+					weight_sum += weight;
+				}
+				reflected /= max(weight_sum, 0.00001);
+			}
 			if (reflected.a > 0.0) {
 				vec3 mirror_color = reflected.rgb / reflected.a;
 				float strength = water_geometry_preview ? 1.0 : mix(0.15, 0.23, 1.0 - exp(-depth * 0.4) * bottom.a);
