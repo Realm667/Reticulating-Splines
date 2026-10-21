@@ -29786,3 +29786,38 @@ msgstr "Se informa de cortes eléctricos"
 #: src/ui/settings/update_check_dialog.gd
 msgid "No newer published release is available. You have version %s."
 msgstr "No hay una versión publicada más reciente. Tienes la versión %s."
+
+#. Supplementary RS rain lighting, AI-assisted translation.
+#: src/ui/settings/visual_enhancements_tab.gd
+msgid "Activate lights during rainfall"
+msgstr "Activar luces durante la lluvia"
+
+#. Supplementary RS rain lighting, AI-assisted translation.
+#: src/ui/settings/visual_enhancements_tab.gd
+msgid "Light brightness during rain"
+msgstr "Brillo de las luces durante la lluvia"
+
+#. Supplementary RS rain lighting, AI-assisted translation.
+#: src/ui/settings/visual_enhancements_tab.gd
+msgid "Turn on building, vehicle and street lights during rain. Requires Weather and Building and vehicle lights. Stronger night or daytime lighting stays unchanged."
+msgstr "Enciende las luces de edificios, vehículos y calles durante la lluvia. Requiere Clima y Luces de edificios y vehículos. La iluminación nocturna o diurna más intensa no cambia."
+
+#. Supplementary RS rain lighting, AI-assisted translation.
+#: src/ui/settings/visual_enhancements_tab.gd
+msgid "Maximum rain brightness as a percentage of Light brightness. Fades with rainfall; does not dim stronger night lighting."
+msgstr "Brillo máximo durante la lluvia como porcentaje del brillo de las luces. Aparece y desaparece gradualmente con la lluvia; no atenúa la iluminación nocturna más intensa."
+
+#. Supplementary RS rain lighting, AI-assisted translation.
+#: src/ui/settings/visual_enhancements_tab.gd
+msgid "Enable Weather and Building and vehicle lights to use rain lighting."
+msgstr "Activa Clima y Luces de edificios y vehículos para usar la iluminación durante la lluvia."
+
+#. Supplementary RS rain lighting, AI-assisted translation.
+#: src/ui/settings/visual_enhancements_tab.gd
+msgid "Enable Activate lights during rainfall to adjust rain brightness."
+msgstr "Activa Activar luces durante la lluvia para ajustar su brillo."
+
+#. Supplementary RS rain lighting, AI-assisted translation.
+#: src/ui/settings/visual_enhancements_tab.gd
+msgid "Enable Day and night, daytime lights or rain lighting."
+msgstr "Activa Día y noche, las luces diurnas o la iluminación durante la lluvia."

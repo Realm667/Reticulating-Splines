@@ -3,6 +3,7 @@ extends RefCounted
 ## Presentation-only weather and random state. No city writes or simulation RNG.
 
 enum Kind { SUNNY, LIGHT_RAIN, HEAVY_RAIN, RAIN_STORM, DRY_STORM, LIGHT_SNOW, HEAVY_SNOW }
+const LIGHT_RAIN_AMOUNT := 0.28
 const PARTICLES := preload("res://src/view/environment/weather_particles.gdshader")
 const TINTS := [Color.WHITE, Color(0.86, 0.9, 0.96), Color(0.7, 0.77, 0.86),
 	Color(0.59, 0.67, 0.79), Color(0.63, 0.7, 0.82), Color(0.93, 0.96, 1.0), Color(0.81, 0.87, 0.95)]
@@ -121,7 +122,7 @@ func process(delta: float, phase_elapsed: float, active: bool, season: float, pa
 	var target_tint := Color.WHITE.lerp(TINTS[kind], strength)
 	tint = Color(move_toward(tint.r, target_tint.r, weight), move_toward(tint.g, target_tint.g, weight), move_toward(tint.b, target_tint.b, weight))
 	frost = move_toward(frost, (0.18 if kind == Kind.LIGHT_SNOW else (0.85 if kind == Kind.HEAVY_SNOW else 0.0)) * strength, weight)
-	rain = move_toward(rain, (0.28 if kind == Kind.LIGHT_RAIN else (1.0 if kind in [Kind.HEAVY_RAIN, Kind.RAIN_STORM] else 0.0)) * strength, weight)
+	rain = move_toward(rain, (LIGHT_RAIN_AMOUNT if kind == Kind.LIGHT_RAIN else (1.0 if kind in [Kind.HEAVY_RAIN, Kind.RAIN_STORM] else 0.0)) * strength, weight)
 	snow = move_toward(snow, (0.24 if kind == Kind.LIGHT_SNOW else (1.0 if kind == Kind.HEAVY_SNOW else 0.0)) * strength, weight)
 	if kind == Kind.DRY_STORM:
 		# A dry discharge must never reveal a residual precipitation front.

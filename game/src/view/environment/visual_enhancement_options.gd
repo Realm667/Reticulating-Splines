@@ -50,6 +50,8 @@ const FIELDS := [
 	["night_ambient", "Night ambient light", "number", 35.0, 0.0, 100.0, 5.0],
 	["brightmaps", "Lights and brightmaps", "bool", true],
 	["night_daytime_enabled", "Keep lights on during daytime", "bool", false],
+	["rain_lights_enabled", "Activate lights during rainfall", "bool", true],
+	["rain_light_strength", "Light brightness during rain", "number", 35.0, 0.0, 100.0, 5.0],
 	["night_light_strength", "Night light strength", "number", 100.0, 0.0, 100.0, 5.0],
 	["night_glow", "Light glow strength", "number", 35.0, 0.0, 100.0, 5.0],
 	["night_ground", "Street and junction lighting", "number", 45.0, 0.0, 100.0, 5.0],

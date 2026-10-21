@@ -10,7 +10,7 @@ const SECTIONS := [
 	["Day & Night", "Set the time of day and the appearance of the night.",
 		["day_enabled", "day_mode", "day_hour", "day_seconds", "day_lut_strength", "night_strength"]],
 	["Lighting", "Building, vehicle and street lights. Keep lights on during the day with the daytime override.",
-		["brightmaps", "night_daytime_enabled", "night_light_strength", "night_ambient", "night_glow", "night_ground", "detail_lights_min_zoom"]],
+		["brightmaps", "night_daytime_enabled", "rain_lights_enabled", "rain_light_strength", "night_light_strength", "night_ambient", "night_glow", "night_ground", "detail_lights_min_zoom"]],
 	["Seasons", "Follow the city calendar, run a visual cycle or choose one season.",
 		["season_enabled", "season_mode", "season_fixed", "season_seconds", "season_transition", "season_lut_strength"]],
 	["Weather & Clouds", "Weather and clouds have separate switches. Fog is part of Clouds. Fixed weather can show snow in any season.",
@@ -57,6 +57,8 @@ const HINTS := {
 	"nature_terrain_strength": "Blend the terrain variation over the original ground. 0% shows the original colors; 100% applies the full variation. Seasons still apply.",
 	"disaster_blending": "Smooth palette color cycles across city graphics, including water and power warnings, and blend sprite frames for fire, toxic clouds, floods, tornadoes, smoke, explosion clouds and demolition dust. Palette colors are blended once, separately from sprite frames. Fire also fades in and out. Disaster blending requires Enhanced disaster visuals. Power warnings always stay fullbright. The initial explosion flash stays immediate.",
 	"night_daytime_enabled": "Keep building brightmaps, glow, street lamps, junction signals and vehicle lights on at any hour, even with the day-night cycle off. Daylight colors and individual light strengths stay unchanged.",
+	"rain_lights_enabled": "Turn on building, vehicle and street lights during rain. Requires Weather and Building and vehicle lights. Stronger night or daytime lighting stays unchanged.",
+	"rain_light_strength": "Maximum rain brightness as a percentage of Light brightness. Fades with rainfall; does not dim stronger night lighting.",
 	"night_ambient": "Cool fill light reveals dark surfaces at night. Window and vehicle light brightness stays separate.",
 	"night_glow": "Soft colored light around visible brightmaps. Zero keeps only the sharp original lights.",
 	"night_ground": "Street lamps, warm road lighting, cosmetic junction signals and selected shop approaches. Signals do not control traffic. Zero disables these lights.",
@@ -287,7 +289,7 @@ func _number_control(key: String, field: Array) -> SpinBox:
 	spin.min_value = float(field[4]) * scale
 	spin.max_value = float(field[5]) * scale
 	spin.step = float(field[6]) * scale
-	if key in PERCENT_FIELDS or key in ["night_light_strength", "night_ambient", "night_glow", "night_ground"]:
+	if key in PERCENT_FIELDS or key in ["night_light_strength", "rain_light_strength", "night_ambient", "night_glow", "night_ground"]:
 		spin.suffix = "%"
 	elif key.ends_with("_seconds") or key == "weather_transition":
 		spin.suffix = "s"
@@ -400,6 +402,7 @@ func _refresh_action_message() -> void:
 
 func _update_availability() -> void:
 	var values := selected_values()
+	var lighting: bool = values.day_enabled or values.night_daytime_enabled or (values.weather_enabled and values.rain_lights_enabled)
 	for key: String in controls:
 		var available := true
 		if key.begins_with("tilt_shift_") and key != "tilt_shift_enabled":
@@ -438,10 +441,14 @@ func _update_availability() -> void:
 				available = true
 			"night_daytime_enabled":
 				available = values.brightmaps
+			"rain_lights_enabled":
+				available = values.brightmaps and values.weather_enabled
+			"rain_light_strength":
+				available = values.brightmaps and values.weather_enabled and values.rain_lights_enabled
 			"brightmap_folder", "night_light_strength":
-				available = (values.day_enabled or values.night_daytime_enabled) and values.brightmaps
+				available = lighting and values.brightmaps
 			"night_glow", "night_ground", "detail_lights_min_zoom":
-				available = (values.day_enabled or values.night_daytime_enabled) and values.brightmaps and values.night_light_strength > 0.0
+				available = lighting and values.brightmaps and values.night_light_strength > 0.0
 			"life_car_amount":
 				available = values.life_cars_enabled
 			"life_people_amount":
@@ -503,10 +510,14 @@ func _dependency_reason(key: String, values: Dictionary) -> String:
 			return "Enable Clouds and fog to adjust their appearance."
 		"night_daytime_enabled":
 			return "Enable Building and vehicle lights to use lighting controls."
+		"rain_lights_enabled":
+			return "Enable Weather and Building and vehicle lights to use rain lighting."
+		"rain_light_strength":
+			return "Enable Activate lights during rainfall to adjust rain brightness." if values.weather_enabled and values.brightmaps else ""
 		"night_light_strength", "brightmap_folder":
 			if not values.brightmaps:
 				return "Enable Building and vehicle lights in Lighting." if key == "brightmap_folder" else ""
-			return "Enable Day and night or Keep lights on during daytime."
+			return "Enable Day and night, daytime lights or rain lighting."
 		"night_ambient":
 			return "Enable Day and night to adjust ambient night light."
 		"night_glow":

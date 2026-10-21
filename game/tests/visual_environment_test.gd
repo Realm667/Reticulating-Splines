@@ -62,6 +62,10 @@ func _run() -> void:
 	assert(VisualEnhancementOptions.normalize({"nature_terrain_strength": 2.0}).nature_terrain_strength == 1.0)
 	assert(defaults.night_light_strength == 100.0)
 	assert(not defaults.night_daytime_enabled)
+	assert(defaults.rain_lights_enabled and defaults.rain_light_strength == 35.0)
+	assert(VisualEnhancementOptions.normalize({"rain_light_strength": NAN}).rain_light_strength == 35.0)
+	assert(VisualEnhancementOptions.normalize({"rain_light_strength": -1}).rain_light_strength == 0.0)
+	assert(VisualEnhancementOptions.normalize({"rain_light_strength": 110}).rain_light_strength == 100.0)
 	assert(defaults.disaster_blending)
 	assert(VisualEnhancementOptions.normalize({"disaster_blending": "invalid"}).disaster_blending)
 	assert(VisualEnhancementOptions.normalize({"night_light_strength": NAN}).night_light_strength == 100.0)
@@ -77,6 +81,8 @@ func _run() -> void:
 	save.visual_enhancements.weather_lut_strength = 0.0
 	save.visual_enhancements.night_light_strength = 35.0
 	save.visual_enhancements.night_daytime_enabled = true
+	save.visual_enhancements.rain_lights_enabled = false
+	save.visual_enhancements.rain_light_strength = 65.0
 	save.visual_enhancements.disaster_blending = false
 	save.visual_enhancements.tree_shadows_enabled = false
 	save.visual_enhancements.merge({"tilt_shift_enabled": true, "tilt_shift_strength": 0.65,
@@ -329,6 +335,7 @@ func _run() -> void:
 	assert([engine.random.state, engine.lfsr_random.state, engine.game_random.state] == random_before)
 	# A newly loaded sunny document must not inherit the previous snowstorm.
 	_check_landscape_environment(main)
+	_check_rain_lighting(main)
 	await _check_ground_lighting(main)
 	main.preferences.visual_enhancements.season_enabled = true
 	main.preferences.visual_enhancements.weather_mode = 2
@@ -366,6 +373,7 @@ func _check_landscape_environment(main: CityApplication) -> void:
 	var before := DocumentState.capture(main.document_state.city.document)
 	var phases := Vector2(main.visual_environment.phase, main.visual_environment.season_phase)
 	main.tool_state.landscape_editor = true
+	main.visual_environment.weather.rain = 1.0
 	main.visual_environment.process(10.0)
 	var parameters := main.map_view.layers.environment_parameters
 	for key in ["map_strata_enabled", "water_depth_enabled", "nature_terrain_enabled",
@@ -395,6 +403,53 @@ func _check_landscape_environment(main: CityApplication) -> void:
 	assert(main.map_view.layers.environment_parameters.environment_seasons == Vector4(0, 0, 0, 1))
 	assert(main.visual_environment.tilt_shift.canvas.visible)
 	assert(DocumentState.capture(main.document_state.city.document) == before)
+	main.preferences.visual_enhancements = saved
+	main.visual_environment.configure()
+
+
+func _check_rain_lighting(main: CityApplication) -> void:
+	var saved := main.preferences.visual_enhancements.duplicate(true)
+	var options := VisualEnhancementOptions.normalize({"day_enabled": false,
+		"weather_enabled": true, "weather_mode": 2, "cloud_enabled": false})
+	main.preferences.visual_enhancements = options
+	var weather := main.visual_environment.weather
+	weather.reset()
+	options.weather_fixed = CityVisualWeather.Kind.LIGHT_RAIN
+	weather.process(float(options.weather_transition) * 0.07, 0.0, true, 1.0)
+	var entering := CityVisualEnvironment.artificial_light_level(options, 0.0, weather.rain, 1.0)
+	assert(entering > 0.0 and entering < 0.35, "Rain lighting must fade in with precipitation")
+	weather.process(float(options.weather_transition), 0.0, true, 1.0)
+	main.visual_environment.process(0.0)
+	assert(is_equal_approx(main.visual_environment.night, 0.35))
+	assert(is_equal_approx(main.map_view.layers.environment_parameters.environment_night, 0.35))
+	assert(CityVisualEnvironment.artificial_light_level(options, 0.0, weather.rain, 0.0) == 0.0)
+	assert(is_equal_approx(CityVisualEnvironment.artificial_light_level(options, 0.8, weather.rain, 1.0), 0.8))
+	options.night_daytime_enabled = true
+	assert(CityVisualEnvironment.artificial_light_level(options, 0.0, weather.rain, 1.0) == 1.0)
+	options.night_daytime_enabled = false
+	options.night_light_strength = 50.0
+	assert(is_equal_approx(CityVisualEnvironment.artificial_light_level(options, 0.0, weather.rain, 1.0), 0.175))
+	options.night_light_strength = 100.0
+	for strength in [0.0, 100.0]:
+		options.rain_light_strength = strength
+		assert(is_equal_approx(CityVisualEnvironment.artificial_light_level(options, 0.0, weather.rain, 1.0), strength / 100.0))
+	options.rain_light_strength = 35.0
+	for key in ["rain_lights_enabled", "weather_enabled", "brightmaps"]:
+		options[key] = false
+		assert(CityVisualEnvironment.artificial_light_level(options, 0.0, weather.rain, 1.0) == 0.0)
+		options[key] = true
+	options.weather_fixed = CityVisualWeather.Kind.SUNNY
+	weather.process(float(options.weather_transition) * 0.07, 0.0, true, 1.0)
+	var leaving := CityVisualEnvironment.artificial_light_level(options, 0.0, weather.rain, 1.0)
+	assert(leaving > 0.0 and leaving < 0.35, "Rain lighting must fade out with outgoing rain")
+	for dry_kind in [CityVisualWeather.Kind.SUNNY, CityVisualWeather.Kind.DRY_STORM, CityVisualWeather.Kind.HEAVY_SNOW]:
+		options.weather_fixed = dry_kind
+		weather.process(float(options.weather_transition), 0.0, true, 3.0)
+		assert(CityVisualEnvironment.artificial_light_level(options, 0.0, weather.rain, 1.0) == 0.0)
+	options.weather_strength = 0.1
+	options.weather_fixed = CityVisualWeather.Kind.LIGHT_RAIN
+	weather.process(float(options.weather_transition), 0.0, true, 1.0)
+	assert(is_equal_approx(CityVisualEnvironment.artificial_light_level(options, 0.0, weather.rain, 1.0), 0.35))
 	main.preferences.visual_enhancements = saved
 	main.visual_environment.configure()
 
@@ -916,6 +971,15 @@ func _check_menu_dependencies(tab: VisualEnhancementsTab) -> void:
 	assert(daytime.disabled and not (tab.controls.night_ground as SpinBox).editable)
 	(tab.controls.brightmaps as CheckBox).button_pressed = true
 	daytime.button_pressed = false
+	assert(not (tab.controls.night_ground as SpinBox).editable)
+	assert((tab.controls.rain_lights_enabled as CheckBox).disabled)
+	assert(not (tab.controls.rain_light_strength as SpinBox).editable)
+	(tab.controls.weather_enabled as CheckBox).button_pressed = true
+	assert(not (tab.controls.rain_lights_enabled as CheckBox).disabled)
+	assert((tab.controls.rain_light_strength as SpinBox).editable)
+	assert((tab.controls.night_ground as SpinBox).editable)
+	(tab.controls.rain_lights_enabled as CheckBox).button_pressed = false
+	assert(not (tab.controls.rain_light_strength as SpinBox).editable)
 	assert(not (tab.controls.night_ground as SpinBox).editable)
 	(tab.controls.cloud_enabled as CheckBox).button_pressed = false
 	assert(not (tab.controls.cloud_density as SpinBox).editable)

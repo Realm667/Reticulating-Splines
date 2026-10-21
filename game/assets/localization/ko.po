@@ -9371,3 +9371,38 @@ msgstr "전력 부족 신고"
 #: src/ui/settings/update_check_dialog.gd
 msgid "No newer published release is available. You have version %s."
 msgstr "더 최신의 공개 버전이 없습니다. 현재 버전은 %s입니다."
+
+#. Supplementary RS rain lighting, AI-assisted translation.
+#: src/ui/settings/visual_enhancements_tab.gd
+msgid "Activate lights during rainfall"
+msgstr "비가 올 때 조명 켜기"
+
+#. Supplementary RS rain lighting, AI-assisted translation.
+#: src/ui/settings/visual_enhancements_tab.gd
+msgid "Light brightness during rain"
+msgstr "비가 올 때 조명 밝기"
+
+#. Supplementary RS rain lighting, AI-assisted translation.
+#: src/ui/settings/visual_enhancements_tab.gd
+msgid "Turn on building, vehicle and street lights during rain. Requires Weather and Building and vehicle lights. Stronger night or daytime lighting stays unchanged."
+msgstr "비가 올 때 건물, 차량, 가로등을 켭니다. 날씨 및 건물과 차량 조명이 필요합니다. 더 밝은 야간 또는 주간 조명은 그대로 유지됩니다."
+
+#. Supplementary RS rain lighting, AI-assisted translation.
+#: src/ui/settings/visual_enhancements_tab.gd
+msgid "Maximum rain brightness as a percentage of Light brightness. Fades with rainfall; does not dim stronger night lighting."
+msgstr "조명 밝기에 대한 비율로 설정하는 우천 시 최대 밝기입니다. 비에 따라 서서히 켜지고 꺼지며, 더 밝은 야간 조명을 어둡게 하지 않습니다."
+
+#. Supplementary RS rain lighting, AI-assisted translation.
+#: src/ui/settings/visual_enhancements_tab.gd
+msgid "Enable Weather and Building and vehicle lights to use rain lighting."
+msgstr "우천 시 조명을 사용하려면 날씨 및 건물과 차량 조명을 활성화하세요."
+
+#. Supplementary RS rain lighting, AI-assisted translation.
+#: src/ui/settings/visual_enhancements_tab.gd
+msgid "Enable Activate lights during rainfall to adjust rain brightness."
+msgstr "우천 시 밝기를 조절하려면 비가 올 때 조명 켜기를 활성화하세요."
+
+#. Supplementary RS rain lighting, AI-assisted translation.
+#: src/ui/settings/visual_enhancements_tab.gd
+msgid "Enable Day and night, daytime lights or rain lighting."
+msgstr "낮과 밤, 주간 조명 또는 우천 시 조명을 활성화하세요."

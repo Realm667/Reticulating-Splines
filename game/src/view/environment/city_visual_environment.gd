@@ -247,11 +247,11 @@ func process(delta: float) -> void:
 		_sync_whole_water()
 	tint = lighting.tint if active and options.day_enabled else Color.WHITE
 	var ambient_night: float = lighting.night if active and options.day_enabled else 0.0
-	# Artificial lights can stay on without changing daylight, grading or cloud shadows.
-	var light_level := 1.0 if daytime_lights else ambient_night
-	night = light_level * float(options.night_light_strength) / 100.0 if options.brightmaps else 0.0
 	clouds.process(delta, weather_delta * factor, active, tint * weather.tint, lighting.night if options.day_enabled else 0.0, weather.kind)
 	weather.set_cloud_cover(clouds.precipitation_readiness)
+	# Reuse the actual precipitation blend, including cloud-front readiness.
+	# Artificial light never changes daylight, grading or simulation weather.
+	night = artificial_light_level(options, ambient_night, weather.rain, clouds.precipitation_readiness) if active else 0.0
 	var parameters := {
 		"artwork_color_strength": options.artwork_color_strength if surface_active and options.artwork_color_enabled else 0.0,
 		"map_strata_enabled": surface_active and options.map_strata_enabled,
@@ -302,6 +302,19 @@ func process(delta: float) -> void:
 		app.map_view.layers._apply_environment(clouds.material)
 	tilt_shift.update(app.map_view, active, options)
 	app.preferences.visual_enhancements = saved_options
+
+
+static func artificial_light_level(options: Dictionary, ambient_night: float, rain: float, cloud_readiness: float) -> float:
+	if not options.brightmaps:
+		return 0.0
+	var level := 1.0 if options.night_daytime_enabled else ambient_night
+	if options.weather_enabled and options.rain_lights_enabled:
+		# Steady light rain reaches the selected brightness even with fewer drops.
+		# Incoming/outgoing fronts use their existing smooth precipitation amount.
+		var drizzle := CityVisualWeather.LIGHT_RAIN_AMOUNT * maxf(0.1, float(options.weather_strength))
+		var presence := clampf(rain * cloud_readiness / drizzle, 0.0, 1.0)
+		level = maxf(level, presence * float(options.rain_light_strength) / 100.0)
+	return level * float(options.night_light_strength) / 100.0
 
 
 func network_description() -> Dictionary:
