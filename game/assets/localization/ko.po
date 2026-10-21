@@ -8962,3 +8962,407 @@ msgstr "성장"
 #. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
 msgid "Water supply"
 msgstr "급수"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Industry needs a destination"
+msgstr "산업에는 목적지가 필요합니다"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Industry needs a transport connection to a residential or commercial zone to develop. A nearby road with no reachable destination is not enough."
+msgstr "산업이 성장하려면 주거 또는 상업 구역으로 이어지는 교통망이 필요합니다. 가까이에 도로가 있어도 도달할 목적지가 없으면 부족합니다."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Most large power plants age. Set aside replacement funds and check their age before supply fails. Hydro and wind do not use this regular replacement cycle."
+msgstr "대부분의 대형 발전소는 노후화됩니다. 공급이 끊기기 전에 교체 비용을 모으고 연령을 확인하세요. 수력과 풍력에는 이 정기 교체 주기가 없습니다."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Fresh water helps pumps"
+msgstr "담수는 펌프에 도움이 됩니다"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Powered pumps produce more beside fresh water. Salt water gives ordinary pumps no bonus. Check actual output before adding more pumps."
+msgstr "전력이 공급되는 펌프는 담수 옆에서 더 많은 물을 생산합니다. 일반 펌프는 바닷물의 보너스를 받지 않습니다. 추가 건설 전에 실제 생산량을 확인하세요."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Water can support denser buildings"
+msgstr "급수는 고밀도 건물을 도울 수 있습니다"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Water supply can raise land value and help residential or commercial buildings reach a higher density. Power, routes and demand still matter; water does not guarantee growth."
+msgstr "급수는 지가를 높여 주거·상업 건물의 밀도 증가를 도울 수 있습니다. 전력, 경로, 수요도 중요하며 물만으로 성장이 보장되지는 않습니다."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Maintain your transport network"
+msgstr "교통망을 유지하세요"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Cutting transport funding can let routes decay. Check maintenance before expanding the network: a broken connection can affect several districts."
+msgstr "교통 예산을 줄이면 도로 등이 훼손될 수 있습니다. 확장 전에 유지보수를 확인하세요. 연결 하나가 끊겨도 여러 지역에 영향을 줍니다."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Check the city after a disaster"
+msgstr "재난 후 도시를 확인하세요"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Inspect damaged roads, power lines and pipes. Restore essential connections before expanding. The event button takes you to a known affected location."
+msgstr "손상된 도로, 전력선, 수도관을 점검하세요. 확장 전에 필수 연결을 복구하세요. 사건 버튼은 확인된 피해 위치로 이동합니다."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Review scenario objectives"
+msgstr "시나리오 목표를 확인하세요"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Scenario goals and deadlines depend on the loaded scenario. Review unfinished objectives before time runs out."
+msgstr "목표와 기한은 불러온 시나리오에 따라 다릅니다. 시간이 끝나기 전에 미완료 목표를 확인하세요."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Coal: cheap power, heavy pollution"
+msgstr "석탄: 저렴한 전력, 심한 오염"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Coal offers inexpensive generating capacity, but produces substantial pollution. Leave space between the plant and sensitive residential areas."
+msgstr "석탄은 저렴한 발전 용량을 제공하지만 오염이 심합니다. 발전소와 민감한 주거 지역 사이에 거리를 두세요."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Gas: low purchase cost, low output"
+msgstr "가스: 낮은 구매 비용, 적은 출력"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "A gas plant costs less to build than other large fuel plants, but supplies much less power. Compare capacity as well as purchase price."
+msgstr "가스 발전소는 다른 대형 연료 발전소보다 건설비가 낮지만 출력도 훨씬 적습니다. 가격과 용량을 함께 비교하세요."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Oil: weigh cost against pollution"
+msgstr "석유: 비용과 오염을 비교하세요"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Oil produces less pollution than coal, but costs more to build for a modest increase in output. Check whether that trade-off suits your budget."
+msgstr "석유는 석탄보다 오염이 적지만 출력 증가에 비해 건설비가 높습니다. 예산에 맞는 선택인지 확인하세요."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Hydro needs a waterfall"
+msgstr "수력에는 폭포가 필요합니다"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Hydro plants need waterfall terrain. Each provides limited power without the regular aging cycle of large plants; check the site's suitability and connections."
+msgstr "수력 발전소에는 폭포 지형이 필요합니다. 각 발전소의 출력은 제한적이지만 대형 발전소의 정기 노후화 주기는 없습니다. 부지와 연결을 확인하세요."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Wind needs a reserve"
+msgstr "풍력에는 예비 전력이 필요합니다"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Wind output depends on elevation and wind. Higher sites can help, but output varies. Keep spare generating capacity for weaker conditions."
+msgstr "풍력 출력은 고도와 바람에 따라 달라집니다. 높은 곳이 유리할 수 있지만 출력은 변동합니다. 약한 바람에 대비한 발전 여유를 두세요."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Solar output follows the weather"
+msgstr "태양광 출력은 날씨에 따릅니다"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Solar generation varies with weather. Do not plan the network around its best output; keep capacity in reserve for worse conditions."
+msgstr "태양광 발전량은 날씨에 따라 변합니다. 최고 출력만 기준으로 계획하지 말고 나쁜 날씨에 대비한 여유를 두세요."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Nuclear: output and risk"
+msgstr "원자력: 출력과 위험"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Nuclear plants supply substantial power with little routine pollution, but have a high purchase cost. A meltdown is possible when disasters are enabled."
+msgstr "원자력은 평상시 오염이 적고 출력이 크지만 구매 비용이 높습니다. 재난이 켜져 있으면 노심 용융이 발생할 수 있습니다."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Microwave: powerful but costly"
+msgstr "마이크로파: 강력하지만 비쌉니다"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Microwave plants provide high output at a high initial cost. With disasters enabled, a beam accident is possible. Keep replacement funds available."
+msgstr "마이크로파 발전소는 초기 비용과 출력이 모두 큽니다. 재난이 켜져 있으면 빔 사고가 발생할 수 있습니다. 교체 자금을 마련하세요."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Fusion needs capital"
+msgstr "핵융합에는 자본이 필요합니다"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Fusion offers very high output and little pollution, but ties up a large amount of money. Buy it when your city can afford the cost and use the capacity."
+msgstr "핵융합은 출력이 매우 크고 오염이 적지만 많은 자금이 묶입니다. 비용을 감당하고 용량을 활용할 수 있을 때 건설하세요."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Desalination needs salt water"
+msgstr "담수화에는 바닷물이 필요합니다"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Desalination needs power and adjacent salt water. An inland site or fresh-water shore will not provide the required salt-water intake."
+msgstr "담수화 시설에는 전력과 인접한 바닷물이 필요합니다. 내륙이나 담수 기슭에서는 필요한 바닷물을 얻을 수 없습니다."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Towers store water"
+msgstr "급수탑은 물을 저장합니다"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Water towers store surplus water and release it during shortages. They do not create water: connect them to a network with a working source."
+msgstr "급수탑은 잉여 물을 저장해 부족할 때 내보냅니다. 물을 생산하지는 않으므로 작동하는 수원이 있는 망에 연결하세요."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Keep a water reserve"
+msgstr "물 여유를 확보하세요"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Pump output changes with rainfall and water conditions. A system that barely meets demand can fail during dry weather. Check output and stored reserves."
+msgstr "펌프 출력은 강수량과 물 상태에 따라 바뀝니다. 수요를 겨우 충족하는 시설은 건조할 때 부족해질 수 있습니다. 생산량과 저장량을 확인하세요."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Police need funding and power"
+msgstr "경찰에는 예산과 전력이 필요합니다"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Police coverage depends on funding and power as well as station placement. Check the coverage map before paying for another station."
+msgstr "경찰 범위는 경찰서 위치뿐 아니라 예산과 전력에도 달려 있습니다. 경찰서를 추가하기 전에 범위 지도를 확인하세요."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Fire stations need support"
+msgstr "소방서에는 지원이 필요합니다"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Fire protection depends on station placement, power and funding. Restore a weak existing service before building more stations in the same area."
+msgstr "화재 예방은 위치, 전력, 예산에 달려 있습니다. 같은 지역에 소방서를 더 짓기 전에 기존 서비스의 부족한 점을 개선하세요."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Prisons support police"
+msgstr "교도소는 경찰을 지원합니다"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Prisons can support police effectiveness, but do not replace local police coverage. They also add pollution; choose their location carefully."
+msgstr "교도소는 경찰의 효과를 도울 수 있지만 지역 경찰 범위를 대신하지는 않습니다. 오염도 발생하므로 위치를 신중히 고르세요."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Schools work over time"
+msgstr "학교의 효과에는 시간이 걸립니다"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Schools need adequate funding to serve pupils. Education changes gradually as residents age; judge the trend instead of expecting an instant jump."
+msgstr "학교는 학생을 지원할 충분한 예산이 필요합니다. 주민들이 나이를 먹으며 교육 수준이 점차 바뀌므로 즉각적인 상승보다 추세를 보세요."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "College complements school"
+msgstr "대학은 학교를 보완합니다"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Colleges serve a different age group from schools. Fund both stages as needed; a college does not replace primary schooling."
+msgstr "대학은 학교와 다른 연령층을 담당합니다. 필요에 따라 두 단계를 지원하세요. 대학이 기초 학교 교육을 대신하지는 않습니다."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Hospitals need sustained funding"
+msgstr "병원에는 지속적인 예산이 필요합니다"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Hospital capacity depends on funding. Health improves over time, so inspect capacity and the long-term trend before adding another hospital."
+msgstr "병원의 수용력은 예산에 달려 있습니다. 건강은 시간이 지나며 개선되므로 추가 건설 전에 수용력과 장기 추세를 확인하세요."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Recreation can lift a growth limit"
+msgstr "여가 시설은 성장 한도를 높일 수 있습니다"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Large parks, zoos, stadiums and marinas can expand the city's residential growth allowance. Build for an actual need; they do not repair missing power or routes."
+msgstr "큰 공원, 동물원, 경기장, 요트 항구는 주거 성장 한도를 늘릴 수 있습니다. 실제 필요에 맞춰 건설하세요. 전력이나 경로 부족을 해결하지는 않습니다."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "A stadium needs space and money"
+msgstr "경기장에는 공간과 자금이 필요합니다"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "A stadium can support residential growth, but occupies a large site, costs money and adds some pollution. Compare it with smaller leisure investments."
+msgstr "경기장은 주거 성장을 도울 수 있지만 넓은 부지와 자금이 필요하며 약간의 오염도 발생합니다. 작은 여가 시설 투자와 비교하세요."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Taxes influence demand"
+msgstr "세금은 수요에 영향을 줍니다"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Higher taxes can reduce demand. If zones remain empty, compare tax rates and the budget before lowering taxes; lost income must still cover services."
+msgstr "높은 세율은 수요를 줄일 수 있습니다. 구역이 비어 있으면 세금을 내리기 전에 세율과 예산을 비교하세요. 서비스 비용은 계속 충당해야 합니다."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Abandoned buildings can recover"
+msgstr "버려진 건물도 회복할 수 있습니다"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Do not demolish every abandoned building immediately. Check power, reachable destinations and demand, then allow development time after repairing the cause."
+msgstr "버려진 건물을 바로 철거하지 마세요. 전력, 도달 가능한 목적지, 수요를 확인하고 원인을 고친 뒤 발전할 시간을 주세요."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Outside connections support growth"
+msgstr "외부 연결은 성장을 지원합니다"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Neighbor roads and developed airports can lift commercial limits; seaports and suitable rail or highway connections can help industry. Empty port zoning alone is not enough."
+msgstr "이웃 도시 도로와 개발된 공항은 상업 한도를 높일 수 있고, 항구와 적절한 철도·고속도로 연결은 산업을 돕습니다. 빈 항구 구역만으로는 부족합니다."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Keep zones close to roads"
+msgstr "구역을 도로 가까이에 두세요"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Along a straight road, plan no more than three rows of zones; roads on both sides can serve six rows. Distance counts horizontal and vertical grid steps together. A route to a suitable destination is still needed."
+msgstr "직선 도로 옆에는 구역을 최대 세 줄로 계획하세요. 양쪽에 도로가 있으면 여섯 줄까지 접근할 수 있습니다. 가로와 세로 격자 거리를 합산하며 적절한 목적지까지의 경로도 필요합니다."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Water Supply"
+msgstr "급수"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Before zoning more land, inspect areas that are still empty."
+msgstr "구역을 늘리기 전에 아직 비어 있는 곳을 확인하세요."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "More zoning does not repair a missing connection. The query tool helps you inspect a specific site."
+msgstr "구역을 더 만들어도 끊긴 연결은 해결되지 않습니다. 조회 도구로 특정 부지를 확인하세요."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Power Supply"
+msgstr "전력 공급"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "No link"
+msgstr "연결 없음"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "No supply"
+msgstr "공급 없음"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Supplied"
+msgstr "공급됨"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "No connection"
+msgstr "연결 없음"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Not supplied"
+msgstr "공급 안 됨"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Go to event"
+msgstr "사건 위치로 이동"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "What needs attention here?"
+msgstr "무엇을 확인해야 할까요?"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Why is this zone not developing?"
+msgstr "이 구역에 왜 건물이 생기지 않을까요?"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Why is this building abandoned?"
+msgstr "이 건물은 왜 버려졌을까요?"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Connect this site to a working power supply."
+msgstr "이 부지를 작동 중인 전력망에 연결하세요."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "No nearby transport access was found. Add a road or a suitable station within three grid steps."
+msgstr "가까운 교통 접근점이 없습니다. 격자 세 칸 이내에 도로나 적절한 역을 설치하세요."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Demand is weak. More zoning alone will not help; check taxes and existing connections."
+msgstr "수요가 약합니다. 구역만 늘리지 말고 세율과 기존 연결을 확인하세요."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Land value is too low for the next density level. Check water supply and local pollution."
+msgstr "다음 밀도 단계에 필요한 지가가 부족합니다. 급수와 주변 오염을 확인하세요."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "The zoning or current building size limits further expansion."
+msgstr "구역 설정이나 현재 건물 크기가 추가 확장을 제한합니다."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "This tile is part of a larger building. Query its anchor tile to check further development."
+msgstr "이 칸은 큰 건물의 일부입니다. 추가 발전을 확인하려면 건물의 기준 칸을 조회하세요."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Power and the checked local conditions allow development. A successful route and a later growth visit are still needed."
+msgstr "전력과 확인된 현지 조건은 발전을 허용합니다. 적절한 목적지까지의 경로와 다음 성장 검사가 여전히 필요합니다."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "The full route to a suitable destination has not been checked."
+msgstr "적절한 목적지까지의 전체 경로는 확인하지 않았습니다."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Power Plant Needed"
+msgstr "발전소 필요"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Citizens Demand Road & Rail"
+msgstr "시민들이 도로와 철도를 요구합니다"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Citizens Demand Police"
+msgstr "시민들이 경찰을 요구합니다"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Fire Protection Demanded"
+msgstr "소방 서비스 요구"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Water Shortage Reported"
+msgstr "물 부족 신고"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Hospitals Demanded"
+msgstr "병원 요구"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Citizens Demand Schools"
+msgstr "시민들이 학교를 요구합니다"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Industry Demands Seaport"
+msgstr "산업계에서 항구를 요구합니다"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Commerce Demands Airport"
+msgstr "상업계에서 공항을 요구합니다"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Residents Demand Zoo"
+msgstr "주민들이 동물원을 요구합니다"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Residents Demand Stadium"
+msgstr "주민들이 경기장을 요구합니다"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Residents Demand Marina"
+msgstr "주민들이 요트 항구를 요구합니다"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Residents Demand Park"
+msgstr "주민들이 공원을 요구합니다"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Industry Needs Connections"
+msgstr "산업에 외부 연결이 필요합니다"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Commerce Needs Connections"
+msgstr "상업에 외부 연결이 필요합니다"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Blizzard Warning"
+msgstr "눈보라 경보"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Hurricane Warning"
+msgstr "허리케인 경보"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Tornado Warning"
+msgstr "토네이도 경보"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Brownouts Reported"
+msgstr "전력 부족 신고"

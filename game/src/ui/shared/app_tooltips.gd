@@ -26,7 +26,12 @@ func _bind_popup(reference: WeakRef) -> void:
 func _bind_panel(reference: WeakRef) -> void:
 	var panel := reference.get_ref() as PanelContainer
 	if panel != null and panel.is_inside_tree():
-		wrap_labels(panel, panel.get_viewport_rect().size.x)
+		var available_width := panel.get_viewport_rect().size.x
+		var layer := panel.get_parent() as CanvasLayer
+		if layer != null and layer.custom_viewport is Viewport:
+			# The frosted copy belongs to the popup node but draws in the outer viewport.
+			available_width = layer.custom_viewport.get_visible_rect().size.x / maxf(panel.scale.x, 0.001)
+		wrap_labels(panel, available_width)
 		FrostedTooltipPanel.bind(panel)
 
 
@@ -42,6 +47,11 @@ static func wrap_labels(node: Node, available_width: float) -> void:
 			# The translucent overlay copies an already constrained popup label.
 			if child.custom_maximum_size.x > 0.0:
 				width = minf(width, child.custom_maximum_size.x)
+			var lines := child.tr(child.text).split("\n")
+			var natural := 0.0
+			for line in lines:
+				natural = maxf(natural, font.get_string_size(line, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x)
+			child.custom_minimum_size.x = minf(width, maxf(child.custom_minimum_size.x, ceilf(natural) + 2.0))
 			child.custom_maximum_size.x = width
 			child.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		else:

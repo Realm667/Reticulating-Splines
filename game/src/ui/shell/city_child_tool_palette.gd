@@ -289,7 +289,7 @@ func _tool_price(tool: ToolCatalog.Tool) -> String:
 		return tr("Free")
 
 	return (
-		"Free"
+		tr("Free")
 		if int(tool.cost) == 0
 		else "$%s" % DisplayNumbers.format(int(tool.cost))
 	)

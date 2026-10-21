@@ -22,6 +22,10 @@ var introduction_shown := false
 var host_view := ""
 var host_revision := -1
 var host_disaster := 0
+var event_point := Vector2i(-1, -1)
+var event_compass := -1
+var selected_tip := ""
+var tool_seconds := 0.0
 
 
 func _init(application: CityApplication) -> void:
@@ -153,6 +157,10 @@ func activated(loaded: bool) -> void:
 	host_revision = -1
 	host_view = ""
 	host_disaster = 0
+	event_point = Vector2i(-1, -1)
+	event_compass = -1
+	selected_tip = ""
+	tool_seconds = 0.0
 
 
 func loading(parent: VBoxContainer) -> void:
@@ -191,13 +199,14 @@ func observe(result: SimulationTickResult) -> void:
 	var forecast: Variant = null
 	for day in result.day_results:
 		for phase: PhaseResult in day.phase_results.values():
+			if day.ok and phase.ok and phase.complete and phase is DisasterStartResult:
+				disaster_started(phase)
 			if day.ok and phase.ok and phase.complete and phase is BudgetPhase.Result:
 				forecast = BudgetReport.capture(city, BudgetPhase.funding_values(city)).estimated_cash
 	rules.observe(result, forecast)
 	stamp = city.mirror_signature(PackedStringArray(["XBLD", "XZON", "XUND", "XBIT", "MISC"]))
-	if card.id in ["power", "water", "vacant"] and not rules.streaks.has(card.id):
-		card.hide()
-		suspended_card = false
+	if card.id in ["power", "water", "vacant"]:
+		card.set_context_valid(rules.streaks.has(card.id))
 
 
 func invalidate_edits() -> void:
@@ -207,8 +216,9 @@ func invalidate_edits() -> void:
 		rules.candidates.clear()
 		rules.streaks.clear()
 		stamp = []
-		card.hide()
-		suspended_card = false
+		# Keep the readable advice, but withdraw an outdated diagnosis/action.
+		if card.id in ["power", "water", "vacant"]:
+			card.set_context_valid(false)
 
 
 func observe_host(state: Dictionary) -> void:
@@ -275,11 +285,14 @@ func _process(delta: float) -> void:
 		running = running and not bool(confirmed.get("blocked", false)) and not bool(confirmed.get("terminal", false))
 	if running:
 		rules.advance(delta)
-	var collapsed := card.age >= 20.0 and not card.expanded and not card.pin.button_pressed
-	if mode == 2 and (not card.visible or collapsed):
+	if mode == 2:
+		_observe_tool(delta)
+	if mode == 2 and not card.visible:
 		var id := rules.take()
 		if not id.is_empty():
 			card.show_entry(id)
+			if id == "recovery":
+				card.action_button.visible = _event_target().x >= 0
 	layout_elapsed += delta
 	if card.visible and layout_elapsed >= 0.1:
 		layout_elapsed = 0.0
@@ -333,5 +346,54 @@ func _action(action: String) -> void:
 		app.reports.on_windows_menu(1)
 	elif action == "graphs":
 		app.reports.on_windows_menu(4)
+	elif action == "event":
+		var target := _event_target()
+		if target.x >= 0:
+			app.menus.select_view(CityViewMode.Mode.CITY)
+			app.camera_input.center_map_on_tile(target)
+		else:
+			card.action_button.hide()
 	elif action == "scenario":
 		app.reports.on_windows_menu(CityMenuBar.MENU_SCENARIO_GOALS)
+
+
+func disaster_started(result: DisasterStartResult) -> void:
+	if city == null or city != app.document_state.city or app.coop.active() or not result.ok or not result.started:
+		return
+	event_point = DisasterFocus.find_point(city)
+	if event_point.x < 0:
+		event_point = result.point
+	if city.index_of(event_point.x, event_point.y) < 0:
+		event_point = Vector2i(-1, -1)
+	event_compass = city.compass_rotation()
+	rules.condition("recovery", true, 100, 1)
+
+
+func _event_target() -> Vector2i:
+	if city == null or city != app.document_state.city or app.coop.active():
+		return Vector2i(-1, -1)
+	# Query only on presentation/click, never scan the map each frame.
+	var target := DisasterFocus.find_point(city)
+	if target.x >= 0 and city.index_of(target.x, target.y) >= 0:
+		return target
+	# A stored point belongs to the current city and orientation only.
+	if event_compass >= 0 and city.index_of(event_point.x, event_point.y) >= 0:
+		var rotated := event_point
+		for turn in posmod(city.compass_rotation() - event_compass, 4):
+			rotated = SimulationEngine._rotate_runtime_point(rotated, true, city.map_size)
+		return rotated
+	return Vector2i(-1, -1)
+
+
+func _observe_tool(delta: float) -> void:
+	var id := KnowledgeCatalog.for_tool(app.tool_state.selected_group, app.tool_state.selected_subtool)
+	if id != selected_tip:
+		if not selected_tip.is_empty():
+			rules.condition(selected_tip, false, 10)
+		selected_tip = id
+		tool_seconds = 0.0
+	if id.is_empty() or rules.shown_at.has(id) or not app.tool_state.selected_tool_available:
+		return
+	tool_seconds += delta
+	if tool_seconds >= 3.0 and not app.map_view.is_left_drag_active():
+		rules.condition(id, true, 10, 1)

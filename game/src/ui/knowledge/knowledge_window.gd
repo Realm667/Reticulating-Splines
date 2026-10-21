@@ -62,6 +62,7 @@ func _init() -> void:
 	scroll.add_child(content)
 	card = KnowledgeCard.new()
 	card.embedded = true
+	card.library = true
 	card.unbounded_body = true
 	content.add_child(card)
 	card.action_requested.connect(action_requested.emit)
@@ -119,6 +120,7 @@ func select_entry(id: String) -> void:
 	card.show_entry(id, true)
 	if ids.has(id):
 		items.select(ids.find(id))
+		items.ensure_current_is_visible.call_deferred()
 
 
 func _notification(what: int) -> void:

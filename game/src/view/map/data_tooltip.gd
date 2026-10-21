@@ -28,3 +28,8 @@ func refresh() -> void:
 	point.x = clampf(point.x, 4, maxf(4, map.size.x - size.x - 4))
 	point.y = clampf(point.y, 4, maxf(4, map.size.y - size.y - 4))
 	position = point
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_TRANSLATION_CHANGED and _label != null and map != null:
+		refresh()

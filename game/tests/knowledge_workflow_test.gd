@@ -65,6 +65,31 @@ func _run() -> void:
 	knowledge.activated(true)
 	var city := app.document_state.city
 	city.set_zone_id(10, 10, 2)
+	# Ordinary edits withdraw diagnoses without dismissing readable/pinned cards.
+	knowledge.card.show_entry("power")
+	knowledge.card.pin.set_pressed_no_signal(true)
+	knowledge.rules.condition("power", true, 90, 1)
+	knowledge.stamp = city.mirror_signature(PackedStringArray(["XBLD", "XZON", "XUND", "XBIT", "MISC"]))
+	city.set_zone_id(11, 10, 2)
+	knowledge.invalidate_edits()
+	assert(knowledge.card.visible and knowledge.card.pin.button_pressed)
+	assert(not knowledge.card.context_valid and not knowledge.card.action_button.visible)
+	assert(knowledge.rules.candidates.is_empty())
+	knowledge.card.pin.set_pressed_no_signal(false)
+	knowledge.card._process(1)
+	assert(knowledge.card.visible, "An edit must retain the minimum reading time")
+	app.map_view.city = city
+	app.map_view.city_source = CityMapSource.new(CityIsometricRenderer.output_size_for_view(2, 128))
+	knowledge.event_point = Vector2i(64, 64)
+	knowledge.event_compass = city.compass_rotation()
+	assert(knowledge._event_target() == Vector2i(64, 64))
+	knowledge._action("event")
+	assert(app.map_view.center_tile().distance_to(Vector2i(64, 64)) <= 1)
+	knowledge.activated(true)
+	assert(knowledge._event_target().x < 0, "City activation must clear old event locations")
+	knowledge.window.open([], "power")
+	assert(not knowledge.window.card.action_button.visible and not knowledge.window.card.close_button.visible)
+	knowledge.window.hide()
 	var inputs := KnowledgeRules.growth(city, Vector2i(10, 10))
 	before = city.document.serialize().data
 	for theme_id in AppUiTheme.IDS:
@@ -82,7 +107,7 @@ func _run() -> void:
 		assert(not knowledge.window.card.visible)
 		knowledge.window.search.clear()
 		knowledge.window.refresh()
-		assert(knowledge.window.items.item_count == 24)
+		assert(knowledge.window.items.item_count == KnowledgeCatalog.ENTRIES.size())
 		knowledge.window.hide()
 		knowledge.growth_dialog.open(inputs)
 		await process_frame

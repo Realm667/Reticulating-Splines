@@ -166,7 +166,7 @@ static func tile_text(city: CityState, mode: CityViewMode.Mode, point: Vector2i,
 		description = ["Very low", "Low", "Moderate", "High", "Very high"][mini((number * 5) / 256, 4)]
 
 	var title: String = TITLES[CityViewMode.DATA_MODES.find(mode)]
-	var result := "%s: %s" % [title, description]
+	var result := "%s: %s" % [TranslationServer.translate(title), TranslationServer.translate(description)]
 
 	if mode == CityViewMode.Mode.LAND_VALUE:
 		description = "Medium" if description == "Moderate" else description

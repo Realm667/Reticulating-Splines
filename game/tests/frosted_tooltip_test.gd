@@ -33,6 +33,11 @@ func _run() -> void:
 	assert(layer != null and layer.visible and effect.is_processing())
 	assert(popup.canvas_cull_mask == 0, "The source tooltip must not draw twice")
 	_assert_sharp_labels(surface)
+	for original in popup.get_children():
+		if original is Label:
+			for duplicate in surface.get_children():
+				if duplicate is Label:
+					assert(duplicate.get_line_count() == original.get_line_count(), "A real tooltip copy must preserve the source wrapping")
 	var old_position := surface.position
 	popup.position += Vector2i(17, 11)
 	await process_frame
@@ -195,4 +200,10 @@ func _test_wrapping() -> void:
 			for child in surface.get_children():
 				if child is Label:
 					assert(child.get_line_count() == label.get_line_count(), "Backdrop copy must preserve every wrapped line")
+			# Short multiline labels must not collapse to a few letters per line.
+			label.text = "Bildung\nSchule"
+			AppTooltips.wrap_labels(popup, 280)
+			for frame in 5:
+				await process_frame
+			assert(label.get_line_count() == 2, "Short tooltip words must remain whole")
 			viewport.free()

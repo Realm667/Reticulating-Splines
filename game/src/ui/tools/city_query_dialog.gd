@@ -37,7 +37,7 @@ func _ready() -> void:
 	action_button = get_node("Center/QueryDialog/Content/Buttons/Action")
 	ok_button = get_node("Center/QueryDialog/Content/Buttons/OK")
 	growth_button = Button.new()
-	growth_button.text = "Why is nothing growing here?"
+	growth_button.text = "What needs attention here?"
 	growth_button.pressed.connect(growth_requested.emit)
 	ok_button.get_parent().add_child(growth_button)
 	ok_button.get_parent().move_child(growth_button, 0)
@@ -74,6 +74,8 @@ func show_query(
 	action_button.visible = not action_text.is_empty()
 	action_button.text = action_text
 	growth_button.visible = info != null and info.zone_id >= 1 and info.zone_id <= 6
+	if growth_button.visible:
+		growth_button.text = "Why is this zone not developing?" if info.tile_id < BuildingTileIds.DEVELOPED_FIRST else "What needs attention here?"
 	_populate_summary(details_text, info)
 	_populate_details(info)
 	tabs.current_tab = 0

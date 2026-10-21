@@ -43,3 +43,8 @@ func _draw_content() -> void:
 		map.trip_reach.draw_key(_content)
 	elif map.data_view_mesh != null:
 		map.layers.draw_data_key(_content)
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_TRANSLATION_CHANGED and _content != null:
+		_content.queue_redraw()

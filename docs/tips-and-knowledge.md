@@ -1,17 +1,16 @@
 # Tips & Knowledge
 
-This optional, local help feature offers 24 short entries, a searchable window
+This optional, local help feature offers short entries about city planning and individual buildings, a searchable window
 under Help, and a read-only growth check from the query tool. It does not create
 tutorial tasks or modify city data, game speed, random state, or multiplayer rules.
 
 ## Presentation and preferences
 
 One card appears at the lower right, or at the upper right if selected. Cards
-collapse after 20 seconds unless expanded, pinned, hovered or keyboard-focused.
+stay readable for 45 seconds; pinning, hovering and keyboard focus suspend expiry.
 Existing dialogs and photo mode hide them. The same catalog supplies new-city,
 loading and in-game text; loading is never delayed to make a tip readable.
-Long explanations scroll inside the card. Every action only opens an existing
-view or report. No action builds, spends money or moves the camera.
+Long explanations scroll inside the card. Actions open an existing view or report, or explicitly locate a known disaster. No action builds or spends money; merely showing a card never moves the camera.
 
 Preferences are stored beside the local settings file as `.knowledge.cfg`:
 off, start/loading only, or also during play (default); position; hidden topic
@@ -53,12 +52,11 @@ not perform that check. A non-anchor tile is not diagnosed as an isolated
 building. Thresholds are not generalized from residential/commercial to industry.
 Results are a snapshot, not a guarantee of construction on the next visit.
 
-The existing `vacant` card includes an industrial-startup example: power and
+The separate `industry` card explains industrial startup: power and
 transport connections to a reachable residential **or** commercial zone.
 Commerce is not a mandatory unlock; the trip destination check uses zone type,
 not whether the destination already has buildings. This is conditional advice,
-not a diagnosis that industry is stalled. It uses the existing general growth
-trigger, loading rotation and searchable catalog, with no additional city scan.
+not a diagnosis that industry is stalled. It is available after choosing industrial zoning, in the loading rotation and in the searchable catalog, with no additional city scan.
 Evidence: `trip.rs` (`DESTINATION_ZONE_MASKS`, `has_walking_destination`) and
 `growth/mod.rs` (`process_rci_tile`, `record_trip`, `try_advance_density`).
 
@@ -95,3 +93,42 @@ Do not add fixed zone ratios, guaranteed development dates, original-game
 exploits, or exact statistical effects without checking their RS implementation.
 Keep new translations in all seven central catalogs and extend behavioral tests
 when adding a trigger or diagnosis.
+
+
+## October 2026 follow-up
+
+Cards display their complete short explanation without an expand/collapse button.
+The library has no view action or inner close button. In-game cards allow 45 seconds
+of reading time; hovering, keyboard focus and pinning suspend expiry. Ordinary
+edits clear pending diagnoses and withdraw the current diagnostic heading/action,
+but retain the readable general advice and pin. Complete later phases can confirm
+the condition again. No simulation call is added to the frame loop.
+
+Disaster and scenario guidance are separate entries. Disaster actions use the
+existing read-only focus query on presentation/click, or the recorded event point
+from this city, transformed for the current rotation. No known point means no
+navigation action. City changes discard the point; MP summaries without a host
+location do not invent one. Opening a card never moves the camera.
+
+The expanded catalog consolidates the requested building advice rather than
+repeating the same facts in multiple entries. Tool selection offers relevant
+general knowledge after three seconds, at low priority and at most once per topic
+per city session. Existing cooldowns and muting apply. It does not diagnose a
+shortage from tool selection. All entries are searchable and available while loading.
+
+Reviewed native sources: `sim/growth/inputs.rs`, `sim/growth/development.rs`,
+`sim/trip.rs`, power and water phases, annual microsimulation, demand caps,
+service funding, land-value and pollution phases. Industry accepts residential OR
+commercial destinations, including a zoned empty destination; no employment or
+goods economy is inferred. Local transport searches the Manhattan-distance-three
+offsets, not a square radius. Three rows beside a straight road (six between two
+roads) describe local access, not guaranteed growth. The separate full route still
+matters. Mature-building local access is explicitly untested by the growth query.
+
+Power guidance describes relative costs/output and environmental trade-offs,
+without presenting published megawatt labels as the simulation's consumer units.
+Hydro/wind do not use the large-plant aging cycle. Pump fresh-water adjacency,
+desalination salt-water intake, tower storage, rainfall reserve, service funding,
+education/health over time, recovery from abandonment and conditional growth caps
+follow the implemented rules. Original walkthroughs are context, not authority for
+mechanics absent from this fork. No new simulation, RNG, save or multiplayer rules.

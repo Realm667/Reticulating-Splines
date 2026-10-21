@@ -30742,3 +30742,407 @@ msgstr "Crescimento"
 #. Tips & Knowledge: supplementary translation from authored English; AI-assisted.
 msgid "Water supply"
 msgstr "Abastecimento de água"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Industry needs a destination"
+msgstr "A indústria precisa de um destino"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Industry needs a transport connection to a residential or commercial zone to develop. A nearby road with no reachable destination is not enough."
+msgstr "Para se desenvolver, a indústria precisa de uma conexão de transporte com uma zona residencial ou comercial. Uma rua próxima sem destino acessível não basta."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Most large power plants age. Set aside replacement funds and check their age before supply fails. Hydro and wind do not use this regular replacement cycle."
+msgstr "A maioria das grandes usinas envelhece. Reserve dinheiro e confira a idade antes de faltar energia. Hidrelétricas e turbinas eólicas não seguem esse ciclo de troca."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Fresh water helps pumps"
+msgstr "Água doce ajuda as bombas"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Powered pumps produce more beside fresh water. Salt water gives ordinary pumps no bonus. Check actual output before adding more pumps."
+msgstr "Bombas com energia produzem mais junto à água doce. Água salgada não dá bônus às bombas comuns. Confira a produção antes de construir mais."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Water can support denser buildings"
+msgstr "Água pode favorecer maior densidade"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Water supply can raise land value and help residential or commercial buildings reach a higher density. Power, routes and demand still matter; water does not guarantee growth."
+msgstr "O abastecimento de água pode elevar o valor do terreno e favorecer maior densidade residencial ou comercial. Energia, trajetos e demanda continuam importantes; água não garante crescimento."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Maintain your transport network"
+msgstr "Mantenha sua rede de transporte"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Cutting transport funding can let routes decay. Check maintenance before expanding the network: a broken connection can affect several districts."
+msgstr "Cortar verbas de transporte pode deteriorar as vias. Confira a manutenção antes de expandir: uma ligação interrompida pode afetar vários bairros."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Check the city after a disaster"
+msgstr "Verifique a cidade após um desastre"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Inspect damaged roads, power lines and pipes. Restore essential connections before expanding. The event button takes you to a known affected location."
+msgstr "Confira ruas, linhas elétricas e canos danificados. Restaure conexões essenciais antes de expandir. O botão do evento leva a um local afetado conhecido."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Review scenario objectives"
+msgstr "Confira os objetivos do cenário"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Scenario goals and deadlines depend on the loaded scenario. Review unfinished objectives before time runs out."
+msgstr "Objetivos e prazos dependem do cenário carregado. Confira as metas pendentes antes que o tempo acabe."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Coal: cheap power, heavy pollution"
+msgstr "Carvão: energia barata, muita poluição"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Coal offers inexpensive generating capacity, but produces substantial pollution. Leave space between the plant and sensitive residential areas."
+msgstr "O carvão oferece capacidade barata, mas polui muito. Mantenha distância das áreas residenciais sensíveis."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Gas: low purchase cost, low output"
+msgstr "Gás: baixo custo, pouca produção"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "A gas plant costs less to build than other large fuel plants, but supplies much less power. Compare capacity as well as purchase price."
+msgstr "Uma usina a gás custa menos que outras grandes usinas a combustível, mas produz bem menos. Compare capacidade e preço."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Oil: weigh cost against pollution"
+msgstr "Petróleo: compare custo e poluição"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Oil produces less pollution than coal, but costs more to build for a modest increase in output. Check whether that trade-off suits your budget."
+msgstr "O petróleo polui menos que o carvão, mas custa mais por um ganho modesto de produção. Veja se compensa no orçamento."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Hydro needs a waterfall"
+msgstr "Hidrelétricas precisam de uma queda d'água"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Hydro plants need waterfall terrain. Each provides limited power without the regular aging cycle of large plants; check the site's suitability and connections."
+msgstr "Hidrelétricas exigem terreno com queda d'água. Cada uma fornece pouca energia sem o envelhecimento regular das grandes usinas. Confira o local e as conexões."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Wind needs a reserve"
+msgstr "Energia eólica precisa de reserva"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Wind output depends on elevation and wind. Higher sites can help, but output varies. Keep spare generating capacity for weaker conditions."
+msgstr "A produção eólica depende da altitude e do vento. Locais altos podem ajudar, mas a produção varia. Mantenha capacidade de reserva."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Solar output follows the weather"
+msgstr "Energia solar depende do clima"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Solar generation varies with weather. Do not plan the network around its best output; keep capacity in reserve for worse conditions."
+msgstr "A geração solar varia com o clima. Não planeje a rede só pela produção máxima; reserve capacidade para condições piores."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Nuclear: output and risk"
+msgstr "Nuclear: produção e risco"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Nuclear plants supply substantial power with little routine pollution, but have a high purchase cost. A meltdown is possible when disasters are enabled."
+msgstr "Usinas nucleares fornecem muita energia com pouca poluição normal, mas custam caro. Com desastres ativados, pode ocorrer fusão do núcleo."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Microwave: powerful but costly"
+msgstr "Micro-ondas: potente, mas cara"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Microwave plants provide high output at a high initial cost. With disasters enabled, a beam accident is possible. Keep replacement funds available."
+msgstr "Usinas de micro-ondas têm alta produção e custo inicial elevado. Com desastres ativados, pode haver acidente com o feixe. Reserve dinheiro para reposição."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Fusion needs capital"
+msgstr "Fusão exige capital"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Fusion offers very high output and little pollution, but ties up a large amount of money. Buy it when your city can afford the cost and use the capacity."
+msgstr "A fusão oferece produção muito alta e pouca poluição, mas imobiliza muito dinheiro. Compre quando a cidade puder pagar e usar essa capacidade."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Desalination needs salt water"
+msgstr "Dessalinização precisa de água salgada"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Desalination needs power and adjacent salt water. An inland site or fresh-water shore will not provide the required salt-water intake."
+msgstr "A dessalinização exige energia e água salgada adjacente. Um local no interior ou junto à água doce não fornece a captação necessária."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Towers store water"
+msgstr "Torres armazenam água"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Water towers store surplus water and release it during shortages. They do not create water: connect them to a network with a working source."
+msgstr "Torres armazenam excedentes e os liberam durante a escassez. Elas não produzem água: conecte-as a uma rede com fonte em funcionamento."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Keep a water reserve"
+msgstr "Mantenha uma reserva de água"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Pump output changes with rainfall and water conditions. A system that barely meets demand can fail during dry weather. Check output and stored reserves."
+msgstr "A produção das bombas muda com a chuva e as condições da água. Um sistema no limite pode falhar na seca. Confira produção e reservas."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Police need funding and power"
+msgstr "A polícia precisa de verbas e energia"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Police coverage depends on funding and power as well as station placement. Check the coverage map before paying for another station."
+msgstr "A cobertura policial depende de verbas, energia e localização. Confira o mapa antes de pagar por outra delegacia."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Fire stations need support"
+msgstr "Quartéis precisam de apoio"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Fire protection depends on station placement, power and funding. Restore a weak existing service before building more stations in the same area."
+msgstr "A proteção contra incêndios depende da localização, energia e verbas. Reforce o serviço existente antes de construir mais quartéis na mesma área."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Prisons support police"
+msgstr "Prisões apoiam a polícia"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Prisons can support police effectiveness, but do not replace local police coverage. They also add pollution; choose their location carefully."
+msgstr "Prisões podem ajudar a eficácia policial, mas não substituem a cobertura local. Também poluem; escolha bem a localização."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Schools work over time"
+msgstr "Escolas agem ao longo do tempo"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Schools need adequate funding to serve pupils. Education changes gradually as residents age; judge the trend instead of expecting an instant jump."
+msgstr "Escolas precisam de verbas adequadas. A educação muda gradualmente conforme os moradores envelhecem; avalie a tendência, não um salto imediato."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "College complements school"
+msgstr "A faculdade complementa a escola"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Colleges serve a different age group from schools. Fund both stages as needed; a college does not replace primary schooling."
+msgstr "Faculdades atendem a outra faixa etária. Financie ambas as etapas conforme a necessidade; a faculdade não substitui a escola."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Hospitals need sustained funding"
+msgstr "Hospitais precisam de verbas contínuas"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Hospital capacity depends on funding. Health improves over time, so inspect capacity and the long-term trend before adding another hospital."
+msgstr "A capacidade hospitalar depende das verbas. A saúde melhora com o tempo; confira capacidade e tendência antes de adicionar outro hospital."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Recreation can lift a growth limit"
+msgstr "Lazer pode ampliar um limite de crescimento"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Large parks, zoos, stadiums and marinas can expand the city's residential growth allowance. Build for an actual need; they do not repair missing power or routes."
+msgstr "Parques grandes, zoológicos, estádios e marinas podem ampliar o limite residencial. Construa por necessidade real; não substituem energia ou trajetos."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "A stadium needs space and money"
+msgstr "Um estádio precisa de espaço e dinheiro"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "A stadium can support residential growth, but occupies a large site, costs money and adds some pollution. Compare it with smaller leisure investments."
+msgstr "Um estádio pode apoiar o crescimento residencial, mas ocupa muito espaço, custa dinheiro e gera alguma poluição. Compare com investimentos menores em lazer."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Taxes influence demand"
+msgstr "Impostos influenciam a demanda"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Higher taxes can reduce demand. If zones remain empty, compare tax rates and the budget before lowering taxes; lost income must still cover services."
+msgstr "Impostos altos podem reduzir a demanda. Se as zonas ficarem vazias, compare alíquotas e orçamento antes de reduzir; os serviços ainda precisam de financiamento."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Abandoned buildings can recover"
+msgstr "Edifícios abandonados podem se recuperar"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Do not demolish every abandoned building immediately. Check power, reachable destinations and demand, then allow development time after repairing the cause."
+msgstr "Não demole logo todo edifício abandonado. Confira energia, destinos acessíveis e demanda; dê tempo após corrigir a causa."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Outside connections support growth"
+msgstr "Conexões externas apoiam o crescimento"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Neighbor roads and developed airports can lift commercial limits; seaports and suitable rail or highway connections can help industry. Empty port zoning alone is not enough."
+msgstr "Ruas para vizinhos e aeroportos desenvolvidos podem ampliar limites comerciais; portos e conexões ferroviárias ou rodoviárias ajudam a indústria. Zonas portuárias vazias não bastam."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Keep zones close to roads"
+msgstr "Mantenha zonas perto das ruas"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Along a straight road, plan no more than three rows of zones; roads on both sides can serve six rows. Distance counts horizontal and vertical grid steps together. A route to a suitable destination is still needed."
+msgstr "Ao longo de uma rua reta, planeje até três fileiras de zonas; ruas dos dois lados atendem seis. Somam-se passos horizontais e verticais. Ainda é preciso um trajeto até um destino adequado."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Water Supply"
+msgstr "Abastecimento de água"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Before zoning more land, inspect areas that are still empty."
+msgstr "Antes de criar mais zonas, confira as que continuam vazias."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "More zoning does not repair a missing connection. The query tool helps you inspect a specific site."
+msgstr "Mais zonas não corrigem uma conexão ausente. A ferramenta de consulta permite examinar um local específico."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Power Supply"
+msgstr "Abastecimento de energia"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "No link"
+msgstr "Sem conexão"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "No supply"
+msgstr "Sem abastecimento"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Supplied"
+msgstr "Abastecido"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "No connection"
+msgstr "Sem conexão"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Not supplied"
+msgstr "Não abastecido"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Go to event"
+msgstr "Ir ao evento"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "What needs attention here?"
+msgstr "O que precisa de atenção aqui?"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Why is this zone not developing?"
+msgstr "Por que esta zona não se desenvolve?"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Why is this building abandoned?"
+msgstr "Por que este edifício está abandonado?"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Connect this site to a working power supply."
+msgstr "Conecte este local a uma fonte de energia em funcionamento."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "No nearby transport access was found. Add a road or a suitable station within three grid steps."
+msgstr "Não há acesso próximo ao transporte. Construa uma rua ou estação adequada a até três passos da grade."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Demand is weak. More zoning alone will not help; check taxes and existing connections."
+msgstr "A demanda está fraca. Mais zonas não bastam; verifique impostos e conexões."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Land value is too low for the next density level. Check water supply and local pollution."
+msgstr "O valor do terreno é baixo para a próxima densidade. Verifique água e poluição local."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "The zoning or current building size limits further expansion."
+msgstr "O zoneamento ou o tamanho atual do edifício limita a expansão."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "This tile is part of a larger building. Query its anchor tile to check further development."
+msgstr "Esta célula faz parte de um edifício maior. Consulte a célula de referência para verificar seu desenvolvimento."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Power and the checked local conditions allow development. A successful route and a later growth visit are still needed."
+msgstr "A energia e as condições locais verificadas permitem o desenvolvimento. Ainda são necessários um trajeto válido e uma próxima verificação de crescimento."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "The full route to a suitable destination has not been checked."
+msgstr "O trajeto completo até um destino adequado não foi verificado."
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Power Plant Needed"
+msgstr "Usina elétrica necessária"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Citizens Demand Road & Rail"
+msgstr "Cidadãos pedem ruas e ferrovias"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Citizens Demand Police"
+msgstr "Cidadãos pedem mais polícia"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Fire Protection Demanded"
+msgstr "Proteção contra incêndios solicitada"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Water Shortage Reported"
+msgstr "Falta de água relatada"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Hospitals Demanded"
+msgstr "Hospitais solicitados"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Citizens Demand Schools"
+msgstr "Cidadãos pedem escolas"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Industry Demands Seaport"
+msgstr "A indústria pede um porto"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Commerce Demands Airport"
+msgstr "O comércio pede um aeroporto"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Residents Demand Zoo"
+msgstr "Moradores pedem um zoológico"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Residents Demand Stadium"
+msgstr "Moradores pedem um estádio"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Residents Demand Marina"
+msgstr "Moradores pedem uma marina"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Residents Demand Park"
+msgstr "Moradores pedem um parque"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Industry Needs Connections"
+msgstr "A indústria precisa de conexões externas"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Commerce Needs Connections"
+msgstr "O comércio precisa de conexões externas"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Blizzard Warning"
+msgstr "Alerta de nevasca"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Hurricane Warning"
+msgstr "Alerta de furacão"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Tornado Warning"
+msgstr "Alerta de tornado"
+
+#. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
+msgid "Brownouts Reported"
+msgstr "Quedas de energia relatadas"

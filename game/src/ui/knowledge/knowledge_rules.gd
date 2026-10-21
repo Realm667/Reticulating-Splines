@@ -70,7 +70,7 @@ func observe(result: SimulationTickResult, budget_forecast: Variant = null) -> v
 				condition("recovery", phase.started, 100, 1)
 			elif phase is ScenarioPhase.Result:
 				if phase.active and not phase.unmet.is_empty() and phase.remaining_months <= 12:
-					condition("recovery", true, 50, 1)
+					condition("scenario", true, 50, 1)
 	# Existing modal reports take precedence; do not duplicate their event.
 	if not result.notice_ids.is_empty() or result.newspaper_requested or not result.game_over_events.is_empty():
 		for id in ["age", "unlock", "recovery"]:
@@ -122,3 +122,11 @@ static func growth_rows(inputs: Dictionary) -> Array:
 		["Land value", ("Sufficient" if int(inputs.land_value) > needed else "Too low") if needed >= 0 else "No density threshold"],
 		["Destination reachability", "Not checked"],
 	]
+
+
+static func growth_title(inputs: Dictionary) -> String:
+	if int(inputs.get("building", 0)) < BuildingTileIds.DEVELOPED_FIRST:
+		return "Why is this zone not developing?"
+	if int(inputs.get("status", 0)) == 2:
+		return "Why is this building abandoned?"
+	return "What needs attention here?"

@@ -172,13 +172,13 @@ func _draw_data_view(scale: float, offset: Vector2) -> void:
 
 
 func draw_data_key(canvas: Control) -> void:
-	var font := ThemeDB.fallback_font
+	var font := map.get_theme_font("font", "Label")
 	var origin := Vector2.ZERO
 	var title: String = CityDataView.TITLES[CityViewMode.DATA_MODES.find(map.data_view_mode)]
 	canvas.draw_string(
 		font,
 		origin + Vector2(12, 24),
-		title,
+		tr(title),
 		HORIZONTAL_ALIGNMENT_LEFT,
 		-1,
 		16,
@@ -194,7 +194,11 @@ func draw_data_key(canvas: Control) -> void:
 				Rect2(position, Vector2(88, 18)),
 				CityDataView.color(index, map.data_view_mode),
 			)
-			canvas.draw_string(font, position + Vector2(0, 38), states[index], HORIZONTAL_ALIGNMENT_LEFT, -1, 14,
+			var caption := tr(states[index])
+			var caption_size := 14
+			while caption_size > 10 and font.get_string_size(caption, HORIZONTAL_ALIGNMENT_LEFT, -1, caption_size).x > 96:
+				caption_size -= 1
+			canvas.draw_string(font, position + Vector2(0, 38), caption, HORIZONTAL_ALIGNMENT_LEFT, 96, caption_size,
 					map.get_theme_color("font_color", "MapLegend"))
 	else:
 		for index in CityDataView.SCALE_CELLS:
@@ -214,7 +218,7 @@ func draw_data_key(canvas: Control) -> void:
 
 		var labels := CityDataView.range_labels(map.data_view_mode)
 		_draw_scale_labels(canvas, font, origin + Vector2(0, 80), labels[0], labels[1])
-		var middle := CityDataView.middle_label(map.data_view_mode)
+		var middle := tr(CityDataView.middle_label(map.data_view_mode))
 
 		if not middle.is_empty():
 			var middle_width := font.get_string_size(middle, HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x
@@ -225,7 +229,8 @@ func draw_data_key(canvas: Control) -> void:
 # the low label under the left end of a scale and the high label under its right end
 func _draw_scale_labels(canvas: Control, font: Font, baseline: Vector2, low: String, high: String) -> void:
 	var color := map.get_theme_color("font_color", "MapLegend")
-	canvas.draw_string(font, baseline + Vector2(12, 0), low, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, color)
+	canvas.draw_string(font, baseline + Vector2(12, 0), tr(low), HORIZONTAL_ALIGNMENT_LEFT, -1, 14, color)
+	high = tr(high)
 	var high_width := font.get_string_size(high, HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x
 	canvas.draw_string(font, baseline + Vector2(308 - high_width, 0), high, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, color)
 
@@ -236,7 +241,10 @@ func data_key_origin() -> Vector2:
 	if workspace != null:
 		var map_space := workspace.get_node_or_null("Page/Content/MapSpace") as Control
 		if map_space != null:
-			return map_space.global_position - map.global_position + Vector2(12, 12)
+			var origin := map_space.global_position - map.global_position + Vector2(12, 12)
+			if AppUiTheme.is_classic() and workspace is CityWorkspace and workspace.toolbar.is_visible_in_tree():
+				origin.x = maxf(origin.x, workspace.toolbar.get_global_rect().end.x - map.global_position.x + 12)
+			return origin
 	return Vector2(12, 12)
 
 
