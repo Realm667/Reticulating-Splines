@@ -24,6 +24,7 @@ func _run() -> void:
 	main.set_process(false)
 	main.main_menu.city_background.set_process(false)
 	assert(main.city_session.activate_document(EmptyCityTemplate.create(128)))
+	main.map_view.city_source = CityMapSource.new(CityIsometricRenderer.output_size_for_view(2, 128))
 	main.frame.select_speed(GameSpeedController.Speed.PAUSED)
 	var before: PackedByteArray = main.document_state.city.document.serialize().data
 	var shared_theme := main.theme
@@ -53,10 +54,24 @@ func _run() -> void:
 		assert(dialog.translucent_menus_check.disabled == AppUiTheme.is_classic())
 		assert(main.preferences.translucent_menus, "Retro themes preserve the modern transparency preference")
 		assert(AppUiTheme.uses_translucency() == not AppUiTheme.is_classic())
+		var workspace := main.city_workspace
+		var dos := AppUiTheme.selected == "classic_dos"
+		assert(workspace.dos_hscroll.visible == dos and workspace.dos_vscroll.visible == dos)
+		assert(main.city_menu_bar.dos_city_line.visible == dos)
+		if dos:
+			var bar := workspace.dos_hscroll
+			bar.value = (bar.max_value - bar.page) * 0.6
+			var scroll_state := main.map_view.camera.scroll_state()
+			assert(is_equal_approx(scroll_state.value.x, bar.value), "DOS scrollbar must control the real camera")
+			workspace.set_editor_controls_visible(false)
+			assert(not bar.visible and not workspace.dos_vscroll.visible)
+			workspace.set_editor_controls_visible(true)
 		var toolbar := main.city_toolbar
 		assert(toolbar.layers_button.is_visible_in_tree() == AppUiTheme.is_classic())
 		if AppUiTheme.is_classic():
 			assert(toolbar.get_parent() is ScrollContainer)
+			assert(main.map_view.layers.data_key_origin().x + main.map_view.global_position.x >= toolbar.get_global_rect().end.x,
+				"The data legend must clear the floating classic palette")
 			toolbar.show_layers()
 			await process_frame
 			assert(toolbar.layers_popup.visible)

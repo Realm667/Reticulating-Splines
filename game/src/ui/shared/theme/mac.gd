@@ -4,7 +4,7 @@ extends RefCounted
 
 
 static func build() -> Theme:
-	var result := AppUiClassicTheme.build("classic_dos")
+	var result := AppUiClassicTheme.build("classic_dos", false)
 	var paper := Color("eeeeee")
 	result.set_color("title_background", "AppPalette", Color.WHITE)
 	result.set_color("canvas", "AppPalette", paper)

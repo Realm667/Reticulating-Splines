@@ -54,7 +54,7 @@ func _draw() -> void:
 
 	for index in bars.size():
 		if bars[index].size.y > 0.0:
-			draw_rect(bars[index], ZONE_COLORS[index], true)
+			draw_rect(bars[index], [Color("00ff00"), Color("0000ff"), Color("ffff00")][index] if AppUiTheme.selected == "classic_dos" else ZONE_COLORS[index], true)
 
 	draw_rect(graph_rect, get_theme_color("border", "AppPalette"), false, 1.0)
 

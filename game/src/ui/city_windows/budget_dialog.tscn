@@ -24,9 +24,12 @@ offset_bottom = -54.0
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="Heading" type="Label" parent="Margin/Content"]
+[node name="Heading" type="RichTextLabel" parent="Margin/Content"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 20
+fit_content = true
+scroll_active = false
+theme_override_font_sizes/normal_font_size = 20
+theme_override_font_sizes/bold_font_size = 20
 text = "City budget"
 
 [node name="Notice" type="Label" parent="Margin/Content"]

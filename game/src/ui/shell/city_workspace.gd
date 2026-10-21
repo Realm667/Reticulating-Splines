@@ -12,6 +12,9 @@ var _rci_parent: Node
 var _rci_index := 0
 var _classic_layout := false
 var _bar_scrolls: Array[ScrollContainer] = []
+var dos_hscroll: HScrollBar
+var dos_vscroll: VScrollBar
+var syncing_scrolls := false
 
 
 func _enter_tree() -> void:
@@ -47,11 +50,13 @@ func _ready() -> void:
 	_sync_classic_layout.call_deferred()
 	menu_bar.resized.connect(_fit_palette.call_deferred)
 	status_bar.resized.connect(_fit_palette.call_deferred)
+	_build_dos_scrolls()
 
 
 func set_editor_controls_visible(value: bool) -> void:
 	$Page.visible = value
 	_palette_scroll.visible = value and _classic_layout
+	_sync_dos_scrolls()
 
 
 func _sync_camera_rect() -> void:
@@ -105,3 +110,47 @@ func _fit_palette() -> void:
 	var minimum := toolbar.get_combined_minimum_size()
 	_palette_scroll.position = Vector2(12, top)
 	_palette_scroll.size = Vector2(minimum.x + (16 if minimum.y > available else 0), minf(minimum.y, available))
+
+
+func _build_dos_scrolls() -> void:
+	dos_hscroll = HScrollBar.new()
+	dos_vscroll = VScrollBar.new()
+	dos_hscroll.custom_step = 32.0
+	dos_vscroll.custom_step = 32.0
+	add_child(dos_hscroll)
+	add_child(dos_vscroll)
+	dos_hscroll.value_changed.connect(_scroll_dos.bind(0))
+	dos_vscroll.value_changed.connect(_scroll_dos.bind(1))
+	map_view.viewport_changed.connect(_sync_dos_scrolls)
+	theme_changed.connect(_sync_dos_scrolls.call_deferred)
+	$Page/Content/MapSpace.item_rect_changed.connect(_sync_dos_scrolls)
+	_sync_dos_scrolls()
+
+
+func _scroll_dos(value: float, axis: int) -> void:
+	if not syncing_scrolls:
+		map_view.camera.set_scroll_value(axis, value)
+
+
+func _sync_dos_scrolls() -> void:
+	if dos_hscroll == null or syncing_scrolls:
+		return
+	var active: bool = AppUiTheme.selected == "classic_dos" and $Page.visible
+	dos_hscroll.visible = active
+	dos_vscroll.visible = active
+	if not active:
+		return
+	syncing_scrolls = true
+	var area: Rect2 = $Page/Content/MapSpace.get_global_rect()
+	area.position -= global_position
+	dos_hscroll.position = Vector2(area.position.x, area.end.y - 16)
+	dos_hscroll.size = Vector2(maxf(16, area.size.x - 16), 16)
+	dos_vscroll.position = Vector2(area.end.x - 16, area.position.y)
+	dos_vscroll.size = Vector2(16, maxf(16, area.size.y - 16))
+	var state := map_view.camera.scroll_state()
+	for axis in 2:
+		var bar: ScrollBar = dos_hscroll if axis == 0 else dos_vscroll
+		bar.max_value = state.content[axis] if state != null else 1.0
+		bar.page = state.page[axis] if state != null else 1.0
+		bar.set_value_no_signal(state.value[axis] if state != null else 0.0)
+	syncing_scrolls = false

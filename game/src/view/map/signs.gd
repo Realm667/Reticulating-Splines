@@ -170,6 +170,10 @@ func _draw_signs(scale: float, offset: Vector2) -> void:
 	_ensure_sign_entries()
 	var view_index := sign_view_index(map.zoom_factor)
 	var display_multiplier := sign_display_multiplier(map.zoom_factor) * map.map_pixel_ratio
+	if AppUiTheme.selected == "classic_dos":
+		for entry in sign_entries:
+			_draw_dos_sign(entry, (offset + entry.anchor * scale).round(), display_multiplier)
+		return
 	atlas.prepare(map, sign_entries, view_index, artwork_density, _get_sign_font())
 	for entry in sign_entries:
 		if not Rect2(entry.bounds).intersects(map.camera.visible_source_rect()):
@@ -285,3 +289,22 @@ class Layout extends RefCounted:
 		var rect := panel.merge(post).grow(padding)
 		var start := rect.position.floor()
 		return Rect2(start, rect.end.ceil() - start)
+
+
+func _draw_dos_sign(entry: Entry, origin: Vector2, multiplier: float) -> void:
+	var font := AppUiTheme.current().default_font
+	var font_size := maxi(7, roundi(11 * multiplier))
+	var width := ceilf(font.get_string_size(entry.label, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x)
+	var height := ceilf(font.get_height(font_size))
+	var panel := Rect2(origin + Vector2(-width * 0.5 - 3, -height - 28 * multiplier), Vector2(width + 6, height + 4))
+	panel.position = panel.position.round()
+	if not panel.expand(origin).intersects(Rect2(Vector2.ZERO, map.size)):
+		return
+	map.draw_line(origin, Vector2(origin.x, panel.end.y), Color("808080"), maxf(1, multiplier))
+	map.draw_rect(panel, Color("c0c0c0"))
+	map.draw_line(panel.position, Vector2(panel.end.x, panel.position.y), Color.WHITE)
+	map.draw_line(panel.position, Vector2(panel.position.x, panel.end.y), Color.WHITE)
+	map.draw_line(Vector2(panel.position.x, panel.end.y), panel.end, Color("404040"))
+	map.draw_line(Vector2(panel.end.x, panel.position.y), panel.end, Color("404040"))
+	map.draw_string(font, panel.position + Vector2(3, 2 + font.get_ascent(font_size)), entry.label,
+		HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, Color.BLACK)

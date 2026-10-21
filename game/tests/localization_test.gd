@@ -95,7 +95,7 @@ func _run() -> void:
 	root.add_child(budget)
 	budget.set_city(city)
 	budget.open_budget(BudgetPhase.funding_values(city), false, false)
-	assert(budget.get_node("Margin/Content/Heading").text.contains(tr("January")))
+	assert(budget.get_node("Margin/Content/Heading").get_parsed_text().contains(tr("January")))
 	for label in budget.budget_labels:
 		if label.get_meta("budget_source") == "Fire":
 			assert(label.text == tr("Fire", "budget"))
@@ -109,7 +109,7 @@ func _run() -> void:
 	assert(tr("Population: %s") % "12,345" == "Population: 12,345")
 	assert(ToolCatalog.tool(CityToolIds.Group.WATER, CityToolIds.Water.PIPES).id == "pipes")
 
-	assert(budget.get_node("Margin/Content/Heading").text.contains("January"))
+	assert(budget.get_node("Margin/Content/Heading").get_parsed_text().contains("January"))
 	for label in budget.budget_labels:
 		if label.get_meta("budget_source") == "Fire":
 			assert(label.text == "Fire")

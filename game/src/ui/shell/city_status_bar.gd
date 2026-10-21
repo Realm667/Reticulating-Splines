@@ -17,6 +17,8 @@ var priority_status := false
 var status_style := ""
 var music_notice := ""
 var music_notice_seconds := 0.0
+var dos_messages: VBoxContainer
+var dos_layout := false
 # the key that turns a click on the status bar into a request for its help
 var control_bindings := ControlBindings.defaults()
 
@@ -35,6 +37,12 @@ func _ready() -> void:
 	_fit_speed_label()
 	refresh_tooltips()
 	_watch_help_clicks(self)
+	dos_messages = VBoxContainer.new()
+	dos_messages.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	dos_messages.add_theme_constant_override("separation", 0)
+	$Metrics.add_child(dos_messages)
+	theme_changed.connect(_sync_dos_layout.call_deferred)
+	_sync_dos_layout()
 
 
 func _watch_help_clicks(control: Control) -> void:
@@ -203,3 +211,26 @@ func show_notice(message: String, priority := false) -> void:
 	music_notice_seconds = 5.0
 	_refresh_report_text()
 	_sync_overflow_tooltip(reports_label)
+
+
+func _sync_dos_layout() -> void:
+	if dos_messages == null:
+		return
+	var dos := AppUiTheme.selected == "classic_dos"
+	dos_messages.visible = dos
+	if dos_layout == dos:
+		return
+	dos_layout = dos
+	if dos:
+		message_label.reparent(dos_messages)
+		reports_label.reparent(dos_messages)
+		$Metrics.move_child(dos_messages, 0)
+	else:
+		message_label.reparent($Metrics)
+		$Metrics.move_child(message_label, 0)
+		reports_label.reparent($Metrics)
+		$Metrics.move_child(reports_label, $Metrics/LocateDisaster.get_index())
+	message_label.custom_minimum_size.y = 14 if dos else 22
+	reports_label.custom_minimum_size.y = 14 if dos else 20
+	message_label.theme_type_variation = "SectionHeading" if dos else ""
+	$Metrics/MessageDivider.visible = not dos

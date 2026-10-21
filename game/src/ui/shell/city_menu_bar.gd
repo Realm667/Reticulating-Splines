@@ -105,6 +105,8 @@ var population_label: Label
 var date_label: Label
 var money_label: Label
 var fps_label: Label
+var dos_city_line: Label
+var metric_controls: Array[Control] = []
 
 
 func _ready() -> void:
@@ -112,7 +114,10 @@ func _ready() -> void:
 	theme_type_variation = "CityMenuBarPanel"
 	var menu_row := HBoxContainer.new()
 	menu_row.add_theme_constant_override("separation", 0)
-	add_child(menu_row)
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 0)
+	add_child(column)
+	column.add_child(menu_row)
 
 	file_menu = _add_menu(menu_row, "File", [
 		["New City", 0], ["Open City", 1],
@@ -145,6 +150,7 @@ func _ready() -> void:
 	options_menu.get_popup().add_separator()
 	options_menu.get_popup().add_item("Music box", MENU_MUSIC_BOX)
 	options_menu.get_popup().add_item("Photo mode", MENU_PHOTO_MODE)
+	options_menu.get_popup().add_separator()
 	options_menu.get_popup().add_item("Settings", MENU_SETTINGS)
 	options_menu.disabled = true
 
@@ -223,6 +229,7 @@ func _ready() -> void:
 	city_field.custom_minimum_size = Vector2(174, 0)
 	city_field.add_theme_constant_override("margin_left", 9)
 	city_field.add_theme_constant_override("margin_right", 4)
+	var first_metric := menu_row.get_child_count() - 1
 	menu_row.add_child(city_field)
 	city_label = Label.new()
 	city_label.text = "No city loaded"
@@ -264,6 +271,16 @@ func _ready() -> void:
 	fps_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	fps_label.tooltip_text = "Current rendered frames per second"
 	menu_row.add_child(fps_label)
+	for index in range(first_metric, menu_row.get_child_count()):
+		metric_controls.append(menu_row.get_child(index))
+	dos_city_line = Label.new()
+	dos_city_line.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	dos_city_line.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	dos_city_line.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
+	column.add_child(dos_city_line)
+	theme_changed.connect(_sync_dos_header.call_deferred)
+	_sync_dos_header()
+
 
 
 func _add_padded_metric(parent: Control, label: Label, field_name: String) -> void:
@@ -409,6 +426,7 @@ func _metric_label(text_value: String, minimum_width: int) -> Label:
 func set_city_name(display_name: String, tooltip := "") -> void:
 	city_label.text = display_name
 	city_label.tooltip_text = tooltip if not tooltip.is_empty() else display_name
+	_refresh_dos_header()
 
 
 # the original menu shows the two newspaper options above the available papers,
@@ -448,15 +466,18 @@ func set_population(display_value: String, available := true) -> void:
 func set_date(display_date: String) -> void:
 	date_label.text = display_date
 	date_label.tooltip_text = tr("Current city date: %s") % display_date
+	_refresh_dos_header()
 
 
 func set_money(display_money: String) -> void:
 	money_label.text = display_money
 	money_label.tooltip_text = tr("Current city funds: %s") % display_money
+	_refresh_dos_header()
 
 
 func set_fps(frames_per_second: int) -> void:
 	fps_label.text = tr("FPS: %d") % frames_per_second
+	_refresh_dos_header()
 
 
 static func disaster_name(disaster_id: int) -> String:
@@ -518,3 +539,20 @@ func _on_help_menu(id: int) -> void:
 
 func _on_debug_menu(id: int) -> void:
 	debug_menu_requested.emit(id)
+
+
+func _sync_dos_header() -> void:
+	if dos_city_line == null:
+		return
+	var dos := AppUiTheme.selected == "classic_dos"
+	for control in metric_controls:
+		control.visible = not dos
+	dos_city_line.visible = dos
+	_refresh_dos_header()
+
+
+func _refresh_dos_header() -> void:
+	if dos_city_line == null:
+		return
+	dos_city_line.text = "%s <%s> %s" % [date_label.text, city_label.text, money_label.text]
+	dos_city_line.tooltip_text = "%s\n%s\n%s" % [city_label.tooltip_text, population_label.text, fps_label.text]

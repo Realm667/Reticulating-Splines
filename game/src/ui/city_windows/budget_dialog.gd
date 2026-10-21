@@ -89,6 +89,7 @@ func _ready() -> void:
 	action_buttons.append(bond_advice)
 	_style_actions()
 	AppUiTheme.current().changed.connect(_style_actions)
+	AppUiTheme.current().changed.connect(_refresh_heading)
 
 	for caption in ["Year to date", "Year-end cash flow", "Current funds", "Year-end funds"]:
 		var column := VBoxContainer.new()
@@ -516,8 +517,19 @@ func _budget_label(source: String, prefix := "") -> Label:
 
 
 func _refresh_heading() -> void:
-	$Margin/Content/Heading.text = tr(title) if city == null else tr("{city} · {month} {year}").format({
-		"city": city.display_name(),
-		"month": tr(BudgetReport.MONTHS[city.current_month() - 1]),
-		"year": city.current_year(),
-	})
+	var heading: RichTextLabel = $Margin/Content/Heading
+	heading.clear()
+	if city == null:
+		heading.add_text(tr(title))
+		return
+	var font: Font = (AppUiThemeDefinitions._website_font(800) if not AppUiTheme.is_classic()
+		else AppUiTheme.current().get_font("bold_font", "RichTextLabel"))
+	var format := tr("{city} · {month} {year}")
+	var parts := format.split("{city}", true, 1)
+	var values := {"month": tr(BudgetReport.MONTHS[city.current_month() - 1]), "year": city.current_year()}
+	heading.add_text(parts[0].format(values))
+	heading.push_font(font)
+	heading.add_text(city.display_name())
+	heading.pop()
+	if parts.size() > 1:
+		heading.add_text(parts[1].format(values))

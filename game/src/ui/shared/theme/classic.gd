@@ -8,7 +8,7 @@ const NAVY := Color("000080")
 static var _fonts: Dictionary[bool, Font] = {}
 
 
-static func build(value: String) -> Theme:
+static func build(value: String, dos_details := true) -> Theme:
 	var dos := value == "classic_dos"
 	var selection := Color.BLACK if dos else NAVY
 	var result := ThemeDB.get_default_theme().duplicate(true) as Theme
@@ -157,6 +157,8 @@ static func build(value: String) -> Theme:
 		result.set_constant("margin_" + side, "DialogMargin", 12)
 	for type_name in ["VBoxContainer", "HBoxContainer"]:
 		result.set_constant("separation", type_name, 6)
+	if dos and dos_details:
+		_dos_details(result)
 	return result
 
 
@@ -267,4 +269,43 @@ static func _check_icon(checked: bool, radio: bool, disabled: bool) -> Texture2D
 			var y := 8 - absi(x - 5)
 			image.set_pixel(x, y, ink)
 			image.set_pixel(x, y + 1, ink)
+	return ImageTexture.create_from_image(image)
+
+
+static func _dos_details(result: Theme) -> void:
+	result.set_stylebox("panel", "CityToolbarPanel", bevel(Color("808080"), false, 2))
+	result.set_stylebox("panel", "CityMenuBarPanel", flat(FACE, 1))
+	result.set_stylebox("panel", "CityStatusBarPanel", bevel(FACE, false, 2))
+	result.set_stylebox("panel", "TooltipPanel", flat(FACE, 4))
+	result.set_constant("separation", "VBoxContainer", 2)
+	result.set_constant("separation", "HBoxContainer", 2)
+	for type_name in ["HScrollBar", "VScrollBar"]:
+		var vertical: bool = type_name == "VScrollBar"
+		for state in ["decrement", "decrement_highlight", "decrement_pressed"]:
+			result.set_icon(state, type_name, _dos_arrow(vertical, false, state.ends_with("pressed")))
+		for state in ["increment", "increment_highlight", "increment_pressed"]:
+			result.set_icon(state, type_name, _dos_arrow(vertical, true, state.ends_with("pressed")))
+		for state in ["grabber", "grabber_highlight", "grabber_pressed"]:
+			var box := bevel(FACE, state == "grabber_pressed", 7)
+			var image := _bevel_image(Vector2i(12, 12), FACE, state == "grabber_pressed")
+			for y in range(3, 9, 3):
+				for x in range(3, 9, 3):
+					image.set_pixel(x, y, Color.WHITE)
+					image.set_pixel(x + 1, y + 1, SHADOW)
+			box.texture = ImageTexture.create_from_image(image)
+			box.axis_stretch_horizontal = StyleBoxTexture.AXIS_STRETCH_MODE_TILE
+			box.axis_stretch_vertical = StyleBoxTexture.AXIS_STRETCH_MODE_TILE
+			result.set_stylebox(state, type_name, box)
+
+
+static func _dos_arrow(vertical: bool, forward: bool, pressed: bool) -> Texture2D:
+	var image := _bevel_image(Vector2i(16, 16), FACE, pressed)
+	for y in range(4, 12):
+		for x in range(4, 12):
+			var along := y if vertical else x
+			var across := x if vertical else y
+			if not forward:
+				along = 15 - along
+			if (along <= 8 and absi(across - 7) <= 1) or (along >= 7 and absi(across - 7) <= 11 - along):
+				image.set_pixel(x, y, Color("ff0000"))
 	return ImageTexture.create_from_image(image)
