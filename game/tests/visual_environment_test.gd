@@ -932,6 +932,24 @@ func _check_zone_soil_masks() -> void:
 	for archive: Sc2SpriteArchive in [pack.large_sprites, pack.small_medium_sprites]:
 		CitySeasonColors.prepare(archive, pack.palette)
 		for id: int in archive.entries_by_id:
+			if id % 500 < BuildingTileIds.HIGHWAY_ONRAMP_1 or id % 500 > BuildingTileIds.HIGHWAY_ONRAMP_4:
+				continue
+			var entry := archive.find_sprite(id)
+			var indices: PackedInt32Array = entry.decode_indices().pixels
+			var mask: Image = archive.visual_seasons.get(id)
+			assert(mask != null, "Ramp ground has no seasonal mask: %d" % id)
+			var soil_count := 0
+			var structure_count := 0
+			for at in indices.size():
+				if indices[at] < 0:
+					continue
+				var marked := mask.get_pixel(at % entry.width, at / entry.width).g > 0.5
+				if marked:
+					soil_count += 1
+				else:
+					structure_count += 1
+			assert(soil_count > 0 and structure_count > 0, "Ramp lost its soil/structure distinction")
+		for id: int in archive.entries_by_id:
 			if id % 500 < 291 or id % 500 > 299:
 				continue
 			assert(archive.visual_seasons.has(id), "Zoned soil has no seasonal mask: %d" % id)
