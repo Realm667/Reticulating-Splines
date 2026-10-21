@@ -37,6 +37,19 @@ func open_import_settings() -> void:
 	app.main_overlays.settings_dialog.tabs.current_tab = AppSettingsDialog.DATA_TAB
 
 
+func open_building_mix() -> void:
+	app.main_overlays.settings_dialog.building_mix_dialog.open(preferences.building_mix, app.assets.building_variants.notices)
+
+
+func apply_building_mix(value: Dictionary) -> void:
+	if value == preferences.building_mix:
+		return
+	app.assets.set_building_mix(value)
+	_save_settings()
+	if not app.assets.building_variants.notices.is_empty():
+		app.status_label.text = "\n".join(app.assets.building_variants.notices)
+
+
 func open_mods_settings() -> void:
 	open_settings_dialog()
 	app.main_overlays.settings_dialog.tabs.current_tab = AppSettingsDialog.MODS_TAB
@@ -494,6 +507,7 @@ func load_app_settings() -> void:
 	preferences.mods_folder = values.mods_folder
 	preferences.data_pack_folder = str(values.data_pack_folder)
 	preferences.hd_pack_folder = str(values.hd_pack_folder)
+	preferences.building_mix = BuildingVariants.normalize(values.building_mix)
 	preferences.dark_underground = bool(values.dark_underground)
 	app.menus.sync_map_style()
 	preferences.hd_graphics = bool(values.hd_graphics)

@@ -3,6 +3,9 @@ extends RefCounted
 
 var entries: Array[SpriteEntry] = []
 var entries_by_id: Dictionary[int, SpriteEntry] = {}
+var building_variants: Dictionary[int, PackedInt64Array] = {}
+var building_mix_seed := 0
+var building_original_weight := 50
 var visual_emission: Dictionary[int, Image] = {}
 var visual_emission_artwork: Dictionary[int, Image] = {}
 var visual_seasons: Dictionary[int, Image] = {}

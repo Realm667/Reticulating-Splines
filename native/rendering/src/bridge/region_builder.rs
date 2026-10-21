@@ -428,6 +428,37 @@ impl NativeCityRegionBuilder {
             core.atlas.revision += previous_revision;
 
             configure_artwork(&mut core, &request)?;
+            if let Some(value) = request.get("building_variants") {
+                let choices = value.try_to::<AnyDictionary>().map_err(|_| "invalid building variants")?;
+                core.sprites.variants.seed = int(&request, "building_mix_seed", 0) as u32;
+                core.sprites.variants.original_weight = int(&request, "building_original_weight", 50).clamp(0, 100) as u32;
+                for (id, values) in choices.iter_shared() {
+                    let id = id.try_to::<i32>().map_err(|_| "invalid variant base")?;
+                    let values = values.try_to::<PackedInt64Array>().map_err(|_| "invalid variant choices")?;
+                    if id / 500 != view
+                        || !(id % 500 == 13 || (112..=255).contains(&(id % 500)))
+                        || values.len() % 2 != 0
+                        || values.len() > 16
+                    {
+                        return Err("invalid variant family".into());
+                    }
+                    let base = core.sprites.images.get(&(id as u64 * 2)).ok_or("missing variant base")?;
+                    let mut family = Vec::new();
+                    for pair in values.as_slice().chunks_exact(2) {
+                        let (sprite, weight) = (pair[0], pair[1]);
+                        let first = i64::from(sc2k_render::variants::FIRST);
+                        if !(first..first + 8 * 1500).contains(&sprite) || sprite % 1500 != i64::from(id) || !(1..=100).contains(&weight) {
+                            return Err("invalid building variant".into());
+                        }
+                        let image = core.sprites.images.get(&(sprite as u64 * 2)).ok_or("missing building variant")?;
+                        if image.w != base.w {
+                            return Err("variant footprint differs from base".into());
+                        }
+                        family.push((sprite as i32, weight as u32));
+                    }
+                    core.sprites.variants.choices.insert(id, family);
+                }
+            }
             if let Some(value) = request.get("visual_registration") {
                 let registrations = value.try_to::<AnyDictionary>().map_err(|_| "invalid sprite canvas registration")?;
                 for (key, value) in registrations.iter_shared() {

@@ -9471,3 +9471,93 @@ msgstr "밝기를 조절하려면 일출 빛 효과를 활성화하세요."
 #: src/ui/settings/visual_enhancements_tab.gd
 msgid "Enable Sunset glow to adjust its brightness."
 msgstr "밝기를 조절하려면 일몰 빛 효과를 활성화하세요."
+
+#. Supplementary building-variant UI translation; AI-assisted from English.
+#: game/src/ui/settings/building_mix_dialog.gd
+msgid "Building variants"
+msgstr "건물 변형"
+
+#. Supplementary building-variant UI translation; AI-assisted from English.
+#: game/src/ui/settings/building_mix_dialog.gd
+msgid "Building variants…"
+msgstr "건물 변형…"
+
+#. Supplementary building-variant UI translation; AI-assisted from English.
+#: game/src/ui/settings/building_mix_dialog.gd
+msgid "Mix building tile sets"
+msgstr "건물 타일 세트 혼합"
+
+#. Supplementary building-variant UI translation; AI-assisted from English.
+#: game/src/ui/settings/building_mix_dialog.gd
+msgid "Choose local SCURK MIF files. Mixing uses the base graphics instead of replacement tile sets. Changes affect appearance only."
+msgstr "로컬 SCURK MIF 파일을 선택하세요. 혼합은 대체 타일 세트 대신 기본 그래픽을 사용하며 외형만 변경합니다."
+
+#. Supplementary building-variant UI translation; AI-assisted from English.
+#: game/src/ui/settings/building_mix_dialog.gd
+msgid "Weights are relative for each building with compatible alternatives. A missing or incomplete family keeps the original. Additional artwork needs its own matching light masks."
+msgstr "호환되는 대안이 있는 건물마다 상대 가중치가 적용됩니다. 변형이 없거나 불완전하면 원본을 유지합니다. 추가 그래픽에는 알맞은 자체 조명 마스크가 필요합니다."
+
+#. Supplementary building-variant UI translation; AI-assisted from English.
+#: game/src/ui/settings/building_mix_dialog.gd
+msgid "Original weight"
+msgstr "원본 가중치"
+
+#. Supplementary building-variant UI translation; AI-assisted from English.
+#: game/src/ui/settings/building_mix_dialog.gd
+msgid "Add tile sets…"
+msgstr "타일 세트 추가…"
+
+#. Supplementary building-variant UI translation; AI-assisted from English.
+#: game/src/ui/settings/building_mix_dialog.gd
+msgid "Up to 8 local sets. Equal weights give equal chances; actual counts vary."
+msgstr "로컬 세트는 최대 8개입니다. 같은 가중치는 같은 확률을 의미하며 실제 개수는 달라집니다."
+
+#. Supplementary building-variant UI translation; AI-assisted from English.
+#: game/src/ui/settings/building_mix_dialog.gd
+msgid "Shuffle again"
+msgstr "다시 섞기"
+
+#. Supplementary building-variant UI translation; AI-assisted from English.
+#: game/src/ui/settings/building_mix_dialog.gd
+msgid "New building choices will be used after Apply."
+msgstr "적용을 누르면 새로운 건물 선택을 사용합니다."
+
+#. Supplementary building-variant UI translation; AI-assisted from English.
+#: game/src/ui/settings/building_mix_dialog.gd
+msgid "Unavailable tile set: %s"
+msgstr "사용할 수 없는 타일 세트: %s"
+
+#. Supplementary building-variant UI translation; AI-assisted from English.
+#: game/src/ui/settings/building_mix_dialog.gd
+msgid "Invalid tile set: %s"
+msgstr "잘못된 타일 세트: %s"
+
+#. Supplementary building-variant UI translation; AI-assisted from English.
+#: game/src/ui/settings/building_mix_dialog.gd
+msgid "Tile set memory limit reached."
+msgstr "타일 세트 메모리 한도에 도달했습니다."
+
+#. Supplementary building-variant UI translation; AI-assisted from English.
+#: game/src/ui/settings/building_mix_dialog.gd
+msgid "%s: %d unchanged or incomplete building families skipped."
+msgstr "%s: 변경되지 않았거나 불완전한 건물 묶음 %d개를 건너뛰었습니다."
+
+#. Supplementary building-variant UI translation; AI-assisted from English.
+#: game/src/ui/settings/building_mix_dialog.gd
+msgid "Building mixing needs indexed SC2000 graphics."
+msgstr "건물 혼합에는 인덱스 방식 SC2000 그래픽이 필요합니다."
+
+#. Supplementary building-variant UI translation; AI-assisted from English.
+#: game/src/ui/settings/building_mix_dialog.gd
+msgid "SCURK tile set"
+msgstr "SCURK 타일 세트"
+
+#. Supplementary building-variant UI translation; AI-assisted from English.
+#: game/src/ui/settings/building_mix_dialog.gd
+msgid "Public services"
+msgstr "공공시설"
+
+#. Supplementary building-variant UI translation; AI-assisted from English.
+#: game/src/ui/settings/building_mix_dialog.gd
+msgid "Power plants"
+msgstr "발전소"

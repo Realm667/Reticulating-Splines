@@ -3,6 +3,67 @@ use super::painter::TRAFFIC;
 use super::*;
 
 #[test]
+fn building_variants_keep_multicell_identity_across_views_rotations_and_rebuilds() {
+    let mut expected = HashMap::new();
+    for view in 0..3 {
+        for rotation in 0..4 {
+            let mut b = fixture(32, view);
+            b.city.rotation = rotation;
+            let id = view * 500 + 183;
+            let width = 96 / b.config.divisor();
+            let image = Sprite {
+                w: width,
+                h: width,
+                rgba: vec![255; (width * width * 4) as usize],
+                la: vec![255; (width * width * 2) as usize],
+            };
+            b.sprites.images.insert(id as u64 * 2, image.clone());
+            for offset in [variants::FIRST, variants::FIRST + 1500] {
+                b.sprites.images.insert((id + offset) as u64 * 2, image.clone());
+            }
+            b.sprites.variants.original_weight = 50;
+            b.sprites
+                .variants
+                .choices
+                .insert(id, vec![(id + variants::FIRST, 25), (id + variants::FIRST + 1500, 25)]);
+            for x in 2..20 {
+                let (cx, cy) = (2 * x + 2, 12);
+                let (rx, ry) = match rotation {
+                    1 => (cy, 62 - cx),
+                    2 => (62 - cx, 62 - cy),
+                    3 => (62 - cy, cx),
+                    _ => (cx, cy),
+                };
+                let (ax, ay) = ((rx - 2) / 2, (ry + 2) / 2);
+                let chosen = b.building_variant(ax, ay, id) - id;
+                assert_eq!(chosen, *expected.entry(x).or_insert(chosen));
+                assert_eq!(b.building_variant(ax, ay, id), id + chosen);
+            }
+            assert_eq!(b.building_variant(1, 1, id + 1), id + 1, "unregistered family must stay original");
+            let old: Vec<_> = (2..20).map(|x| b.building_variant(x, 7, id)).collect();
+            b.sprites.variants.seed = 1;
+            assert_ne!(old, (2..20).map(|x| b.building_variant(x, 7, id)).collect::<Vec<_>>());
+            b.sprites.variants.original_weight = 0;
+            b.sprites.variants.choices.insert(id, vec![(id + variants::FIRST, 100)]);
+            let cell = b.city.index(3, 3);
+            b.city.buildings[cell] = 183;
+            b.city.zones[cell] = [0x80, 0x10, 0x20, 0x40][rotation];
+            let draw = b
+                .paint(3, 3)
+                .unwrap()
+                .into_iter()
+                .find(|d| d.sprite == id + variants::FIRST)
+                .unwrap();
+            assert_eq!(draw.flip, rotation % 2 != 0);
+            assert!(draw.emission_disabled);
+        }
+    }
+    assert!(expected.values().any(|&v| v == 0));
+    assert!(expected.values().any(|&v| v == variants::FIRST));
+    assert!(expected.values().any(|&v| v == variants::FIRST + 1500));
+}
+
+#[test]
 fn registered_canvases_preserve_parcel_and_baseline_in_every_view_and_flip() {
     for view in 0..3 {
         for flip in [false, true] {

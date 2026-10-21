@@ -31,6 +31,9 @@ static func load_values(
 	if config.load(path) != OK:
 		return result
 	result.visual_enhancements = VisualEnhancementOptions.normalize(config.get_value("visual_enhancements", "options", {}))
+	result.building_mix = BuildingVariants.normalize(config.get_value("graphics", "building_mix", {}))
+	for pack: Dictionary in result.building_mix.packs:
+		pack.path = AppPaths.loaded_path(pack.path)
 
 	result.dark_underground = bool(config.get_value("display", "dark_underground", false))
 	result.sprite_corrections = bool(config.get_value("graphics", "sc2kfix_sprite_corrections", false))
@@ -347,6 +350,11 @@ static func save_values(
 
 	if options.hd_pack_folder != null:
 		config.set_value("graphics", "hd_pack", AppPaths.stored_path(str(options.hd_pack_folder).strip_edges()))
+	if options.building_mix != null:
+		var mix := BuildingVariants.normalize(options.building_mix)
+		for pack: Dictionary in mix.packs:
+			pack.path = AppPaths.stored_path(pack.path)
+		config.set_value("graphics", "building_mix", mix)
 
 	if options.control_bindings != null:
 		_write_bindings(config, options.control_bindings)
@@ -413,6 +421,7 @@ static func save_update_state(
 
 
 class Values extends RefCounted:
+	var building_mix := BuildingVariants.normalize({})
 	var visual_enhancements := VisualEnhancementOptions.normalize({})
 	var default_mayor_name := "Mayor"
 	var ui_theme := "dark"
@@ -464,6 +473,7 @@ class LoadedValues extends Values:
 
 # Null leaves a saved value unchanged. An empty graphics source keeps both graphics fields.
 class SaveOptions extends RefCounted:
+	var building_mix: Variant = null
 	var visual_enhancements: Variant = null
 	var graphics_source := ""
 	var graphics_folder := ""

@@ -183,6 +183,8 @@ func _build_main_menu() -> void:
 
 	app.main_overlays.settings_dialog.button_clicked.connect(play_toolbar_click)
 	app.main_overlays.settings_dialog.settings_changed.connect(app.settings.request_apply_settings)
+	app.main_overlays.settings_dialog.building_mix_requested.connect(app.settings.open_building_mix)
+	app.main_overlays.settings_dialog.building_mix_dialog.applied.connect(app.settings.apply_building_mix)
 	app.main_overlays.settings_dialog.brightmaps_reload_requested.connect(app.visual_environment.reload_brightmaps)
 	app.main_overlays.settings_dialog.brightmaps_export_requested.connect(app.visual_environment.export_brightmaps)
 	app.main_overlays.settings_dialog.confirmed.connect(play_toolbar_click)

@@ -1,5 +1,12 @@
 [
   {
+    "id": "building_variants_test",
+    "script": "tests/building_variants_test.gd",
+    "domain": "rendering",
+    "lane": "product",
+    "requires": ["ext/graphics/pack.json"]
+  },
+  {
     "id": "sun_glow_gpu_test",
     "script": "tests/sun_glow_gpu_test.gd",
     "domain": "rendering",

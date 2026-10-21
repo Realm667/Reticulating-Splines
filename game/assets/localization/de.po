@@ -28295,3 +28295,93 @@ msgstr "Leuchten bei Sonnenaufgang aktivieren, um die Helligkeit anzupassen."
 #: src/ui/settings/visual_enhancements_tab.gd
 msgid "Enable Sunset glow to adjust its brightness."
 msgstr "Leuchten bei Sonnenuntergang aktivieren, um die Helligkeit anzupassen."
+
+#. Supplementary building-variant UI translation; AI-assisted from English.
+#: game/src/ui/settings/building_mix_dialog.gd
+msgid "Building variants"
+msgstr "Gebäudevarianten"
+
+#. Supplementary building-variant UI translation; AI-assisted from English.
+#: game/src/ui/settings/building_mix_dialog.gd
+msgid "Building variants…"
+msgstr "Gebäudevarianten…"
+
+#. Supplementary building-variant UI translation; AI-assisted from English.
+#: game/src/ui/settings/building_mix_dialog.gd
+msgid "Mix building tile sets"
+msgstr "Gebäude-Tilesets mischen"
+
+#. Supplementary building-variant UI translation; AI-assisted from English.
+#: game/src/ui/settings/building_mix_dialog.gd
+msgid "Choose local SCURK MIF files. Mixing uses the base graphics instead of replacement tile sets. Changes affect appearance only."
+msgstr "Lokale SCURK-MIF-Dateien auswählen. Die Mischung verwendet die Basisgrafiken anstelle ersetzender Tilesets. Änderungen betreffen nur das Aussehen."
+
+#. Supplementary building-variant UI translation; AI-assisted from English.
+#: game/src/ui/settings/building_mix_dialog.gd
+msgid "Weights are relative for each building with compatible alternatives. A missing or incomplete family keeps the original. Additional artwork needs its own matching light masks."
+msgstr "Gewichte gelten relativ je Gebäude mit passenden Alternativen. Fehlende oder unvollständige Varianten behalten das Original. Zusätzliche Grafiken benötigen eigene passende Lichtmasken."
+
+#. Supplementary building-variant UI translation; AI-assisted from English.
+#: game/src/ui/settings/building_mix_dialog.gd
+msgid "Original weight"
+msgstr "Gewicht des Originals"
+
+#. Supplementary building-variant UI translation; AI-assisted from English.
+#: game/src/ui/settings/building_mix_dialog.gd
+msgid "Add tile sets…"
+msgstr "Tilesets hinzufügen…"
+
+#. Supplementary building-variant UI translation; AI-assisted from English.
+#: game/src/ui/settings/building_mix_dialog.gd
+msgid "Up to 8 local sets. Equal weights give equal chances; actual counts vary."
+msgstr "Bis zu 8 lokale Sets. Gleiche Gewichte ergeben gleiche Chancen; tatsächliche Anzahlen variieren."
+
+#. Supplementary building-variant UI translation; AI-assisted from English.
+#: game/src/ui/settings/building_mix_dialog.gd
+msgid "Shuffle again"
+msgstr "Neu mischen"
+
+#. Supplementary building-variant UI translation; AI-assisted from English.
+#: game/src/ui/settings/building_mix_dialog.gd
+msgid "New building choices will be used after Apply."
+msgstr "Die neue Gebäudeauswahl wird nach Anwenden verwendet."
+
+#. Supplementary building-variant UI translation; AI-assisted from English.
+#: game/src/ui/settings/building_mix_dialog.gd
+msgid "Unavailable tile set: %s"
+msgstr "Tileset nicht verfügbar: %s"
+
+#. Supplementary building-variant UI translation; AI-assisted from English.
+#: game/src/ui/settings/building_mix_dialog.gd
+msgid "Invalid tile set: %s"
+msgstr "Ungültiges Tileset: %s"
+
+#. Supplementary building-variant UI translation; AI-assisted from English.
+#: game/src/ui/settings/building_mix_dialog.gd
+msgid "Tile set memory limit reached."
+msgstr "Speichergrenze für Tilesets erreicht."
+
+#. Supplementary building-variant UI translation; AI-assisted from English.
+#: game/src/ui/settings/building_mix_dialog.gd
+msgid "%s: %d unchanged or incomplete building families skipped."
+msgstr "%s: %d unveränderte oder unvollständige Gebäudefamilien übersprungen."
+
+#. Supplementary building-variant UI translation; AI-assisted from English.
+#: game/src/ui/settings/building_mix_dialog.gd
+msgid "Building mixing needs indexed SC2000 graphics."
+msgstr "Die Gebäudemischung benötigt indizierte SC2000-Grafiken."
+
+#. Supplementary building-variant UI translation; AI-assisted from English.
+#: game/src/ui/settings/building_mix_dialog.gd
+msgid "SCURK tile set"
+msgstr "SCURK-Tileset"
+
+#. Supplementary building-variant UI translation; AI-assisted from English.
+#: game/src/ui/settings/building_mix_dialog.gd
+msgid "Public services"
+msgstr "Öffentliche Einrichtungen"
+
+#. Supplementary building-variant UI translation; AI-assisted from English.
+#: game/src/ui/settings/building_mix_dialog.gd
+msgid "Power plants"
+msgstr "Kraftwerke"

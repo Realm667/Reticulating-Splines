@@ -130,7 +130,7 @@ func prepare(city: CityState, palette: Sc2Palette, sprites: Sc2SpriteArchive, vi
 		var artwork: Dictionary[int, Image] = {}
 
 		for id: int in sprites.entries_by_id:
-			if id >= configuration.sprite_base and id < configuration.sprite_base + 500:
+			if (id >= configuration.sprite_base and id < configuration.sprite_base + 500) or (id >= BuildingVariants.FIRST and id % BuildingVariants.SPAN / 500 == view):
 				artwork[id] = CityIsometricRenderer.sprite_image(sprites, palette, images, id, false)
 		if (sprites.visual_nature_enabled or sprites.visual_terrain_enabled) and mode == CityViewMode.Mode.CITY:
 			for id: int in sprites.visual_nature:
@@ -141,6 +141,13 @@ func prepare(city: CityState, palette: Sc2Palette, sprites: Sc2SpriteArchive, vi
 					artwork[id] = CityIsometricRenderer.sprite_image(sprites, palette, images, id, false)
 
 		var request := _snapshot(city)
+		var variants: Dictionary[int, PackedInt64Array] = {}
+		for id: int in sprites.building_variants:
+			if id / 500 == view:
+				variants[id] = sprites.building_variants[id]
+		request["building_variants"] = variants
+		request["building_mix_seed"] = sprites.building_mix_seed
+		request["building_original_weight"] = sprites.building_original_weight
 		var registrations: Dictionary[int, Vector3i] = {}
 		for id: int in sprites.visual_registration:
 			if artwork.has(id):

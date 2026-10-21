@@ -504,6 +504,9 @@ func _apply_scurk_tile_sets(
 # that uses the sc2kfix DOS colours adds them to the palette, and the original
 # sprites under it keep those entries black. False when the sprites cannot combine.
 func combine_tile_sets(tile_sets: Array[ScurkMif]) -> bool:
+	if app.preferences.building_mix.enabled:
+		app.assets.use_default_sprites()
+		return true
 	var dos_colors := tile_sets.any(func(tile_set: ScurkMif) -> bool: return tile_set.uses_dos_colors())
 	var base_large := app.asset_state.base_large_sprites
 	var base_small_medium := app.asset_state.base_small_medium_sprites

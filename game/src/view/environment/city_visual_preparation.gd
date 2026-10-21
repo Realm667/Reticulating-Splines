@@ -157,6 +157,9 @@ func begin() -> void:
 		archive.parcel_styles = original.parcel_styles
 		archive.entries = original.entries
 		archive.entries_by_id = original.entries_by_id
+		archive.building_variants = original.building_variants
+		archive.building_mix_seed = original.building_mix_seed
+		archive.building_original_weight = original.building_original_weight
 		archive.visual_emission = original.visual_emission
 		archive.visual_emission_artwork = original.visual_emission_artwork
 		archive.visual_seasons = original.visual_seasons

@@ -14,6 +14,7 @@ var text_resources: OriginalTextResources
 var original_import_prompt: OriginalImportPrompt
 var requested_import_categories := PackedStringArray()
 var _startup_load: GraphicsSourceLoad
+var building_variants := BuildingVariants.new()
 
 
 func _init(application: CityApplication) -> void:
@@ -381,16 +382,30 @@ func apply_graphics_source(selected: GameAssetSource) -> void:
 func use_default_sprites() -> void:
 	var large := app.asset_state.base_large_sprites
 	var small_medium := app.asset_state.base_small_medium_sprites
+	var mix := app.preferences.building_mix
+	var supported := app.asset_state.base_palette != null and app.asset_state.base_palette.cycles_enabled
+	building_variants.load_options(mix if supported else BuildingVariants.normalize({}))
+	if mix.enabled and not supported:
+		building_variants.notices.append(tr("Building mixing needs indexed SC2000 graphics."))
 	# HD graphics show no sc2kfix corrections
 	var corrections := app.preferences.sprite_corrections and not app.asset_state.hd_active()
 
 	if corrections:
 		large = Sc2kfixSpriteFixes.apply(large, "large")
 		small_medium = Sc2kfixSpriteFixes.apply(small_medium, "small_medium")
+	elif building_variants.uses_dos_colors():
+		large = Sc2kfixSpriteFixes.apply(large, "large", false)
+		small_medium = Sc2kfixSpriteFixes.apply(small_medium, "small_medium", false)
 
-	app.asset_state.large_sprites = with_hd_sprites(large)
-	app.asset_state.small_medium_sprites = with_hd_sprites(small_medium)
-	use_dos_colors(corrections)
+	building_variants.prepare_families(large, small_medium, mix)
+	app.asset_state.large_sprites = building_variants.apply_to(with_hd_sprites(large), mix)
+	app.asset_state.small_medium_sprites = building_variants.apply_to(with_hd_sprites(small_medium), mix)
+	use_dos_colors(corrections or building_variants.uses_dos_colors())
+
+
+func set_building_mix(value: Dictionary) -> void:
+	app.preferences.building_mix = BuildingVariants.normalize(value)
+	_reload_sprites()
 
 
 # `archive` with the art of the HD sprite pack, when HD graphics show.

@@ -287,6 +287,7 @@ impl Builder {
             // An odd compass rotation mirrors buildings, not networks.
             let flip =
                 sprite < crate::nature::FIRST && ((self.city.flags[i] & flags::FLIPPED != 0) ^ (developed && self.city.rotation & 1 != 0));
+            let sprite = self.building_variant(x, y, sprite);
             let image = self.sprites.get(sprite, flip)?;
             let width = self.sprites.footprint_width(image);
             if developed && c.building_ground {

@@ -21,6 +21,7 @@ pub mod region_plan;
 pub mod sprites;
 pub mod surface_grid;
 pub mod tree_shadows;
+pub mod variants;
 pub mod visual_auxiliary;
 pub mod water_reflections;
 

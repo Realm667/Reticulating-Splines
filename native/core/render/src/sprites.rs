@@ -41,6 +41,7 @@ pub struct Artwork {
 }
 
 pub struct Sprites {
+    pub variants: crate::variants::Variants,
     pub images: HashMap<u64, Sprite>,
     /// Pack-local footprint width and added left/bottom canvas padding.
     /// Indexed geometry and full-color artwork share this registration.
@@ -65,6 +66,7 @@ pub struct Sprites {
 impl Sprites {
     pub fn new(images: HashMap<u64, Sprite>, target: [u8; 4]) -> Self {
         Self {
+            variants: crate::variants::Variants::default(),
             images,
             registration: HashMap::new(),
             parcels: HashMap::new(),

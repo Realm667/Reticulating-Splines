@@ -238,7 +238,7 @@ impl Builder {
                 water.is_none()
                     && !draw.shadow
                     && !draw.moving
-                    && draw.sprite == self.config.base() + i32::from(b)
+                    && crate::nature::original(draw.sprite) == self.config.base() + i32::from(b)
                     && (bridge(b) || b == crate::ids::building_tile_ids::MARINA)
                     && self.city.wet(i)
             });
@@ -932,6 +932,42 @@ mod tests {
             let disabled = builder.water_pixels(bounds, &[0; 256], &HashMap::new(), &HashMap::new()).unwrap();
             assert!(disabled.surface.iter().all(|v| *v == 0));
         }
+    }
+
+    #[test]
+    fn mixed_marina_keeps_its_own_embedded_water_receiver() {
+        let mut builder = fixture(2);
+        let original = builder.config.base() + i32::from(crate::ids::building_tile_ids::MARINA);
+        let variant = crate::variants::FIRST + original;
+        let sprite = builder.sprites.images[&2224].clone();
+        builder.sprites.images.insert(original as u64 * 2, sprite.clone());
+        builder.sprites.images.insert(variant as u64 * 2, sprite.clone());
+        builder.city.buildings[0] = crate::ids::building_tile_ids::MARINA;
+        builder.city.flags[0] = 4;
+        builder.city.terrain[0] = 0x10;
+        let mut mask = sprite;
+        for pixel in mask.rgba.chunks_exact_mut(4) {
+            pixel.copy_from_slice(&[0, 0, 140, 255]);
+        }
+        let c = builder.config;
+        let bounds = Rect::new(c.side(), c.top() - 32, 160, 160);
+        // No generic water indices: all receivers must come from the marina mask.
+        let before = builder
+            .water_pixels(
+                bounds,
+                &[0; 256],
+                &HashMap::new(),
+                &HashMap::from([(original as u64 * 2, mask.clone())]),
+            )
+            .unwrap();
+        assert!(before.surface.chunks_exact(4).any(|p| p[3] != 0));
+        builder.sprites.variants.choices.insert(original, vec![(variant, 100)]);
+        builder.sprites.variants.original_weight = 0;
+        builder.tiles.clear();
+        let after = builder
+            .water_pixels(bounds, &[0; 256], &HashMap::new(), &HashMap::from([(variant as u64 * 2, mask)]))
+            .unwrap();
+        assert_eq!(before.surface, after.surface);
     }
 
     #[test]
