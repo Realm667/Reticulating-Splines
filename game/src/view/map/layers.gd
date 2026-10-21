@@ -28,6 +28,7 @@ var _retained_data_signature: Array = []
 var environment_parameters: Dictionary = {}
 var ground_receivers: Array[Node2D] = []
 var water_layer: CityWaterLayer
+var tree_fade: CityTreeGrowthFade
 var _visual_materials: Dictionary = {}
 var _environment := CityEnvironmentParameters.new()
 
@@ -67,6 +68,10 @@ func visual_material(emission: Texture2D, seasons: Texture2D, pages: CityGpuText
 
 func _init(control: CityMapControl) -> void:
 	map = control
+	if map != null:
+		tree_fade = CityTreeGrowthFade.new()
+		tree_fade.settled.connect(_prune_visual_materials)
+		map.add_child(tree_fade)
 
 
 func set_data_view(value: CityState, mode: CityViewMode.Mode) -> void:
@@ -270,6 +275,8 @@ func _ensure_base_layer() -> void:
 	_base_material = _new_palette_material()
 	base_layer.material = _base_material
 	map.add_child(base_layer)
+	tree_fade.name = "TreeGrowthFade"
+	tree_fade.show_behind_parent = true
 	water_layer = CityWaterLayer.new()
 	water_layer.name = "WaterReflections"
 	water_layer.show_behind_parent = true
@@ -302,7 +309,7 @@ func _sync_base_nodes() -> void:
 	# Packs and retained sources may arrive after the environment canvases.
 	# Base art must always precede water, moving art and all later overlays.
 	var position := 0
-	var ordered: Array[Node] = [base_layer, water_layer]
+	var ordered: Array[Node] = [base_layer, tree_fade, water_layer]
 	ordered.append_array(ground_receivers)
 	ordered.append(dynamic_canvas)
 	for layer: Node in ordered:
@@ -311,6 +318,7 @@ func _sync_base_nodes() -> void:
 				map.move_child(layer, position)
 			position += 1
 	if not map.data_view_mode == CityViewMode.Mode.NONE:
+		tree_fade.reset()
 		if map.data_view_layer != null:
 			var data_scale := map.camera._view_scale()
 			map.data_view_layer.position = map.camera._draw_offset(data_scale)
@@ -331,6 +339,7 @@ func _sync_base_nodes() -> void:
 		return
 
 	if map.city_source == null:
+		tree_fade.reset()
 		base_layer.hide()
 		if water_layer != null:
 			water_layer.sync(null, 1.0, Vector2.ZERO, map.animated_palette_texture)
@@ -338,6 +347,8 @@ func _sync_base_nodes() -> void:
 		return
 
 	var scale := map.camera._view_scale()
+	if _tiled_source != map.city_source:
+		tree_fade.capture(_tiled_source, map.city_source, self)
 
 	if _tiled_source != map.city_source and not _update_region_meshes(scale):
 		for tile in _tile_layers:
@@ -415,20 +426,31 @@ func _sync_base_nodes() -> void:
 		_mesh_view_scale = scale
 
 	base_layer.position = map.camera._draw_offset(scale)
+	tree_fade.position = base_layer.position
+	tree_fade.scale = Vector2.ONE * scale
+	tree_fade.advance(0.0)
 	base_layer.size = Vector2(map.city_source.size) * scale
 	base_layer.show()
 	water_layer.sync(map.city_source, scale, map.camera._draw_offset(scale), map.animated_palette_texture, map.visible_source_rect())
+	_prune_visual_materials()
+	_sync_base_material()
+	_sync_dynamic_canvas()
+
+
+func _prune_visual_materials() -> void:
+	if base_layer == null:
+		return
 	var used_materials := {}
 	used_materials[base_layer.material] = true
 	for tile in _tile_layers:
 		used_materials[tile.material] = true
 	for mesh in _mesh_layers:
 		used_materials[mesh.material] = true
+	for entry: Dictionary in tree_fade.active.values():
+		used_materials[entry.node.material] = true
 	for key in _visual_materials.keys():
 		if not used_materials.has(_visual_materials[key]):
 			_visual_materials.erase(key)
-	_sync_base_material()
-	_sync_dynamic_canvas()
 
 
 # A stationary view publishes the same region positions with a few new meshes.

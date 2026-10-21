@@ -29,8 +29,37 @@ func _run() -> void:
 	assert(loaded.parse(saved.data))
 	assert(CityState.from_document(loaded).buildings == city.buildings, "Grown forest survives saving and loading")
 	_check_shared()
+	_check_presentation()
 	print("PASS: deterministic optional saved forest growth, density, adjacent spread, protected land and shared ownership composition")
 	quit()
+
+
+func _check_presentation() -> void:
+	var city := _fixture()
+	var before := CityState.from_document(city.document.duplicate_document())
+	var source := CityMapSource.new(Vector2i(2048, 2048))
+	for x in 4:
+		for y in 4:
+			source.tiles.append(CityMapSource.TileEntry.new(Vector2(x * 512, y * 512), Vector2(512, 512), null))
+	var fade := CityTreeGrowthFade.new()
+	fade.observe(city, before, source, [1, 0], 512, true)
+	assert(fade.pending.is_empty(), "Loading must not fade an existing city")
+	city.set_age_in_days(8 * CityCalendar.DAYS_PER_YEAR)
+	ForestGrowth.advance(city, 0, true)
+	var saved := city.document.serialize().data
+	fade.observe(city, before, source, [1, 0], 512, true)
+	assert(not fade.pending.is_empty(), "Both denser forest and new saplings must arm visible regions")
+	assert(CityTreeGrowthFade.grows(0, 6) and CityTreeGrowthFade.grows(6, 7))
+	assert(not CityTreeGrowthFade.grows(7, 6) and not CityTreeGrowthFade.grows(6, 29))
+	fade.advance(CityTreeGrowthFade.PENDING_SECONDS + 1.0)
+	assert(fade.pending.is_empty(), "Unpublished regions must not leave unbounded pending work")
+	fade.observe(city, before, source, [1, 0], 512, true)
+	fade.observe(city, before, source, [1, 1], 512, true)
+	assert(fade.pending.is_empty(), "A rotated/resized cache must not reuse old screen geometry")
+	fade.observe(city, before, source, [1, 1], 512, false)
+	assert(fade.pending.is_empty() and fade.active.is_empty(), "Disabled/editor views settle immediately")
+	assert(city.document.serialize().data == saved, "The visual transition must not change save or simulation state")
+	fade.free()
 
 
 func _fixture() -> CityState:

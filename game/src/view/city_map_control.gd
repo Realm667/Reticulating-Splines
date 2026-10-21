@@ -199,6 +199,8 @@ func advance_artwork_animation(delta: float) -> void:
 
 func _process(delta: float) -> void:
 	interaction._process(delta)
+	# Appearance transitions finish in real time, including a simulation pause.
+	layers.tree_fade.advance(delta)
 
 
 func set_data_view(value: CityState, mode: CityViewMode.Mode) -> void:

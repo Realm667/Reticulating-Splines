@@ -185,6 +185,7 @@ func process(delta: float) -> void:
 	# lighting or presentation clocks. Saved city settings remain unchanged.
 	var active := surface_active and not app.tool_state.landscape_editor
 	if city != null and city.document.get_instance_id() != _city_id:
+		app.map_view.layers.tree_fade.discard_other_city(city.document.get_instance_id())
 		_city_id = city.document.get_instance_id()
 		phase = 0.5
 		season_phase = 1.0
@@ -204,6 +205,8 @@ func process(delta: float) -> void:
 			phase = float(remote_weather.get("day_phase", phase))
 			season_phase = float(remote_weather.get("season_phase", season_phase))
 	var options := app.preferences.visual_enhancements
+	if not active or not options.tree_growth_enabled:
+		app.map_view.layers.tree_fade.reset()
 	var speed := app.simulation_state.speed_controller.speed if app.simulation_state.speed_controller != null else 1
 	var elapsed := maxf(delta, 0.0)
 	var paused := speed == GameSpeedController.Speed.PAUSED or (not app.coop.active() and app.frame._simulation_suspended())

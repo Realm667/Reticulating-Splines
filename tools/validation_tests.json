@@ -294,6 +294,13 @@
     "driver": "scene-batch"
   },
   {
+    "id": "tree_growth_fade_gpu_test",
+    "script": "tests/tree_growth_fade_gpu_test.gd",
+    "domain": "rendering",
+    "lane": "native",
+    "driver": "scene-batch"
+  },
+  {
     "id": "fog_height_gpu_test",
     "script": "tests/fog_height_gpu_test.gd",
     "domain": "rendering",
