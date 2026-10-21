@@ -16,6 +16,16 @@ static func default_path() -> String:
 	return AppPaths.path("settings.cfg")
 
 
+# Partial saves preserve the other sections and use a fresh config for a missing file.
+static func _config_for_update(path: String) -> ConfigFile:
+	var config := ConfigFile.new()
+
+	if FileAccess.file_exists(path):
+		config.load(path)
+
+	return config
+
+
 static func load_values(
 	path := default_path(),
 	default_music_volume := 0.8,
@@ -209,10 +219,7 @@ static func _write_bindings(config: ConfigFile, bindings: ControlBindings) -> vo
 
 # save only the controls section, and keep every other saved value
 static func save_controls(bindings: ControlBindings, path := default_path()) -> Error:
-	var config := ConfigFile.new()
-
-	if FileAccess.file_exists(path):
-		config.load(path)
+	var config := _config_for_update(path)
 
 	_write_bindings(config, bindings)
 
@@ -259,10 +266,7 @@ static func save_values(
 	if options == null:
 		options = SaveOptions.new()
 
-	var config := ConfigFile.new()
-
-	if FileAccess.file_exists(path):
-		config.load(path)
+	var config := _config_for_update(path)
 
 	if not options.graphics_source.is_empty():
 		config.set_value("graphics", "source", options.graphics_source)
@@ -371,10 +375,7 @@ static func save_values(
 
 # the Debug window saves this choice when it changes
 static func save_debug_mode(enabled: bool, path := default_path()) -> Error:
-	var config := ConfigFile.new()
-
-	if FileAccess.file_exists(path):
-		config.load(path)
+	var config := _config_for_update(path)
 
 	config.set_value("debug", "enabled", enabled)
 
@@ -394,10 +395,7 @@ static func load_disabled_mods(path := default_path()) -> PackedStringArray:
 
 
 static func save_disabled_mods(ids: PackedStringArray, path := default_path()) -> Error:
-	var config := ConfigFile.new()
-
-	if FileAccess.file_exists(path):
-		config.load(path)
+	var config := _config_for_update(path)
 
 	config.set_value("mods", "disabled", ids)
 
@@ -407,10 +405,7 @@ static func save_disabled_mods(ids: PackedStringArray, path := default_path()) -
 static func save_update_state(
 	last_check: int, skipped_version: String, checked_at: int, error: String, path := default_path()
 ) -> Error:
-	var config := ConfigFile.new()
-
-	if FileAccess.file_exists(path):
-		config.load(path)
+	var config := _config_for_update(path)
 
 	config.set_value("updates", "last_check", last_check)
 	config.set_value("updates", "skipped_version", skipped_version)
