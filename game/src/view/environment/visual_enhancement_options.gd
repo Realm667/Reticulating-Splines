@@ -115,5 +115,5 @@ static func detail_lights_visible(options: Dictionary, zoom: float) -> bool:
 	return zoom + 0.00001 >= [0.1, 0.25, 0.5, 1.0, 2.0, 4.0][clampi(int(options.get("detail_lights_min_zoom", 2)), 0, 5)]
 
 
-static func water_pass_enabled(options: Dictionary) -> bool:
-	return options.water_reflections == 1 or options.water_topography or options.get("water_depth_enabled", false) or options.get("water_waves_enabled", false) or (options.season_enabled and options.season_water_strength > 0.0)
+static func water_pass_enabled(options: Dictionary, allow_seasons := true) -> bool:
+	return options.water_reflections == 1 or options.water_topography or options.get("water_depth_enabled", false) or options.get("water_waves_enabled", false) or (allow_seasons and options.season_enabled and options.season_water_strength > 0.0)

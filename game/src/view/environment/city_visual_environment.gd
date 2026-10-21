@@ -180,7 +180,10 @@ func process(delta: float) -> void:
 	var city := app.document_state.city
 	if not app.coop.active() or app.coop.session.hosting:
 		remote_weather.clear()
-	var active := city != null and app.view_state.overlay_mode == CityViewMode.Mode.CITY and not app.tool_state.landscape_editor
+	var surface_active := city != null and app.view_state.overlay_mode == CityViewMode.Mode.CITY
+	# The landscape editor previews Environment artwork, without atmosphere,
+	# lighting or presentation clocks. Saved city settings remain unchanged.
+	var active := surface_active and not app.tool_state.landscape_editor
 	if city != null and city.document.get_instance_id() != _city_id:
 		_city_id = city.document.get_instance_id()
 		phase = 0.5
@@ -231,47 +234,48 @@ func process(delta: float) -> void:
 		profiles.reload(options.lut_folder)
 	var grading_delta: float = options.weather_transition if weather_paused and weather.kind != previous_weather else weather_delta
 	profiles.advance_weather(weather.kind, grading_delta, options.weather_transition, active and options.weather_enabled)
-	var daytime_lights: bool = options.brightmaps and options.night_daytime_enabled
+	var daytime_lights: bool = active and options.brightmaps and options.night_daytime_enabled
 	# The auxiliary mask also identifies fullbright warning icons, even with
 	# all environment effects disabled.
-	if active:
+	if surface_active:
 		_sync_whole_masks()
-	if active and VisualEnhancementOptions.water_pass_enabled(options):
+	var water_enabled := surface_active and VisualEnhancementOptions.water_pass_enabled(options, active)
+	if water_enabled:
 		_sync_whole_water()
-	tint = lighting.tint if options.day_enabled else Color.WHITE
-	var ambient_night: float = lighting.night if options.day_enabled else 0.0
+	tint = lighting.tint if active and options.day_enabled else Color.WHITE
+	var ambient_night: float = lighting.night if active and options.day_enabled else 0.0
 	# Artificial lights can stay on without changing daylight, grading or cloud shadows.
 	var light_level := 1.0 if daytime_lights else ambient_night
 	night = light_level * float(options.night_light_strength) / 100.0 if options.brightmaps else 0.0
 	clouds.process(delta, weather_delta * factor, active, tint * weather.tint, lighting.night if options.day_enabled else 0.0, weather.kind)
 	weather.set_cloud_cover(clouds.precipitation_readiness)
 	var parameters := {
-		"artwork_color_strength": options.artwork_color_strength if active and options.artwork_color_enabled else 0.0,
-		"map_strata_enabled": active and options.map_strata_enabled,
+		"artwork_color_strength": options.artwork_color_strength if surface_active and options.artwork_color_enabled else 0.0,
+		"map_strata_enabled": surface_active and options.map_strata_enabled,
 		"map_edge_size": float(city.map_size) if city != null else 128.0,
-		"map_edge_profile": edge_profile.texture_for(city) if active and (options.map_strata_enabled or options.water_depth_enabled) else null,
+		"map_edge_profile": edge_profile.texture_for(city) if surface_active and (options.map_strata_enabled or options.water_depth_enabled) else null,
 		"edge_canvas_to_grid": _nature_projection(true),
-		"water_depth_enabled": active and options.water_depth_enabled,
-		"nature_terrain_enabled": active and options.nature_terrain_enabled,
-		"terrain_elevation_enabled": active and options.nature_terrain_enabled,
+		"water_depth_enabled": surface_active and options.water_depth_enabled,
+		"nature_terrain_enabled": surface_active and options.nature_terrain_enabled,
+		"terrain_elevation_enabled": surface_active and options.nature_terrain_enabled,
 		"terrain_elevation_range": terrain_elevation.range_for(city),
 		"nature_terrain_strength": options.nature_terrain_strength,
-		"nature_forests_enabled": active and options.nature_forests_enabled,
-		"tree_shadows_enabled": active and options.tree_shadows_enabled,
+		"nature_forests_enabled": surface_active and options.nature_forests_enabled,
+		"tree_shadows_enabled": surface_active and options.tree_shadows_enabled,
 		"nature_ground": CityNatureArtwork.ground_texture(),
 		"nature_canvas_to_grid": _nature_projection(),
-		"water_enabled": active and VisualEnhancementOptions.water_pass_enabled(options),
+		"water_enabled": water_enabled,
 		"water_high_resolution": app.asset_state.large_sprites != null and not app.asset_state.large_sprites.high_resolution.is_empty(),
-		"water_reflections_enabled": active and options.water_reflections == 1,
+		"water_reflections_enabled": surface_active and options.water_reflections == 1,
 		"water_topography": options.water_topography,
 		"water_waves_enabled": options.water_waves_enabled,
 		"water_season_strength": options.season_water_strength if active and options.season_enabled else 0.0,
 		"water_rain": weather.rain * clouds.precipitation_readiness,
-		"water_frozen": options.pause_freezes and (speed == 1 or (not app.coop.active() and app.frame._simulation_suspended())),
+		"water_frozen": not active or (options.pause_freezes and (speed == 1 or (not app.coop.active() and app.frame._simulation_suspended()))),
 		"environment_enabled": active and (options.day_enabled or options.season_enabled or options.weather_enabled or daytime_lights),
 		"environment_weather": Vector3(weather.tint.r, weather.tint.g, weather.tint.b),
 		"environment_frost": weather.frost,
-		"environment_seasons": CitySeasonColors.weights(season, options.season_transition) if options.season_enabled else Vector4(0, 1, 0, 0),
+		"environment_seasons": CitySeasonColors.weights(season, options.season_transition) if active and options.season_enabled else Vector4(0, 1, 0, 0),
 		"environment_tint": Vector3(tint.r, tint.g, tint.b),
 		"environment_saturation": lerpf(1.0, 0.78, ambient_night),
 		"environment_night": night,

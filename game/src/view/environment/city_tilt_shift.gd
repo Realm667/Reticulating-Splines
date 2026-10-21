@@ -36,6 +36,10 @@ func update(map: CityMapControl, active: bool, options: Dictionary) -> void:
 		if canvas.get_index() != target:
 			map.move_child(canvas, target)
 	var bounds := map.camera._camera_rect().intersection(Rect2(Vector2.ZERO, map.size))
+	# Camera centering excludes the sidebar's column, not the visible artwork
+	# below it. The interface is drawn later, above this city-only pass.
+	bounds.position.x = 0.0
+	bounds.size.x = map.size.x
 	rect.position = bounds.position
 	rect.size = bounds.size
 	copy.copy_mode = BackBufferCopy.COPY_MODE_VIEWPORT

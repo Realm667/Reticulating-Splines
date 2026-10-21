@@ -328,6 +328,7 @@ func _run() -> void:
 	assert(DocumentState.capture(main.document_state.city.document) == before)
 	assert([engine.random.state, engine.lfsr_random.state, engine.game_random.state] == random_before)
 	# A newly loaded sunny document must not inherit the previous snowstorm.
+	_check_landscape_environment(main)
 	await _check_ground_lighting(main)
 	main.preferences.visual_enhancements.season_enabled = true
 	main.preferences.visual_enhancements.weather_mode = 2
@@ -347,6 +348,55 @@ func _run() -> void:
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
 	print("PASS: cosmetic clocks, speed, pause, grading, seasons, weather mapping, settings preservation and unchanged city/RNG")
 	quit()
+
+
+func _check_landscape_environment(main: CityApplication) -> void:
+	var saved := main.preferences.visual_enhancements.duplicate(true)
+	var options := main.preferences.visual_enhancements
+	options.merge({"day_enabled": true, "day_mode": 1, "day_hour": 0.0,
+		"season_enabled": true, "season_mode": 2, "season_fixed": 3,
+		"weather_enabled": true, "weather_mode": 2, "weather_fixed": CityVisualWeather.Kind.HEAVY_SNOW,
+		"cloud_enabled": true, "brightmaps": true, "night_daytime_enabled": true,
+		"nature_forests_enabled": true, "tree_shadows_enabled": true, "nature_terrain_enabled": true,
+		"map_strata_enabled": true, "water_depth_enabled": true, "water_reflections": 1,
+		"water_waves_enabled": true, "artwork_color_enabled": true, "artwork_color_strength": 0.2,
+		"tilt_shift_enabled": true, "tilt_shift_strength": 0.7}, true)
+	main.visual_environment.configure()
+	var chosen := options.duplicate(true)
+	var before := DocumentState.capture(main.document_state.city.document)
+	var phases := Vector2(main.visual_environment.phase, main.visual_environment.season_phase)
+	main.tool_state.landscape_editor = true
+	main.visual_environment.process(10.0)
+	var parameters := main.map_view.layers.environment_parameters
+	for key in ["map_strata_enabled", "water_depth_enabled", "nature_terrain_enabled",
+		"terrain_elevation_enabled", "nature_forests_enabled", "tree_shadows_enabled", "water_enabled", "water_reflections_enabled"]:
+		assert(parameters[key], "Environment effect must remain available in the landscape editor: " + key)
+	assert(parameters.artwork_color_strength == 0.2 and parameters.map_edge_profile != null)
+	assert(not parameters.environment_enabled and not parameters.cloud_enabled)
+	assert(parameters.environment_night == 0.0 and parameters.water_rain == 0.0)
+	assert(parameters.environment_frost == 0.0 and parameters.water_season_strength == 0.0)
+	assert(parameters.environment_seasons == Vector4(0, 1, 0, 0) and parameters.water_frozen)
+	assert(main.visual_environment.tint == Color.WHITE)
+	assert(not main.visual_environment.weather.layer.visible)
+	assert(not main.visual_environment.tilt_shift.canvas.visible)
+	assert(Vector2(main.visual_environment.phase, main.visual_environment.season_phase) == phases)
+	assert(main.preferences.visual_enhancements == chosen, "Editor must not rewrite saved appearance settings")
+	var retained_profile: Texture2D = parameters.map_edge_profile
+	main.visual_environment.process(0.0)
+	assert(main.map_view.layers.environment_parameters.map_edge_profile == retained_profile)
+	main.view_state.overlay_mode = CityViewMode.Mode.HEIGHT
+	main.visual_environment.process(0.0)
+	assert(not main.map_view.layers.environment_parameters.nature_terrain_enabled)
+	assert(not main.map_view.layers.environment_parameters.water_enabled)
+	main.view_state.overlay_mode = CityViewMode.Mode.CITY
+	main.tool_state.landscape_editor = false
+	main.visual_environment.process(0.0)
+	assert(main.map_view.layers.environment_parameters.environment_enabled)
+	assert(main.map_view.layers.environment_parameters.environment_seasons == Vector4(0, 0, 0, 1))
+	assert(main.visual_environment.tilt_shift.canvas.visible)
+	assert(DocumentState.capture(main.document_state.city.document) == before)
+	main.preferences.visual_enhancements = saved
+	main.visual_environment.configure()
 
 
 func _check_weather_pause(main: CityApplication) -> void:

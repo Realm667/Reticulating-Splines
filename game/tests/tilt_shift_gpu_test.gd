@@ -53,6 +53,15 @@ func _run() -> void:
 		assert(absf(pixel.r - pixel.g) < 0.005, "Red interface pixels must not bleed into the map")
 	assert(blurred.get_pixel(124, 30) == Color.GREEN, "Selection overlay must stay sharp")
 	assert(blurred.get_pixel(31, 30) == Color.RED, "Interface outside the map must stay untouched")
+	# The camera centers beside a sidebar, but artwork remains visible below
+	# that sidebar. Its left-hand pixels need the same postprocessing pass.
+	map.camera_view_rect = Rect2(64, 0, 192, 192)
+	effect.update(map, true, options)
+	await RenderingServer.frame_post_draw
+	var sidebar := viewport.get_texture().get_image()
+	assert(sidebar.get_region(Rect2i(32, 190, 80, 24)).get_data() == blurred.get_region(Rect2i(32, 190, 80, 24)).get_data(),
+		"Camera centering beside the sidebar must not clip blur below it")
+	assert(sidebar.get_pixel(124, 30) == Color.GREEN, "Selection must remain above the full-width blur")
 	# Maximum strength must still blur regular pixel patterns instead of
 	# aliasing back to the unblurred grid. Edge size moves the focus boundary.
 	options.tilt_shift_strength = 1.0
@@ -88,6 +97,7 @@ func _run() -> void:
 		assert(viewport.get_texture().get_image().get_data() == original.get_data(), "Off, zero strength and inactive views must restore exact pixels")
 	# Resizing and display scaling keep the focus band tied to the map viewport.
 	map.size = Vector2(192, 128)
+	map.camera_view_rect = Rect2(48, 0, 144, 128)
 	map.scale = Vector2(1.5, 1.5)
 	artwork.size = map.size
 	await RenderingServer.frame_post_draw
