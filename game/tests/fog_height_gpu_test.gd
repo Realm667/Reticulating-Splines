@@ -27,6 +27,8 @@ func _run() -> void:
 	main.map_view.city_source = CityMapSource.new(CityIsometricRenderer.output_size_for_view(IsometricConstants.VIEW_LARGE, 128))
 	var fog := CityVisualFog.new(main)
 	fog.process(0.0, true, 0.2, Color.WHITE)
+	assert(fog.layer.position.x == 0.0 and fog.layer.size.x == main.map_view.size.x,
+		"Fog stops at the sidebar instead of covering the map below it")
 	var texture := fog.altitude_texture
 	var uploads := fog.height_updates
 	fog.process(1.0, true, 0.1, Color(0.5, 0.5, 0.7))

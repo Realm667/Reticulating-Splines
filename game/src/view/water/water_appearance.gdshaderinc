@@ -29,6 +29,7 @@ vec3 water_noise(vec2 p) {
 
 // Lighting and reflected silhouettes use the same moving surface gradient.
 vec3 water_swell(vec2 world, float clock, float rain, float coast, float axis) {
+	clock *= 1.65;
 	vec2 plane = vec2(world.x, world.y * 2.0);
 	vec3 broad = water_noise(plane * 0.025 + vec2(clock * 0.055, clock * 0.035));
 	vec3 small = water_noise(plane * 0.067 + vec2(-clock * 0.095, clock * 0.065) + vec2(19.3, 7.1));
@@ -38,7 +39,7 @@ vec3 water_swell(vec2 world, float clock, float rain, float coast, float axis) {
 	float exposure = mix(0.55, 1.0, smoothstep(2.0, 24.0, coast)) * (axis > 0.0 ? 0.65 : 1.0);
 	float glint = smoothstep(0.25, 0.65, dot(normal, vec2(0.6, -0.8))) * detail;
 	float light = dot(normal, vec2(-0.6, 0.8)) * 0.12 + glint * 0.055;
-	return vec3(light, normal.x * 3.2, glint) * exposure * (1.0 + rain * 0.35);
+	return vec3(light, normal.x * 6.0, glint) * exposure * (1.0 + rain * 0.35);
 }
 
 float water_surf(vec2 world, float coast, float clock, float rain) {

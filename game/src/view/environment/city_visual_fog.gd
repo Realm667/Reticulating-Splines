@@ -93,7 +93,11 @@ func process(elapsed: float, active: bool, fog_density: float, light: Color) -> 
 	material.set_shader_parameter("fog_drift", drift)
 	material.set_shader_parameter("fog_density", density)
 	material.set_shader_parameter("fog_light", Vector3(light.r, light.g, light.b))
-	var bounds := map.camera._camera_rect()
+	var bounds := map.camera._camera_rect().intersection(Rect2(Vector2.ZERO, map.size))
+	# The short sidebar only covers the upper-left map. The visible city
+	# underneath it must use the same mist and projected altitude mask.
+	bounds.position.x = 0.0
+	bounds.size.x = map.size.x
 	# Preserve the fine field when many tiles fit into a screen pixel.
 	var reduction := 0.5 if map.zoom_factor >= 0.5 else 1.0
 	var size := Vector2i((bounds.size * minf(reduction, 1920.0 * reduction / maxf(bounds.size.x, bounds.size.y))).ceil()).max(Vector2i.ONE)

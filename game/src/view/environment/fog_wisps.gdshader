@@ -19,20 +19,22 @@ void vertex() {
 float wisp(vec2 point) {
 	vec2 curl = vec2(texture(fog_field, point * 2.0).r,
 		texture(fog_field, point * 2.0 + vec2(0.37, 0.61)).r) - 0.5;
-	float body = texture(fog_field, point + curl * 0.38).r;
-	float detail = texture(fog_field, point * 4.0 + curl * 0.2).r;
-	return smoothstep(0.36, 0.72, body * 0.92 + detail * 0.08);
+	float body = texture(fog_field, point + curl * 0.08).r;
+	float detail = texture(fog_field, point * 2.0 + curl * 0.04).r;
+	return smoothstep(0.18, 0.88, body * 0.96 + detail * 0.04);
 }
 
 void fragment() {
 	// Three irregular, elongated sheets with different drift and scale.
 	// Power-of-two periods keep the explicit drift wrap seamless.
-	vec2 p = vec2(fog_grid.x - fog_grid.y, (fog_grid.x + fog_grid.y) * 2.0);
+	// Stretch banks along an actual ground axis. Projection into the canvas
+	// supplies the isometric compression; do not paint round screen-space cells.
+	vec2 p = vec2(fog_grid.x * 0.5, fog_grid.y * 2.0);
 	vec2 drift = mod(fog_drift, vec2(4096.0));
 	float far_sheet = wisp((p - drift) / 256.0);
 	float middle_sheet = wisp((p - drift * 2.0) / 128.0 + vec2(0.31, 0.57));
 	float near_sheet = wisp((p - drift * 4.0) / 64.0 + vec2(0.73, 0.19));
-	float mist = far_sheet * 0.56 + middle_sheet * 0.36 + near_sheet * 0.08;
+	float mist = (far_sheet * 0.72 + middle_sheet * 0.25 + near_sheet * 0.03) * 0.72;
 	vec2 edge_distance = min(fog_grid, vec2(fog_map_edge) - fog_grid);
 	float map_mask = smoothstep(0.0, 2.0, min(edge_distance.x, edge_distance.y));
 	if (fog_has_height_mask) { map_mask = texture(fog_height_mask, UV).r; }
