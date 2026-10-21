@@ -42,6 +42,16 @@ func _check_versions() -> void:
 	assert(not Check.is_newer("0.1.0", "0.2.0"))
 	assert(not Check.is_newer("invalid", "0.1.0"))
 	assert(not Check.is_newer("1.0.0", "invalid"))
+	for pair in [["0.3.0-rs.10", "0.3.0-rs.9"], ["0.3.0-rs.6", "0.3.0-rs.6-dev.2"],
+			["0.3.0-rs.6-dev.10", "0.3.0-rs.6-dev.9"], ["0.3.0-rs.7-dev.1", "0.3.0-rs.6"],
+			["0.3.0", "0.3.0-rs.99"], ["0.3.1-rs.1", "0.3.0"]]:
+		assert(Check.is_newer(pair[0], pair[1]), str(pair))
+		assert(not Check.is_newer(pair[1], pair[0]), str(pair))
+		assert(not Check.is_newer(pair[0], pair[0]), str(pair))
+	assert(Check.normalized_version(" v0.3.0-rs.6-dev.2 ") == "0.3.0-rs.6-dev.2")
+	for invalid in ["0.3.0-rs.0", "0.3.0-rs.01", "0.3.0-rs.65536", "0.3.0-rs.1-dev.0",
+			"0.3.0-rs.1-dev.02", "0.3.0-rs.1-dev.65536", "0.3.0-rs.1-beta", "0.3.0-rs.1-rs.2"]:
+		assert(Check.parse_version(invalid).is_empty(), invalid)
 
 	# 2026-09-25 14:05 UTC, shown in local time
 	assert(Check.status_text(1790345100, "", 0).contains("2026-09-25 14:05"))
@@ -56,11 +66,16 @@ func _check_versions() -> void:
 
 
 func _release_body(tag: String, page: String) -> PackedByteArray:
-	return JSON.stringify({ "tag_name": tag, "html_url": page }).to_utf8_buffer()
+	return JSON.stringify([_release(tag, page)]).to_utf8_buffer()
+
+
+func _release(tag: String, page := "") -> Dictionary:
+	return { "tag_name": tag, "html_url": page if not page.is_empty() else Check.RELEASE_PAGE_PREFIX + tag,
+		"draft": false, "prerelease": tag.contains("-"), "published_at": "2026-10-21T07:00:00Z" }
 
 
 func _check_responses() -> void:
-	assert(Check.LATEST_RELEASE_API == "https://api.github.com/repos/Realm667/Reticulating-Splines/releases/latest")
+	assert(Check.LATEST_RELEASE_API == "https://api.github.com/repos/Realm667/Reticulating-Splines/releases?per_page=100")
 	var upstream := Check.read_response(HTTPRequest.RESULT_SUCCESS, 200, PackedStringArray(),
 		_release_body("v9.0.0", "https://github.com/nicholas-ochoa/OpenSC2K/releases/tag/v9.0.0"), "1.0.0", 0)
 	assert(upstream.url == Check.LATEST_RELEASE_PAGE, "Upstream links must not escape the fork release page")
@@ -68,8 +83,7 @@ func _check_responses() -> void:
 	var newer := Check.read_response(HTTPRequest.RESULT_SUCCESS, 200, PackedStringArray(), _release_body("v1.3.0", page), "1.2.3", 0)
 	assert(newer.status == Check.Status.UPDATE_AVAILABLE and newer.version == "1.3.0" and newer.url == page)
 
-	# Installed RS previews must still discover stable releases. Stable
-	# candidates keep the existing strict parser and latest-release endpoint.
+	# Installed RS previews must still discover stable releases.
 	for pair in [["v0.3.1", Check.Status.UPDATE_AVAILABLE], ["v0.3.0", Check.Status.UPDATE_AVAILABLE], ["v0.2.9", Check.Status.UP_TO_DATE]]:
 		var preview := Check.read_response(HTTPRequest.RESULT_SUCCESS, 200, PackedStringArray(),
 			_release_body(pair[0], Check.RELEASE_PAGE_PREFIX + pair[0]), "0.3.0-rs.1", 0)
@@ -82,6 +96,21 @@ func _check_responses() -> void:
 
 	var older := Check.read_response(HTTPRequest.RESULT_SUCCESS, 200, PackedStringArray(), _release_body("v1.0.0", page), "1.2.3", 0)
 	assert(older.status == Check.Status.UP_TO_DATE)
+	var draft := _release("v9.0.0")
+	draft.draft = true
+	var unpublished := _release("v8.0.0")
+	unpublished.published_at = null
+	var entries := [_release("v0.3.0-rs.10"), draft, null, 42, _release("nightly"),
+		unpublished, _release("v0.3.0-rs.9"), _release("v0.2.0")]
+	var selected := Check.read_response(HTTPRequest.RESULT_SUCCESS, 200, PackedStringArray(),
+		JSON.stringify(entries).to_utf8_buffer(), "0.3.0-rs.9", 0)
+	assert(selected.status == Check.Status.UPDATE_AVAILABLE and selected.version == "0.3.0-rs.10")
+	assert(selected.url == Check.RELEASE_PAGE_PREFIX + "v0.3.0-rs.10")
+	entries.reverse()
+	assert(Check.select_release(entries, "0.3.0-rs.10-dev.2").status == Check.Status.UPDATE_AVAILABLE)
+	assert(Check.select_release(entries, "0.3.0-rs.11-dev.1").status == Check.Status.UP_TO_DATE)
+	assert(Check.select_release(entries, "invalid").status == Check.Status.FAILED)
+	assert(Check.select_release([draft, unpublished, {}], "0.3.0-rs.9").status == Check.Status.FAILED)
 
 	# open only a release page of this project
 	var foreign := Check.read_response(
@@ -185,6 +214,30 @@ func _check_controller(path: String) -> void:
 	updates.status_changed.connect(func(checked_at: int, error: String) -> void:
 		statuses.append([checked_at, error]))
 	var now := 10 * Check.CHECK_INTERVAL_SECONDS
+	# A newer candidate can be on a later page: publication order is not version order.
+	updates.current_version = "0.3.0-rs.9"
+	updates.check_now()
+	updates._on_request_completed(HTTPRequest.RESULT_SUCCESS, 200,
+		PackedStringArray(['Link: <https://example.com/untrusted>; rel="next"']),
+		_release_body("v0.3.0-rs.8", Check.RELEASE_PAGE_PREFIX + "v0.3.0-rs.8"))
+	assert(updates.running and updates.release_page == 2 and not dialog.visible)
+	updates._on_request_completed(HTTPRequest.RESULT_SUCCESS, 200, PackedStringArray(),
+		_release_body("v0.3.0-rs.10", Check.RELEASE_PAGE_PREFIX + "v0.3.0-rs.10"))
+	assert(not updates.running and dialog.visible and updates.releases.is_empty())
+	dialog.get_ok_button().pressed.emit()
+	assert(updates.opened == [Check.RELEASE_PAGE_PREFIX + "v0.3.0-rs.10"])
+	updates.check_now()
+	updates.release_page = ApplicationUpdates.MAX_RELEASE_PAGES
+	updates._on_request_completed(HTTPRequest.RESULT_SUCCESS, 200,
+		PackedStringArray(['Link: <ignored>; rel="next"']), _release_body("v0.3.0-rs.8", ""))
+	assert(not updates.running and not preferences.update_error.is_empty())
+	dialog.hide()
+	updates.current_version = "1.2.3"
+	updates.sent = 0
+	updates.opened.clear()
+	running_states.clear()
+	statuses.clear()
+	preferences.update_skipped_version = ""
 
 	# off by default: the startup check sends nothing
 	updates.check_on_startup(now)

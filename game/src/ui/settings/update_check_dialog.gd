@@ -1,6 +1,6 @@
 class_name UpdateCheckDialog
 extends AcceptDialog
-## Shows the result of a check for a newer stable release.
+## Shows the result of a check for a newer published release.
 
 signal download_requested(version: String, url: String)
 signal skip_requested(version: String)
@@ -35,7 +35,7 @@ func show_update(version: String, current_version: String, url: String) -> void:
 
 
 func show_latest(current_version: String) -> void:
-	_show_notice("No Update Available", tr("Reticulating Splines %s is the latest release.") % current_version)
+	_show_notice("No Update Available", tr("No newer published release is available. You have version %s.") % current_version)
 
 
 func show_failure(message: String) -> void:

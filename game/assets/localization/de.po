@@ -28190,3 +28190,8 @@ msgstr "Tornadowarnung"
 #. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
 msgid "Brownouts Reported"
 msgstr "Stromausfälle gemeldet"
+
+#. Supplementary RS update status, AI-assisted translation.
+#: src/ui/settings/update_check_dialog.gd
+msgid "No newer published release is available. You have version %s."
+msgstr "Es ist keine neuere veröffentlichte Version verfügbar. Du hast Version %s."

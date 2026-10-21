@@ -1,6 +1,6 @@
 class_name ApplicationUpdates
 extends RefCounted
-## Runs the optional check for a newer stable release. The automatic check
+## Runs the optional check for a newer published release. The automatic check
 ## shows only a new release that the player did not skip. A check that the
 ## player requests shows every result.
 
@@ -16,6 +16,9 @@ var request: HTTPRequest
 var current_version := ReleaseUpdateCheck.current_version()
 var running := false
 var show_all_outcomes := false
+var release_page := 1
+var releases: Array = []
+const MAX_RELEASE_PAGES := 10
 
 
 func _init(app_preferences: AppPreferences) -> void:
@@ -50,6 +53,8 @@ func _start(manual: bool) -> void:
 	if running:
 		return
 
+	release_page = 1
+	releases.clear()
 	var error := _send_request()
 
 	if error != OK:
@@ -70,17 +75,39 @@ func _send_request() -> Error:
 		request.request_completed.connect(_on_request_completed)
 		host.add_child(request)
 
-	return request.request(ReleaseUpdateCheck.LATEST_RELEASE_API, PackedStringArray(ReleaseUpdateCheck.REQUEST_HEADERS))
+	var url := ReleaseUpdateCheck.LATEST_RELEASE_API + "&page=%d" % release_page
+	return request.request(url, PackedStringArray(ReleaseUpdateCheck.REQUEST_HEADERS))
 
 
 func _on_request_completed(result: int, response_code: int, headers: PackedStringArray, body: PackedByteArray) -> void:
 	var now := int(Time.get_unix_time_from_system())
-	finish(ReleaseUpdateCheck.read_response(result, response_code, headers, body, current_version, now), now)
+	if result != HTTPRequest.RESULT_SUCCESS or response_code != 200:
+		finish(ReleaseUpdateCheck.read_response(result, response_code, headers, body, current_version, now), now)
+		return
+	var json := JSON.new()
+	if json.parse(body.get_string_from_utf8()) != OK or not json.data is Array:
+		finish(ReleaseUpdateCheck.failed("GitHub returned release information that Reticulating Splines cannot read."), now)
+		return
+	releases.append_array(json.data)
+	var link := ReleaseUpdateCheck.header_value(headers, "link")
+	if link.contains('; rel="next"'):
+		# Construct our own next URL; never follow a URL from response headers.
+		# Fail explicitly on a truncated list instead of claiming it is up to date.
+		if release_page >= MAX_RELEASE_PAGES:
+			finish(ReleaseUpdateCheck.failed("GitHub returned release information that Reticulating Splines cannot read."), now)
+			return
+		release_page += 1
+		var error := _send_request()
+		if error != OK:
+			finish(ReleaseUpdateCheck.failed("Cannot start the update check (error %d)." % error), now)
+		return
+	finish(ReleaseUpdateCheck.select_release(releases, current_version), now)
 
 
 func finish(outcome: ReleaseUpdateCheck.Outcome, now := int(Time.get_unix_time_from_system())) -> void:
 	var manual := show_all_outcomes
 	show_all_outcomes = false
+	releases.clear()
 
 	if running:
 		running = false

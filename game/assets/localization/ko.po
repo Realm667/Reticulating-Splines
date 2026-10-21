@@ -9366,3 +9366,8 @@ msgstr "토네이도 경보"
 #. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
 msgid "Brownouts Reported"
 msgstr "전력 부족 신고"
+
+#. Supplementary RS update status, AI-assisted translation.
+#: src/ui/settings/update_check_dialog.gd
+msgid "No newer published release is available. You have version %s."
+msgstr "더 최신의 공개 버전이 없습니다. 현재 버전은 %s입니다."

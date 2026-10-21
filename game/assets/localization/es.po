@@ -29781,3 +29781,8 @@ msgstr "Aviso de tornado"
 #. RS: reviewed UI and strategy guidance; AI-assisted supplementary translation.
 msgid "Brownouts Reported"
 msgstr "Se informa de cortes eléctricos"
+
+#. Supplementary RS update status, AI-assisted translation.
+#: src/ui/settings/update_check_dialog.gd
+msgid "No newer published release is available. You have version %s."
+msgstr "No hay una versión publicada más reciente. Tienes la versión %s."
