@@ -114,6 +114,17 @@ fn forests_keep_density_clearings_and_local_cache_invalidation() {
                 );
             }
         }
+        for shape in 0..6 {
+            b.sprites.images.insert(
+                ((tree_shadows::SILHOUETTE_FIRST + shape) * 2) as u64,
+                Sprite {
+                    w: 10,
+                    h: 18,
+                    rgba: vec![255; 10 * 18 * 4],
+                    la: vec![255; 10 * 18 * 2],
+                },
+            );
+        }
         for x in 4..10 {
             for y in 4..10 {
                 let i = b.city.index(x, y);

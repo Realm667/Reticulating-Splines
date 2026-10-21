@@ -8,6 +8,7 @@ const FIRST := 6000
 const SPAN := 1500
 const VARIANTS := 8
 const GROUND_VARIANT := 128
+const SHADOW_FIRST := 210000
 # Tree roots are local to the original 32x16 diamond. No tree is placed on an empty tile.
 const ROOTS := [Vector2i(16, 25), Vector2i(8, 24), Vector2i(24, 24),
 	Vector2i(16, 19), Vector2i(9, 19), Vector2i(23, 19), Vector2i(16, 30)]
@@ -34,6 +35,12 @@ static func prepare(archive: Sc2SpriteArchive, palette: Sc2Palette, authored: Vi
 	if not archive.visual_nature.is_empty():
 		return
 	var trees := _templates(palette)
+	# Six shared silhouettes, sampled by the ground projection in the existing
+	# indexed atlas. No per-tree texture or per-frame image generation.
+	for index in trees.size():
+		var tree := trees[index]
+		var id := SHADOW_FIRST + index
+		archive.visual_nature[id] = Sc2SpriteArchive.entry_from_indices(id, tree.size.x, tree.size.y, tree.pixels)
 	for view in 3:
 		if not archive.entries_by_id.has(view * 500 + 6):
 			continue

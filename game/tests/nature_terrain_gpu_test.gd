@@ -152,13 +152,20 @@ func _check_tree_shadow() -> void:
 	var arrays := []
 	arrays.resize(Mesh.ARRAY_MAX)
 	arrays[Mesh.ARRAY_VERTEX] = PackedVector2Array([Vector2(0,0),Vector2(32,0),Vector2(32,32),Vector2(0,32)])
-	arrays[Mesh.ARRAY_TEX_UV] = PackedVector2Array([Vector2(-1,-1),Vector2(1,-1),Vector2(1,1),Vector2(-1,1)])
+	arrays[Mesh.ARRAY_TEX_UV] = PackedVector2Array([Vector2(0,0),Vector2(1,0),Vector2(1,1),Vector2(0,1)])
 	arrays[Mesh.ARRAY_COLOR] = PackedColorArray([Color8(56,0,0),Color8(56,0,0),Color8(56,0,0),Color8(56,0,0)])
 	arrays[Mesh.ARRAY_INDEX] = PackedInt32Array([0,1,2,0,2,3])
 	var mesh := ArrayMesh.new()
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES,arrays)
 	var node := MeshInstance2D.new()
 	node.mesh=mesh
+	var silhouette := Image.create(32,32,false,Image.FORMAT_RGBA8)
+	# An asymmetric canopy with a trunk and an interior gap: an oval would
+	# darken the gap and miss the branch. Verify the actual atlas silhouette.
+	silhouette.fill_rect(Rect2i(8,6,20,16), Color.WHITE)
+	silhouette.fill_rect(Rect2i(15,22,3,9), Color.WHITE)
+	silhouette.fill_rect(Rect2i(20,10,4,4), Color.TRANSPARENT)
+	node.texture = ImageTexture.create_from_image(silhouette)
 	var material := ShaderMaterial.new()
 	material.shader=preload("res://src/view/map/palette_cycle.gdshader")
 	node.material=material
@@ -170,6 +177,8 @@ func _check_tree_shadow() -> void:
 	var on := viewport.get_texture().get_image()
 	assert(on.get_pixel(16,16).r < off.get_pixel(16,16).r-0.1,"Tree shadows must darken the actual ground")
 	assert(on.get_pixel(0,0).is_equal_approx(off.get_pixel(0,0)),"Outside the canopy must stay transparent")
+	assert(on.get_pixel(22,12).is_equal_approx(off.get_pixel(22,12)),"Silhouette gap was filled")
+	assert(on.get_pixel(16,28).r < off.get_pixel(16,28).r - 0.1,"Trunk shadow is detached")
 	material.set_shader_parameter("tree_shadows_enabled",false)
 	await RenderingServer.frame_post_draw
 	assert(viewport.get_texture().get_image().get_data()==off.get_data(),"Shadows off must restore exact ground pixels")

@@ -7,7 +7,8 @@ const MASKS: [u8; 15] = [0, 9, 3, 6, 12, 11, 7, 14, 13, 1, 2, 4, 8, 15, 0];
 const ROOTS: [[i32; 2]; 7] = [[16, 25], [8, 24], [24, 24], [16, 19], [9, 19], [23, 19], [16, 30]];
 // Sun from upper left, consistent with the authored buildings. Horizontal
 // displacement in tile units per altitude level; it does not change with zoom.
-const LIGHT: [f32; 2] = [0.38, -0.12];
+const LIGHT: [f32; 2] = [0.30, 0.04];
+pub const SILHOUETTE_FIRST: i32 = 210000;
 type Vertex = [f32; 4]; // screen x/y and projected canopy u/v
 
 fn faces(mask: u8) -> [[usize; 3]; 2] {
@@ -70,14 +71,17 @@ fn clip(mut polygon: Vec<Vertex>, axis: usize, limit: f32, sign: f32) -> Vec<Ver
     polygon
 }
 
-fn canopy_uv(point: [f32; 3], crown: [f32; 3], radius: f32) -> [f32; 2] {
-    [
-        (point[0] - crown[0] - LIGHT[0] * (crown[2] - point[2])) / radius,
-        (point[1] - crown[1] - LIGHT[1] * (crown[2] - point[2])) / radius,
-    ]
+// Invert the directional projection onto the receiving terrain. The source
+// is an upright sprite whose bottom centre is the actual tree root. Ground
+// height participates in the inversion, so slopes bend the same silhouette.
+fn silhouette_uv(point: [f32; 3], root: [f32; 3], width: f32, height: f32) -> [f32; 2] {
+    let drop = (point[0] + point[1] - root[0] - root[1]) / (LIGHT[0] + LIGHT[1]);
+    let upright = (drop + point[2] - root[2]) * 12.0;
+    let across = (point[0] - root[0] - LIGHT[0] * drop) * 32.0;
+    [(across + (width / 2.0).floor()) / width, 1.0 - upright / height]
 }
 
-pub fn append(builder: &Builder, out: &mut Region, draw: &Draw, bounds: Rect) {
+pub fn append(builder: &mut Builder, out: &mut Region, draw: &Draw, bounds: Rect) -> Result<(), String> {
     let city = &builder.city;
     if !builder.config.tree_shadows
         || !builder.config.natural_forests
@@ -87,20 +91,20 @@ pub fn append(builder: &Builder, out: &mut Region, draw: &Draw, bounds: Rect) {
         || !matches!(draw.sprite.rem_euclid(500), 256..=268)
         || draw.surface_grid == 0
     {
-        return;
+        return Ok(());
     }
     let y = (draw.depth % i64::from(city.edge)) as i32;
     let x = (draw.depth / i64::from(city.edge)) as i32 - y;
     if x < 0 || y < 0 || x >= city.edge || y >= city.edge {
-        return;
+        return Ok(());
     }
     let i = city.index(x, y);
     if city.wet(i) || !city.visible(i) {
-        return;
+        return Ok(());
     }
     let shape = city.surface(x, y) as usize;
     let Some(&mask) = MASKS.get(shape) else {
-        return;
+        return Ok(());
     };
     let c = builder.config;
     let points = corners(x, y, city.land(i) as f32, mask);
@@ -135,25 +139,24 @@ pub fn append(builder: &Builder, out: &mut Region, draw: &Draw, bounds: Rect) {
                 if density >= 4 && neighbors & (1 << side) != 0 {
                     rx += if rx > 16 { 1 } else { -1 };
                 }
+                let source = (SILHOUETTE_FIRST + seed % 6) as u64 * 2;
+                let Some(sprite) = builder.sprites.images.get(&source) else {
+                    continue;
+                };
+                let slot = builder.atlas.slot(source, sprite)?;
+                let width = (sprite.w + i32::from(density >= 4 && neighbors & (1 << side) != 0)) as f32;
+                let height = (sprite.h + (seed / 6) % 2) as f32;
                 let root = [
-                    nx as f32 + (rx - 16) as f32 / 32.0 + (ry - 27) as f32 / 16.0,
-                    ny as f32 - (rx - 16) as f32 / 32.0 + (ry - 27) as f32 / 16.0,
-                ];
-                let height = [18.0, 14.0, 14.0, 18.0, 14.0, 18.0][seed as usize % 6];
-                let radius = [9.0, 8.0, 11.0, 10.0, 13.0, 10.0][seed as usize % 6] / 32.0;
-                let crown = [
-                    root[0],
-                    root[1],
-                    // Match the sprite baseline, including fully raised ground. Slopes
-                    // affect the receiver, not the existing tree sprite baseline.
-                    city.object(n) as f32 + f32::from(source_mask == 15) + height / 18.0,
+                    nx as f32 + (rx - 16) as f32 / 32.0 + (ry - 26) as f32 / 16.0,
+                    ny as f32 - (rx - 16) as f32 / 32.0 + (ry - 26) as f32 / 16.0,
+                    city.object(n) as f32 + f32::from(source_mask == 15),
                 ];
                 for face in faces(mask) {
                     let mut polygon: Vec<Vertex> = face
                         .iter()
                         .map(|&index| {
                             let p = points[index];
-                            let uv = canopy_uv(p, crown, radius);
+                            let uv = silhouette_uv(p, root, width, height);
                             [
                                 c.side() as f32 + (city.edge as f32 + p[0] - p[1] + 1.0) * c.hw() as f32,
                                 c.top() as f32 + (p[0] + p[1] + 1.0) * c.hh() as f32 - p[2] * c.step() as f32,
@@ -168,9 +171,9 @@ pub fn append(builder: &Builder, out: &mut Region, draw: &Draw, bounds: Rect) {
                         continue;
                     }
                     for (axis, limit, sign) in [
-                        (2, -1.0, 1.0),
+                        (2, 0.0, 1.0),
                         (2, 1.0, -1.0),
-                        (3, -1.0, 1.0),
+                        (3, 0.0, 1.0),
                         (3, 1.0, -1.0),
                         (0, bounds.x as f32, 1.0),
                         (0, (bounds.x + bounds.w) as f32, -1.0),
@@ -185,7 +188,9 @@ pub fn append(builder: &Builder, out: &mut Region, draw: &Draw, bounds: Rect) {
                     let first = out.vertices.len() as i32;
                     for point in &polygon {
                         out.vertices.push([point[0] - bounds.x as f32, point[1] - bounds.y as f32]);
-                        out.uvs.push([point[2], point[3]]);
+                        let u = if (seed / 6) & 1 != 0 { 1.0 - point[2] } else { point[2] };
+                        out.uvs
+                            .push([slot.x as f32 + u * slot.w as f32, slot.y as f32 + point[3] * slot.h as f32]);
                         out.colors.push([f32::from(TAG) / 255.0, 0.0, 0.0, 1.0]);
                     }
                     for at in 1..polygon.len() - 1 {
@@ -195,6 +200,7 @@ pub fn append(builder: &Builder, out: &mut Region, draw: &Draw, bounds: Rect) {
             }
         }
     }
+    Ok(())
 }
 
 #[cfg(test)]
@@ -209,16 +215,16 @@ mod tests {
         }
     }
     #[test]
-    fn light_projection_changes_with_receiver_height() {
-        let crown = [4.0, 5.0, 8.0];
-        for height in [3.0, 3.5, 4.0, 7.0] {
-            let receiver = [
-                crown[0] + LIGHT[0] * (crown[2] - height),
-                crown[1] + LIGHT[1] * (crown[2] - height),
-                height,
-            ];
-            let uv = canopy_uv(receiver, crown, 0.3);
-            assert!(uv[0].abs() < 0.00001 && uv[1].abs() < 0.00001);
+    fn silhouette_projection_is_rooted_and_follows_receiver_height() {
+        let root = [4.0, 5.0, 8.0];
+        for height in [3.0, 3.5, 4.0, 8.0] {
+            for upright in [0.0, 6.0, 18.0] {
+                let drop = root[2] + upright / 12.0 - height;
+                let receiver = [root[0] + LIGHT[0] * drop, root[1] + LIGHT[1] * drop, height];
+                let uv = silhouette_uv(receiver, root, 10.0, 18.0);
+                assert!((uv[0] - 0.5).abs() < 0.00001);
+                assert!((uv[1] - (1.0 - upright / 18.0)).abs() < 0.00001);
+            }
         }
     }
     #[test]

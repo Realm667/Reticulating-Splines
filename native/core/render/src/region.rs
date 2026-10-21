@@ -471,14 +471,14 @@ impl Builder {
                 }
             }
 
-            crate::tree_shadows::append(self, &mut out, &draw, bounds);
+            crate::tree_shadows::append(self, &mut out, &draw, bounds)?;
             out.draws.push(draw);
         }
 
         let scale = 1.0 / self.atlas.edge as f32;
 
         for (uv, color) in out.uvs.iter_mut().zip(&out.colors) {
-            if !surface_grid::is_grid_color(color) && (color[0] * 255.0).round() != f32::from(crate::tree_shadows::TAG) {
+            if !surface_grid::is_grid_color(color) {
                 uv[0] *= scale;
                 uv[1] *= scale;
             }

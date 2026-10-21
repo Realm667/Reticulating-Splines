@@ -268,7 +268,11 @@ void fragment() {
 
 	if (tree_shadow > 0.5) {
 		if (!tree_shadows_enabled) discard;
-		float edge = 1.0 - smoothstep(0.55, 1.0, length(UV));
+#ifdef USE_PAGED_ATLAS
+		float edge = region_page_sample(region_atlas_pages, UV).a;
+#else
+		float edge = texture(TEXTURE, UV).a;
+#endif
 		float daylight = environment_enabled ? (1.0 - environment_night * 0.85) : 1.0;
 		float weather = environment_enabled ? clamp(dot(environment_weather, vec3(0.3333)), 0.45, 1.0) : 1.0;
 		COLOR = vec4(vec3(0.0), 0.24 * edge * daylight * weather * float(nature_forests_enabled));
