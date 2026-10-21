@@ -7,15 +7,17 @@ import subprocess
 
 NATIVE_JOBS = {f"Build native libraries ({name})" for name in
                ("macos", "linux-x86_64", "linux-arm64", "windows-x86_64", "windows-arm64")}
-BUILD_INPUTS = ["native", "game", "tools/build_native.py", "tools/build_fluidsynth.py",
-                ".cargo", "Cargo.lock", "Cargo.toml", "rust-toolchain.toml", "rust-toolchain"]
+# GDScript, shaders, translations and project version are exported separately.
+# Native sources/build scripts are self-contained under native/; retain extension
+# descriptors and the workflow recipe as compatibility/build-environment inputs.
+BUILD_INPUTS = ["native", "game/bin", "tools/build_native.py", "tools/build_fluidsynth.py",
+                ".github/workflows/rs-desktop.yml", ".cargo", "Cargo.lock", "Cargo.toml",
+                "rust-toolchain.toml", "rust-toolchain"]
 
 
 def matching_sources(previous, current="HEAD", repository=Path(".")):
     changed = subprocess.check_output(["git", "diff", "--name-only", previous, current, "--", *BUILD_INPUTS],
                                       cwd=repository, text=True).splitlines()
-    # Export presets change package identity/layout, never the native libraries.
-    changed = [path for path in changed if path != "game/export_presets.cfg"]
     if changed:
         raise ValueError("Native artifact inputs changed: " + ", ".join(changed))
 

@@ -91,7 +91,7 @@ class PublicPayloadTest(unittest.TestCase):
 
 
 class NativeReuseTest(unittest.TestCase):
-    def test_packaging_only_changes_can_reuse_but_native_or_game_changes_cannot(self):
+    def test_exported_game_changes_can_reuse_but_native_inputs_cannot(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             def git(*args):
@@ -107,6 +107,9 @@ class NativeReuseTest(unittest.TestCase):
             (root / "README.md").write_text("Release instructions")
             (root / "game").mkdir()
             (root / "game/export_presets.cfg").write_text("New bundle identity")
+            (root / "game/project.godot").write_text('config/version="next"')
+            (root / "game/menu.gd").write_text("# Changed UI")
+            (root / "game/effect.gdshader").write_text("// Changed shader")
             git("add", ".")
             git("commit", "-m", "Packaging")
             reuse.matching_sources(base, repository=root)
@@ -115,6 +118,18 @@ class NativeReuseTest(unittest.TestCase):
             git("commit", "-m", "Native change")
             with self.assertRaisesRegex(ValueError, "inputs changed"):
                 reuse.matching_sources(base, repository=root)
+            for name in ("game/bin/module.gdextension", "tools/build_fluidsynth.py",
+                         "native/Cargo.lock", "rust-toolchain.toml",
+                         ".github/workflows/rs-desktop.yml"):
+                with self.subTest(input=name):
+                    before = git("rev-parse", "HEAD")
+                    path = root / name
+                    path.parent.mkdir(parents=True, exist_ok=True)
+                    path.write_text("Changed native build input")
+                    git("add", ".")
+                    git("commit", "-m", "Build input change")
+                    with self.assertRaisesRegex(ValueError, "inputs changed"):
+                        reuse.matching_sources(before, repository=root)
 
 
 if __name__ == "__main__":
