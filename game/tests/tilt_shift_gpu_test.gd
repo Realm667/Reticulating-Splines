@@ -110,6 +110,9 @@ func _run() -> void:
 	assert(scaled.get_region(Rect2i(32, 90, 288, 50)).get_data() == resized.get_region(Rect2i(32, 90, 288, 50)).get_data())
 	assert(scaled.get_region(Rect2i(40, 26, 60, 20)).get_data() != resized.get_region(Rect2i(40, 26, 60, 20)).get_data())
 	map.queue_free()
+	# The test resumes from frame_post_draw. The next process_frame can run
+	# before Godot flushes queued deletions; allow that full frame to finish.
+	await process_frame
 	await process_frame
 	assert(not is_instance_valid(effect.canvas), "Map owns and releases the effect nodes")
 	viewport.queue_free()
