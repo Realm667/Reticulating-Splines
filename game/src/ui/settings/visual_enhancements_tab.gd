@@ -8,7 +8,8 @@ signal export_requested
 
 const SECTIONS := [
 	["Day & Night", "Set the time of day and the appearance of the night.",
-		["day_enabled", "day_mode", "day_hour", "day_seconds", "day_lut_strength", "night_strength"]],
+		["day_enabled", "day_mode", "day_hour", "day_seconds", "day_lut_strength", "night_strength",
+		"sunrise_enabled", "sunrise_strength", "sunset_enabled", "sunset_strength", "day_glow_radius", "day_glow_hours"]],
 	["Lighting", "Building, vehicle and street lights. Keep lights on during the day with the daytime override.",
 		["brightmaps", "night_daytime_enabled", "rain_lights_enabled", "rain_light_strength", "night_light_strength", "night_ambient", "night_glow", "night_ground", "detail_lights_min_zoom"]],
 	["Seasons", "Follow the city calendar, run a visual cycle or choose one season.",
@@ -26,7 +27,7 @@ const SECTIONS := [
 	["Tilt shift", "Blur the top and bottom of the city view while keeping the center and interface sharp.",
 		["tilt_shift_enabled", "tilt_shift_strength", "tilt_shift_edge", "tilt_shift_transition"]],
 ]
-const PERCENT_FIELDS := ["artwork_color_strength", "tilt_shift_strength", "tilt_shift_edge", "tilt_shift_transition", "nature_terrain_strength", "day_lut_strength", "night_strength", "season_transition", "season_lut_strength",
+const PERCENT_FIELDS := ["sunrise_strength", "sunset_strength", "day_glow_radius", "artwork_color_strength", "tilt_shift_strength", "tilt_shift_edge", "tilt_shift_transition", "nature_terrain_strength", "day_lut_strength", "night_strength", "season_transition", "season_lut_strength",
 	"season_water_strength", "weather_strength", "weather_lut_strength", "cloud_density", "cloud_shadow_strength",
 	"disaster_strength", "disaster_lights", "disaster_shake"]
 const LABELS := {
@@ -45,6 +46,10 @@ const LABELS := {
 	"lut_path": "Custom color filter (LUT PNG)", "brightmap_folder": "Custom light masks (brightmaps)",
 }
 const HINTS := {
+	"sunrise_enabled": "A cool radial glow moves from middle left to upper left around 07:00. Uses the visual day clock and its pause setting; fixed time previews the effect.",
+	"sunset_enabled": "A warm radial glow moves from upper left to middle right around 19:00. Uses the visual day clock and its pause setting; fixed time previews the effect.",
+	"day_glow_radius": "Radius as a percentage of the shorter side of the city view. Interface elements stay unchanged.",
+	"day_glow_hours": "Duration of each glow, centered on 07:00 and 19:00. Includes fade-in, movement and fade-out. Does not change the city calendar.",
 	"tree_growth_enabled": "Changes the saved city: forests become denser every four years and spread to free adjacent land over eight years. No random numbers. In multiplayer, the host decides. Off by default.",
 	"artwork_color_strength": "Reduce saturation of the original indexed artwork only. Added effects, lightmaps and interface colors stay unchanged.",
 	"water_depth_enabled": "Light coastal shallows and dark deep water, including the exposed water at map edges.",
@@ -418,6 +423,14 @@ func _update_availability() -> void:
 		elif key.begins_with("cloud_") and key != "cloud_enabled":
 			available = values.cloud_enabled
 		match key:
+			"sunrise_enabled", "sunset_enabled":
+				available = values.day_enabled
+			"sunrise_strength":
+				available = values.day_enabled and values.sunrise_enabled
+			"sunset_strength":
+				available = values.day_enabled and values.sunset_enabled
+			"day_glow_radius", "day_glow_hours":
+				available = values.day_enabled and (values.sunrise_enabled or values.sunset_enabled)
 			"nature_terrain_strength":
 				available = values.nature_terrain_enabled
 				terrain_strength_slider.editable = available
@@ -497,6 +510,12 @@ func _update_availability() -> void:
 
 func _dependency_reason(key: String, values: Dictionary) -> String:
 	# Explain each disabled group once, at its first relevant setting.
+	if key == "sunrise_enabled" and not values.day_enabled:
+		return "Enable Day and night to use sunrise and sunset effects."
+	if key == "sunrise_strength" and values.day_enabled:
+		return "Enable Sunrise glow to adjust its brightness."
+	if key == "sunset_strength" and values.day_enabled:
+		return "Enable Sunset glow to adjust its brightness."
 	match key:
 		"nature_terrain_strength":
 			return "Enable terrain variation to adjust its strength."

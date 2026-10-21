@@ -9406,3 +9406,68 @@ msgstr "우천 시 밝기를 조절하려면 비가 올 때 조명 켜기를 활
 #: src/ui/settings/visual_enhancements_tab.gd
 msgid "Enable Day and night, daytime lights or rain lighting."
 msgstr "낮과 밤, 주간 조명 또는 우천 시 조명을 활성화하세요."
+
+#. Supplementary RS dawn/dusk effects, AI-assisted translation.
+#: src/ui/settings/visual_enhancements_tab.gd
+msgid "Sunrise glow"
+msgstr "일출 빛 효과"
+
+#. Supplementary RS dawn/dusk effects, AI-assisted translation.
+#: src/ui/settings/visual_enhancements_tab.gd
+msgid "Sunrise brightness"
+msgstr "일출 밝기"
+
+#. Supplementary RS dawn/dusk effects, AI-assisted translation.
+#: src/ui/settings/visual_enhancements_tab.gd
+msgid "Sunset glow"
+msgstr "일몰 빛 효과"
+
+#. Supplementary RS dawn/dusk effects, AI-assisted translation.
+#: src/ui/settings/visual_enhancements_tab.gd
+msgid "Sunset brightness"
+msgstr "일몰 밝기"
+
+#. Supplementary RS dawn/dusk effects, AI-assisted translation.
+#: src/ui/settings/visual_enhancements_tab.gd
+msgid "Sun glow size"
+msgstr "햇빛 효과 크기"
+
+#. Supplementary RS dawn/dusk effects, AI-assisted translation.
+#: src/ui/settings/visual_enhancements_tab.gd
+msgid "Sun glow duration (visual hours)"
+msgstr "빛 효과 지속 시간(시각 효과 시간)"
+
+#. Supplementary RS dawn/dusk effects, AI-assisted translation.
+#: src/ui/settings/visual_enhancements_tab.gd
+msgid "A cool radial glow moves from middle left to upper left around 07:00. Uses the visual day clock and its pause setting; fixed time previews the effect."
+msgstr "07:00 무렵 차가운 원형 빛이 왼쪽 중앙에서 왼쪽 위로 이동합니다. 시각 효과 시계와 일시 정지 설정을 따르며, 고정 시간으로 효과를 미리 볼 수 있습니다."
+
+#. Supplementary RS dawn/dusk effects, AI-assisted translation.
+#: src/ui/settings/visual_enhancements_tab.gd
+msgid "A warm radial glow moves from upper left to middle right around 19:00. Uses the visual day clock and its pause setting; fixed time previews the effect."
+msgstr "19:00 무렵 따뜻한 원형 빛이 왼쪽 위에서 오른쪽 중앙으로 이동합니다. 시각 효과 시계와 일시 정지 설정을 따르며, 고정 시간으로 효과를 미리 볼 수 있습니다."
+
+#. Supplementary RS dawn/dusk effects, AI-assisted translation.
+#: src/ui/settings/visual_enhancements_tab.gd
+msgid "Radius as a percentage of the shorter side of the city view. Interface elements stay unchanged."
+msgstr "도시 화면의 짧은 변에 대한 반경의 비율입니다. 인터페이스 요소는 바뀌지 않습니다."
+
+#. Supplementary RS dawn/dusk effects, AI-assisted translation.
+#: src/ui/settings/visual_enhancements_tab.gd
+msgid "Duration of each glow, centered on 07:00 and 19:00. Includes fade-in, movement and fade-out. Does not change the city calendar."
+msgstr "07:00와 19:00를 중심으로 각 빛 효과가 지속되는 시간입니다. 서서히 나타나기, 이동, 사라지기를 포함합니다. 도시 달력은 바뀌지 않습니다."
+
+#. Supplementary RS dawn/dusk effects, AI-assisted translation.
+#: src/ui/settings/visual_enhancements_tab.gd
+msgid "Enable Day and night to use sunrise and sunset effects."
+msgstr "일출과 일몰 효과를 사용하려면 낮과 밤을 활성화하세요."
+
+#. Supplementary RS dawn/dusk effects, AI-assisted translation.
+#: src/ui/settings/visual_enhancements_tab.gd
+msgid "Enable Sunrise glow to adjust its brightness."
+msgstr "밝기를 조절하려면 일출 빛 효과를 활성화하세요."
+
+#. Supplementary RS dawn/dusk effects, AI-assisted translation.
+#: src/ui/settings/visual_enhancements_tab.gd
+msgid "Enable Sunset glow to adjust its brightness."
+msgstr "밝기를 조절하려면 일몰 빛 효과를 활성화하세요."

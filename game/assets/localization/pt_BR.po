@@ -31186,3 +31186,68 @@ msgstr "Ative Acender luzes durante a chuva para ajustar o brilho."
 #: src/ui/settings/visual_enhancements_tab.gd
 msgid "Enable Day and night, daytime lights or rain lighting."
 msgstr "Ative Dia e noite, luzes diurnas ou iluminação durante a chuva."
+
+#. Supplementary RS dawn/dusk effects, AI-assisted translation.
+#: src/ui/settings/visual_enhancements_tab.gd
+msgid "Sunrise glow"
+msgstr "Brilho do nascer do sol"
+
+#. Supplementary RS dawn/dusk effects, AI-assisted translation.
+#: src/ui/settings/visual_enhancements_tab.gd
+msgid "Sunrise brightness"
+msgstr "Intensidade do nascer do sol"
+
+#. Supplementary RS dawn/dusk effects, AI-assisted translation.
+#: src/ui/settings/visual_enhancements_tab.gd
+msgid "Sunset glow"
+msgstr "Brilho do pôr do sol"
+
+#. Supplementary RS dawn/dusk effects, AI-assisted translation.
+#: src/ui/settings/visual_enhancements_tab.gd
+msgid "Sunset brightness"
+msgstr "Intensidade do pôr do sol"
+
+#. Supplementary RS dawn/dusk effects, AI-assisted translation.
+#: src/ui/settings/visual_enhancements_tab.gd
+msgid "Sun glow size"
+msgstr "Tamanho do brilho solar"
+
+#. Supplementary RS dawn/dusk effects, AI-assisted translation.
+#: src/ui/settings/visual_enhancements_tab.gd
+msgid "Sun glow duration (visual hours)"
+msgstr "Duração do brilho (horas visuais)"
+
+#. Supplementary RS dawn/dusk effects, AI-assisted translation.
+#: src/ui/settings/visual_enhancements_tab.gd
+msgid "A cool radial glow moves from middle left to upper left around 07:00. Uses the visual day clock and its pause setting; fixed time previews the effect."
+msgstr "Um brilho radial frio se move do centro esquerdo para o canto superior esquerdo por volta das 07:00. Usa o relógio visual e sua opção de pausa; o horário fixo permite visualizar o efeito."
+
+#. Supplementary RS dawn/dusk effects, AI-assisted translation.
+#: src/ui/settings/visual_enhancements_tab.gd
+msgid "A warm radial glow moves from upper left to middle right around 19:00. Uses the visual day clock and its pause setting; fixed time previews the effect."
+msgstr "Um brilho radial quente se move do canto superior esquerdo para o centro direito por volta das 19:00. Usa o relógio visual e sua opção de pausa; o horário fixo permite visualizar o efeito."
+
+#. Supplementary RS dawn/dusk effects, AI-assisted translation.
+#: src/ui/settings/visual_enhancements_tab.gd
+msgid "Radius as a percentage of the shorter side of the city view. Interface elements stay unchanged."
+msgstr "Raio como porcentagem do lado mais curto da vista da cidade. Os elementos da interface permanecem inalterados."
+
+#. Supplementary RS dawn/dusk effects, AI-assisted translation.
+#: src/ui/settings/visual_enhancements_tab.gd
+msgid "Duration of each glow, centered on 07:00 and 19:00. Includes fade-in, movement and fade-out. Does not change the city calendar."
+msgstr "Duração de cada brilho, centrada nas 07:00 e nas 19:00. Inclui aparecimento gradual, movimento e desaparecimento gradual. Não altera o calendário da cidade."
+
+#. Supplementary RS dawn/dusk effects, AI-assisted translation.
+#: src/ui/settings/visual_enhancements_tab.gd
+msgid "Enable Day and night to use sunrise and sunset effects."
+msgstr "Ative Dia e noite para usar os efeitos do nascer e do pôr do sol."
+
+#. Supplementary RS dawn/dusk effects, AI-assisted translation.
+#: src/ui/settings/visual_enhancements_tab.gd
+msgid "Enable Sunrise glow to adjust its brightness."
+msgstr "Ative Brilho do nascer do sol para ajustar sua intensidade."
+
+#. Supplementary RS dawn/dusk effects, AI-assisted translation.
+#: src/ui/settings/visual_enhancements_tab.gd
+msgid "Enable Sunset glow to adjust its brightness."
+msgstr "Ative Brilho do pôr do sol para ajustar sua intensidade."

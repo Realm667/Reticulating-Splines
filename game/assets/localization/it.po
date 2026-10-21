@@ -39497,3 +39497,68 @@ msgstr "Attiva Accendi le luci durante la pioggia per regolarne la luminosità."
 #: src/ui/settings/visual_enhancements_tab.gd
 msgid "Enable Day and night, daytime lights or rain lighting."
 msgstr "Attiva Giorno e notte, le luci diurne o l’illuminazione durante la pioggia."
+
+#. Supplementary RS dawn/dusk effects, AI-assisted translation.
+#: src/ui/settings/visual_enhancements_tab.gd
+msgid "Sunrise glow"
+msgstr "Bagliore dell’alba"
+
+#. Supplementary RS dawn/dusk effects, AI-assisted translation.
+#: src/ui/settings/visual_enhancements_tab.gd
+msgid "Sunrise brightness"
+msgstr "Luminosità dell’alba"
+
+#. Supplementary RS dawn/dusk effects, AI-assisted translation.
+#: src/ui/settings/visual_enhancements_tab.gd
+msgid "Sunset glow"
+msgstr "Bagliore del tramonto"
+
+#. Supplementary RS dawn/dusk effects, AI-assisted translation.
+#: src/ui/settings/visual_enhancements_tab.gd
+msgid "Sunset brightness"
+msgstr "Luminosità del tramonto"
+
+#. Supplementary RS dawn/dusk effects, AI-assisted translation.
+#: src/ui/settings/visual_enhancements_tab.gd
+msgid "Sun glow size"
+msgstr "Dimensione del bagliore solare"
+
+#. Supplementary RS dawn/dusk effects, AI-assisted translation.
+#: src/ui/settings/visual_enhancements_tab.gd
+msgid "Sun glow duration (visual hours)"
+msgstr "Durata del bagliore (ore visive)"
+
+#. Supplementary RS dawn/dusk effects, AI-assisted translation.
+#: src/ui/settings/visual_enhancements_tab.gd
+msgid "A cool radial glow moves from middle left to upper left around 07:00. Uses the visual day clock and its pause setting; fixed time previews the effect."
+msgstr "Un bagliore radiale freddo si sposta dal centro sinistra verso l’alto a sinistra intorno alle 07:00. Segue l’orologio visivo e la relativa pausa; l’ora fissa mostra un’anteprima."
+
+#. Supplementary RS dawn/dusk effects, AI-assisted translation.
+#: src/ui/settings/visual_enhancements_tab.gd
+msgid "A warm radial glow moves from upper left to middle right around 19:00. Uses the visual day clock and its pause setting; fixed time previews the effect."
+msgstr "Un bagliore radiale caldo si sposta dall’alto a sinistra verso il centro destra intorno alle 19:00. Segue l’orologio visivo e la relativa pausa; l’ora fissa mostra un’anteprima."
+
+#. Supplementary RS dawn/dusk effects, AI-assisted translation.
+#: src/ui/settings/visual_enhancements_tab.gd
+msgid "Radius as a percentage of the shorter side of the city view. Interface elements stay unchanged."
+msgstr "Raggio come percentuale del lato più corto della vista della città. Gli elementi dell’interfaccia restano invariati."
+
+#. Supplementary RS dawn/dusk effects, AI-assisted translation.
+#: src/ui/settings/visual_enhancements_tab.gd
+msgid "Duration of each glow, centered on 07:00 and 19:00. Includes fade-in, movement and fade-out. Does not change the city calendar."
+msgstr "Durata di ciascun bagliore, centrata sulle 07:00 e sulle 19:00. Include comparsa graduale, movimento e dissolvenza. Non cambia il calendario della città."
+
+#. Supplementary RS dawn/dusk effects, AI-assisted translation.
+#: src/ui/settings/visual_enhancements_tab.gd
+msgid "Enable Day and night to use sunrise and sunset effects."
+msgstr "Attiva Giorno e notte per usare gli effetti dell’alba e del tramonto."
+
+#. Supplementary RS dawn/dusk effects, AI-assisted translation.
+#: src/ui/settings/visual_enhancements_tab.gd
+msgid "Enable Sunrise glow to adjust its brightness."
+msgstr "Attiva Bagliore dell’alba per regolarne la luminosità."
+
+#. Supplementary RS dawn/dusk effects, AI-assisted translation.
+#: src/ui/settings/visual_enhancements_tab.gd
+msgid "Enable Sunset glow to adjust its brightness."
+msgstr "Attiva Bagliore del tramonto per regolarne la luminosità."

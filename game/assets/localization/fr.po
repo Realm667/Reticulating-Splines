@@ -40049,3 +40049,68 @@ msgstr "Activez Allumer les lumières sous la pluie pour régler leur luminosit�
 #: src/ui/settings/visual_enhancements_tab.gd
 msgid "Enable Day and night, daytime lights or rain lighting."
 msgstr "Activez Jour et nuit, l’éclairage diurne ou l’éclairage sous la pluie."
+
+#. Supplementary RS dawn/dusk effects, AI-assisted translation.
+#: src/ui/settings/visual_enhancements_tab.gd
+msgid "Sunrise glow"
+msgstr "Lueur du lever du soleil"
+
+#. Supplementary RS dawn/dusk effects, AI-assisted translation.
+#: src/ui/settings/visual_enhancements_tab.gd
+msgid "Sunrise brightness"
+msgstr "Luminosité du lever du soleil"
+
+#. Supplementary RS dawn/dusk effects, AI-assisted translation.
+#: src/ui/settings/visual_enhancements_tab.gd
+msgid "Sunset glow"
+msgstr "Lueur du coucher du soleil"
+
+#. Supplementary RS dawn/dusk effects, AI-assisted translation.
+#: src/ui/settings/visual_enhancements_tab.gd
+msgid "Sunset brightness"
+msgstr "Luminosité du coucher du soleil"
+
+#. Supplementary RS dawn/dusk effects, AI-assisted translation.
+#: src/ui/settings/visual_enhancements_tab.gd
+msgid "Sun glow size"
+msgstr "Taille de la lueur solaire"
+
+#. Supplementary RS dawn/dusk effects, AI-assisted translation.
+#: src/ui/settings/visual_enhancements_tab.gd
+msgid "Sun glow duration (visual hours)"
+msgstr "Durée de la lueur (heures visuelles)"
+
+#. Supplementary RS dawn/dusk effects, AI-assisted translation.
+#: src/ui/settings/visual_enhancements_tab.gd
+msgid "A cool radial glow moves from middle left to upper left around 07:00. Uses the visual day clock and its pause setting; fixed time previews the effect."
+msgstr "Une lueur radiale froide se déplace du milieu gauche vers le coin supérieur gauche vers 07:00. Suit l’horloge visuelle et son réglage de pause ; une heure fixe permet de prévisualiser l’effet."
+
+#. Supplementary RS dawn/dusk effects, AI-assisted translation.
+#: src/ui/settings/visual_enhancements_tab.gd
+msgid "A warm radial glow moves from upper left to middle right around 19:00. Uses the visual day clock and its pause setting; fixed time previews the effect."
+msgstr "Une lueur radiale chaude se déplace du coin supérieur gauche vers le milieu droit vers 19:00. Suit l’horloge visuelle et son réglage de pause ; une heure fixe permet de prévisualiser l’effet."
+
+#. Supplementary RS dawn/dusk effects, AI-assisted translation.
+#: src/ui/settings/visual_enhancements_tab.gd
+msgid "Radius as a percentage of the shorter side of the city view. Interface elements stay unchanged."
+msgstr "Rayon en pourcentage du côté le plus court de la vue de la ville. Les éléments de l’interface restent inchangés."
+
+#. Supplementary RS dawn/dusk effects, AI-assisted translation.
+#: src/ui/settings/visual_enhancements_tab.gd
+msgid "Duration of each glow, centered on 07:00 and 19:00. Includes fade-in, movement and fade-out. Does not change the city calendar."
+msgstr "Durée de chaque lueur, centrée sur 07:00 et 19:00. Comprend l’apparition, le déplacement et la disparition progressifs. Ne modifie pas le calendrier de la ville."
+
+#. Supplementary RS dawn/dusk effects, AI-assisted translation.
+#: src/ui/settings/visual_enhancements_tab.gd
+msgid "Enable Day and night to use sunrise and sunset effects."
+msgstr "Activez Jour et nuit pour utiliser les effets du lever et du coucher du soleil."
+
+#. Supplementary RS dawn/dusk effects, AI-assisted translation.
+#: src/ui/settings/visual_enhancements_tab.gd
+msgid "Enable Sunrise glow to adjust its brightness."
+msgstr "Activez Lueur du lever du soleil pour régler sa luminosité."
+
+#. Supplementary RS dawn/dusk effects, AI-assisted translation.
+#: src/ui/settings/visual_enhancements_tab.gd
+msgid "Enable Sunset glow to adjust its brightness."
+msgstr "Activez Lueur du coucher du soleil pour régler sa luminosité."

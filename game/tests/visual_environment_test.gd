@@ -51,6 +51,12 @@ func _run() -> void:
 	assert(elevation.range_for(other) != Vector2(2, 18), "Changing cities must refresh elevation shading")
 	var defaults := VisualEnhancementOptions.normalize({})
 	assert(defaults.day_seconds == 600.0)
+	assert(defaults.sunrise_enabled and defaults.sunset_enabled)
+	assert(defaults.sunrise_strength == 0.25 and defaults.sunset_strength == 0.25)
+	assert(defaults.day_glow_radius == 0.9 and defaults.day_glow_hours == 2.0)
+	assert(VisualEnhancementOptions.normalize({"day_glow_hours": 0.0}).day_glow_hours == 0.5)
+	assert(VisualEnhancementOptions.normalize({"day_glow_hours": 25.0}).day_glow_hours == 4.0)
+	assert(VisualEnhancementOptions.normalize({"sunrise_strength": NAN}).sunrise_strength == 0.25)
 	assert(defaults.tilt_shift_enabled and defaults.tilt_shift_strength == 0.25)
 	assert(VisualEnhancementOptions.normalize({"tilt_shift_edge": 1.0}).tilt_shift_edge == 0.45)
 	assert(VisualEnhancementOptions.normalize({"tilt_shift_strength": NAN}).tilt_shift_strength == 0.25)
@@ -83,6 +89,9 @@ func _run() -> void:
 	save.visual_enhancements.night_daytime_enabled = true
 	save.visual_enhancements.rain_lights_enabled = false
 	save.visual_enhancements.rain_light_strength = 65.0
+	save.visual_enhancements.sunrise_enabled = false
+	save.visual_enhancements.sunset_strength = 0.65
+	save.visual_enhancements.day_glow_hours = 3.0
 	save.visual_enhancements.disaster_blending = false
 	save.visual_enhancements.tree_shadows_enabled = false
 	save.visual_enhancements.merge({"tilt_shift_enabled": true, "tilt_shift_strength": 0.65,
@@ -336,6 +345,7 @@ func _run() -> void:
 	# A newly loaded sunny document must not inherit the previous snowstorm.
 	_check_landscape_environment(main)
 	_check_rain_lighting(main)
+	_check_sun_glow(main)
 	await _check_ground_lighting(main)
 	main.preferences.visual_enhancements.season_enabled = true
 	main.preferences.visual_enhancements.weather_mode = 2
@@ -347,6 +357,7 @@ func _run() -> void:
 	main.preferences.visual_enhancements.weather_mode = 0
 	assert(main.city_session.activate_document(sunny_document))
 	main.visual_environment.process(0.0)
+	assert(not main.visual_environment.sun_glow.rect.visible, "Loading must not retain the previous sun glow")
 	assert(main.visual_environment.weather.tint == Color.WHITE)
 	assert(main.visual_environment.weather.rain == 0.0 and main.visual_environment.weather.snow == 0.0 and main.visual_environment.weather.frost == 0.0)
 	assert(not main.visual_environment.weather.layer.visible)
@@ -403,6 +414,67 @@ func _check_landscape_environment(main: CityApplication) -> void:
 	assert(main.map_view.layers.environment_parameters.environment_seasons == Vector4(0, 0, 0, 1))
 	assert(main.visual_environment.tilt_shift.canvas.visible)
 	assert(DocumentState.capture(main.document_state.city.document) == before)
+	main.preferences.visual_enhancements = saved
+	main.visual_environment.configure()
+
+
+func _check_sun_glow(main: CityApplication) -> void:
+	var saved := main.preferences.visual_enhancements.duplicate(true)
+	var options := VisualEnhancementOptions.normalize({"day_mode": 1, "day_hour": 7.0})
+	for hour in [0.0, 6.0, 8.0, 12.0, 18.0, 20.0, 24.0]:
+		assert(CitySunGlow.at_hour(hour, options).strength == 0.0)
+	var early := CitySunGlow.at_hour(6.5, options)
+	var late := CitySunGlow.at_hour(7.5, options)
+	assert(early.center.y > late.center.y and early.center.x == late.center.x)
+	assert(early.color.b > early.color.r and early.strength > 0.0)
+	assert(CitySunGlow.at_hour(6.05, options).strength < early.strength)
+	assert(CitySunGlow.at_hour(7.95, options).strength < late.strength)
+	early = CitySunGlow.at_hour(18.5, options)
+	late = CitySunGlow.at_hour(19.5, options)
+	assert(early.center.x < late.center.x and early.center.y < late.center.y)
+	assert(early.color.r > early.color.b)
+	assert(CitySunGlow.at_hour(31.0, options) == CitySunGlow.at_hour(7.0, options))
+	main.preferences.visual_enhancements = options
+	main.visual_environment.configure()
+	var glow := main.visual_environment.sun_glow
+	assert(glow.rect.visible)
+	var center: Vector2 = glow.material.get_shader_parameter("glow_center")
+	main.visual_environment.process(20.0)
+	assert(glow.material.get_shader_parameter("glow_center") == center, "Fixed time must not animate with real time")
+	main.tool_state.landscape_editor = true
+	main.visual_environment.process(0.0)
+	assert(not glow.rect.visible)
+	main.tool_state.landscape_editor = false
+	options.day_enabled = false
+	main.visual_environment.process(0.0)
+	assert(not glow.rect.visible)
+	options.day_enabled = true
+	options.sunrise_enabled = false
+	main.visual_environment.process(0.0)
+	assert(not glow.rect.visible)
+	options.sunrise_enabled = true
+	options.sunrise_strength = 0.0
+	main.visual_environment.process(0.0)
+	assert(not glow.rect.visible)
+	options.sunrise_strength = 0.25
+	options.day_hour = 19.0
+	main.visual_environment.process(0.0)
+	assert(glow.rect.visible)
+	var old_speed := main.simulation_state.speed_controller.speed
+	var old_phase := main.visual_environment.phase
+	main.simulation_state.speed_controller.set_speed(GameSpeedController.Speed.PAUSED)
+	options.day_mode = 0
+	options.pause_freezes = true
+	main.visual_environment.phase = 7.0 / 24.0
+	main.visual_environment.process(0.0)
+	center = glow.material.get_shader_parameter("glow_center")
+	main.visual_environment.process(20.0)
+	assert(glow.material.get_shader_parameter("glow_center") == center, "Paused visual clock must freeze sun movement")
+	options.pause_freezes = false
+	main.visual_environment.process(1.0)
+	assert(glow.material.get_shader_parameter("glow_center") != center, "Sun must use the existing optional unpaused visual clock")
+	main.visual_environment.phase = old_phase
+	main.simulation_state.speed_controller.set_speed(old_speed)
 	main.preferences.visual_enhancements = saved
 	main.visual_environment.configure()
 
@@ -959,6 +1031,9 @@ func _check_menu_dependencies(tab: VisualEnhancementsTab) -> void:
 	(tab.controls.night_light_strength as SpinBox).value = 35.0
 	assert(tab.selected_values().night_light_strength == 35.0)
 	(tab.controls.day_enabled as CheckBox).button_pressed = false
+	assert((tab.controls.sunrise_enabled as CheckBox).disabled)
+	assert(not (tab.controls.sunset_strength as SpinBox).editable)
+	assert(not (tab.controls.day_glow_radius as SpinBox).editable)
 	assert(day_source.disabled and not (tab.controls.brightmaps as CheckBox).disabled)
 	assert(not (tab.controls.night_light_strength as SpinBox).editable)
 	var daytime := tab.controls.night_daytime_enabled as CheckBox

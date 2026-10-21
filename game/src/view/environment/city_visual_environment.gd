@@ -13,6 +13,7 @@ const SHARED_OPTIONS := ["tree_growth_enabled", "day_enabled", "day_mode", "day_
 
 var tint := Color.WHITE
 var night := 0.0
+var sun_glow := CitySunGlow.new()
 var lut: ImageTexture
 var lut_size := 0.0
 var profiles := CityVisualLuts.new()
@@ -300,6 +301,7 @@ func process(delta: float) -> void:
 	night_lighting.process(active, night, options, elapsed * factor, maxf(delta, 0.0))
 	if clouds.layer != null and clouds.layer.visible:
 		app.map_view.layers._apply_environment(clouds.material)
+	sun_glow.update(app.map_view, active, options, hour, tilt_shift.canvas if is_instance_valid(tilt_shift.canvas) else null)
 	tilt_shift.update(app.map_view, active, options)
 	app.preferences.visual_enhancements = saved_options
 
