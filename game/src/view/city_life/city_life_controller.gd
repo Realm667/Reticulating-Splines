@@ -165,7 +165,9 @@ func _sync_traffic(enhanced: bool) -> void:
 			app.map_render.refresh_map(false)
 			return
 		app.map_render.close_region_cache()
-		app.static_render.invalidate_rendered_city()
+		# Traffic artwork changes the static image, not road/light geometry.
+		# Keep completed receivers also before directional preparation is ready.
+		app.static_render.invalidate_view_render()
 		app.map_render.refresh_map()
 
 
