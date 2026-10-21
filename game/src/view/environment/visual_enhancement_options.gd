@@ -30,7 +30,8 @@ const FIELDS := [
 	["water_waves_enabled", "Waves and coastal surf", "bool", true],
 	["cloud_enabled", "Clouds and fog", "bool", true],
 	["cloud_mode", "Cloud type", "choice", 0, ["Automatic (weather)", "Cumulus", "Stratus", "Altostratus", "Cirrus", "Cirrocumulus", "Fog"]],
-	["cloud_density", "Cloud and fog coverage", "number", 0.4, 0.0, 1.0, 0.05],
+	["fog_density", "Fog coverage", "number", 1.0, 0.0, 1.0, 0.05],
+	["cloud_density", "Cloud coverage", "number", 0.4, 0.0, 1.0, 0.05],
 	["cloud_shadow_strength", "Cloud shadow strength", "number", 0.4, 0.0, 0.5, 0.02],
 	["cloud_speed", "Cloud and fog movement", "number", 1.0, 0.0, 3.0, 0.1],
 	["life_cars_enabled", "Individual cars", "bool", true],
@@ -80,6 +81,47 @@ const FIELDS := [
 	["weather_strength", "Weather strength", "number", 1.0, 0.1, 1.0, 0.05],
 	["weather_lut_strength", "Weather LUT strength", "number", 0.5, 0.0, 1.0, 0.05],
 ]
+
+
+const PRESET_NAMES := ["Vanilla SimCity 2000", "Lightweight", "Balanced", "Detailed", "Reticulated Splines Experience"]
+const PRESET_INDEPENDENT := ["tree_growth_enabled", "idle_saving_enabled", "speed_link", "pause_freezes", "brightmap_folder", "lut_path", "lut_folder"]
+
+
+## Performance tiers enable progressively more rendering work. Simulation and
+## user file locations are independent; no preset enables saved tree growth.
+static func preset(level: int, current: Dictionary) -> Dictionary:
+	var result := normalize({})
+	for field in FIELDS:
+		if field[2] == "bool" and field[0] not in PRESET_INDEPENDENT:
+			result[field[0]] = level == 4
+	result.water_reflections = 0
+	result.night_glow = 0.0
+	result.night_ground = 0.0
+	result.detail_lights_min_zoom = 3
+	if level >= 1:
+		for key in ["map_strata_enabled", "water_depth_enabled", "artwork_color_enabled", "season_enabled"]:
+			result[key] = true
+	if level >= 2:
+		for key in ["day_enabled", "brightmaps", "nature_forests_enabled", "nature_terrain_enabled", "traffic_vehicles_enabled", "traffic_shadows_enabled", "disaster_blending"]:
+			result[key] = true
+	if level >= 3:
+		for key in ["tree_shadows_enabled", "sunrise_enabled", "sunset_enabled", "weather_enabled", "rain_lights_enabled", "water_waves_enabled", "disaster_enabled", "disaster_dust", "disaster_motion", "disaster_crowds", "life_cars_enabled", "life_people_enabled"]:
+			result[key] = true
+		result.night_glow = 20.0
+		result.night_ground = 25.0
+		result.life_car_amount = 0.5
+		result.life_people_amount = 0.5
+	if level == 4:
+		result.water_reflections = 1
+		result.night_glow = 35.0
+		result.night_ground = 45.0
+		result.detail_lights_min_zoom = 2
+		result.life_car_amount = 1.0
+		result.life_people_amount = 1.0
+	var previous := normalize(current)
+	for key in PRESET_INDEPENDENT:
+		result[key] = previous[key]
+	return result
 
 
 static func normalize(source: Variant) -> Dictionary:

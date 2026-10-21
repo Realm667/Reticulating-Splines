@@ -9561,3 +9561,74 @@ msgstr "공공시설"
 #: game/src/ui/settings/building_mix_dialog.gd
 msgid "Power plants"
 msgstr "발전소"
+
+#. Reticulating Splines UI corrections, AI-assisted supplementary translation.
+msgid "Vanilla SimCity 2000"
+msgstr "Vanilla SimCity 2000"
+
+#. Reticulating Splines UI corrections, AI-assisted supplementary translation.
+msgid "Lightweight"
+msgstr "저사양"
+
+#. Reticulating Splines UI corrections, AI-assisted supplementary translation.
+msgid "Balanced"
+msgstr "균형"
+
+#. Reticulating Splines UI corrections, AI-assisted supplementary translation.
+msgid "Detailed"
+msgstr "고품질"
+
+#. Reticulating Splines UI corrections, AI-assisted supplementary translation.
+msgid "Reticulated Splines Experience"
+msgstr "Reticulated Splines Experience"
+
+#. Reticulating Splines UI corrections, AI-assisted supplementary translation.
+msgid "Custom"
+msgstr "사용자 지정"
+
+#. Reticulating Splines UI corrections, AI-assisted supplementary translation.
+msgid "Fog coverage"
+msgstr "안개 범위"
+
+#. Reticulating Splines UI corrections, AI-assisted supplementary translation.
+msgid "Cloud coverage"
+msgstr "구름 범위"
+
+#. Reticulating Splines UI corrections, AI-assisted supplementary translation.
+msgid "Next tip"
+msgstr "다음 팁"
+
+#. Reticulating Splines UI corrections, AI-assisted supplementary translation.
+msgid "Modding guide"
+msgstr "모드 제작 안내"
+
+#. Reticulating Splines UI corrections, AI-assisted supplementary translation.
+msgid ""
+"Presets change visual effects only. Tree growth and custom file paths stay "
+"unchanged."
+msgstr "프리셋은 시각 효과만 변경합니다. 나무 성장과 사용자 파일 경로는 유지됩니다."
+
+#. Reticulating Splines UI corrections, AI-assisted supplementary translation.
+msgid ""
+"A white and cool blue glow shines from the upper left around 07:00. Fades "
+"out during rain, snow and storms over 1.5 seconds."
+msgstr "07:00 무렵 왼쪽 위에서 흰색과 차가운 파란빛이 비칩니다. 비, 눈, 폭풍이 오면 1.5초에 걸쳐 사라집니다."
+
+#. Reticulating Splines UI corrections, AI-assisted supplementary translation.
+msgid ""
+"A white and warm orange glow shines from the upper right around 19:00. Fades"
+" out during rain, snow and storms over 1.5 seconds."
+msgstr "19:00 무렵 오른쪽 위에서 흰색과 따뜻한 주황빛이 비칩니다. 비, 눈, 폭풍이 오면 1.5초에 걸쳐 사라집니다."
+
+#. Reticulating Splines UI corrections, AI-assisted supplementary translation.
+msgid ""
+"Amount of aerial cloud coverage. Fog has its own coverage setting. Rain, "
+"snow and storms keep minimum cloud coverage, even at 0%."
+msgstr "하늘의 구름 범위입니다. 안개는 별도로 조절합니다. 비, 눈, 폭풍 중에는 0%에서도 최소 구름량이 유지됩니다."
+
+msgid ""
+"Duration of each glow, centered on 07:00 and 19:00. Includes fade-in and "
+"fade-out. Does not change the city calendar."
+msgstr ""
+"각 빛 효과의 지속 시간으로, 07:00와 19:00를 중심으로 합니다. 서서히 나타나고 사라지는 시간이 포함됩니다. 도시 달력은 바뀌지"
+" 않습니다."

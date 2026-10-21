@@ -11,6 +11,10 @@ void fragment() {
 	// A circular, soft radial gradient in screen pixels, independent of zoom.
 	float distance_to_center = length((UV - glow_center) * canvas_size);
 	float reach = max(1.0, min(canvas_size.x, canvas_size.y) * radius);
-	float falloff = 1.0 - smoothstep(0.0, reach, distance_to_center);
-	COLOR = vec4(glow_color.rgb, strength * falloff * falloff);
+	float distance_ratio = distance_to_center / reach;
+	float falloff = 1.0 - smoothstep(0.0, 1.0, distance_ratio);
+	// White luminous core, colored middle and a broad, feathered outer edge.
+	float core = 1.0 - smoothstep(0.0, 0.65, distance_ratio);
+	vec3 tint = mix(glow_color.rgb, vec3(1.0), core * core);
+	COLOR = vec4(tint, (1.0 - pow(1.0 - clamp(strength, 0.0, 1.0), 4.0)) * falloff * falloff);
 }

@@ -273,7 +273,7 @@ void fragment() {
 #else
 		float edge = texture(TEXTURE, UV).a;
 #endif
-		float daylight = environment_enabled ? (1.0 - environment_night * 0.85) : 1.0;
+		float daylight = environment_enabled ? (1.0 - environment_ambient_night * 0.85) : 1.0;
 		float weather = environment_enabled ? clamp(dot(environment_weather, vec3(0.3333)), 0.45, 1.0) : 1.0;
 		COLOR = vec4(vec3(0.0), 0.24 * edge * daylight * weather * float(nature_forests_enabled));
 	} else if (artwork_kind < 0.5) {

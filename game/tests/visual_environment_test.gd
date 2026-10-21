@@ -118,6 +118,24 @@ func _run() -> void:
 	await process_frame
 	main.set_process(false)
 	main.main_menu.city_background.set_process(false)
+	var kept_options := main.preferences.visual_enhancements.duplicate(true)
+	var kept_graphics := {}
+	for key in ["base_large_sprites", "base_small_medium_sprites", "base_palette", "large_sprites", "small_medium_sprites", "palette"]:
+		kept_graphics[key] = main.asset_state.get(key)
+	var reload_fixture := FixtureGraphics.pack()
+	main.asset_state.base_large_sprites = reload_fixture.large_sprites
+	main.asset_state.base_small_medium_sprites = reload_fixture.small_medium_sprites
+	main.asset_state.base_palette = reload_fixture.palette
+	for enabled in [true, false]:
+		main.assets.set_sprite_corrections(enabled)
+		assert(not main.asset_state.large_sprites.visual_seasons.is_empty(), "Toggling sprite corrections lost seasonal material masks")
+		assert(not main.asset_state.large_sprites.visual_nature.is_empty(), "Toggling sprite corrections lost nature artwork")
+		assert(main.preferences.visual_enhancements == kept_options, "Sprite corrections changed enhancement preferences")
+	# The clock tests below intentionally use their original asset-free fixture;
+	# manual cloud previews have independent clocks covered by cloud_visual_test.
+	for key: String in kept_graphics:
+		main.asset_state.set(key, kept_graphics[key])
+	main.main_menu.city_background.replace_graphics(main.asset_state.palette, main.asset_state.large_sprites)
 	assert(main.city_session.activate_document(EmptyCityTemplate.create(128)))
 	var before := DocumentState.capture(main.document_state.city.document)
 	var engine := main.simulation_state.simulation_engine
@@ -189,9 +207,7 @@ func _run() -> void:
 	# Exercise the real menu action. Water must also leave the vanilla path
 	# even when its independent options and the other effects were enabled.
 	var before_disable := tab.selected_values()
-	for control in tab.find_children("*", "Button", true, false):
-		if control.text == "Disable all":
-			control.pressed.emit()
+	tab.preset_selector.item_selected.emit(0)
 	main.visual_environment.process(0.0)
 	var parameters := main.map_view.layers.environment_parameters
 	assert(not parameters.water_enabled and not parameters.water_reflections_enabled)
@@ -420,18 +436,18 @@ func _check_landscape_environment(main: CityApplication) -> void:
 
 func _check_sun_glow(main: CityApplication) -> void:
 	var saved := main.preferences.visual_enhancements.duplicate(true)
-	var options := VisualEnhancementOptions.normalize({"day_mode": 1, "day_hour": 7.0})
+	var options := VisualEnhancementOptions.normalize({"day_mode": 1, "day_hour": 7.0, "weather_enabled": false})
 	for hour in [0.0, 6.0, 8.0, 12.0, 18.0, 20.0, 24.0]:
 		assert(CitySunGlow.at_hour(hour, options).strength == 0.0)
 	var early := CitySunGlow.at_hour(6.5, options)
 	var late := CitySunGlow.at_hour(7.5, options)
-	assert(early.center.y > late.center.y and early.center.x == late.center.x)
+	assert(early.center == Vector2.ZERO and late.center == early.center)
 	assert(early.color.b > early.color.r and early.strength > 0.0)
 	assert(CitySunGlow.at_hour(6.05, options).strength < early.strength)
 	assert(CitySunGlow.at_hour(7.95, options).strength < late.strength)
 	early = CitySunGlow.at_hour(18.5, options)
 	late = CitySunGlow.at_hour(19.5, options)
-	assert(early.center.x < late.center.x and early.center.y < late.center.y)
+	assert(early.center == Vector2(1, 0) and late.center == early.center)
 	assert(early.color.r > early.color.b)
 	assert(CitySunGlow.at_hour(31.0, options) == CitySunGlow.at_hour(7.0, options))
 	main.preferences.visual_enhancements = options
@@ -468,11 +484,13 @@ func _check_sun_glow(main: CityApplication) -> void:
 	main.visual_environment.phase = 7.0 / 24.0
 	main.visual_environment.process(0.0)
 	center = glow.material.get_shader_parameter("glow_center")
+	var paused_phase := main.visual_environment.phase
 	main.visual_environment.process(20.0)
-	assert(glow.material.get_shader_parameter("glow_center") == center, "Paused visual clock must freeze sun movement")
+	assert(main.visual_environment.phase == paused_phase, "Paused visual clock must freeze the sun envelope")
 	options.pause_freezes = false
 	main.visual_environment.process(1.0)
-	assert(glow.material.get_shader_parameter("glow_center") != center, "Sun must use the existing optional unpaused visual clock")
+	assert(main.visual_environment.phase != paused_phase, "Sun must use the existing optional unpaused visual clock")
+	assert(glow.material.get_shader_parameter("glow_center") == center, "Sunrise must stay anchored to the upper-left corner")
 	main.visual_environment.phase = old_phase
 	main.simulation_state.speed_controller.set_speed(old_speed)
 	main.preferences.visual_enhancements = saved

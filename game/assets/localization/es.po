@@ -29976,3 +29976,82 @@ msgstr "Servicios públicos"
 #: game/src/ui/settings/building_mix_dialog.gd
 msgid "Power plants"
 msgstr "Centrales eléctricas"
+
+#. Reticulating Splines UI corrections, AI-assisted supplementary translation.
+msgid "Vanilla SimCity 2000"
+msgstr "Vanilla SimCity 2000"
+
+#. Reticulating Splines UI corrections, AI-assisted supplementary translation.
+msgid "Lightweight"
+msgstr "Ligero"
+
+#. Reticulating Splines UI corrections, AI-assisted supplementary translation.
+msgid "Balanced"
+msgstr "Equilibrado"
+
+#. Reticulating Splines UI corrections, AI-assisted supplementary translation.
+msgid "Detailed"
+msgstr "Detallado"
+
+#. Reticulating Splines UI corrections, AI-assisted supplementary translation.
+msgid "Reticulated Splines Experience"
+msgstr "Reticulated Splines Experience"
+
+#. Reticulating Splines UI corrections, AI-assisted supplementary translation.
+msgid "Custom"
+msgstr "Personalizado"
+
+#. Reticulating Splines UI corrections, AI-assisted supplementary translation.
+msgid "Fog coverage"
+msgstr "Cobertura de niebla"
+
+#. Reticulating Splines UI corrections, AI-assisted supplementary translation.
+msgid "Cloud coverage"
+msgstr "Cobertura de nubes"
+
+#. Reticulating Splines UI corrections, AI-assisted supplementary translation.
+msgid "Next tip"
+msgstr "Siguiente consejo"
+
+#. Reticulating Splines UI corrections, AI-assisted supplementary translation.
+msgid "Modding guide"
+msgstr "Guía de mods"
+
+#. Reticulating Splines UI corrections, AI-assisted supplementary translation.
+msgid ""
+"Presets change visual effects only. Tree growth and custom file paths stay "
+"unchanged."
+msgstr ""
+"Los preajustes solo cambian los efectos visuales. El crecimiento de árboles "
+"y las rutas de archivos no cambian."
+
+#. Reticulating Splines UI corrections, AI-assisted supplementary translation.
+msgid ""
+"A white and cool blue glow shines from the upper left around 07:00. Fades "
+"out during rain, snow and storms over 1.5 seconds."
+msgstr ""
+"Un resplandor blanco y azul frío ilumina desde arriba a la izquierda hacia "
+"las 07:00. Se desvanece en 1,5 segundos con lluvia, nieve o tormentas."
+
+#. Reticulating Splines UI corrections, AI-assisted supplementary translation.
+msgid ""
+"A white and warm orange glow shines from the upper right around 19:00. Fades"
+" out during rain, snow and storms over 1.5 seconds."
+msgstr ""
+"Un resplandor blanco y naranja cálido ilumina desde arriba a la derecha "
+"hacia las 19:00. Se desvanece en 1,5 segundos con lluvia, nieve o tormentas."
+
+#. Reticulating Splines UI corrections, AI-assisted supplementary translation.
+msgid ""
+"Amount of aerial cloud coverage. Fog has its own coverage setting. Rain, "
+"snow and storms keep minimum cloud coverage, even at 0%."
+msgstr ""
+"Cobertura de nubes altas. La niebla tiene su propio ajuste. La lluvia, la "
+"nieve y las tormentas mantienen un mínimo de nubes incluso al 0%."
+
+msgid ""
+"Duration of each glow, centered on 07:00 and 19:00. Includes fade-in and "
+"fade-out. Does not change the city calendar."
+msgstr ""
+"Duración de cada resplandor, centrado en las 07:00 y las 19:00. Incluye la "
+"aparición y desaparición gradual. No cambia el calendario de la ciudad."

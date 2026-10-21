@@ -268,6 +268,13 @@ func test_sc2kfix_sprite_fixes(reference_root: String) -> void:
 	# the DOS colour entries: sc2kfix fills them, and other original sprites keep them black
 	var palette := Sc2Palette.load_bmp(reference_root.path_join("BITMAPS/PAL_MSTR.BMP"))
 	var extended := Sc2kfixSpriteFixes.extended_palette(palette)
+	for tick in 32:
+		var maps := [extended.animation_index_map(tick), extended.animation_index_map_steps(tick, tick), extended.scurk_animation_index_map(tick * 30)]
+		for mapping: PackedInt32Array in maps:
+			for index: int in Sc2kfixSpriteFixes.DOS_COLORS:
+				_check(mapping[index] == index, "DOS material colours must not blink through the Windows slow cycle")
+	_check(extended.animation_index_map(1)[200] != 200, "Actual water animation must remain active")
+	_check(palette.animation_index_map(8)[232] != 232, "The original palette cycle must remain unchanged")
 	_check(palette.colors[0xea] == Color.BLACK and extended.colors[0xea] == Color8(104, 53, 0)
 		and extended.colors[0x10] == palette.colors[0x10], "The DOS colours fill only the 20 empty palette entries")
 	var black_only := Sc2kfixSpriteFixes.apply(large, "large", false)

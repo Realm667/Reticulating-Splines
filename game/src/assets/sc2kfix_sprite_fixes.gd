@@ -12,9 +12,9 @@ extends RefCounted
 ## A correction applies only to a sprite whose size and pixels match the
 ## original Windows sprite, so another graphics source keeps its own art.
 ##
-## The animated colours are DOS colours that sc2kfix puts in 20 palette
-## entries that the Windows palette leaves black. Nine original sprites draw
-## those entries; with the DOS colours present they keep them black.
+## Additional DOS material colours occupy 20 entries that Windows leaves black.
+## They stay static even where those entries overlap Windows animation slots.
+## Nine original sprites draw those entries; their reserved pixels stay black.
 
 const DATA_PATH := "res://assets/data/sc2kfix_sprite_fixes.json"
 const RESERVED_BLACK := "reserved_black"
@@ -38,9 +38,12 @@ static func extended_palette(palette: Sc2Palette) -> Sc2Palette:
 	var result := Sc2Palette.new()
 	result.colors = palette.colors.duplicate()
 	result.is_index_encoding = palette.is_index_encoding
+	result.static_cycle_indices = palette.static_cycle_indices.duplicate()
 
 	for index: int in DOS_COLORS:
 		result.colors[index] = DOS_COLORS[index]
+		if not result.static_cycle_indices.has(index):
+			result.static_cycle_indices.append(index)
 
 	return result
 

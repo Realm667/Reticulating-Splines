@@ -29,6 +29,7 @@ static func for_assets(assets: LoadedAssetState) -> CityPreviewJob:
 		result.palette = Sc2Palette.new()
 		result.palette.colors.assign(assets.palette.colors)
 		result.palette.cycles_enabled = assets.palette.cycles_enabled
+		result.palette.static_cycle_indices = assets.palette.static_cycle_indices.duplicate()
 		result.palette.is_index_encoding = assets.palette.is_index_encoding
 	if assets.large_sprites != null:
 		var source := assets.large_sprites

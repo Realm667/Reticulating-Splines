@@ -15,7 +15,7 @@ const SECTIONS := [
 	["Seasons", "Follow the city calendar, run a visual cycle or choose one season.",
 		["season_enabled", "season_mode", "season_fixed", "season_seconds", "season_transition", "season_lut_strength"]],
 	["Weather & Clouds", "Weather and clouds have separate switches. Fog is part of Clouds. Fixed weather can show snow in any season.",
-		["weather_enabled", "weather_mode", "weather_fixed", "weather_seconds", "weather_transition", "weather_strength", "weather_lut_strength", "cloud_enabled", "cloud_mode", "cloud_density", "cloud_shadow_strength", "cloud_speed"]],
+		["weather_enabled", "weather_mode", "weather_fixed", "weather_seconds", "weather_transition", "weather_strength", "weather_lut_strength", "cloud_enabled", "cloud_mode", "cloud_density", "fog_density", "cloud_shadow_strength", "cloud_speed"]],
 	["Environment", "Forests, subtle terrain variation and water appearance. Seasonal water colors require Seasons.",
 		["nature_forests_enabled", "tree_growth_enabled", "tree_shadows_enabled", "nature_terrain_enabled", "nature_terrain_strength", "water_reflections", "water_waves_enabled", "water_topography", "water_depth_enabled", "map_strata_enabled", "season_water_strength", "artwork_color_enabled", "artwork_color_strength"]],
 	["Traffic & Movement", "Decorative cars and pedestrians, plus smoother movement for existing vehicles.",
@@ -28,7 +28,7 @@ const SECTIONS := [
 		["tilt_shift_enabled", "tilt_shift_strength", "tilt_shift_edge", "tilt_shift_transition"]],
 ]
 const PERCENT_FIELDS := ["sunrise_strength", "sunset_strength", "day_glow_radius", "artwork_color_strength", "tilt_shift_strength", "tilt_shift_edge", "tilt_shift_transition", "nature_terrain_strength", "day_lut_strength", "night_strength", "season_transition", "season_lut_strength",
-	"season_water_strength", "weather_strength", "weather_lut_strength", "cloud_density", "cloud_shadow_strength",
+	"season_water_strength", "weather_strength", "weather_lut_strength", "cloud_density", "fog_density", "cloud_shadow_strength",
 	"disaster_strength", "disaster_lights", "disaster_shake"]
 const LABELS := {
 	"disaster_enabled": "Enhanced disaster visuals", "disaster_strength": "Additional effect intensity",
@@ -46,10 +46,10 @@ const LABELS := {
 	"lut_path": "Custom color filter (LUT PNG)", "brightmap_folder": "Custom light masks (brightmaps)",
 }
 const HINTS := {
-	"sunrise_enabled": "A cool radial glow moves from middle left to upper left around 07:00. Uses the visual day clock and its pause setting; fixed time previews the effect.",
-	"sunset_enabled": "A warm radial glow moves from upper left to middle right around 19:00. Uses the visual day clock and its pause setting; fixed time previews the effect.",
+	"sunrise_enabled": "A white and cool blue glow shines from the upper left around 07:00. Fades out during rain, snow and storms over 1.5 seconds.",
+	"sunset_enabled": "A white and warm orange glow shines from the upper right around 19:00. Fades out during rain, snow and storms over 1.5 seconds.",
 	"day_glow_radius": "Radius as a percentage of the shorter side of the city view. Interface elements stay unchanged.",
-	"day_glow_hours": "Duration of each glow, centered on 07:00 and 19:00. Includes fade-in, movement and fade-out. Does not change the city calendar.",
+	"day_glow_hours": "Duration of each glow, centered on 07:00 and 19:00. Includes fade-in and fade-out. Does not change the city calendar.",
 	"tree_growth_enabled": "Changes the saved city: forests become denser every four years and spread to free adjacent land over eight years. No random numbers. In multiplayer, the host decides. Off by default.",
 	"artwork_color_strength": "Reduce saturation of the original indexed artwork only. Added effects, lightmaps and interface colors stay unchanged.",
 	"water_depth_enabled": "Light coastal shallows and dark deep water, including the exposed water at map edges.",
@@ -90,7 +90,7 @@ const HINTS := {
 	"season_water_strength": "Strength of the seasonal water tint. Enable Seasons to use this setting.",
 	"cloud_enabled": "Enable clouds, their shadows and ground-level fog together. Weather effects have their own switch.",
 	"cloud_mode": "Automatic follows the weather. Choose Cumulus for puffy clouds, Stratus for low sheets, Altostratus for higher sheets, Cirrus for wisps, Cirrocumulus for small cloudlets, or Fog for ground-level clouds. Fog fades above low terrain, leaving hilltops clear. Fixed types stay selected during rain, snow and storms.",
-	"cloud_density": "Amount of decorative cloud and fog coverage. With aerial clouds enabled, rain, snow and storms keep minimum cloud coverage, even at 0%.",
+	"cloud_density": "Amount of aerial cloud coverage. Fog has its own coverage setting. Rain, snow and storms keep minimum cloud coverage, even at 0%.",
 	"cloud_speed": "Multiplier for cloud and fog movement. 1× is the standard speed; 0× stops movement.",
 	"life_car_amount": "Decorative car density. 1× is the standard amount; does not change simulated traffic.",
 	"life_people_amount": "Decorative pedestrian density. 1× is the standard amount; does not change population.",
@@ -109,12 +109,9 @@ var page_scroll: ScrollContainer
 var selected_category := -1
 var scroll_positions: Dictionary = {}
 var dependency_hints: Dictionary = {}
-var undo_values: Dictionary = {}
-var undo_button: Button
+var preset_selector: OptionButton
 var action_message: Label
 var last_values: Dictionary = {}
-var action_source := ""
-var action_category := ""
 
 
 func _ready() -> void:
@@ -181,22 +178,16 @@ func _ready() -> void:
 		navigation.add_child(button)
 		category_buttons.append(button)
 	add_child(HSeparator.new())
-	var actions := HFlowContainer.new()
-	add_child(actions)
-	_add_button(actions, "Disable all", _disable_all)
-	_add_button(actions, "Reset this category", _reset_category)
-	_add_button(actions, "Reset all visual settings", _reset_all)
-	_add_button(actions, "Undo", _undo_action)
-	undo_button = actions.get_child(3)
-	undo_button.disabled = true
-	actions.get_child(0).tooltip_text = "Turn off all visual enhancements. Keep effect strengths and custom file paths."
-	actions.get_child(1).tooltip_text = "Reset only the open category."
-	actions.get_child(2).tooltip_text = "Reset every category, including custom file paths. Undo restores the previous values."
-	undo_button.tooltip_text = "Undo the last reset or Disable all, before making another edit."
-	action_message = _help("Undo restores the last reset or Disable all.")
-	# A wrapping footer can inflate the window before its first layout pass.
-	action_message.autowrap_mode = TextServer.AUTOWRAP_OFF
-	action_message.clip_text = true
+	preset_selector = OptionButton.new()
+	preset_selector.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	preset_selector.fit_to_longest_item = false
+	for label in VisualEnhancementOptions.PRESET_NAMES:
+		preset_selector.add_item(label)
+	preset_selector.add_item("Custom")
+	preset_selector.set_item_disabled(5, true)
+	preset_selector.item_selected.connect(_apply_preset)
+	add_child(preset_selector)
+	action_message = _help("Presets change visual effects only. Tree growth and custom file paths stay unchanged.")
 	add_child(action_message)
 	select_category(0)
 	show_values({})
@@ -205,7 +196,7 @@ func _ready() -> void:
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_TRANSLATION_CHANGED and is_node_ready():
 		_update_availability()
-		_refresh_action_message()
+
 
 
 func _help(text: String) -> Label:
@@ -334,48 +325,21 @@ func _display_scale(key: String) -> float:
 	return 100.0 if key in PERCENT_FIELDS else 1.0
 
 
-func _disable_all() -> void:
-	var values := selected_values()
-	for key in values:
-		if str(key).ends_with("_enabled"):
-			values[key] = false
-	values.water_reflections = 0
-	values.water_topography = false
-	_apply_bulk(values, "All effects disabled. Undo restores previous settings.")
-
-
-func _reset_category() -> void:
-	var values := selected_values()
-	var defaults := VisualEnhancementOptions.normalize({})
-	for key: String in SECTIONS[selected_category][2]:
-		values[key] = defaults[key]
-	if "lut_path" in SECTIONS[selected_category][2]:
-		values.lut_folder = defaults.lut_folder
-	_apply_bulk(values, "%s reset. Other categories unchanged.", SECTIONS[selected_category][0])
-
-
-func _reset_all() -> void:
-	_apply_bulk(VisualEnhancementOptions.normalize({}), "All settings reset, including custom paths. Undo is available.")
-
-
-func _apply_bulk(values: Dictionary, message: String, category := "") -> void:
-	var previous := selected_values()
-	if values == previous:
+func _apply_preset(index: int) -> void:
+	if index < 0 or index >= VisualEnhancementOptions.PRESET_NAMES.size():
 		return
-	show_values(values)
-	undo_values = previous
-	undo_button.disabled = false
-	_set_action_message(message, category)
+	show_values(VisualEnhancementOptions.preset(index, selected_values()))
 	changed.emit()
 
 
-func _undo_action() -> void:
-	if undo_values.is_empty():
-		return
-	var previous := undo_values.duplicate(true)
-	show_values(previous)
-	_set_action_message("Previous visual settings restored.")
-	changed.emit()
+func _sync_preset() -> void:
+	var values := selected_values()
+	var index := 5
+	for candidate in VisualEnhancementOptions.PRESET_NAMES.size():
+		if values == VisualEnhancementOptions.preset(candidate, values):
+			index = candidate
+			break
+	preset_selector.select(index)
 
 
 func _changed() -> void:
@@ -384,25 +348,9 @@ func _changed() -> void:
 		if values == last_values:
 			return
 		last_values = values
-		_clear_undo()
+		_sync_preset()
 		_update_availability()
 		changed.emit()
-
-
-func _clear_undo() -> void:
-	undo_values.clear()
-	undo_button.disabled = true
-	_set_action_message("Undo restores the last reset or Disable all.")
-
-
-func _set_action_message(source: String, category := "") -> void:
-	action_source = source
-	action_category = category
-	_refresh_action_message()
-
-
-func _refresh_action_message() -> void:
-	action_message.text = tr(action_source) if action_category.is_empty() else tr(action_source) % tr(action_category)
 
 
 func _update_availability() -> void:
@@ -420,7 +368,7 @@ func _update_availability() -> void:
 			available = values.day_enabled
 		elif key.begins_with("weather_") and key != "weather_enabled":
 			available = values.weather_enabled
-		elif key.begins_with("cloud_") and key != "cloud_enabled":
+		elif (key.begins_with("cloud_") and key != "cloud_enabled") or key == "fog_density":
 			available = values.cloud_enabled
 		match key:
 			"sunrise_enabled", "sunset_enabled":
@@ -554,7 +502,6 @@ func _dependency_reason(key: String, values: Dictionary) -> String:
 
 func show_values(source: Dictionary) -> void:
 	filling = true
-	_clear_undo()
 	var values := VisualEnhancementOptions.normalize(source)
 	for key in controls:
 		var control: Control = controls[key]
@@ -570,6 +517,7 @@ func show_values(source: Dictionary) -> void:
 			(control as LineEdit).text = values[key]
 	filling = false
 	last_values = values
+	_sync_preset()
 	_update_availability()
 
 

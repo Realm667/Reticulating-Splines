@@ -62,34 +62,24 @@ func _run() -> void:
 	up.pressed = true
 	clock._gui_input(up)
 	assert(clock.value == 0.25)
+	custom.tree_growth_enabled = true
 	tab.show_values(custom)
-	tab.select_category(1)
-	notifications[0] = 0
-	tab._reset_category()
-	var expected := custom.duplicate()
-	for key: String in VisualEnhancementsTab.SECTIONS[1][2]:
-		expected[key] = defaults[key]
-	assert(tab.selected_values() == expected and notifications[0] == 1)
-	assert(not tab.undo_button.disabled)
-	tab.undo_button.pressed.emit()
-	assert(tab.selected_values() == custom and notifications[0] == 2)
-	tab._reset_all()
-	assert(tab.selected_values() == defaults and notifications[0] == 3)
-	tab.undo_button.pressed.emit()
-	assert(tab.selected_values() == custom)
-	# Hidden custom paths survive normal edits and category resets.
-	(tab.controls.life_people_enabled as CheckBox).button_pressed = false
-	assert(tab.selected_values().lut_folder == custom.lut_folder)
-	assert(tab.selected_values().lut_path == custom.lut_path)
-	assert(tab.selected_values().brightmap_folder == custom.brightmap_folder)
-	tab.show_values(custom)
-	tab._disable_all()
-	assert(not tab.selected_values().day_enabled)
-	tab._undo_action()
-	assert(tab.selected_values() == custom)
-	tab._reset_all()
+	for level in 5:
+		notifications[0] = 0
+		tab.preset_selector.item_selected.emit(level)
+		var values := tab.selected_values()
+		assert(notifications[0] == 1)
+		assert(values == VisualEnhancementOptions.preset(level, custom))
+		assert(values.tree_growth_enabled and values.lut_folder == custom.lut_folder)
+		assert(values.lut_path == custom.lut_path and values.brightmap_folder == custom.brightmap_folder)
+		assert(tab.preset_selector.selected == level)
+	tab._apply_preset(0)
+	for field in VisualEnhancementOptions.FIELDS:
+		if field[2] == "bool" and field[0] not in VisualEnhancementOptions.PRESET_INDEPENDENT:
+			assert(not tab.selected_values()[field[0]])
+	tab._apply_preset(4)
 	(tab.controls.cloud_enabled as CheckBox).button_pressed = false
-	assert(tab.undo_button.disabled, "Undo must not overwrite later edits")
+	assert(tab.preset_selector.selected == 5, "Manual edits must be shown as custom")
 	assert((tab.dependency_hints.cloud_mode as Label).visible)
 	assert(not (tab.dependency_hints.weather_mode as Label).visible)
 	(tab.controls.season_enabled as CheckBox).button_pressed = false
@@ -174,10 +164,7 @@ func _check_cloud_settings(tab: VisualEnhancementsTab) -> void:
 			assert((tab.controls[key] as SpinBox).editable)
 	(tab.controls.weather_enabled as CheckBox).button_pressed = true
 	assert((tab.dependency_hints.cloud_mode as Label).visible)
-	tab.select_category(3)
-	var before_reset := tab.selected_values()
-	tab._reset_category()
-	assert(tab.selected_values().cloud_mode == 0 and tab.selected_values().day_hour == 7.5)
-	tab._undo_action()
-	assert(tab.selected_values() == before_reset)
+	(tab.controls.fog_density as SpinBox).value = 100.0
+	(tab.controls.cloud_density as SpinBox).value = 15.0
+	assert(tab.selected_values().fog_density == 1.0 and tab.selected_values().cloud_density == 0.15)
 	tab.changed.disconnect(count_change)

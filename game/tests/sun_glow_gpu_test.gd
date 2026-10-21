@@ -52,14 +52,14 @@ func _check(hdr: bool) -> void:
 	assert(dawn.get_pixel(365, 260) == original.get_pixel(365, 260))
 	assert(dawn.get_pixel(48, 88) == Color.GREEN, "Map overlay must remain sharp and untinted")
 	assert(dawn.get_pixel(10, 110) == Color.RED, "Effect must stay inside city view")
-	assert(absf(dawn.get_pixel(89, 98).b - dawn.get_pixel(49, 138).b) < 0.005, "Radial distance must use pixels, not stretched UV axes")
+	assert(absf(dawn.get_pixel(80, 100).b - dawn.get_pixel(100, 80).b) < 0.005, "Radial distance must use pixels, not stretched UV axes")
 	glow.update(map, true, options, 6.01)
 	await RenderingServer.frame_post_draw
 	var entering := viewport.get_texture().get_image().get_pixel(55, 110)
 	assert(entering.b < left.b, "Beginning of dawn must fade in")
 	glow.update(map, true, options, 19.0)
 	await RenderingServer.frame_post_draw
-	var dusk := viewport.get_texture().get_image().get_pixel(200, 100)
+	var dusk := viewport.get_texture().get_image().get_pixel(300, 100)
 	assert(dusk.r > dusk.g and dusk.g > dusk.b)
 	glow.update(map, true, options, 18.5)
 	await RenderingServer.frame_post_draw
@@ -67,8 +67,18 @@ func _check(hdr: bool) -> void:
 	glow.update(map, true, options, 19.5)
 	await RenderingServer.frame_post_draw
 	var late := viewport.get_texture().get_image()
-	assert(early.get_pixel(95, 70).r > late.get_pixel(95, 70).r)
-	assert(early.get_pixel(300, 140).r < late.get_pixel(300, 140).r)
+	assert(early.get_data() == late.get_data(), "Dusk stays anchored to the upper right")
+	glow.advance_weather(false, 0.75)
+	glow.update(map, true, options, 19.0)
+	await RenderingServer.frame_post_draw
+	var fading := viewport.get_texture().get_image().get_pixel(300, 100)
+	assert(fading.r > original.get_pixel(300, 100).r and fading.r < dusk.r)
+	glow.advance_weather(false, 0.75)
+	glow.update(map, true, options, 19.0)
+	assert(not glow.rect.visible)
+	glow.advance_weather(true, 1.5)
+	glow.update(map, true, options, 19.0)
+	assert(glow.rect.visible)
 	glow.update(map, false, options, 7.0)
 	await RenderingServer.frame_post_draw
 	assert(viewport.get_texture().get_image().get_data() == original.get_data())

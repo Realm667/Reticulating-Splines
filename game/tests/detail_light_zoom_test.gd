@@ -36,6 +36,11 @@ func _run() -> void:
 	assert(not lights.moving.visible and not lights.life.visible)
 	main.map_view.zoom_factor = 0.5
 	lights.process(true, 1.0, options, 0.0, 0.0)
+	assert(lights.detail_enabled and not lights.ground.visible, "Street lights must begin their activation fade at zero")
+	lights.process(true, 1.0, options, 0.0, 0.5)
+	assert(lights.ground.visible and is_equal_approx(lights.street_activation, 0.5))
+	lights.process(true, 1.0, options, 0.0, 0.5)
+	assert(is_equal_approx(lights.street_activation, 1.0), "Street lights must finish fading after one second")
 	assert(lights.ground.visible and lights.detail_enabled)
 	main.map_view.zoom_factor = 0.1
 	options.detail_lights_min_zoom = 0

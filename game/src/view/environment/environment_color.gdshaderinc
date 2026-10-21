@@ -2,6 +2,7 @@ uniform bool environment_enabled = false;
 uniform vec3 environment_tint = vec3(1.0);
 uniform float environment_saturation = 1.0;
 uniform float environment_night = 0.0;
+uniform float environment_ambient_night = 0.0;
 uniform float environment_ambient_lift = 0.0;
 uniform sampler2D environment_emission : source_color, filter_nearest, repeat_disable;
 uniform bool environment_has_emission = false;

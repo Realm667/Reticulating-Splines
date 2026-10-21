@@ -2,7 +2,7 @@ class_name CityLightFade
 extends RefCounted
 ## One presentation clock and first-visible timestamps shared by all artwork sizes.
 
-const DURATION := 0.65
+const DURATION := 1.0
 const UNSEEN := 1.0e20
 var clock := 0.0
 var revision := 0

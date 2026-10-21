@@ -186,6 +186,9 @@ func _check_tree_shadow() -> void:
 	material.set_shader_parameter("environment_enabled",true)
 	material.set_shader_parameter("environment_night",1.0)
 	await RenderingServer.frame_post_draw
+	assert(viewport.get_texture().get_image().get_data() == on.get_data(), "Daytime artificial lighting must retain tree shadows")
+	material.set_shader_parameter("environment_ambient_night",1.0)
+	await RenderingServer.frame_post_draw
 	var night := viewport.get_texture().get_image()
 	assert(night.get_pixel(16,16).r > on.get_pixel(16,16).r,"Sun shadows must recede at night")
 	material.shader=preload("res://src/view/environment/night_emission.gdshader")

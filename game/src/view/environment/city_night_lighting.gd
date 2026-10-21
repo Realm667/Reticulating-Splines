@@ -25,6 +25,7 @@ var moving_detail_enabled := true
 var _warm_source: CityMapSource
 var _warm_size := Vector2i.ZERO
 var _warm_figure_groups := -1
+var street_activation := 0.0
 
 
 func _init(application: CityApplication) -> void:
@@ -33,6 +34,7 @@ func _init(application: CityApplication) -> void:
 
 func reset() -> void:
 	fades.reset()
+	street_activation = 0.0
 	source = null
 	_warm_source = null
 	_warm_size = Vector2i.ZERO
@@ -58,7 +60,12 @@ func process(active: bool, night: float, options: Dictionary, elapsed := 0.0, pr
 	output.visible = glow
 	for buffer in buffers:
 		buffer.render_target_update_mode = SubViewport.UPDATE_ALWAYS if glow else SubViewport.UPDATE_DISABLED
-	ground.sync(app, night * float(options.night_ground) / 100.0 if enabled and detail_enabled else 0.0, elapsed, prepare)
+	var street_enabled := enabled and detail_enabled and float(options.night_ground) > 0.0
+	# Cached receivers retain their first-visible clocks across zoom/rotation.
+	# A fresh lighting activation still needs a one-second fade at dusk or when
+	# the player enables street lighting, including while simulation is paused.
+	street_activation = minf(1.0, street_activation + maxf(presentation_elapsed, 0.0) / CityLightFade.DURATION) if street_enabled else 0.0
+	ground.sync(app, night * float(options.night_ground) / 100.0 * smoothstep(0.0, 1.0, street_activation) if street_enabled else 0.0, elapsed, prepare)
 	var before: Control = app.visual_environment.clouds.layer
 	if before == null:
 		before = app.visual_environment.weather.layer

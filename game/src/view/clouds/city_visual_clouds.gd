@@ -112,6 +112,7 @@ func process(delta: float, phase_elapsed: float, active: bool, light: Color, dar
 	var projection := source_to_grid(edge, rotation)
 	var grid_to_source := projection.affine_inverse()
 	var base_density := float(options.get("cloud_density", 0.4))
+	var fog_density := float(options.get("fog_density", 1.0))
 	var target_density := base_density
 	var game_weather := (city.weather_type() if options.weather_mode == 0 else -1) if options.weather_enabled else -2
 	var kind := weather_kind if options.weather_enabled else CityVisualWeather.Kind.SUNNY
@@ -121,7 +122,7 @@ func process(delta: float, phase_elapsed: float, active: bool, light: Color, dar
 			kind = CityVisualWeather.Kind.LIGHT_SNOW
 		elif app.visual_environment.weather.rain > 0.001:
 			kind = CityVisualWeather.Kind.LIGHT_RAIN
-	var signature := [options.get("cloud_mode", 0), options.weather_enabled, options.weather_mode, options.weather_fixed, base_density, options.weather_strength]
+	var signature := [options.get("cloud_mode", 0), options.weather_enabled, options.weather_mode, options.weather_fixed, base_density, fog_density, options.weather_strength]
 	var manual := _initialized and signature != _preview_signature
 	_preview_signature = signature
 	_manual_preview = _manual_preview or manual
@@ -131,9 +132,11 @@ func process(delta: float, phase_elapsed: float, active: bool, light: Color, dar
 	if options.weather_enabled:
 		weather_clock = fposmod(weather_clock + maxf(phase_elapsed, 0.0), 900.0)
 		target_density = weather_density(base_density, kind, game_weather, weather_clock)
+	# Fog banks use their own coverage, including transitions from aerial clouds.
+	target_density = lerpf(target_density, fog_density, situations.fog_weight())
 	var moisture := weather_fog(kind, -1, weather_clock) * float(options.weather_strength) if options.weather_enabled else 0.0
-	var bank_fog := situations.fog_weight() * 0.24 * clampf(base_density / 0.4, 0.0, 1.0)
-	var target_fog := maxf(moisture, bank_fog)
+	var bank_fog := situations.fog_weight() * 0.24
+	var target_fog := maxf(moisture, bank_fog) * fog_density
 	var step := maxf(delta, 0.0) if _manual_preview else minf(maxf(delta, 0.0), maxf(phase_elapsed, 0.0))
 	var storm_target := 1.0 if kind in [CityVisualWeather.Kind.RAIN_STORM, CityVisualWeather.Kind.DRY_STORM] else 0.0
 	storminess = storm_target if not _initialized else move_toward(storminess, storm_target, step / (8.0 if _manual_preview else 60.0))

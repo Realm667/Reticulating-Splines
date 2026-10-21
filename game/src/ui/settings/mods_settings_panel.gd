@@ -67,6 +67,11 @@ func _init() -> void:
 	reload_button.tooltip_text = "Stop all mods, find the mods in the folder again, and start the enabled ones."
 	reload_button.pressed.connect(reload_requested.emit)
 	buttons.add_child(reload_button)
+	var guide := Button.new()
+	guide.text = "Modding guide"
+	guide.pressed.connect(func() -> void:
+		OS.shell_open("https://github.com/Realm667/Reticulating-Splines/blob/reticulating-splines/docs/mods.md"))
+	buttons.add_child(guide)
 	add_child(buttons)
 
 

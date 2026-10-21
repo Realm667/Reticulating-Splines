@@ -347,7 +347,7 @@ func _check_seasonal_water(viewport: SubViewport, material: ShaderMaterial) -> v
 		assert(result.get_pixel(24, 8) == original.get_pixel(24, 8), "Seasonal water color reached dry land")
 		assert(colors[-1] != water, "Seasonal water color missing: %d" % season)
 	assert(colors[0].g > colors[1].g and colors[2].r > colors[0].r and colors[2].b < colors[1].b)
-	assert(colors[3].g > colors[1].g and colors[3].b > colors[2].b)
+	assert(colors[3].b > colors[3].g and colors[3].g < colors[1].g and colors[3].b > colors[2].b, "Winter water must read cold blue, not petrol")
 	material.set_shader_parameter("environment_seasons", Vector4(0.5, 0.5, 0, 0))
 	await RenderingServer.frame_post_draw
 	var blended := viewport.get_texture().get_image().get_pixel(8, 8)

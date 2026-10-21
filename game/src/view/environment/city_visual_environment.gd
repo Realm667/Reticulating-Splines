@@ -8,7 +8,7 @@ var season_phase := 1.0
 const SHARED_OPTIONS := ["tree_growth_enabled", "day_enabled", "day_mode", "day_seconds", "day_hour",
 	"season_enabled", "season_mode", "season_seconds", "season_fixed", "season_transition",
 	"weather_enabled", "weather_mode", "weather_fixed", "weather_seconds", "weather_transition",
-	"weather_strength", "cloud_enabled", "cloud_mode", "cloud_density", "cloud_speed",
+	"weather_strength", "cloud_enabled", "cloud_mode", "cloud_density", "fog_density", "cloud_speed",
 	"fog_enabled", "pause_freezes", "speed_link"]
 
 var tint := Color.WHITE
@@ -283,6 +283,7 @@ func process(delta: float) -> void:
 		"environment_tint": Vector3(tint.r, tint.g, tint.b),
 		"environment_saturation": lerpf(1.0, 0.78, ambient_night),
 		"environment_night": night,
+		"environment_ambient_night": ambient_night,
 		"environment_ambient_lift": float(options.night_ambient) / 100.0 * ambient_night,
 		"environment_lut": lut,
 		"environment_lut_size": lut_size,
@@ -301,6 +302,7 @@ func process(delta: float) -> void:
 	night_lighting.process(active, night, options, elapsed * factor, maxf(delta, 0.0))
 	if clouds.layer != null and clouds.layer.visible:
 		app.map_view.layers._apply_environment(clouds.material)
+	sun_glow.advance_weather(not options.weather_enabled or weather.kind == CityVisualWeather.Kind.SUNNY, delta)
 	sun_glow.update(app.map_view, active, options, hour, tilt_shift.canvas if is_instance_valid(tilt_shift.canvas) else null)
 	tilt_shift.update(app.map_view, active, options)
 	app.preferences.visual_enhancements = saved_options

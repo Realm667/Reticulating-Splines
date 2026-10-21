@@ -3,7 +3,7 @@ render_mode unshaded, blend_premul_alpha;
 uniform float strength = 0.0;
 uniform float edge_softness = 0.0;
 uniform float fade_clock = -1.0;
-uniform float fade_duration = 0.65;
+uniform float fade_duration = 1.0;
 varying float light_birth;
 void vertex() {
 	light_birth = COLOR.r;

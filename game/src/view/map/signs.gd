@@ -191,7 +191,9 @@ func _draw_signs(scale: float, offset: Vector2) -> void:
 func draw_text(canvas: CanvasItem, entry: Entry, slot: CitySignAtlas.Slot, origin: Vector2, multiplier: float, view: int) -> void:
 	var font := _get_sign_font()
 	var native_size := maxi(1, roundi(_em_size(font, ENAMEL_FONT_HEIGHTS[view])))
-	var screen_size := maxi(1, roundi(native_size * multiplier))
+	# Rasterize at twice the physical display density, then fit to the same board.
+	var raster_scale := maxf(1.0, canvas.get_global_transform_with_canvas().get_scale().y) * 2.0
+	var screen_size := maxi(1, roundi(native_size * multiplier * raster_scale))
 	if entry.screen_font_size != screen_size:
 		entry.screen_font_size = screen_size
 		entry.screen_text_width = font.get_string_size(entry.label, HORIZONTAL_ALIGNMENT_LEFT, -1, screen_size).x
@@ -199,7 +201,7 @@ func draw_text(canvas: CanvasItem, entry: Entry, slot: CitySignAtlas.Slot, origi
 	# to the board without changing its world-space position or bounds.
 	var fit := slot.text_width * multiplier / maxf(1.0, entry.screen_text_width)
 	var text_origin := origin + (slot.face * Vector2(5, 3)) * multiplier
-	canvas.draw_set_transform_matrix(Transform2D(Vector2(fit, fit * 0.5), Vector2(0, 1), text_origin))
+	canvas.draw_set_transform_matrix(Transform2D(Vector2(fit, fit * 0.5), Vector2(0, 1.0 / raster_scale), text_origin))
 	canvas.draw_string(font, Vector2(0, font.get_ascent(screen_size)), entry.label,
 		HORIZONTAL_ALIGNMENT_LEFT, -1, screen_size, Color("eee9d3"))
 	canvas.draw_set_transform_matrix(Transform2D.IDENTITY)

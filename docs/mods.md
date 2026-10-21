@@ -1,6 +1,10 @@
-# Mods
+# Mods in Reticulating Splines
 
-A mod is a folder of JavaScript files with an `info.json` file. OpenSC2K loads
+This is the inherited OpenSC2K modding guide, maintained for Reticulating Splines.
+The JavaScript API and examples remain compatible; see [Scripting](scripting.md)
+and [example mods](../examples/mods).
+
+A mod is a folder of JavaScript files with an `info.json` file. Reticulating Splines loads
 each enabled mod when the game starts. Each mod runs in its own script runtime,
 and can use files only in its own folder. For the script API, see
 [Scripting](scripting.md). For example mods, see `examples/mods`.
@@ -17,7 +21,10 @@ and can use files only in its own folder. For the script API, see
 
 ## Install a mod
 
-Copy the mod folder into the `mods` folder of the OpenSC2K data folder:
+Copy the mod folder into the `mods` folder of the active data folder. **Settings > Mods > Open Mods Folder** is the
+authoritative location, including a custom folder set under Data. The inherited
+non-portable profile name is still `OpenSC2K`; it is not renamed by this fork:
+
 
 | System | Mods folder |
 | --- | --- |
@@ -68,6 +75,22 @@ The Console has the same controls:
 | `mods enable <id>`, `mods disable <id>` | Turns a mod on or off, as the check box does. |
 | `mods reload` | Stops all mods, finds the mods in the folder again, and starts the enabled ones. |
 | `reset` | Also stops the console scripts. |
+
+## Building variants and configuration
+
+**Settings > Mods > Building variants…** opens the built-in SCURK artwork mixer.
+It is a presentation feature, separate from the JavaScript mod list: enable or
+disable mixing, choose local MIF packs, categories and weights there. No mod
+script or city simulation change is required. Indexed color animation survives
+mixing when the imported artwork actually uses animated palette indices. A
+static MIF export does not supply the original console animation frames.
+
+JavaScript mods already support enable/disable, dependency handling, reloading,
+events and persistent `game.storage` (see below). There is currently no generic
+settings schema that automatically creates per-mod controls in this menu. For
+now, a mod can document its own configuration file or use its existing scripting
+API. A future configurable mod UI needs a defined schema and lifecycle; copying
+a graphics pack into the JavaScript mods folder does not turn it into a mod.
 
 ## The mod folder
 

@@ -2,7 +2,7 @@ shader_type canvas_item;
 render_mode unshaded;
 
 uniform float fade_clock = -1.0;
-uniform float fade_duration = 0.65;
+uniform float fade_duration = 1.0;
 varying float light_birth;
 
 void vertex() {

@@ -112,6 +112,8 @@ func _ready() -> void:
 	dark_underground_check = %DarkUndergroundCheck
 	sprite_corrections_check = %SpriteCorrectionsCheck
 	hd_graphics_check = %HdGraphicsCheck
+	hd_graphics_check.hide()
+	get_node("Tabs/Graphics/Content/PackFields/HdGraphicsSpacer").hide()
 	# this runs before the change notice, so the values have the corrections off
 	hd_graphics_check.toggled.connect(func(pressed: bool) -> void:
 		if not hd_graphics_check.disabled:
@@ -177,7 +179,6 @@ func _ready() -> void:
 	add_child(building_mix_dialog)
 	var mix_button := Button.new()
 	mix_button.text = "Building variants…"
-	tabs.get_node("Graphics/Content").add_child(mix_button)
 	mix_button.pressed.connect(building_mix_requested.emit)
 	_bind_pack_controls("graphics", folder_edit, %GraphicsPackName, %GraphicsBrowse)
 	_bind_pack_controls("sound", sound_pack_edit, %SoundPackName, %SoundBrowse)
@@ -187,6 +188,8 @@ func _ready() -> void:
 	_build_library_controls()
 	tabs.get_node("Data/Content/Fields/MusicPackLabel").hide()
 	tabs.get_node("Data/Content/Fields/MusicPackControls").hide()
+	tabs.get_node("Data/Content/Fields/HdPackLabel").hide()
+	tabs.get_node("Data/Content/Fields/HdPackControls").hide()
 	_watch_clicks(tabs)
 	tabs.get_tab_bar().tab_clicked.connect(button_clicked.emit.unbind(1))
 	_build_controls_reset(content)
@@ -196,6 +199,8 @@ func _ready() -> void:
 	mods_scroll.name = "Mods"
 	mods_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	mods_panel = ModsSettingsPanel.new()
+	mods_panel.add_child(mix_button)
+	mods_panel.move_child(mix_button, 0)
 	mods_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	mods_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	mods_scroll.add_child(mods_panel)

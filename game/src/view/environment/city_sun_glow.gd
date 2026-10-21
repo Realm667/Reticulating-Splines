@@ -5,6 +5,12 @@ extends RefCounted
 const SHADER := preload("res://src/view/environment/sun_glow.gdshader")
 var rect: ColorRect
 var material: ShaderMaterial
+var clear_weather := 1.0
+const WEATHER_FADE_SECONDS := 1.5
+
+
+func advance_weather(sunny: bool, delta: float) -> void:
+	clear_weather = move_toward(clear_weather, 1.0 if sunny else 0.0, maxf(delta, 0.0) / WEATHER_FADE_SECONDS)
 
 
 static func at_hour(hour: float, options: Dictionary) -> Dictionary:
@@ -20,10 +26,8 @@ static func at_hour(hour: float, options: Dictionary) -> Dictionary:
 		var progress := (h - middle) / duration + 0.5
 		if progress <= 0.0 or progress >= 1.0:
 			continue
-		var start := Vector2(0.08, 0.52) if event == "sunrise" else Vector2(0.08, 0.08)
-		var finish := Vector2(0.08, 0.08) if event == "sunrise" else Vector2(0.92, 0.52)
-		result.center = start.lerp(finish, smoothstep(0.0, 1.0, progress))
-		result.color = Color(0.65, 0.82, 1.0) if event == "sunrise" else Color(1.0, 0.61, 0.28)
+		result.center = Vector2(0.0, 0.0) if event == "sunrise" else Vector2(1.0, 0.0)
+		result.color = Color(0.40, 0.72, 0.80) if event == "sunrise" else Color(1.0, 0.36, 0.08)
 		result.strength = float(options[event + "_strength"]) * smoothstep(0.0, 0.3, progress) * (1.0 - smoothstep(0.7, 1.0, progress))
 		break
 	return result
@@ -31,6 +35,7 @@ static func at_hour(hour: float, options: Dictionary) -> Dictionary:
 
 func update(map: CityMapControl, active: bool, options: Dictionary, hour: float, before: Node = null) -> void:
 	var state := at_hour(hour, options) if active else {"strength": 0.0}
+	state.strength *= smoothstep(0.0, 1.0, clear_weather)
 	if state.strength <= 0.0:
 		if is_instance_valid(rect):
 			rect.hide()

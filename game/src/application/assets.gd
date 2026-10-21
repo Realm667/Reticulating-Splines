@@ -512,13 +512,8 @@ func set_sprite_corrections(enabled: bool) -> void:
 	if app.asset_state.active_scurk_tile_set != null or app.asset_state.base_large_sprites == null:
 		return
 
-	app.map_render.close_region_cache()
-	app.static_render.stop_render_job()
-	use_default_sprites()
-	app.static_render.invalidate_rendered_city()
-
-	if app.document_state.city != null:
-		app.map_render.refresh_map()
+	# New archives also need their season, nature and lighting masks rebuilt.
+	_reload_sprites()
 
 
 func data_pack_folder() -> String:

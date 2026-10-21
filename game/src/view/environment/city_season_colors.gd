@@ -51,10 +51,12 @@ static func prepare(archive: Sc2SpriteArchive, palette: Sc2Palette) -> void:
 				image.set_pixel(at % entry.width, at / entry.width, Color(0, 0, 0.4, 1))
 			elif water_side:
 				image.set_pixel(at % entry.width, at / entry.width, Color(0, 0, 0.25, 1))
-			elif (ground and blue_water) or (waterfront and (pixels[at] == 95 or (pixels[at] >= 200 and pixels[at] <= 211))):
+			elif (ground and blue_water) or (offset == BuildingTileIds.MARINA and blue_water) or (waterfront and (pixels[at] == 95 or (pixels[at] >= 200 and pixels[at] <= 211))):
 				# Terrain water also needs grading below the separate surface pass,
 				# including its exposed edge texels. On objects, use only the authored
-				# water ramp and waterfront IDs, never a global blue-color replacement.
+				# water ramp and waterfront IDs. Marinas also contain static blue water
+				# shades (including imported variants), not only the animated ramp.
+				# Never replace blue pixels globally across unrelated buildings.
 				image.set_pixel(at % entry.width, at / entry.width, Color(0, 0, 0.6, 1))
 			elif foliage or soil or power_warning:
 				image.set_pixel(at % entry.width, at / entry.width, Color(float(foliage), float(soil), float(power_warning), 1))

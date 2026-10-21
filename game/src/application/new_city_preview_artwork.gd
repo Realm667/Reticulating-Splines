@@ -30,6 +30,7 @@ static func preview_palette(source: Sc2Palette) -> Sc2Palette:
 	var result := Sc2Palette.new()
 	result.colors.assign(source.colors)
 	result.cycles_enabled = source.cycles_enabled
+	result.static_cycle_indices = source.static_cycle_indices.duplicate()
 	# At overview scale individual wave geometry is subpixel. Preserve the
 	# palette animation with the same cool water colors as the minimap.
 	var water := CityWaterLayer.blue_indices(source)

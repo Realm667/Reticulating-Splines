@@ -230,6 +230,9 @@ func _check_embedded_water(pack: GraphicsPack) -> void:
 			var water_count := 0
 			for at in indices.size():
 				var water := indices[at] == 95 or (indices[at] >= 200 and indices[at] <= 211)
+				if offset == BuildingTileIds.MARINA and indices[at] >= 0:
+					var color := pack.palette.color(indices[at])
+					water = water or (color.b > 0.15 and color.b > color.r * 1.2 and color.b > color.g * 1.08)
 				var mark := mask.get_pixel(at % entry.width, at / entry.width)
 				assert((mark.b > 0.55) == water, "Waterfront mask recolored non-water artwork")
 				water_count += int(water)

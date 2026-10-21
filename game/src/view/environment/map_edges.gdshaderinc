@@ -4,6 +4,16 @@ uniform sampler2D map_edge_profile : filter_nearest, repeat_disable;
 uniform mat3 edge_canvas_to_grid = mat3(1.0);
 varying vec2 edge_grid;
 
+float edge_layer_hash(float layer) {
+	return fract(sin(layer * 127.1 + 311.7) * 43758.5453);
+}
+
+float edge_layer_boundary(float layer) {
+	// Adjacent boundaries remain ordered, but their spacing varies from 3 to
+	// 21 logical pixels. Absolute layer IDs avoid a repeating stripe sequence.
+	return layer * 12.0 + (edge_layer_hash(layer) - 0.5) * 9.0;
+}
+
 bool map_edge_slope(float mask, float elevation) {
 	if (!map_strata_enabled || elevation < 0.0 || mask < 0.67 || mask > 0.83) { return false; }
 	// Restore the base-height grid coordinate of this vertical face. An outer
@@ -73,13 +83,16 @@ vec4 map_edge_color(vec3 original, float mask) {
 		float distance = map_edge_size - along;
 		float warp = sin(distance * 0.37 + sin(distance * 0.11) * 1.7) * 1.25;
 		warp += sin(distance * 0.17 + below_surface * 0.035) * 0.6;
-		float band = mod(below_surface + warp, 23.0);
-		color = vec3(0.46, 0.35, 0.25);
-		if (band < 3.0) { color = vec3(0.64, 0.58, 0.43); }
-		else if (band < 6.0) { color = vec3(0.38, 0.37, 0.32); }
-		else if (band < 10.0) { color = vec3(0.56, 0.48, 0.34); }
-		else if (band < 12.0) { color = vec3(0.68, 0.63, 0.49); }
-		else if (band < 16.0) { color = vec3(0.36, 0.29, 0.23); }
+		float depth = below_surface + warp;
+		float layer = floor(depth / 12.0);
+		if (depth < edge_layer_boundary(layer)) { layer -= 1.0; }
+		else if (depth >= edge_layer_boundary(layer + 1.0)) { layer += 1.0; }
+		float stone = edge_layer_hash(layer + 97.0);
+		color = mix(vec3(0.36, 0.29, 0.23), vec3(0.64, 0.58, 0.43), stone);
+		// Occasional grey or pale deposits break up the brown sequence without
+		// introducing a fixed colour order or changing any simulation state.
+		if (stone < 0.16) { color = vec3(0.38, 0.37, 0.32); }
+		else if (stone > 0.88) { color = vec3(0.68, 0.63, 0.49); }
 		float grain = fract(sin(dot(floor(vec2(along * 16.0, altitude * 12.0)), vec2(12.9898, 78.233))) * 43758.5453);
 		color *= 0.96 + grain * 0.08;
 	} else {

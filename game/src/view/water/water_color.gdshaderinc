@@ -28,7 +28,7 @@ vec3 water_season_color(vec3 base) {
 	vec3 spring = input_color + blue * vec3(0.015, 0.28, -0.10);
 	vec3 summer = input_color + blue * vec3(0.0, 0.14, -0.025);
 	vec3 autumn = input_color + blue * vec3(0.13, 0.20, -0.20);
-	vec3 winter = input_color + blue * vec3(0.11, 0.22, -0.07);
+	vec3 winter = input_color + blue * vec3(0.10, -0.10, 0.24);
 	vec3 seasonal = spring * environment_seasons.x + summer * environment_seasons.y
 		+ autumn * environment_seasons.z + winter * environment_seasons.w;
 	vec3 colored = mix(input_color, clamp(seasonal, vec3(0.0), vec3(1.0)), water_season_strength);

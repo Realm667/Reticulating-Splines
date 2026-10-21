@@ -19,6 +19,8 @@ var load_error := ""
 var is_index_encoding := false
 # TrueColor packs keep only a static compatibility lookup for logical masks.
 var cycles_enabled := true
+# Extended DOS material colours occupy otherwise unused Windows cycle slots.
+var static_cycle_indices := PackedInt32Array()
 
 
 static func load_bmp(path: String) -> Sc2Palette:
@@ -108,20 +110,26 @@ static func index_encoding() -> Sc2Palette:
 func animation_index_map(base_ticks: int) -> PackedInt32Array:
 	if not cycles_enabled:
 		return NativePalette.index_map(0)
-	return NativePalette.index_map(base_ticks)
+	return _retain_static_colors(NativePalette.index_map(base_ticks))
 
 
 # scurk has its own palette clock, including the startup delay
 func scurk_animation_index_map(timer_ticks: int) -> PackedInt32Array:
 	if not cycles_enabled:
 		return NativePalette.index_map(0)
-	return NativePalette.scurk_index_map(timer_ticks)
+	return _retain_static_colors(NativePalette.scurk_index_map(timer_ticks))
 
 
 func animation_index_map_steps(fast_steps: int, slow_steps: int) -> PackedInt32Array:
 	if not cycles_enabled:
 		return NativePalette.index_map(0)
-	return NativePalette.index_map_steps(fast_steps, slow_steps)
+	return _retain_static_colors(NativePalette.index_map_steps(fast_steps, slow_steps))
+
+
+func _retain_static_colors(indices: PackedInt32Array) -> PackedInt32Array:
+	for index in static_cycle_indices:
+		indices[index] = index
+	return indices
 
 
 func animation_image(base_ticks: int) -> Image:
