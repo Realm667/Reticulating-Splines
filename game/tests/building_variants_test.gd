@@ -2,7 +2,7 @@ extends SceneTree
 ## Generated local MIF families: selection, persistence, fallbacks and both painters.
 @warning_ignore_start("integer_division")
 var folder := "user://building-variants-%d" % Time.get_ticks_usec()
-const IDS := [13,112,124,132,147,183,198,208,209,214,215,224]
+const IDS := [13,112,124,132,147,183,198,208,209,214,215,224,BuildingTileIds.MARINA]
 
 
 func _initialize() -> void:
@@ -26,6 +26,7 @@ func _run() -> void:
 	var small := loaded.apply_to(graphics.small_medium_sprites,options)
 	assert(large.building_variants.size() == IDS.size() and small.building_variants.size() == IDS.size()*2)
 	assert(large.find_sprite(1112) == graphics.large_sprites.find_sprite(1112))
+	_check_variant_water_masks(large, small, graphics.palette)
 	CityBrightmaps.load_archive(large,"","large")
 	for id: int in large.entries_by_id:
 		if id >= BuildingVariants.FIRST:
@@ -64,17 +65,44 @@ func _run() -> void:
 	loaded.packs[0].families.clear()
 	loaded.prepare_families(graphics.large_sprites,graphics.small_medium_sprites,options)
 	assert(not loaded.packs[0].families.has(112))
-	var dialog := BuildingMixDialog.new()
+	var dialog := BuildingMixPanel.new()
 	root.add_child(dialog)
-	dialog.open(options)
+	dialog.show_values(options)
 	dialog.add_paths(PackedStringArray([a,a]))
 	dialog.add_paths(PackedStringArray([folder,folder.path_join("missing.mif"),folder.path_join("settings.cfg")]))
 	assert(dialog.options.packs.size() == 2)
 	assert(dialog.options.original_weight == 50 and dialog.options.packs[0].weight == 50)
+	var applied := []
+	dialog.applied.connect(func(value: Dictionary) -> void: applied.append(value))
+	dialog.options.original_weight = 25
+	assert(applied.is_empty(), "Editing must remain staged until Apply")
+	(dialog.body.get_child(-1) as Button).pressed.emit()
+	assert(applied.size() == 1 and applied[0].original_weight == 25)
 	dialog.queue_free()
 	await process_frame
 	print("PASS: building family mixing, palette indices, weights, persistence, order, missing/incomplete/identical sets, CPU/GPU and menu")
 	quit()
+
+
+func _check_variant_water_masks(large: Sc2SpriteArchive, small: Sc2SpriteArchive, original: Sc2Palette) -> void:
+	# Two imported families use different static blue indices. The mixer bank
+	# offsets must preserve the marina identity at all three artwork sizes.
+	var palette := Sc2Palette.new()
+	palette.colors = original.colors.duplicate()
+	palette.colors[174] = Color(0.1, 0.2, 0.8)
+	palette.colors[120] = Color(0.15, 0.35, 0.65)
+	for archive in [small, large]:
+		CitySeasonColors.prepare(archive, palette)
+		for id: int in archive.building_variants:
+			var choices: PackedInt64Array = archive.building_variants[id]
+			for at in range(0, choices.size(), 2):
+				var variant := choices[at]
+				if id % 500 == BuildingTileIds.MARINA:
+					var mask: Image = archive.visual_seasons[variant]
+					assert(mask.get_pixel(1, 0).b > 0.55, "Imported marina lost its static-blue water mask")
+					assert(mask.get_pixel(0, 0).a == 0.0, "Transparent pixels must stay transparent")
+				else:
+					assert(not archive.visual_seasons.has(variant), "Unrelated blue building artwork must not become water")
 
 
 func _write(name: String, color: int) -> String:

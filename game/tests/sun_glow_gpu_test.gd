@@ -52,7 +52,15 @@ func _check(hdr: bool) -> void:
 	assert(dawn.get_pixel(365, 260) == original.get_pixel(365, 260))
 	assert(dawn.get_pixel(48, 88) == Color.GREEN, "Map overlay must remain sharp and untinted")
 	assert(dawn.get_pixel(10, 110) == Color.RED, "Effect must stay inside city view")
-	assert(absf(dawn.get_pixel(80, 100).b - dawn.get_pixel(100, 80).b) < 0.005, "Radial distance must use pixels, not stretched UV axes")
+	assert(absf(dawn.get_pixel(80, 125).b - dawn.get_pixel(60, 145).b) < 0.005, "Radial distance must use pixels, not stretched UV axes")
+	glow.update(map, true, options, 6.5)
+	await RenderingServer.frame_post_draw
+	var dawn_early := viewport.get_texture().get_image()
+	glow.update(map, true, options, 7.5)
+	await RenderingServer.frame_post_draw
+	var dawn_late := viewport.get_texture().get_image()
+	assert(dawn_early.get_pixel(40, 160).b > dawn_late.get_pixel(40, 160).b)
+	assert(dawn_early.get_pixel(40, 40).b < dawn_late.get_pixel(40, 40).b)
 	glow.update(map, true, options, 6.01)
 	await RenderingServer.frame_post_draw
 	var entering := viewport.get_texture().get_image().get_pixel(55, 110)
@@ -67,7 +75,8 @@ func _check(hdr: bool) -> void:
 	glow.update(map, true, options, 19.5)
 	await RenderingServer.frame_post_draw
 	var late := viewport.get_texture().get_image()
-	assert(early.get_data() == late.get_data(), "Dusk stays anchored to the upper right")
+	assert(early.get_pixel(330, 45).r > late.get_pixel(330, 45).r, "Dusk must leave the upper-right corner")
+	assert(early.get_pixel(330, 170).r < late.get_pixel(330, 170).r, "Dusk must move toward middle right")
 	glow.advance_weather(false, 0.75)
 	glow.update(map, true, options, 19.0)
 	await RenderingServer.frame_post_draw

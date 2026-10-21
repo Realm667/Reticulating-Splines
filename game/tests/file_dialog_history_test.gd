@@ -23,6 +23,12 @@ func _run() -> void:
 		FileDialog.set_recent_list(recents)
 		var dialog := FileDialog.new()
 		root.add_child(dialog)
+		# Settings can reparent a category containing a file picker during layout.
+		var holder := Node.new()
+		root.add_child(holder)
+		dialog.reparent(holder)
+		dialog.reparent(root)
+		holder.queue_free()
 		dialog.popup_centered()
 		await process_frame
 		dialog.hide()

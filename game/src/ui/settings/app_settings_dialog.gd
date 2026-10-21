@@ -10,8 +10,6 @@ signal update_check_requested
 signal button_clicked
 # the player changed a setting. read the new values with selected_values()
 signal settings_changed
-signal building_mix_requested
-var building_mix_dialog: BuildingMixDialog
 signal brightmaps_reload_requested
 signal brightmaps_export_requested
 # the player accepted the Use Defaults warning. the controls reset and save at once
@@ -175,11 +173,6 @@ func _ready() -> void:
 			_update_zoom_graphics_choices())
 
 	_build_classic_zoom_control()
-	building_mix_dialog = BuildingMixDialog.new()
-	add_child(building_mix_dialog)
-	var mix_button := Button.new()
-	mix_button.text = "Building variants…"
-	mix_button.pressed.connect(building_mix_requested.emit)
 	_bind_pack_controls("graphics", folder_edit, %GraphicsPackName, %GraphicsBrowse)
 	_bind_pack_controls("sound", sound_pack_edit, %SoundPackName, %SoundBrowse)
 	_bind_pack_controls("music", music_pack_edit, %MusicPackName, %MusicBrowse)
@@ -199,8 +192,6 @@ func _ready() -> void:
 	mods_scroll.name = "Mods"
 	mods_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	mods_panel = ModsSettingsPanel.new()
-	mods_panel.add_child(mix_button)
-	mods_panel.move_child(mix_button, 0)
 	mods_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	mods_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	mods_scroll.add_child(mods_panel)

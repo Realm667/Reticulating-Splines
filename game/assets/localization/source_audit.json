@@ -22,7 +22,7 @@
     "game/src/application/photo_mode.gd",
     "game/src/ui/knowledge/*.gd",
     "game/src/application/knowledge.gd",
-    "game/src/ui/settings/building_mix_dialog.gd",
+    "game/src/ui/settings/building_mix_panel.gd",
     "game/src/assets/building_variants.gd"
   ],
   "non_display_literals": {

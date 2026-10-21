@@ -441,13 +441,13 @@ func _check_sun_glow(main: CityApplication) -> void:
 		assert(CitySunGlow.at_hour(hour, options).strength == 0.0)
 	var early := CitySunGlow.at_hour(6.5, options)
 	var late := CitySunGlow.at_hour(7.5, options)
-	assert(early.center == Vector2.ZERO and late.center == early.center)
+	assert(early.center.x == 0.0 and late.center.x == 0.0 and early.center.y > late.center.y)
 	assert(early.color.b > early.color.r and early.strength > 0.0)
 	assert(CitySunGlow.at_hour(6.05, options).strength < early.strength)
 	assert(CitySunGlow.at_hour(7.95, options).strength < late.strength)
 	early = CitySunGlow.at_hour(18.5, options)
 	late = CitySunGlow.at_hour(19.5, options)
-	assert(early.center == Vector2(1, 0) and late.center == early.center)
+	assert(early.center.x == 1.0 and late.center.x == 1.0 and early.center.y < late.center.y)
 	assert(early.color.r > early.color.b)
 	assert(CitySunGlow.at_hour(31.0, options) == CitySunGlow.at_hour(7.0, options))
 	main.preferences.visual_enhancements = options
@@ -490,7 +490,7 @@ func _check_sun_glow(main: CityApplication) -> void:
 	options.pause_freezes = false
 	main.visual_environment.process(1.0)
 	assert(main.visual_environment.phase != paused_phase, "Sun must use the existing optional unpaused visual clock")
-	assert(glow.material.get_shader_parameter("glow_center") == center, "Sunrise must stay anchored to the upper-left corner")
+	assert((glow.material.get_shader_parameter("glow_center") as Vector2).y < center.y, "Sunrise must move upward on the existing visual clock")
 	main.visual_environment.phase = old_phase
 	main.simulation_state.speed_controller.set_speed(old_speed)
 	main.preferences.visual_enhancements = saved

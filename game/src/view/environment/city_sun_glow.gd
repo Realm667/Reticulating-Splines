@@ -26,7 +26,8 @@ static func at_hour(hour: float, options: Dictionary) -> Dictionary:
 		var progress := (h - middle) / duration + 0.5
 		if progress <= 0.0 or progress >= 1.0:
 			continue
-		result.center = Vector2(0.0, 0.0) if event == "sunrise" else Vector2(1.0, 0.0)
+		var travel := smoothstep(0.0, 1.0, progress)
+		result.center = Vector2(0.0, lerpf(0.5, 0.0, travel)) if event == "sunrise" else Vector2(1.0, lerpf(0.0, 0.5, travel))
 		result.color = Color(0.40, 0.72, 0.80) if event == "sunrise" else Color(1.0, 0.36, 0.08)
 		result.strength = float(options[event + "_strength"]) * smoothstep(0.0, 0.3, progress) * (1.0 - smoothstep(0.7, 1.0, progress))
 		break

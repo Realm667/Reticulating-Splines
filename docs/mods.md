@@ -78,8 +78,9 @@ The Console has the same controls:
 
 ## Building variants and configuration
 
-**Settings > Mods > Building variants…** opens the built-in SCURK artwork mixer.
-It is a presentation feature, separate from the JavaScript mod list: enable or
+**Settings > Visual Enhancements > Building variants** contains the built-in SCURK artwork mixer.
+The script API does not expose sprite archives, shaders or mixer configuration.
+This built-in presentation feature therefore lives outside the JavaScript mod list: enable or
 disable mixing, choose local MIF packs, categories and weights there. No mod
 script or city simulation change is required. Indexed color animation survives
 mixing when the imported artwork actually uses animated palette indices. A

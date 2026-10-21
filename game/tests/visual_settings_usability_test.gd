@@ -13,6 +13,8 @@ func _run() -> void:
 	dialog.popup_centered()
 	dialog.tabs.current_tab = dialog.visual_tab.get_index()
 	var tab := dialog.visual_tab
+	assert(tab.building_mix_panel.get_parent() == tab.pages[-1])
+	tab.building_mix_panel.show_values({"enabled": true, "original_weight": 30})
 	_check_cloud_settings(tab)
 	var defaults := VisualEnhancementOptions.normalize({})
 	(tab.controls.tree_shadows_enabled as CheckBox).button_pressed = false
@@ -73,6 +75,7 @@ func _run() -> void:
 		assert(values.tree_growth_enabled and values.lut_folder == custom.lut_folder)
 		assert(values.lut_path == custom.lut_path and values.brightmap_folder == custom.brightmap_folder)
 		assert(tab.preset_selector.selected == level)
+		assert(tab.building_mix_panel.options.enabled and tab.building_mix_panel.options.original_weight == 30, "Visual presets must preserve building choices")
 	tab._apply_preset(0)
 	for field in VisualEnhancementOptions.FIELDS:
 		if field[2] == "bool" and field[0] not in VisualEnhancementOptions.PRESET_INDEPENDENT:

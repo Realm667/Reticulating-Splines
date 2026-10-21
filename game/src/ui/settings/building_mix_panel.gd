@@ -1,5 +1,5 @@
-class_name BuildingMixDialog
-extends ConfirmationDialog
+class_name BuildingMixPanel
+extends VBoxContainer
 ## Editing is staged; Apply rebuilds the artwork banks once.
 signal applied(options: Dictionary)
 var options := BuildingVariants.normalize({})
@@ -10,15 +10,9 @@ var picker: FileDialog
 
 
 func _ready() -> void:
-	title = "Building variants"
-	get_ok_button().text = "Apply"
-	var scroll := ScrollContainer.new()
-	scroll.custom_minimum_size = Vector2(500,380)
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	add_child(scroll)
 	body = VBoxContainer.new()
 	body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.add_child(body)
+	add_child(body)
 	picker = FileDialog.new()
 	picker.file_mode = FileDialog.FILE_MODE_OPEN_FILES
 	picker.title = "Add tile sets…"
@@ -26,15 +20,14 @@ func _ready() -> void:
 	picker.filters = PackedStringArray(["*.mif ; " + tr("SCURK tile set")])
 	add_child(picker)
 	picker.files_selected.connect(add_paths)
-	confirmed.connect(func() -> void: applied.emit(BuildingVariants.normalize(options)))
+	show_values(options)
 
 
-func open(value: Dictionary, notices := PackedStringArray()) -> void:
+func show_values(value: Dictionary, notices := PackedStringArray()) -> void:
 	options = BuildingVariants.normalize(value)
 	picker.filters = PackedStringArray(["*.mif ; " + tr("SCURK tile set")])
 	_rebuild()
 	status.text = "\n".join(notices)
-	popup_centered_clamped(Vector2i(760,650),0.85)
 
 
 func _label(text: String) -> Label:
@@ -119,6 +112,10 @@ func _rebuild() -> void:
 	body.add_child(shuffle)
 	status = _label("")
 	body.add_child(status)
+	var apply := Button.new()
+	apply.text = "Apply"
+	apply.pressed.connect(func() -> void: applied.emit(BuildingVariants.normalize(options)))
+	body.add_child(apply)
 
 
 func add_paths(paths: PackedStringArray) -> void:

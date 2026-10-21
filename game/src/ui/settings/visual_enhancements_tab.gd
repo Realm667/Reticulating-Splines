@@ -26,6 +26,7 @@ const SECTIONS := [
 		["disaster_blending", "speed_link", "pause_freezes", "idle_saving_enabled"]],
 	["Tilt shift", "Blur the top and bottom of the city view while keeping the center and interface sharp.",
 		["tilt_shift_enabled", "tilt_shift_strength", "tilt_shift_edge", "tilt_shift_transition"]],
+	["Building variants", "Mix local building artwork. Apply changes when ready; visual presets leave these choices unchanged.", []],
 ]
 const PERCENT_FIELDS := ["sunrise_strength", "sunset_strength", "day_glow_radius", "artwork_color_strength", "tilt_shift_strength", "tilt_shift_edge", "tilt_shift_transition", "nature_terrain_strength", "day_lut_strength", "night_strength", "season_transition", "season_lut_strength",
 	"season_water_strength", "weather_strength", "weather_lut_strength", "cloud_density", "fog_density", "cloud_shadow_strength",
@@ -46,8 +47,8 @@ const LABELS := {
 	"lut_path": "Custom color filter (LUT PNG)", "brightmap_folder": "Custom light masks (brightmaps)",
 }
 const HINTS := {
-	"sunrise_enabled": "A white and cool blue glow shines from the upper left around 07:00. Fades out during rain, snow and storms over 1.5 seconds.",
-	"sunset_enabled": "A white and warm orange glow shines from the upper right around 19:00. Fades out during rain, snow and storms over 1.5 seconds.",
+	"sunrise_enabled": "A white and cool blue glow moves from middle left to upper left around 07:00. Fades out during rain, snow and storms over 1.5 seconds.",
+	"sunset_enabled": "A white and warm orange glow moves from upper right to middle right around 19:00. Fades out during rain, snow and storms over 1.5 seconds.",
 	"day_glow_radius": "Radius as a percentage of the shorter side of the city view. Interface elements stay unchanged.",
 	"day_glow_hours": "Duration of each glow, centered on 07:00 and 19:00. Includes fade-in and fade-out. Does not change the city calendar.",
 	"tree_growth_enabled": "Changes the saved city: forests become denser every four years and spread to free adjacent land over eight years. No random numbers. In multiplayer, the host decides. Off by default.",
@@ -99,6 +100,7 @@ const HINTS := {
 	"lut_path": "Optional PNG lookup table (LUT) for custom color grading. Leave empty for standard colors.",
 }
 
+var building_mix_panel: BuildingMixPanel
 var controls: Dictionary = {}
 var terrain_strength_slider: HSlider
 var filling := false
@@ -169,6 +171,9 @@ func _ready() -> void:
 				subgroup.text = {"weather_enabled": "Weather", "cloud_enabled": "Clouds & Fog"}[key]
 				page.add_child(subgroup)
 			_add_field(page, fields[key])
+		if section[0] == "Building variants":
+			building_mix_panel = BuildingMixPanel.new()
+			page.add_child(building_mix_panel)
 		var button := Button.new()
 		button.text = section[0]
 		button.alignment = HORIZONTAL_ALIGNMENT_LEFT

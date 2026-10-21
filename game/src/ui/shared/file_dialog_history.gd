@@ -15,7 +15,9 @@ func _exit_tree() -> void:
 
 func _node_added(node: Node) -> void:
 	if node is FileDialog:
-		node.visibility_changed.connect(_visibility_changed.bind(node))
+		var callback := _visibility_changed.bind(node)
+		if not node.visibility_changed.is_connected(callback):
+			node.visibility_changed.connect(callback)
 
 
 func _visibility_changed(dialog: FileDialog) -> void:

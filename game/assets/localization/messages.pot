@@ -9966,3 +9966,18 @@ msgid ""
 "Duration of each glow, centered on 07:00 and 19:00. Includes fade-in and "
 "fade-out. Does not change the city calendar."
 msgstr ""
+
+msgid ""
+"A white and cool blue glow moves from middle left to upper left around "
+"07:00. Fades out during rain, snow and storms over 1.5 seconds."
+msgstr ""
+
+msgid ""
+"A white and warm orange glow moves from upper right to middle right around "
+"19:00. Fades out during rain, snow and storms over 1.5 seconds."
+msgstr ""
+
+msgid ""
+"Mix local building artwork. Apply changes when ready; visual presets leave "
+"these choices unchanged."
+msgstr ""
