@@ -43,6 +43,7 @@ func _ready() -> void:
 	add_child(layer)
 	card = _card(layer)
 	card.contextual = true
+	card.next_requested.connect(_next_tip)
 	card.visibility_changed.connect(func() -> void:
 		if card.visible:
 			_layout.call_deferred())
@@ -308,6 +309,30 @@ func _layout() -> void:
 	var bottom := app.city_status_bar.get_global_rect().position.y - 12.0
 	var y := app.city_menu_bar.get_global_rect().end.y + 12.0 if top else bottom - card.size.y
 	card.position = Vector2(viewport.x - width - 16.0, maxf(app.city_menu_bar.get_global_rect().end.y + 8.0, y))
+
+
+func _next_tip() -> void:
+	var entries := KnowledgeCatalog.ENTRIES
+	var current := -1
+	for index in entries.size():
+		if entries[index][0] == card.id:
+			current = index
+			break
+	for step in range(1, entries.size() + 1):
+		var id: String = entries[posmod(current + step, entries.size())][0]
+		if id == card.id or rules.muted.has(id):
+			continue
+		var pinned := card.pin.button_pressed
+		card.show_entry(id)
+		card.pin.set_pressed_no_signal(pinned)
+		# Manual browsing must not assert a live diagnosis or invent an event target.
+		if id in ["power", "water"]:
+			card.set_context_valid(rules.streaks.has(id))
+		if id == "recovery":
+			card.action_button.visible = _event_target().x >= 0
+		rules.record(id)
+		_layout.call_deferred()
+		return
 
 
 func open() -> void:

@@ -23,6 +23,12 @@ func _run() -> void:
 	app.tool_state.landscape_editor = false
 	var knowledge := app.knowledge
 	knowledge.set_process(false)
+	knowledge.card.show_entry("start")
+	knowledge.card.pin.set_pressed_no_signal(true)
+	knowledge.card.next_button.pressed.emit()
+	assert(knowledge.card.id != "start" and knowledge.card.pin.button_pressed)
+	assert(knowledge.card.age == 0.0 and knowledge.card.next_button.visible)
+	knowledge.card.hide()
 	knowledge.activated(true)
 	assert(not knowledge.pending_start)
 	var before: PackedByteArray = app.document_state.city.document.serialize().data

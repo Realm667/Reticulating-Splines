@@ -4,6 +4,7 @@ extends PanelContainer
 
 signal action_requested(action: String)
 signal dismissed
+signal next_requested
 signal mute_requested(id: String)
 var id := ""
 var column: VBoxContainer
@@ -12,6 +13,7 @@ var summary: Label
 var details: Label
 var action_button: Button
 var close_button: Button
+var next_button: Button
 var pin: CheckButton
 var controls: HFlowContainer
 const READING_SECONDS := 45.0
@@ -37,6 +39,11 @@ func _init() -> void:
 	label.text = "Tips & Knowledge"
 	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	top.add_child(label)
+	next_button = Button.new()
+	next_button.text = "→"
+	next_button.tooltip_text = "Next tip"
+	next_button.pressed.connect(next_requested.emit)
+	top.add_child(next_button)
 	close_button = Button.new()
 	close_button.text = "×"
 	close_button.tooltip_text = "Close"
@@ -107,6 +114,7 @@ func show_entry(value: String, _full := false) -> void:
 	action_button.visible = not library and not str(entry[4]).is_empty()
 	action_button.text = {"water": "Open water view", "power": "Open power view", "land": "Show land value", "budget": "Open budget", "event": "Go to event"}.get(entry[4], "Open view")
 	close_button.visible = not library
+	next_button.visible = contextual and not library
 	pin.set_pressed_no_signal(false)
 	age = 0.0
 	show()
