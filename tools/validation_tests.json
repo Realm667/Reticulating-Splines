@@ -1,5 +1,14 @@
 [
   {
+    "id": "classic_native_pack_test",
+    "script": "tests/classic_native_pack_test.gd",
+    "domain": "rendering",
+    "lane": "product",
+    "requires": [
+      "packs/standalone-graphics/graphics/pack.json"
+    ]
+  },
+  {
     "id": "building_variants_test",
     "script": "tests/building_variants_test.gd",
     "domain": "rendering",

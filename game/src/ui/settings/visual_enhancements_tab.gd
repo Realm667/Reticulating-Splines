@@ -26,7 +26,7 @@ const SECTIONS := [
 		["disaster_blending", "speed_link", "pause_freezes", "idle_saving_enabled"]],
 	["Tilt shift", "Blur the top and bottom of the city view while keeping the center and interface sharp.",
 		["tilt_shift_enabled", "tilt_shift_strength", "tilt_shift_edge", "tilt_shift_transition"]],
-	["Building variants", "Mix local building artwork. Apply changes when ready; visual presets leave these choices unchanged.", []],
+	["RS + SC2000", "Mix Reticulating Splines and original SC2000 buildings. Apply changes when ready; visual presets leave these choices unchanged.", []],
 ]
 const PERCENT_FIELDS := ["sunrise_strength", "sunset_strength", "day_glow_radius", "artwork_color_strength", "tilt_shift_strength", "tilt_shift_edge", "tilt_shift_transition", "nature_terrain_strength", "day_lut_strength", "night_strength", "season_transition", "season_lut_strength",
 	"season_water_strength", "weather_strength", "weather_lut_strength", "cloud_density", "fog_density", "cloud_shadow_strength",
@@ -171,7 +171,7 @@ func _ready() -> void:
 				subgroup.text = {"weather_enabled": "Weather", "cloud_enabled": "Clouds & Fog"}[key]
 				page.add_child(subgroup)
 			_add_field(page, fields[key])
-		if section[0] == "Building variants":
+		if section[0] == "RS + SC2000":
 			building_mix_panel = BuildingMixPanel.new()
 			page.add_child(building_mix_panel)
 		var button := Button.new()

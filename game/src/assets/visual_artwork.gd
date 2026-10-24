@@ -44,7 +44,7 @@ func _load(records: Variant, read_image: Callable) -> void:
 		if not size is Array or size.size() != 2 or not _whole(size[0], 1, 2048) or not _whole(size[1], 1, 2048):
 			_fail("Visual artwork logical_size must contain two positive whole dimensions")
 			return
-		if not _whole(record.get("master_scale"), 2, 4) or int(record.master_scale) not in [2, 4]:
+		if not _whole(record.get("master_scale"), 1, 4) or int(record.master_scale) not in [1, 2, 4]:
 			_fail("Unsupported graphics pack format or version")
 			return
 		var frame := Frame.new()

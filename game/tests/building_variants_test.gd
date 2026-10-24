@@ -1,8 +1,7 @@
 extends SceneTree
-## Generated local MIF families: selection, persistence, fallbacks and both painters.
+## Fixed sources, native RS art and lights, legacy settings, stable choices and UI.
 @warning_ignore_start("integer_division")
 var folder := "user://building-variants-%d" % Time.get_ticks_usec()
-const IDS := [13,112,124,132,147,183,198,208,209,214,215,224,BuildingTileIds.MARINA]
 
 
 func _initialize() -> void:
@@ -12,114 +11,80 @@ func _initialize() -> void:
 func _run() -> void:
 	assert(DirAccess.make_dir_recursive_absolute(folder) == OK)
 	var graphics := FixtureGraphics.pack()
-	var a := _write("a.mif", 174)
-	var b := _write("b.mif", 120)
-	var same := ScurkMif.from_archives([graphics.large_sprites,graphics.small_medium_sprites])
-	assert(same.save_path(folder.path_join("same.mif")).ok)
-	var options := BuildingVariants.normalize({"enabled":true,"packs":[{"path":a},{"path":b}]})
+	var original := GameAssetSource.new()
+	original.assets = OriginalGameAssets.new()
+	assert(graphics.apply_to(original.assets))
+	original.import_revision = ImportedPackRevision.UNRECORDED
+	original.source_platform = "Windows"
+	assert(BuildingVariants.supports_source(original))
+	var rs := GraphicsPack.load_root("res://../packs/standalone-graphics/graphics")
+	assert(rs.error.is_empty(), rs.error)
 	var loaded := BuildingVariants.new()
-	loaded.load_options(options)
+	loaded._bundled = rs
+	loaded._bundled_root = PackLibrary.bundled_folder("graphics")
+	var options := BuildingVariants.normalize({"enabled":true,"seed":17,"original_weight":40,"rs_weight":60,
+		"packs":[{"path":"must-never-be-opened.mif","weight":100}]})
+	assert(not options.has("packs"))
+	assert(BuildingVariants.normalize({"enabled":true,"packs":[{"path":"old.mif"}]}).rs_weight == 50)
+	loaded.load_options(options,original)
 	loaded.prepare_families(graphics.large_sprites,graphics.small_medium_sprites,options)
-	assert(loaded.packs.size() == 2 and loaded.decoded_bytes < BuildingVariants.MAX_DECODED_BYTES)
-	assert(loaded.packs[0].families.size() == IDS.size())
+	assert(loaded.packs.size() == 1 and loaded.packs[0].families.size() > 50)
 	var large := loaded.apply_to(graphics.large_sprites,options)
 	var small := loaded.apply_to(graphics.small_medium_sprites,options)
-	assert(large.building_variants.size() == IDS.size() and small.building_variants.size() == IDS.size()*2)
 	assert(large.find_sprite(1112) == graphics.large_sprites.find_sprite(1112))
-	_check_variant_water_masks(large, small, graphics.palette)
-	CityBrightmaps.load_archive(large,"","large")
-	for id: int in large.entries_by_id:
-		if id >= BuildingVariants.FIRST:
-			assert(not large.visual_emission.has(id), "A replacement inherited an original light mask")
-	var reverse := options.duplicate(true)
-	reverse.packs.reverse()
-	var reordered := BuildingVariants.new()
-	reordered.load_options(reverse)
-	reordered.prepare_families(graphics.large_sprites,graphics.small_medium_sprites,reverse)
-	assert(reordered.apply_to(graphics.large_sprites,reverse).building_variants == large.building_variants)
+	assert(large.building_original_weight == 40)
+	for pair in [[large,rs.large_sprites],[small,rs.small_medium_sprites]]:
+		var mixed: Sc2SpriteArchive = pair[0]
+		var own: Sc2SpriteArchive = pair[1]
+		CityBrightmaps.load_archive(mixed,"","large" if mixed == large else "small_medium")
+		for id: int in mixed.building_variants:
+			var v := BuildingVariants.FIRST + id
+			assert(mixed.building_variants[id] == PackedInt64Array([v,60]))
+			assert(mixed.high_resolution[v] == own.high_resolution[id])
+			assert(mixed.visual_emission[v].get_size() == Vector2i(mixed.find_sprite(v).width,mixed.find_sprite(v).height))
+			assert(mixed.high_resolution[v].emission == own.high_resolution[id].emission)
+			assert(mixed.high_resolution[v].animation == own.high_resolution[id].animation)
+	_check_painters(large,small)
+	_check_rotations(large)
 	var save := AppSettingsStore.SaveOptions.new()
 	save.building_mix = options
 	assert(AppSettingsStore.save_values(0,0,false,folder.path_join("settings.cfg"),save) == OK)
 	assert(AppSettingsStore.load_values(folder.path_join("settings.cfg")).building_mix == options)
-	_check_painters(large,small)
-	_check_rotations(large)
 	var restricted := options.duplicate(true)
 	restricted.categories = [0]
-	var only_homes := BuildingVariants.new()
-	only_homes.load_options(restricted)
-	only_homes.prepare_families(graphics.large_sprites,graphics.small_medium_sprites,restricted)
-	var homes := only_homes.apply_to(graphics.large_sprites,restricted)
+	loaded.prepare_families(graphics.large_sprites,graphics.small_medium_sprites,restricted)
+	var homes := loaded.apply_to(graphics.large_sprites,restricted)
 	assert(homes.building_variants.has(1112) and not homes.building_variants.has(1124))
-	for spec in [{"enabled":false,"packs":[{"path":a}]},
-		{"enabled":true,"packs":[{"path":folder.path_join("missing.mif")}]},
-		{"enabled":true,"packs":[{"path":folder.path_join("same.mif")}]}]:
-		var normalized := BuildingVariants.normalize(spec)
-		var fallback := BuildingVariants.new()
-		fallback.load_options(normalized)
-		fallback.prepare_families(graphics.large_sprites,graphics.small_medium_sprites,normalized)
-		assert(fallback.apply_to(graphics.large_sprites,normalized).building_variants.is_empty())
-	# Missing small artwork rejects the whole family instead of changing at zoom.
-	var partial := ScurkMif.load_path(a)
-	partial.overrides.entries_by_id.erase(112)
-	loaded.packs[0].mif = partial
-	loaded.packs[0].families.clear()
+	# An incomplete family must fall back at every zoom.
+	var partial := Sc2SpriteArchive.combine([rs.small_medium_sprites])
+	partial.entries_by_id.erase(112)
+	loaded.packs[0].small = partial
 	loaded.prepare_families(graphics.large_sprites,graphics.small_medium_sprites,options)
 	assert(not loaded.packs[0].families.has(112))
+	for spec in [{"enabled":false},{"enabled":true,"rs_weight":0},{"enabled":true,"rs_weight":0,"original_weight":0}]:
+		var normalized := BuildingVariants.normalize(spec)
+		loaded.load_options(normalized,original)
+		assert(loaded.apply_to(graphics.large_sprites,normalized) == graphics.large_sprites)
+	original.import_revision = ImportedPackRevision.NOT_IMPORTED
+	loaded.load_options(options,original)
+	assert(loaded.packs.is_empty() and not loaded.notices.is_empty())
+	assert(not BuildingVariants.supports_source(null))
 	var dialog := BuildingMixPanel.new()
 	root.add_child(dialog)
 	dialog.show_values(options)
-	dialog.add_paths(PackedStringArray([a,a]))
-	dialog.add_paths(PackedStringArray([folder,folder.path_join("missing.mif"),folder.path_join("settings.cfg")]))
-	assert(dialog.options.packs.size() == 2)
-	assert(dialog.options.original_weight == 50 and dialog.options.packs[0].weight == 50)
+	assert(not dialog.has_method("add_paths"))
 	var applied := []
 	dialog.applied.connect(func(value: Dictionary) -> void: applied.append(value))
-	dialog.options.original_weight = 25
-	assert(applied.is_empty(), "Editing must remain staged until Apply")
+	dialog.options.rs_weight = 25
+	assert(applied.is_empty())
 	(dialog.body.get_child(-1) as Button).pressed.emit()
-	assert(applied.size() == 1 and applied[0].original_weight == 25)
+	assert(applied.size() == 1 and applied[0].rs_weight == 25 and not applied[0].has("packs"))
+	dialog.show_values({},PackedStringArray(),false)
+	assert((dialog.body.get_child(0) as CheckBox).disabled)
 	dialog.queue_free()
 	await process_frame
-	print("PASS: building family mixing, palette indices, weights, persistence, order, missing/incomplete/identical sets, CPU/GPU and menu")
+	print("PASS: fixed SC2000+RS sources, native artwork/emission/animation, migration, weights, zoom/rotation, CPU/GPU, fallbacks and staged menu")
 	quit()
-
-
-func _check_variant_water_masks(large: Sc2SpriteArchive, small: Sc2SpriteArchive, original: Sc2Palette) -> void:
-	# Two imported families use different static blue indices. The mixer bank
-	# offsets must preserve the marina identity at all three artwork sizes.
-	var palette := Sc2Palette.new()
-	palette.colors = original.colors.duplicate()
-	palette.colors[174] = Color(0.1, 0.2, 0.8)
-	palette.colors[120] = Color(0.15, 0.35, 0.65)
-	for archive in [small, large]:
-		CitySeasonColors.prepare(archive, palette)
-		for id: int in archive.building_variants:
-			var choices: PackedInt64Array = archive.building_variants[id]
-			for at in range(0, choices.size(), 2):
-				var variant := choices[at]
-				if id % 500 == BuildingTileIds.MARINA:
-					var mask: Image = archive.visual_seasons[variant]
-					assert(mask.get_pixel(1, 0).b > 0.55, "Imported marina lost its static-blue water mask")
-					assert(mask.get_pixel(0, 0).a == 0.0, "Transparent pixels must stay transparent")
-				else:
-					assert(not archive.visual_seasons.has(variant), "Unrelated blue building artwork must not become water")
-
-
-func _write(name: String, color: int) -> String:
-	var archive := Sc2SpriteArchive.new()
-	for view in 3:
-		for building in IDS:
-			var base := (FixtureGraphics.pack().large_sprites if view == 2 else FixtureGraphics.pack().small_medium_sprites).find_sprite(view*500+building)
-			var pixels := PackedInt32Array()
-			pixels.resize(base.width*(base.height+3))
-			pixels.fill(color)
-			pixels[0] = -1
-			var entry := Sc2SpriteArchive.entry_from_indices(view*500+building,base.width,base.height+3,pixels)
-			archive.entries.append(entry)
-			archive.entries_by_id[entry.sprite_id] = entry
-	var path := folder.path_join(name)
-	assert(ScurkMif.from_archives([archive]).save_path(path).ok)
-	return path
 
 
 func _check_painters(large: Sc2SpriteArchive, small: Sc2SpriteArchive) -> void:

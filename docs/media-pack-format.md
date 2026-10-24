@@ -127,12 +127,13 @@ active until a new import replaces it.
 
 ## Master raster resolution
 
-Set top-level `master_scale` to 2 or 4 for `master_sprites`; omission defaults
+Set top-level `master_scale` to 1, 2 or 4 for `master_sprites`; omission defaults
 to 4 for existing packs. Each PNG is `logical_size * master_scale`. The same
 raster applies to its animation frames, lightmaps and semantic masks. Logical
 placement, footprint and culling dimensions do not change with source resolution.
 UI, desktop and SCURK records support `master_scale` 1, 2 or 4; authored Visual
-Enhancements support 2 or 4. Each record uses its declared raster. Original
+Enhancements support 1, 2 or 4. Each record uses its declared raster. Native
+1x masters preserve their authored pixel dimensions without an enlarged copy. Original
 SC2000 imported packs retain their existing size and indexed rendering.
 
 ## TrueColor master packs

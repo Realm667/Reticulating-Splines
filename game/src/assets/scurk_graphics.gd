@@ -80,7 +80,7 @@ func _load(value: Variant, read_png: Callable, palette: Sc2Palette) -> void:
 		if group == "workspace" and records is Array and not records.is_empty() and records.size() <= 16:
 			var selected: Array[int] = []
 			for record: Variant in records:
-				if not record is Dictionary or record.get("master_scale") != 2 and record.get("master_scale") != 4:
+				if not record is Dictionary or record.get("master_scale") != 1 and record.get("master_scale") != 2 and record.get("master_scale") != 4:
 					break
 				var id: Variant = record.get("id")
 				if not (id is int or id is float) or id < 1200 or id > 1215 or id != int(id) or int(id) in selected:

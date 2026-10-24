@@ -1,6 +1,23 @@
 # Master canvas layout
 
-RS uses `"master_canvas": "centered-footprint-v1"` at the top of `graphics/pack.json`.
+## Current standalone pack: Classic Native
+
+Since 23 October 2026, the default RS pack uses `master_scale: 1` and
+`master_canvas: "legacy"`. Each master has the original logical pixel dimensions;
+the loader retains those pixels without resampling at native scale. Building IDs
+1112-1255 retain their existing footprints and normal legacy placement.
+`packs/standalone-graphics/templates/building-canvases.json` lists the current
+native dimensions. Construct straight isometric edges in the 2:1 pixel grid,
+then author lightmaps at the final dimensions. Art, masks and animation frames
+must have identical canvases. Do not independently resize or trim a lightmap.
+
+## Older and custom packs: centered-footprint-v1
+
+The following describes the previous RS pack and remains supported for custom
+packs. The four footprint SVGs in the templates directory are examples of this
+older 2x convention, not the dimensions of the current standalone art.
+
+The previous RS pack used `"master_canvas": "centered-footprint-v1"` at the top of `graphics/pack.json`.
 This applies to building IDs 1112-1255. Other sprites retain their existing format.
 Packs that omit the field keep legacy placement. Original SC2K packs are unchanged.
 
@@ -31,9 +48,8 @@ legacy registrations are rejected. The loader derives the common anchor once.
 The renderer still uses its existing internal registration structure for footprint
 geometry, borders, lighting and culling; there is no per-frame placement calculation.
 
-`packs/standalone-graphics/templates/building-canvases.json` lists the current
-canvas sizes and ground corners for every RS building. The four SVG guides show
-the footprint and centerline; they are authoring guides, not runtime textures.
+The four SVG guides show the older centered footprint and centerline; they are
+authoring guides, not runtime textures.
 See [object animation frames](object-animation-frames.md) for timing and masks.
 
 ## Accepted RS corrections
@@ -52,6 +68,6 @@ they do not control game placement. Negative top padding means the image has bee
 trimmed above the fixed ground anchor. Never reapply an old correction export to an
 already corrected image without checking its source hash.
 
-The current RS source raster is 2× (16 October 2026). Set `master_scale` to 2.
+The previous RS source raster was 2× (16 October 2026). Set `master_scale` to 2.
 The loader also supports 4× packs (the legacy default): multiply these master-pixel
 measurements by two, while keeping logical dimensions and footprints unchanged.

@@ -1,39 +1,34 @@
 class_name BuildingVariants
 extends RefCounted
-## Local SCURK artwork families. Their IDs never enter the city or simulation.
+## Fixed SC2000 + bundled RS artwork families. IDs never enter city saves.
 
 const FIRST := 3000000
 const SPAN := 1500
-const MAX_PACKS := 8
-const MAX_FILE_BYTES := 16 * 1024 * 1024
-const MAX_DECODED_BYTES := 64 * 1024 * 1024
 const CATEGORIES := ["Residential", "Commercial", "Industrial", "Education", "Public services", "Recreation", "Ports", "Power plants", "Rewards"]
 var packs: Array[Dictionary] = []
 var notices := PackedStringArray()
-var decoded_bytes := 0
+var _bundled: GraphicsPack
+var _bundled_root := ""
 
 
 static func normalize(value: Variant) -> Dictionary:
 	var source: Dictionary = value if value is Dictionary else {}
+	# Legacy MIF paths are discarded; they cannot become mix sources.
 	var result := {"enabled": bool(source.get("enabled", false)), "seed": clampi(int(source.get("seed", 0)), 0, 2147483647),
-		"original_weight": clampi(int(source.get("original_weight", 50)), 0, 100), "categories": [], "packs": []}
+		"original_weight": clampi(int(source.get("original_weight", 50)), 0, 100),
+		"rs_weight": clampi(int(source.get("rs_weight", 50)), 0, 100), "categories": []}
 	var categories: Variant = source.get("categories", range(CATEGORIES.size()))
 	if categories is Array:
-		for category in categories:
-			if category is int and category >= 0 and category < CATEGORIES.size() and not result.categories.has(category):
-				result.categories.append(category)
-	var choices: Variant = source.get("packs", [])
-	if choices is Array:
-		for choice in choices:
-			if not choice is Dictionary or not choice.get("path", "") is String:
-				continue
-			var path := str(choice.path).strip_edges()
-			if path.is_empty() or result.packs.any(func(p: Dictionary) -> bool: return p.path == path):
-				continue
-			result.packs.append({"path": path, "enabled": bool(choice.get("enabled", true)), "weight": clampi(int(choice.get("weight", 50)), 0, 100)})
-			if result.packs.size() == MAX_PACKS:
-				break
+		for item in categories:
+			if item is int and item >= 0 and item < CATEGORIES.size() and not result.categories.has(item):
+				result.categories.append(item)
 	return result
+
+
+static func supports_source(source: GameAssetSource) -> bool:
+	return source != null and source.error.is_empty() and source.import_revision >= ImportedPackRevision.UNRECORDED \
+		and not source.source_platform.is_empty() and source.assets != null \
+		and source.assets.palette != null and source.assets.palette.cycles_enabled
 
 
 static func category(id: int) -> int:
@@ -58,78 +53,46 @@ static func category(id: int) -> int:
 	return -1
 
 
-func load_options(options: Dictionary) -> void:
+func load_options(options: Dictionary, source: GameAssetSource) -> void:
 	packs.clear()
 	notices.clear()
-	decoded_bytes = 0
 	if not options.enabled:
 		return
-	var known := {}
-	for choice: Dictionary in options.packs:
-		if not choice.enabled or choice.weight == 0:
-			continue
-		var file := FileAccess.open(choice.path, FileAccess.READ)
-		if file == null or file.get_length() > MAX_FILE_BYTES:
-			notices.append(TranslationServer.translate("Unavailable tile set: %s") % str(choice.path).get_file())
-			continue
-		var bytes := file.get_buffer(file.get_length())
-		file.close()
-		var hash := HashingContext.new()
-		hash.start(HashingContext.HASH_SHA256)
-		hash.update(bytes)
-		var identity := hash.finish().hex_encode()
-		if known.has(identity):
-			known[identity].weight = maxi(int(known[identity].weight),int(choice.weight))
-			continue
-		var mif := ScurkMif.new()
-		if not mif.parse(bytes):
-			notices.append(TranslationServer.translate("Invalid tile set: %s") % str(choice.path).get_file())
-			continue
-		var size := 0
-		for entry: Sc2SpriteArchive.SpriteEntry in mif.overrides.entries:
-			size += entry.width * entry.height * 8
-		if decoded_bytes + size > MAX_DECODED_BYTES:
-			notices.append(TranslationServer.translate("Tile set memory limit reached."))
-			continue
-		decoded_bytes += size
-		var record := {"id": identity, "mif": mif, "weight": choice.weight, "families": {}, "path": choice.path}
-		known[identity] = record
-		packs.append(record)
-	packs.sort_custom(func(a: Dictionary,b: Dictionary) -> bool: return a.id < b.id)
-
-
-func uses_dos_colors() -> bool:
-	return packs.any(func(pack: Dictionary) -> bool: return pack.mif.uses_dos_colors())
+	if not supports_source(source):
+		notices.append(TranslationServer.translate("Select imported SC2000 graphics in Data to mix them with Reticulating Splines."))
+		return
+	if options.rs_weight == 0:
+		return
+	var folder := PackLibrary.bundled_folder("graphics")
+	if _bundled == null or _bundled_root != folder:
+		_bundled = GraphicsPack.load_root(folder)
+		_bundled_root = folder
+	if not _bundled.error.is_empty():
+		notices.append(TranslationServer.translate("The Reticulating Splines graphics pack is unavailable."))
+		_bundled = null
+		return
+	packs.append({"large": _bundled.large_sprites, "small": _bundled.small_medium_sprites,
+		"weight": options.rs_weight, "families": {}})
 
 
 func prepare_families(large: Sc2SpriteArchive, small: Sc2SpriteArchive, options: Dictionary) -> void:
 	for pack: Dictionary in packs:
 		pack.families.clear()
-		var skipped := 0
 		for building in range(13,256):
 			if category(building) < 0 or not options.categories.has(category(building)):
 				continue
 			var family := []
-			var different := false
 			for view in 3:
 				var id := view * 500 + building
 				var base := (large if view == 2 else small).find_sprite(id)
-				var entry: Sc2SpriteArchive.SpriteEntry = pack.mif.overrides.find_sprite(id)
-				if base == null or entry == null or base.width != entry.width or entry.height > 1024:
+				var archive: Sc2SpriteArchive = pack.large if view == 2 else pack.small
+				var entry := archive.find_sprite(id)
+				if base == null or entry == null or base.width != entry.width or entry.height > 1024 or not entry.decode_indices().ok:
 					family.clear()
 					break
-				var decoded := entry.decode_indices()
-				if not decoded.ok:
-					family.clear()
-					break
-				different = different or base.height != entry.height or decoded.pixels != base.decode_indices().pixels
-				family.append(entry)
-			if family.size() == 3 and different:
+				family.append({"entry": entry, "archive": archive})
+			if family.size() == 3:
 				pack.families[building] = family
-			elif pack.mif.overrides.find_sprite(1000+building) != null:
-				skipped += 1
-		if skipped > 0:
-			notices.append(TranslationServer.translate("%s: %d unchanged or incomplete building families skipped.") % [str(pack.path).get_file(),skipped])
 
 
 func apply_to(base: Sc2SpriteArchive, options: Dictionary) -> Sc2SpriteArchive:
@@ -138,18 +101,23 @@ func apply_to(base: Sc2SpriteArchive, options: Dictionary) -> Sc2SpriteArchive:
 	var result := Sc2SpriteArchive.combine([base])
 	result.building_mix_seed = options.seed
 	result.building_original_weight = options.original_weight
-	for index in packs.size():
-		var pack := packs[index]
+	for pack: Dictionary in packs:
 		for building: int in pack.families:
-			for entry: Sc2SpriteArchive.SpriteEntry in pack.families[building]:
+			for item: Dictionary in pack.families[building]:
+				var entry: Sc2SpriteArchive.SpriteEntry = item.entry
 				if not base.entries_by_id.has(entry.sprite_id):
 					continue
-				var id := FIRST + index * SPAN + entry.sprite_id
-				var variant := Sc2SpriteArchive.entry_from_indices(id,entry.width,entry.height,entry.decode_indices().pixels)
+				var id := FIRST + entry.sprite_id
+				var variant := Sc2SpriteArchive.entry_from_indices(id, entry.width, entry.height, entry.decode_indices().pixels)
 				result.entries.append(variant)
 				result.entries_by_id[id] = variant
-				var choices: PackedInt64Array = result.building_variants.get(entry.sprite_id,PackedInt64Array())
-				choices.append(id)
-				choices.append(pack.weight)
-				result.building_variants[entry.sprite_id] = choices
+				result.building_variants[entry.sprite_id] = PackedInt64Array([id, pack.weight])
+				# RGB art, animation, light masks and registration travel together.
+				var archive: Sc2SpriteArchive = item.archive
+				if archive.high_resolution.has(entry.sprite_id):
+					result.high_resolution[id] = archive.high_resolution[entry.sprite_id]
+				if archive.visual_registration.has(entry.sprite_id):
+					result.visual_registration[id] = archive.visual_registration[entry.sprite_id]
+				if archive.parcel_styles.has(entry.sprite_id):
+					result.parcel_styles[id] = archive.parcel_styles[entry.sprite_id]
 	return result

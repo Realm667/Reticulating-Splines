@@ -24,7 +24,7 @@ func load_records(records: Variant, read_png: Callable, palette: Sc2Palette, rea
 	large.draw_building_ground = true
 	small_medium.draw_building_ground = true
 	_animation_bytes = 0
-	if not (master_scale is int or master_scale is float) or not is_finite(float(master_scale)) or master_scale != int(master_scale) or int(master_scale) not in [2, 4]:
+	if not (master_scale is int or master_scale is float) or not is_finite(float(master_scale)) or master_scale != int(master_scale) or int(master_scale) not in [1, 2, 4]:
 		return _fail("Unsupported graphics pack format or version")
 	_scale = int(master_scale)
 	if not canvas_layout is String or canvas_layout not in ["legacy", "centered-footprint-v1"]:

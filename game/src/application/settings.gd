@@ -86,7 +86,8 @@ func open_settings_dialog() -> void:
 	if host_controls_growth:
 		visual_values.tree_growth_enabled = app.visual_environment.remote_weather.get("options", {}).get("tree_growth_enabled", false)
 	app.main_overlays.settings_dialog.visual_tab.show_values(visual_values)
-	app.main_overlays.settings_dialog.visual_tab.building_mix_panel.show_values(preferences.building_mix, app.assets.building_variants.notices)
+	app.main_overlays.settings_dialog.visual_tab.building_mix_panel.show_values(preferences.building_mix, app.assets.building_variants.notices,
+		BuildingVariants.supports_source(app.asset_state.asset_source))
 	app.main_overlays.settings_dialog.dark_underground_check.button_pressed = preferences.dark_underground
 	app.main_overlays.settings_dialog.sprite_corrections_check.button_pressed = preferences.sprite_corrections
 	app.main_overlays.settings_dialog.show_hd_graphics(preferences.hd_graphics)

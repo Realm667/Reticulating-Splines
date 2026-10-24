@@ -77,6 +77,11 @@ func _initialize() -> void:
 	valid = _load(manifest)
 	assert(valid.error.is_empty() and valid.scurk_graphics.workspace_images.size() == 36)
 	assert(valid.scurk_graphics.presentation_images.is_empty())
+	var native_subset: Dictionary = manifest.duplicate(true)
+	native_subset.scurk.workspace = [{ "id": 1200, "png": "workspace-1200.png", "master_scale": 1 }]
+	var native_icons := _load(native_subset)
+	assert(native_icons.error.is_empty() and native_icons.scurk_graphics.workspace_images.size() == 1)
+	assert(native_icons.scurk_graphics.workspace_images[1200].get_size() == Vector2i(33, 25))
 	manifest.scurk.presentation = []
 
 	for id in ScurkGraphics.PRESENTATION_SIZES:

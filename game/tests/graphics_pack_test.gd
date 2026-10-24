@@ -479,7 +479,7 @@ func _check_two_x_masters() -> void:
 		assert(archive.high_resolution[id].image.get_size() == Vector2i(80, 48))
 		assert(entry.decode_indices().pixels.count(7) == entry.width * entry.height)
 	assert(not master.load_records([record], reader, palette), "2x pixels must not silently pass a 4x declaration")
-	for bad in [0, 1, 3, 2.5, "2", null, true]:
+	for bad in [0, 3, 2.5, "2", null, true]:
 		assert(not master.load_records([record], reader, palette, Callable(), "legacy", bad))
 	var person := Image.create(6, 12, false, Image.FORMAT_RGBA8)
 	person.fill(Color8(90, 130, 160))
@@ -494,7 +494,7 @@ func _check_two_x_masters() -> void:
 	var logical := sprites.sprite(true, 0, 0, 0)
 	assert(logical.get_size() == Vector2i(3, 6) and sprites.master_image(logical).get_size() == Vector2i(6, 12))
 	# Source raster changes must not shrink the displayed toolbar icons.
-	for raster_scale in [2, 4]:
+	for raster_scale in [1, 2, 4]:
 		var toolbar := CityToolbar.new()
 		toolbar.toolbar_art = Image.create(865 * raster_scale, 23 * raster_scale, false, Image.FORMAT_RGBA8)
 		toolbar.toolbar_art.fill_rect(Rect2i(raster_scale, raster_scale, 10 * raster_scale, 12 * raster_scale), Color.WHITE)
@@ -506,3 +506,23 @@ func _check_two_x_masters() -> void:
 	mask.set_pixel(1, 71, Color.RED)
 	var sampled := CityNatureArtwork._logical_mask(mask, Vector2i(32, 36), 1, 2)
 	assert(sampled.get_pixel(0, 35) == Color.RED)
+	# Native masters retain every authored pixel at 100%, including odd heights.
+	decoded.width = 32
+	decoded.height = 17
+	decoded.pixels.resize(32 * 17)
+	for pixel in decoded.pixels.size():
+		decoded.pixels[pixel] = pixel % 170
+	var native_record := {"id": 1029, "png": "native.png", "logical_size": [32, 17]}
+	assert(master.load_records([native_record], reader, palette, Callable(), "legacy", 1), master.error)
+	assert(master.large.find_sprite(1029).decode_indices().pixels == decoded.pixels)
+	assert(master.large.high_resolution[1029].image.get_size() == Vector2i(32, 17))
+	assert(master.small_medium.find_sprite(529).height == 9)
+	assert(master.small_medium.find_sprite(29).height == 5)
+	person.resize(3, 6, Image.INTERPOLATE_NEAREST)
+	rows[0].master_scale = 1
+	visual = VisualArtwork.load_records(rows, visual_reader)
+	assert(visual.error.is_empty() and visual.city_life_scale == 1, visual.error)
+	sprites.set_artwork(visual)
+	logical = sprites.sprite(true, 0, 0, 0)
+	assert(logical.get_size() == Vector2i(3, 6))
+	assert(sprites.master_image(logical).get_size() == Vector2i(3, 6))

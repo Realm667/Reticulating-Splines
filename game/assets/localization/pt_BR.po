@@ -31444,3 +31444,39 @@ msgid ""
 msgstr ""
 "Misture gráficos locais de edifícios. Aplique as alterações quando estiverem"
 " prontas; as predefinições visuais mantêm essas escolhas."
+
+#. Supplementary RS + SC2000 mixing UI; AI-assisted translation.
+msgid "RS + SC2000"
+msgstr "RS + SC2000"
+
+#. Supplementary RS + SC2000 mixing UI; AI-assisted translation.
+msgid "Mix RS and SC2000 buildings"
+msgstr "Misturar edifícios de RS e SC2000"
+
+#. Supplementary RS + SC2000 mixing UI; AI-assisted translation.
+msgid "SC2000 weight"
+msgstr "Peso de SC2000"
+
+#. Supplementary RS + SC2000 mixing UI; AI-assisted translation.
+msgid "Reticulating Splines weight"
+msgstr "Peso de Reticulating Splines"
+
+#. Supplementary RS + SC2000 mixing UI; AI-assisted translation.
+msgid "Select imported SC2000 graphics in Data to mix them with Reticulating Splines."
+msgstr "Selecione os gráficos importados de SC2000 em Dados para misturá-los com Reticulating Splines."
+
+#. Supplementary RS + SC2000 mixing UI; AI-assisted translation.
+msgid "The Reticulating Splines graphics pack is unavailable."
+msgstr "O pacote gráfico de Reticulating Splines está indisponível."
+
+#. Supplementary RS + SC2000 mixing UI; AI-assisted translation.
+msgid "Mix only Reticulating Splines with the original SC2000 buildings. Other tile sets and HD overrides are not used while mixing."
+msgstr "Mistura apenas Reticulating Splines com os edifícios originais de SC2000. Outros conjuntos e gráficos HD não são usados durante a mistura."
+
+#. Supplementary RS + SC2000 mixing UI; AI-assisted translation.
+msgid "Weights are relative for compatible buildings in the selected categories. Missing alternatives keep the original. Both weights at zero also keep the original."
+msgstr "Os pesos são relativos para edifícios compatíveis nas categorias escolhidas. Sem alternativa ou com ambos os pesos em zero, o original é mantido."
+
+#. Supplementary RS + SC2000 mixing UI; AI-assisted translation.
+msgid "Mix Reticulating Splines and original SC2000 buildings. Apply changes when ready; visual presets leave these choices unchanged."
+msgstr "Mistura edifícios de Reticulating Splines e SC2000 original. Aplique ao terminar; as predefinições visuais mantêm estas escolhas."

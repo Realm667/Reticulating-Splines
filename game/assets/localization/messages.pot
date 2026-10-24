@@ -9981,3 +9981,39 @@ msgid ""
 "Mix local building artwork. Apply changes when ready; visual presets leave "
 "these choices unchanged."
 msgstr ""
+
+#. Supplementary RS + SC2000 mixing UI; AI-assisted translation.
+msgid "RS + SC2000"
+msgstr ""
+
+#. Supplementary RS + SC2000 mixing UI; AI-assisted translation.
+msgid "Mix RS and SC2000 buildings"
+msgstr ""
+
+#. Supplementary RS + SC2000 mixing UI; AI-assisted translation.
+msgid "SC2000 weight"
+msgstr ""
+
+#. Supplementary RS + SC2000 mixing UI; AI-assisted translation.
+msgid "Reticulating Splines weight"
+msgstr ""
+
+#. Supplementary RS + SC2000 mixing UI; AI-assisted translation.
+msgid "Select imported SC2000 graphics in Data to mix them with Reticulating Splines."
+msgstr ""
+
+#. Supplementary RS + SC2000 mixing UI; AI-assisted translation.
+msgid "The Reticulating Splines graphics pack is unavailable."
+msgstr ""
+
+#. Supplementary RS + SC2000 mixing UI; AI-assisted translation.
+msgid "Mix only Reticulating Splines with the original SC2000 buildings. Other tile sets and HD overrides are not used while mixing."
+msgstr ""
+
+#. Supplementary RS + SC2000 mixing UI; AI-assisted translation.
+msgid "Weights are relative for compatible buildings in the selected categories. Missing alternatives keep the original. Both weights at zero also keep the original."
+msgstr ""
+
+#. Supplementary RS + SC2000 mixing UI; AI-assisted translation.
+msgid "Mix Reticulating Splines and original SC2000 buildings. Apply changes when ready; visual presets leave these choices unchanged."
+msgstr ""

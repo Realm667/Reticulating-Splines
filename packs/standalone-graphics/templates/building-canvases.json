@@ -1,1736 +1,1159 @@
 {
-  "canvas_convention": "centered-footprint-v1",
-  "master_scale": 2,
+  "canvas_convention": "legacy",
+  "master_scale": 1,
   "projection": "2:1 dimetric",
-  "anchor": "horizontal center, two master pixels above bottom edge",
-  "notes": "PNG height can grow upwards. Width = footprint * 64 + 16 * gutter_steps; symmetric gutters. All animation and mask canvases must match. Guides are not runtime artwork.",
+  "notes": "Current Classic Native source dimensions. No resampling or per-sprite overrides. Existing footprint SVGs illustrate the older centered-footprint-v1 2x convention only.",
   "buildings": [
     {
       "id": 1112,
       "footprint_tiles": 1,
       "png_size": [
-        64,
-        44
-      ],
-      "front_corner": [
         32,
-        42
+        18
       ]
     },
     {
       "id": 1113,
       "footprint_tiles": 1,
       "png_size": [
-        64,
-        44
-      ],
-      "front_corner": [
         32,
-        42
+        18
       ]
     },
     {
       "id": 1114,
       "footprint_tiles": 1,
       "png_size": [
-        64,
-        44
-      ],
-      "front_corner": [
         32,
-        42
+        18
       ]
     },
     {
       "id": 1115,
       "footprint_tiles": 1,
       "png_size": [
-        64,
-        42
-      ],
-      "front_corner": [
         32,
-        40
+        17
       ]
     },
     {
       "id": 1116,
       "footprint_tiles": 1,
       "png_size": [
-        64,
-        42
-      ],
-      "front_corner": [
         32,
-        40
+        17
       ]
     },
     {
       "id": 1117,
       "footprint_tiles": 1,
       "png_size": [
-        64,
-        50
-      ],
-      "front_corner": [
         32,
-        48
+        17
       ]
     },
     {
       "id": 1118,
       "footprint_tiles": 1,
       "png_size": [
-        64,
-        50
-      ],
-      "front_corner": [
         32,
-        48
+        17
       ]
     },
     {
       "id": 1119,
       "footprint_tiles": 1,
       "png_size": [
-        64,
-        50
-      ],
-      "front_corner": [
         32,
-        48
+        17
       ]
     },
     {
       "id": 1120,
       "footprint_tiles": 1,
       "png_size": [
-        64,
-        54
-      ],
-      "front_corner": [
         32,
-        52
+        19
       ]
     },
     {
       "id": 1121,
       "footprint_tiles": 1,
       "png_size": [
-        64,
-        46
-      ],
-      "front_corner": [
         32,
-        44
+        19
       ]
     },
     {
       "id": 1122,
       "footprint_tiles": 1,
       "png_size": [
-        64,
-        48
-      ],
-      "front_corner": [
         32,
-        46
+        20
       ]
     },
     {
       "id": 1123,
       "footprint_tiles": 1,
       "png_size": [
-        64,
-        58
-      ],
-      "front_corner": [
         32,
-        56
+        21
       ]
     },
     {
       "id": 1124,
       "footprint_tiles": 1,
       "png_size": [
-        64,
-        46
-      ],
-      "front_corner": [
         32,
-        44
+        23
       ]
     },
     {
       "id": 1125,
       "footprint_tiles": 1,
       "png_size": [
-        64,
-        78
-      ],
-      "front_corner": [
         32,
-        76
+        27
       ]
     },
     {
       "id": 1126,
       "footprint_tiles": 1,
       "png_size": [
-        64,
-        48
-      ],
-      "front_corner": [
         32,
-        46
+        20
       ]
     },
     {
       "id": 1127,
       "footprint_tiles": 1,
       "png_size": [
-        64,
-        44
-      ],
-      "front_corner": [
         32,
-        42
+        18
       ]
     },
     {
       "id": 1128,
       "footprint_tiles": 1,
       "png_size": [
-        64,
-        64
-      ],
-      "front_corner": [
         32,
-        62
+        32
       ]
     },
     {
       "id": 1129,
       "footprint_tiles": 1,
       "png_size": [
-        64,
-        86
-      ],
-      "front_corner": [
         32,
-        84
+        43
       ]
     },
     {
       "id": 1130,
       "footprint_tiles": 1,
       "png_size": [
-        64,
-        58
-      ],
-      "front_corner": [
         32,
-        56
+        25
       ]
     },
     {
       "id": 1131,
       "footprint_tiles": 1,
       "png_size": [
-        64,
-        84
-      ],
-      "front_corner": [
         32,
-        82
+        34
       ]
     },
     {
       "id": 1132,
       "footprint_tiles": 1,
       "png_size": [
-        64,
-        58
-      ],
-      "front_corner": [
         32,
-        56
+        21
       ]
     },
     {
       "id": 1133,
       "footprint_tiles": 1,
       "png_size": [
-        64,
-        64
-      ],
-      "front_corner": [
         32,
-        62
+        28
       ]
     },
     {
       "id": 1134,
       "footprint_tiles": 1,
       "png_size": [
-        64,
-        48
-      ],
-      "front_corner": [
         32,
-        46
+        20
       ]
     },
     {
       "id": 1135,
       "footprint_tiles": 1,
       "png_size": [
-        64,
-        52
-      ],
-      "front_corner": [
         32,
-        50
+        26
       ]
     },
     {
       "id": 1136,
       "footprint_tiles": 1,
       "png_size": [
-        64,
-        44
-      ],
-      "front_corner": [
         32,
-        42
+        18
       ]
     },
     {
       "id": 1137,
       "footprint_tiles": 1,
       "png_size": [
-        64,
-        52
-      ],
-      "front_corner": [
         32,
-        50
+        18
       ]
     },
     {
       "id": 1138,
       "footprint_tiles": 1,
       "png_size": [
-        64,
-        42
-      ],
-      "front_corner": [
         32,
-        40
+        17
       ]
     },
     {
       "id": 1139,
       "footprint_tiles": 1,
       "png_size": [
-        64,
-        42
-      ],
-      "front_corner": [
         32,
-        40
+        17
       ]
     },
     {
       "id": 1140,
       "footprint_tiles": 2,
       "png_size": [
-        128,
-        84
-      ],
-      "front_corner": [
         64,
-        82
+        34
       ]
     },
     {
       "id": 1141,
       "footprint_tiles": 2,
       "png_size": [
-        128,
-        102
-      ],
-      "front_corner": [
         64,
-        100
+        39
       ]
     },
     {
       "id": 1142,
       "footprint_tiles": 2,
       "png_size": [
-        128,
-        96
-      ],
-      "front_corner": [
         64,
-        94
+        36
       ]
     },
     {
       "id": 1143,
       "footprint_tiles": 2,
       "png_size": [
-        128,
-        104
-      ],
-      "front_corner": [
         64,
-        102
+        44
       ]
     },
     {
       "id": 1144,
       "footprint_tiles": 2,
       "png_size": [
-        128,
-        138
-      ],
-      "front_corner": [
         64,
-        136
+        53
       ]
     },
     {
       "id": 1145,
       "footprint_tiles": 2,
       "png_size": [
-        128,
-        112
-      ],
-      "front_corner": [
         64,
-        110
+        56
       ]
     },
     {
       "id": 1146,
       "footprint_tiles": 2,
       "png_size": [
-        128,
-        196
-      ],
-      "front_corner": [
         64,
-        194
+        78
       ]
     },
     {
       "id": 1147,
       "footprint_tiles": 2,
       "png_size": [
-        128,
-        186
-      ],
-      "front_corner": [
         64,
-        184
+        77
       ]
     },
     {
       "id": 1148,
       "footprint_tiles": 2,
       "png_size": [
-        128,
-        82
-      ],
-      "front_corner": [
         64,
-        80
+        33
       ]
     },
     {
       "id": 1149,
       "footprint_tiles": 2,
       "png_size": [
-        128,
-        106
-      ],
-      "front_corner": [
         64,
-        104
+        37
       ]
     },
     {
       "id": 1150,
       "footprint_tiles": 2,
       "png_size": [
-        128,
-        116
-      ],
-      "front_corner": [
         64,
-        114
+        42
       ]
     },
     {
       "id": 1151,
       "footprint_tiles": 2,
       "png_size": [
-        128,
-        124
-      ],
-      "front_corner": [
         64,
-        122
+        46
       ]
     },
     {
       "id": 1152,
       "footprint_tiles": 2,
       "png_size": [
-        128,
-        116
-      ],
-      "front_corner": [
         64,
-        114
+        46
       ]
     },
     {
       "id": 1153,
       "footprint_tiles": 2,
       "png_size": [
-        128,
-        126
-      ],
-      "front_corner": [
         64,
-        124
+        51
       ]
     },
     {
       "id": 1154,
       "footprint_tiles": 2,
       "png_size": [
-        128,
-        172
-      ],
-      "front_corner": [
         64,
-        170
+        70
       ]
     },
     {
       "id": 1155,
       "footprint_tiles": 2,
       "png_size": [
-        128,
-        172
-      ],
-      "front_corner": [
         64,
-        170
+        66
       ]
     },
     {
       "id": 1156,
       "footprint_tiles": 2,
       "png_size": [
-        128,
-        168
-      ],
-      "front_corner": [
         64,
-        166
+        72
       ]
     },
     {
       "id": 1157,
       "footprint_tiles": 2,
       "png_size": [
-        128,
-        200
-      ],
-      "front_corner": [
         64,
-        198
+        84
       ]
     },
     {
       "id": 1158,
       "footprint_tiles": 2,
       "png_size": [
-        128,
-        82
-      ],
-      "front_corner": [
         64,
-        80
+        37
       ]
     },
     {
       "id": 1159,
       "footprint_tiles": 2,
       "png_size": [
-        128,
-        100
-      ],
-      "front_corner": [
         64,
-        98
+        38
       ]
     },
     {
       "id": 1160,
       "footprint_tiles": 2,
       "png_size": [
-        128,
-        122
-      ],
-      "front_corner": [
         64,
-        120
+        45
       ]
     },
     {
       "id": 1161,
       "footprint_tiles": 2,
       "png_size": [
-        128,
-        94
-      ],
-      "front_corner": [
         64,
-        92
+        35
       ]
     },
     {
       "id": 1162,
       "footprint_tiles": 2,
       "png_size": [
-        128,
-        162
-      ],
-      "front_corner": [
         64,
-        160
+        45
       ]
     },
     {
       "id": 1163,
       "footprint_tiles": 2,
       "png_size": [
-        128,
-        168
-      ],
-      "front_corner": [
         64,
-        166
+        56
       ]
     },
     {
       "id": 1164,
       "footprint_tiles": 2,
       "png_size": [
-        128,
-        186
-      ],
-      "front_corner": [
         64,
-        184
+        61
       ]
     },
     {
       "id": 1165,
       "footprint_tiles": 2,
       "png_size": [
-        128,
-        132
-      ],
-      "front_corner": [
         64,
-        130
+        66
       ]
     },
     {
       "id": 1166,
       "footprint_tiles": 2,
       "png_size": [
-        128,
-        74
-      ],
-      "front_corner": [
         64,
-        72
+        33
       ]
     },
     {
       "id": 1167,
       "footprint_tiles": 2,
       "png_size": [
-        128,
-        120
-      ],
-      "front_corner": [
         64,
-        118
+        44
       ]
     },
     {
       "id": 1168,
       "footprint_tiles": 2,
       "png_size": [
-        128,
-        128
-      ],
-      "front_corner": [
         64,
-        126
+        44
       ]
     },
     {
       "id": 1169,
       "footprint_tiles": 2,
       "png_size": [
-        128,
-        122
-      ],
-      "front_corner": [
         64,
-        120
+        65
       ]
     },
     {
       "id": 1170,
       "footprint_tiles": 2,
       "png_size": [
-        128,
-        140
-      ],
-      "front_corner": [
         64,
-        138
+        46
       ]
     },
     {
       "id": 1171,
       "footprint_tiles": 2,
       "png_size": [
-        128,
-        130
-      ],
-      "front_corner": [
         64,
-        128
+        53
       ]
     },
     {
       "id": 1172,
       "footprint_tiles": 2,
       "png_size": [
-        128,
-        130
-      ],
-      "front_corner": [
         64,
-        128
+        61
       ]
     },
     {
       "id": 1173,
       "footprint_tiles": 2,
       "png_size": [
-        128,
-        194
-      ],
-      "front_corner": [
         64,
-        192
+        73
       ]
     },
     {
       "id": 1174,
       "footprint_tiles": 3,
       "png_size": [
-        192,
-        146
-      ],
-      "front_corner": [
         96,
-        144
+        77
       ]
     },
     {
       "id": 1175,
       "footprint_tiles": 3,
       "png_size": [
-        192,
-        176
-      ],
-      "front_corner": [
         96,
-        174
+        88
       ]
     },
     {
       "id": 1176,
       "footprint_tiles": 3,
       "png_size": [
-        192,
-        124
-      ],
-      "front_corner": [
         96,
-        122
+        58
       ]
     },
     {
       "id": 1177,
       "footprint_tiles": 3,
       "png_size": [
-        192,
-        208
-      ],
-      "front_corner": [
         96,
-        206
+        96
       ]
     },
     {
       "id": 1178,
       "footprint_tiles": 3,
       "png_size": [
-        192,
-        122
-      ],
-      "front_corner": [
         96,
-        120
+        61
       ]
     },
     {
       "id": 1179,
       "footprint_tiles": 3,
       "png_size": [
-        192,
-        270
-      ],
-      "front_corner": [
         96,
-        268
+        91
       ]
     },
     {
       "id": 1180,
       "footprint_tiles": 3,
       "png_size": [
-        192,
-        130
-      ],
-      "front_corner": [
         96,
-        128
+        65
       ]
     },
     {
       "id": 1181,
       "footprint_tiles": 3,
       "png_size": [
-        192,
-        180
-      ],
-      "front_corner": [
         96,
-        178
+        90
       ]
     },
     {
       "id": 1182,
       "footprint_tiles": 3,
       "png_size": [
-        192,
-        140
-      ],
-      "front_corner": [
         96,
-        138
+        58
       ]
     },
     {
       "id": 1183,
       "footprint_tiles": 3,
       "png_size": [
-        192,
-        338
-      ],
-      "front_corner": [
         96,
-        336
+        117
       ]
     },
     {
       "id": 1184,
       "footprint_tiles": 3,
       "png_size": [
-        192,
-        406
-      ],
-      "front_corner": [
         96,
-        404
+        123
       ]
     },
     {
       "id": 1185,
       "footprint_tiles": 3,
       "png_size": [
-        192,
-        188
-      ],
-      "front_corner": [
         96,
-        186
+        78
       ]
     },
     {
       "id": 1186,
       "footprint_tiles": 3,
       "png_size": [
-        192,
-        272
-      ],
-      "front_corner": [
         96,
-        270
+        108
       ]
     },
     {
       "id": 1187,
       "footprint_tiles": 3,
       "png_size": [
-        192,
-        282
-      ],
-      "front_corner": [
         96,
-        280
+        137
       ]
     },
     {
       "id": 1188,
       "footprint_tiles": 3,
       "png_size": [
-        192,
-        148
-      ],
-      "front_corner": [
         96,
-        146
+        50
       ]
     },
     {
       "id": 1189,
       "footprint_tiles": 3,
       "png_size": [
-        192,
-        236
-      ],
-      "front_corner": [
         96,
-        234
+        86
       ]
     },
     {
       "id": 1190,
       "footprint_tiles": 3,
       "png_size": [
-        192,
-        158
-      ],
-      "front_corner": [
         96,
-        156
+        55
       ]
     },
     {
       "id": 1191,
       "footprint_tiles": 3,
       "png_size": [
-        192,
-        198
-      ],
-      "front_corner": [
         96,
-        196
+        63
       ]
     },
     {
       "id": 1192,
       "footprint_tiles": 3,
       "png_size": [
-        192,
-        128
-      ],
-      "front_corner": [
         96,
-        126
+        56
       ]
     },
     {
       "id": 1193,
       "footprint_tiles": 3,
       "png_size": [
-        192,
-        138
-      ],
-      "front_corner": [
         96,
-        136
+        49
       ]
     },
     {
       "id": 1194,
       "footprint_tiles": 3,
       "png_size": [
-        192,
-        226
-      ],
-      "front_corner": [
         96,
-        224
+        85
       ]
     },
     {
       "id": 1195,
       "footprint_tiles": 3,
       "png_size": [
-        192,
-        138
-      ],
-      "front_corner": [
         96,
-        136
+        65
       ]
     },
     {
       "id": 1196,
       "footprint_tiles": 3,
       "png_size": [
-        192,
-        140
-      ],
-      "front_corner": [
         96,
-        138
+        74
       ]
     },
     {
       "id": 1197,
       "footprint_tiles": 3,
       "png_size": [
-        192,
-        164
-      ],
-      "front_corner": [
         96,
-        162
+        90
       ]
     },
     {
       "id": 1198,
       "footprint_tiles": 1,
       "png_size": [
-        64,
-        64
-      ],
-      "front_corner": [
         32,
-        62
+        32
       ]
     },
     {
       "id": 1199,
       "footprint_tiles": 1,
       "png_size": [
-        64,
-        64
-      ],
-      "front_corner": [
         32,
-        62
+        32
       ]
     },
     {
       "id": 1200,
       "footprint_tiles": 1,
       "png_size": [
-        80,
-        128
-      ],
-      "front_corner": [
-        40,
-        126
+        32,
+        48
       ]
     },
     {
       "id": 1201,
       "footprint_tiles": 4,
       "png_size": [
-        256,
-        212
-      ],
-      "front_corner": [
         128,
-        210
+        86
       ]
     },
     {
       "id": 1202,
       "footprint_tiles": 4,
       "png_size": [
-        256,
-        270
-      ],
-      "front_corner": [
         128,
-        268
+        115
       ]
     },
     {
       "id": 1203,
       "footprint_tiles": 4,
       "png_size": [
-        256,
-        162
-      ],
-      "front_corner": [
         128,
-        160
+        81
       ]
     },
     {
       "id": 1204,
       "footprint_tiles": 4,
       "png_size": [
-        256,
-        156
-      ],
-      "front_corner": [
         128,
-        154
+        78
       ]
     },
     {
       "id": 1205,
       "footprint_tiles": 4,
       "png_size": [
-        256,
-        198
-      ],
-      "front_corner": [
         128,
-        196
+        95
       ]
     },
     {
       "id": 1206,
       "footprint_tiles": 4,
       "png_size": [
-        256,
-        146
-      ],
-      "front_corner": [
         128,
-        144
+        69
       ]
     },
     {
       "id": 1207,
       "footprint_tiles": 4,
       "png_size": [
-        256,
-        260
-      ],
-      "front_corner": [
         128,
-        258
+        106
       ]
     },
     {
       "id": 1208,
       "footprint_tiles": 3,
       "png_size": [
-        192,
-        154
-      ],
-      "front_corner": [
         96,
-        152
+        77
       ]
     },
     {
       "id": 1209,
       "footprint_tiles": 3,
       "png_size": [
-        192,
-        156
-      ],
-      "front_corner": [
         96,
-        154
+        82
       ]
     },
     {
       "id": 1210,
       "footprint_tiles": 3,
       "png_size": [
-        208,
-        160
-      ],
-      "front_corner": [
-        104,
-        158
+        96,
+        72
       ]
     },
     {
       "id": 1211,
       "footprint_tiles": 3,
       "png_size": [
-        192,
-        162
-      ],
-      "front_corner": [
         96,
-        160
+        65
       ]
     },
     {
       "id": 1212,
       "footprint_tiles": 3,
       "png_size": [
-        192,
-        110
-      ],
-      "front_corner": [
         96,
-        108
+        55
       ]
     },
     {
       "id": 1213,
       "footprint_tiles": 3,
       "png_size": [
-        192,
-        110
-      ],
-      "front_corner": [
         96,
-        108
+        51
       ]
     },
     {
       "id": 1214,
       "footprint_tiles": 3,
       "png_size": [
-        192,
-        114
-      ],
-      "front_corner": [
         96,
-        112
+        57
       ]
     },
     {
       "id": 1215,
       "footprint_tiles": 4,
       "png_size": [
-        256,
-        158
-      ],
-      "front_corner": [
         128,
-        156
+        83
       ]
     },
     {
       "id": 1216,
       "footprint_tiles": 4,
       "png_size": [
-        256,
-        148
-      ],
-      "front_corner": [
         128,
-        146
+        74
       ]
     },
     {
       "id": 1217,
       "footprint_tiles": 4,
       "png_size": [
-        256,
-        146
-      ],
-      "front_corner": [
         128,
-        144
+        85
       ]
     },
     {
       "id": 1218,
       "footprint_tiles": 4,
       "png_size": [
-        256,
-        150
-      ],
-      "front_corner": [
         128,
-        148
+        67
       ]
     },
     {
       "id": 1219,
       "footprint_tiles": 1,
       "png_size": [
-        64,
-        84
-      ],
-      "front_corner": [
         32,
-        82
+        42
       ]
     },
     {
       "id": 1220,
       "footprint_tiles": 1,
       "png_size": [
-        64,
-        46
-      ],
-      "front_corner": [
         32,
-        44
+        19
       ]
     },
     {
       "id": 1221,
       "footprint_tiles": 1,
       "png_size": [
-        64,
-        34
-      ],
-      "front_corner": [
         32,
-        32
+        17
       ]
     },
     {
       "id": 1222,
       "footprint_tiles": 1,
       "png_size": [
-        64,
-        34
-      ],
-      "front_corner": [
         32,
-        32
+        17
       ]
     },
     {
       "id": 1223,
       "footprint_tiles": 1,
       "png_size": [
-        64,
-        42
-      ],
-      "front_corner": [
         32,
-        40
+        21
       ]
     },
     {
       "id": 1224,
       "footprint_tiles": 1,
       "png_size": [
-        80,
-        104
-      ],
-      "front_corner": [
-        40,
-        102
+        32,
+        40
       ]
     },
     {
       "id": 1225,
       "footprint_tiles": 1,
       "png_size": [
-        64,
-        126
-      ],
-      "front_corner": [
         32,
-        124
+        63
       ]
     },
     {
       "id": 1226,
       "footprint_tiles": 1,
       "png_size": [
-        64,
-        138
-      ],
-      "front_corner": [
         32,
-        136
+        69
       ]
     },
     {
       "id": 1227,
       "footprint_tiles": 1,
       "png_size": [
-        64,
-        56
-      ],
-      "front_corner": [
         32,
-        54
+        20
       ]
     },
     {
       "id": 1228,
       "footprint_tiles": 1,
       "png_size": [
-        80,
-        46
-      ],
-      "front_corner": [
-        40,
-        44
+        32,
+        23
       ]
     },
     {
       "id": 1229,
       "footprint_tiles": 1,
       "png_size": [
-        64,
-        44
-      ],
-      "front_corner": [
         32,
-        42
+        22
       ]
     },
     {
       "id": 1230,
       "footprint_tiles": 1,
       "png_size": [
-        80,
-        42
-      ],
-      "front_corner": [
-        40,
-        40
+        32,
+        17
       ]
     },
     {
       "id": 1231,
       "footprint_tiles": 1,
       "png_size": [
-        80,
-        36
-      ],
-      "front_corner": [
-        40,
-        34
+        32,
+        18
       ]
     },
     {
       "id": 1232,
       "footprint_tiles": 1,
       "png_size": [
-        64,
-        48
-      ],
-      "front_corner": [
         32,
-        46
+        20
       ]
     },
     {
       "id": 1233,
       "footprint_tiles": 1,
       "png_size": [
-        64,
-        50
-      ],
-      "front_corner": [
         32,
-        48
+        21
       ]
     },
     {
       "id": 1234,
       "footprint_tiles": 1,
       "png_size": [
-        64,
-        46
-      ],
-      "front_corner": [
         32,
-        44
+        19
       ]
     },
     {
       "id": 1235,
       "footprint_tiles": 2,
       "png_size": [
-        128,
-        136
-      ],
-      "front_corner": [
         64,
-        134
+        64
       ]
     },
     {
       "id": 1236,
       "footprint_tiles": 2,
       "png_size": [
-        128,
-        74
-      ],
-      "front_corner": [
         64,
-        72
+        37
       ]
     },
     {
       "id": 1237,
       "footprint_tiles": 2,
       "png_size": [
-        128,
-        92
-      ],
-      "front_corner": [
         64,
-        90
+        38
       ]
     },
     {
       "id": 1238,
       "footprint_tiles": 2,
       "png_size": [
-        128,
-        78
-      ],
-      "front_corner": [
         64,
-        76
+        39
       ]
     },
     {
       "id": 1239,
       "footprint_tiles": 2,
       "png_size": [
-        128,
-        82
-      ],
-      "front_corner": [
         64,
-        80
+        37
       ]
     },
     {
       "id": 1240,
       "footprint_tiles": 2,
       "png_size": [
-        128,
-        96
-      ],
-      "front_corner": [
         64,
-        94
+        36
       ]
     },
     {
       "id": 1241,
       "footprint_tiles": 2,
       "png_size": [
-        128,
-        114
-      ],
-      "front_corner": [
         64,
-        112
+        57
       ]
     },
     {
       "id": 1242,
       "footprint_tiles": 2,
       "png_size": [
-        128,
-        90
-      ],
-      "front_corner": [
         64,
-        88
+        33
       ]
     },
     {
       "id": 1243,
       "footprint_tiles": 2,
       "png_size": [
-        128,
-        96
-      ],
-      "front_corner": [
         64,
-        94
+        36
       ]
     },
     {
       "id": 1244,
       "footprint_tiles": 2,
       "png_size": [
-        128,
-        74
-      ],
-      "front_corner": [
         64,
-        72
+        37
       ]
     },
     {
       "id": 1245,
       "footprint_tiles": 2,
       "png_size": [
-        128,
-        106
-      ],
-      "front_corner": [
         64,
-        104
+        53
       ]
     },
     {
       "id": 1246,
       "footprint_tiles": 2,
       "png_size": [
-        128,
-        86
-      ],
-      "front_corner": [
         64,
-        84
+        39
       ]
     },
     {
       "id": 1247,
       "footprint_tiles": 2,
       "png_size": [
-        128,
-        120
-      ],
-      "front_corner": [
         64,
-        118
+        48
       ]
     },
     {
       "id": 1248,
       "footprint_tiles": 3,
       "png_size": [
-        192,
-        110
-      ],
-      "front_corner": [
         96,
-        108
+        55
       ]
     },
     {
       "id": 1249,
       "footprint_tiles": 3,
       "png_size": [
-        192,
-        116
-      ],
-      "front_corner": [
         96,
-        114
+        50
       ]
     },
     {
       "id": 1250,
       "footprint_tiles": 3,
       "png_size": [
-        192,
-        170
-      ],
-      "front_corner": [
         96,
-        168
+        77
       ]
     },
     {
       "id": 1251,
       "footprint_tiles": 4,
       "png_size": [
-        256,
-        392
-      ],
-      "front_corner": [
         128,
-        390
+        196
       ]
     },
     {
       "id": 1252,
       "footprint_tiles": 4,
       "png_size": [
-        256,
-        364
-      ],
-      "front_corner": [
         128,
-        362
+        182
       ]
     },
     {
       "id": 1253,
       "footprint_tiles": 4,
       "png_size": [
-        256,
-        476
-      ],
-      "front_corner": [
         128,
-        474
+        210
       ]
     },
     {
       "id": 1254,
       "footprint_tiles": 4,
       "png_size": [
-        256,
-        438
-      ],
-      "front_corner": [
         128,
-        436
+        235
       ]
     },
     {
       "id": 1255,
       "footprint_tiles": 4,
       "png_size": [
-        256,
-        308
-      ],
-      "front_corner": [
         128,
-        306
+        154
       ]
     }
   ]
