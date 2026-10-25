@@ -9693,3 +9693,19 @@ msgstr "타일 세트 섞기"
 #. Tileset shuffle refinement; AI-assisted supplementary translation.
 msgid "Mix Reticulating Splines and original SC2000 buildings. Apply shuffles the selection again. Runways, piers, hydro and wind power plants always use SC2000 graphics."
 msgstr "Reticulating Splines와 SC2000 원본 건물을 섞습니다. 적용하면 다시 섞습니다. 활주로, 부두, 수력 발전소와 풍력 발전소는 항상 SC2000 그래픽을 사용합니다."
+
+#. Tileset mix slider; AI-assisted supplementary translation.
+msgid "Choose the mix for the selected categories. The center gives equal shares of SC2000 and RS."
+msgstr "선택한 범주의 혼합 비율을 정하세요. 가운데에서는 SC2000과 RS의 비율이 같습니다."
+
+#. Tileset mix slider; AI-assisted supplementary translation.
+msgid "SC2000"
+msgstr "SC2000"
+
+#. Tileset mix slider; AI-assisted supplementary translation.
+msgid "RS"
+msgstr "RS"
+
+#. Tileset mix slider; AI-assisted supplementary translation.
+msgid "%d%% / %d%%"
+msgstr "%d%% / %d%%"

@@ -6,6 +6,8 @@ var options := BuildingVariants.normalize({})
 var body: VBoxContainer
 var status: Label
 var available := true
+var mix_slider: HSlider
+var mix_ratio: Label
 
 
 func _ready() -> void:
@@ -32,19 +34,36 @@ func _label(text: String) -> Label:
 	return label
 
 
-func _weight(text: String, key: String) -> void:
+func _mix_weight() -> void:
 	var row := HBoxContainer.new()
 	body.add_child(row)
-	row.add_child(_label(text))
-	var spin := SpinBox.new()
-	spin.min_value = 0
-	spin.max_value = 100
-	spin.step = 5
-	spin.value = options[key]
-	spin.editable = available
-	spin.custom_minimum_size.x = 90
-	spin.value_changed.connect(func(value: float) -> void: options[key] = int(value))
-	row.add_child(spin)
+	row.add_child(_label("SC2000"))
+	mix_ratio = _label("")
+	mix_ratio.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	row.add_child(mix_ratio)
+	var right := _label("RS")
+	right.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	row.add_child(right)
+	mix_slider = HSlider.new()
+	mix_slider.min_value = 0
+	mix_slider.max_value = 100
+	mix_slider.step = 1
+	mix_slider.tick_count = 3
+	mix_slider.ticks_on_borders = true
+	mix_slider.editable = available
+	mix_slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var total: int = options.original_weight + options.rs_weight
+	# Preserve the ratio of old independent weights, including all-original 0/0.
+	mix_slider.value = roundf(100.0 * options.rs_weight / total) if total > 0 else 0.0
+	mix_slider.value_changed.connect(_set_mix_weight)
+	mix_ratio.text = "%d%% / %d%%" % [100 - int(mix_slider.value), int(mix_slider.value)]
+	body.add_child(mix_slider)
+
+
+func _set_mix_weight(value: float) -> void:
+	options.rs_weight = int(value)
+	options.original_weight = 100 - int(value)
+	mix_ratio.text = "%d%% / %d%%" % [options.original_weight, options.rs_weight]
 
 
 func _rebuild() -> void:
@@ -57,10 +76,8 @@ func _rebuild() -> void:
 	enabled.disabled = not available and not options.enabled
 	enabled.toggled.connect(func(value: bool) -> void: options.enabled = value)
 	body.add_child(enabled)
-	body.add_child(_label("Mix only Reticulating Splines with the original SC2000 buildings. Other tile sets and HD overrides are not used while mixing."))
-	body.add_child(_label("Weights are relative for compatible buildings in the selected categories. Missing alternatives keep the original. Both weights at zero also keep the original."))
-	_weight("SC2000 weight", "original_weight")
-	_weight("Reticulating Splines weight", "rs_weight")
+	body.add_child(_label("Choose the mix for the selected categories. The center gives equal shares of SC2000 and RS."))
+	_mix_weight()
 	var categories := GridContainer.new()
 	categories.columns = 2
 	body.add_child(categories)

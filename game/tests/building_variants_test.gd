@@ -92,7 +92,9 @@ func _run() -> void:
 	assert(not dialog.has_method("add_paths"))
 	var applied := []
 	dialog.applied.connect(func(value: Dictionary) -> void: applied.append(value))
-	dialog.options.rs_weight = 25
+	assert(dialog.mix_slider.value == 60)
+	dialog.mix_slider.value = 25
+	assert(dialog.options.original_weight == 75)
 	assert(applied.is_empty())
 	(dialog.body.get_child(-1) as Button).pressed.emit()
 	assert(applied.size() == 1 and applied[0].rs_weight == 25 and not applied[0].has("packs"))
@@ -102,7 +104,17 @@ func _run() -> void:
 	dialog.options.enabled = false
 	(dialog.body.get_child(-1) as Button).pressed.emit()
 	assert(applied[2].seed == options.seed + 2)
+	for ratio in [0,50,100]:
+		dialog.mix_slider.value = ratio
+		assert(dialog.options.rs_weight == ratio and dialog.options.original_weight == 100 - ratio)
+	dialog.show_values({})
+	assert(dialog.mix_slider.value == 50)
+	dialog.show_values({"original_weight": 20, "rs_weight": 60})
+	assert(dialog.mix_slider.value == 75)
+	dialog.show_values({"original_weight": 0, "rs_weight": 0})
+	assert(dialog.mix_slider.value == 0)
 	dialog.show_values({},PackedStringArray(),false)
+	assert(not dialog.mix_slider.editable)
 	assert((dialog.body.get_child(0) as CheckBox).disabled)
 	dialog.queue_free()
 	await process_frame

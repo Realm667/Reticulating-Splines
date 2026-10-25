@@ -28531,3 +28531,19 @@ msgstr "Tilesets mischen"
 #. Tileset shuffle refinement; AI-assisted supplementary translation.
 msgid "Mix Reticulating Splines and original SC2000 buildings. Apply shuffles the selection again. Runways, piers, hydro and wind power plants always use SC2000 graphics."
 msgstr "Mischt Reticulating Splines mit Originalgebäuden von SC2000. Übernehmen mischt die Auswahl neu. Landebahnen, Piers sowie Wasser- und Windkraftwerke verwenden immer SC2000-Grafiken."
+
+#. Tileset mix slider; AI-assisted supplementary translation.
+msgid "Choose the mix for the selected categories. The center gives equal shares of SC2000 and RS."
+msgstr "Wähle die Mischung für die ausgewählten Kategorien. In der Mitte sind SC2000 und RS gleich verteilt."
+
+#. Tileset mix slider; AI-assisted supplementary translation.
+msgid "SC2000"
+msgstr "SC2000"
+
+#. Tileset mix slider; AI-assisted supplementary translation.
+msgid "RS"
+msgstr "RS"
+
+#. Tileset mix slider; AI-assisted supplementary translation.
+msgid "%d%% / %d%%"
+msgstr "%d%% / %d%%"
