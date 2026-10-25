@@ -14,6 +14,9 @@ uniform bool dark_underground = false;
 uniform sampler2D dark_underground_palette : source_color, filter_nearest, repeat_disable;
 // Seconds of HD sprite animation. They stop while the game is paused.
 uniform float artwork_animation_seconds = 0.0;
+// Region geometry uses quarter/half/full-size logical pixels. Native masters
+// still contain one texel per large-view pixel, including in mixed atlases.
+uniform float artwork_view_divisor = 1.0;
 
 // The red byte of the vertex color of a GPU region quad tells how to draw it.
 // Other values are indexed sprites. Refer to native/core/render/src/region.rs.
@@ -265,6 +268,10 @@ void fragment() {
 #endif
 	vec2 texel = UV / pixel_size;
 	vec2 footprint = fwidth(texel);
+	// world_position removes the CanvasItem scale, so this density does not
+	// change with camera zoom. HD masters retain their existing smooth filter.
+	float artwork_density = length(dFdx(texel)) / max(length(dFdx(world_position)), 0.00001);
+	bool native_artwork = artwork_density <= artwork_view_divisor * 1.001;
 
 	if (tree_shadow > 0.5) {
 		if (!tree_shadows_enabled) discard;
@@ -394,7 +401,7 @@ void fragment() {
 	} else if (artwork_kind > 4.5) {
 		vec2 cell = texel - 0.5;
 		vec2 corner = floor(cell);
-		COLOR = filtered(pipe_water(ATLAS(corner)), pipe_water(ATLAS(corner + vec2(1.0, 0.0))),
+		COLOR = native_artwork ? pipe_water(ATLAS(floor(texel))) : filtered(pipe_water(ATLAS(corner)), pipe_water(ATLAS(corner + vec2(1.0, 0.0))),
 			pipe_water(ATLAS(corner + vec2(0.0, 1.0))), pipe_water(ATLAS(corner + vec2(1.0))), cell - corner);
 	} else {
 		vec3 frames = artwork_frames;
@@ -421,7 +428,11 @@ void fragment() {
 		vec2 spread = (clamp(footprint, vec2(1.0), vec2(MAX_FOOTPRINT)) - 1.0) * 0.25;
 		vec4 sum = vec4(0.0);
 
-		for (int tap = 0; tap < 4; tap++) {
+		if (native_artwork) {
+			// Match the emission/season lookup: never blend neighboring pixel
+			// colors or silhouette alpha in native-resolution replacement art.
+			sum = premultiplied(ATLAS(floor(center))) * 4.0;
+		} else for (int tap = 0; tap < 4; tap++) {
 			vec2 offset = vec2(tap % 2 == 0 ? -spread.x : spread.x, tap < 2 ? -spread.y : spread.y);
 			vec2 cell = center + offset - 0.5;
 			vec2 corner = floor(cell);

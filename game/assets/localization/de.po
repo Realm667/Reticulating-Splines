@@ -28523,3 +28523,11 @@ msgstr "Die Gewichtungen gelten relativ für passende Gebäude der gewählten Ka
 #. Supplementary RS + SC2000 mixing UI; AI-assisted translation.
 msgid "Mix Reticulating Splines and original SC2000 buildings. Apply changes when ready; visual presets leave these choices unchanged."
 msgstr "Mischt Reticulating Splines mit Originalgebäuden von SC2000. Übernimm die Änderungen, wenn du fertig bist; Grafikvoreinstellungen verändern diese Auswahl nicht."
+
+#. Tileset shuffle refinement; AI-assisted supplementary translation.
+msgid "Tileset Shuffle"
+msgstr "Tilesets mischen"
+
+#. Tileset shuffle refinement; AI-assisted supplementary translation.
+msgid "Mix Reticulating Splines and original SC2000 buildings. Apply shuffles the selection again. Runways, piers, hydro and wind power plants always use SC2000 graphics."
+msgstr "Mischt Reticulating Splines mit Originalgebäuden von SC2000. Übernehmen mischt die Auswahl neu. Landebahnen, Piers sowie Wasser- und Windkraftwerke verwenden immer SC2000-Grafiken."

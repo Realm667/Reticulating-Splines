@@ -137,7 +137,7 @@ func capture(before: CityMapSource, after: CityMapSource, layers: CityMapLayers)
 			mesh.texture = previous.texture
 			mesh.position = previous.position
 			mesh.scale = Vector2.ONE * previous.divisor
-			mesh.material = layers.visual_material(previous.emission, previous.seasons, previous.texture_pages)
+			mesh.material = layers.visual_material(previous.emission, previous.seasons, previous.texture_pages, previous.divisor)
 			node = mesh
 		else:
 			var tile := TextureRect.new()

@@ -32,6 +32,10 @@ static func supports_source(source: GameAssetSource) -> bool:
 
 
 static func category(id: int) -> int:
+	# Connected runways/piers and small hydro/wind plants retain SC2000 art.
+	# Per-tile variants would break continuous markings, edges and plant groups.
+	if id in [198,199,200,221,222,223]:
+		return -1
 	if (id >= 112 and id <= 123) or (id >= 140 and id <= 147) or (id >= 174 and id <= 177):
 		return 0
 	if (id >= 124 and id <= 131) or (id >= 148 and id <= 157) or (id >= 178 and id <= 187):

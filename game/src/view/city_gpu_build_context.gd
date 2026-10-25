@@ -313,12 +313,14 @@ static func artwork_request(sprites: Sc2SpriteArchive, sprite_base: int, include
 
 	for id: int in sprites.high_resolution:
 		var nature := sprites.visual_nature.has(id) and id % CityNatureArtwork.SPAN / 500 == sprite_base / 500
+		var mixed := id >= BuildingVariants.FIRST and id < BuildingVariants.FIRST + BuildingVariants.SPAN \
+			and id % BuildingVariants.SPAN / 500 == sprite_base / 500
 		if nature:
 			if not include_nature:
 				continue
 			if (id % 500 >= 256 and not sprites.visual_terrain_enabled) or (id % 500 < 256 and not sprites.visual_nature_enabled):
 				continue
-		elif id < sprite_base or id >= sprite_base + 500 or not sprites.entries_by_id.has(id):
+		elif (not mixed and (id < sprite_base or id >= sprite_base + 500)) or not sprites.entries_by_id.has(id):
 			continue
 
 		var art := sprites.high_resolution[id]

@@ -75,16 +75,12 @@ func _rebuild() -> void:
 			else:
 				options.categories.erase(index))
 		categories.add_child(check)
-	var shuffle := Button.new()
-	shuffle.disabled = not available
-	shuffle.text = "Shuffle again"
-	shuffle.pressed.connect(func() -> void:
-		options.seed = (int(options.seed)+1) % 2147483647
-		status.text = tr("New building choices will be used after Apply."))
-	body.add_child(shuffle)
 	status = _label("")
 	body.add_child(status)
 	var apply := Button.new()
 	apply.text = "Apply"
-	apply.pressed.connect(func() -> void: applied.emit(BuildingVariants.normalize(options)))
+	apply.pressed.connect(func() -> void:
+		if available and options.enabled:
+			options.seed = (int(options.seed) + 1) % 2147483647
+		applied.emit(BuildingVariants.normalize(options)))
 	body.add_child(apply)

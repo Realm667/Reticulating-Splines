@@ -81,6 +81,8 @@ func _run() -> void:
 		if field[2] == "bool" and field[0] not in VisualEnhancementOptions.PRESET_INDEPENDENT:
 			assert(not tab.selected_values()[field[0]])
 	tab._apply_preset(4)
+	assert(not tab.selected_values().night_daytime_enabled)
+	assert(tab.selected_values().day_enabled and tab.selected_values().brightmaps and tab.selected_values().rain_lights_enabled)
 	(tab.controls.cloud_enabled as CheckBox).button_pressed = false
 	assert(tab.preset_selector.selected == 5, "Manual edits must be shown as custom")
 	assert((tab.dependency_hints.cloud_mode as Label).visible)

@@ -33,6 +33,12 @@ func _run() -> void:
 	var small := loaded.apply_to(graphics.small_medium_sprites,options)
 	assert(large.find_sprite(1112) == graphics.large_sprites.find_sprite(1112))
 	assert(large.building_original_weight == 40)
+	for id in [198,199,200,221,222,223]:
+		for view in 3:
+			var archive := large if view == 2 else small
+			var sprite_id: int = view * 500 + id
+			assert(not archive.building_variants.has(sprite_id))
+			assert(archive.find_sprite(sprite_id) == (graphics.large_sprites if view == 2 else graphics.small_medium_sprites).find_sprite(sprite_id))
 	for pair in [[large,rs.large_sprites],[small,rs.small_medium_sprites]]:
 		var mixed: Sc2SpriteArchive = pair[0]
 		var own: Sc2SpriteArchive = pair[1]
@@ -44,6 +50,17 @@ func _run() -> void:
 			assert(mixed.visual_emission[v].get_size() == Vector2i(mixed.find_sprite(v).width,mixed.find_sprite(v).height))
 			assert(mixed.high_resolution[v].emission == own.high_resolution[id].emission)
 			assert(mixed.high_resolution[v].animation == own.high_resolution[id].animation)
+		for view in ([2] if mixed == large else [0,1]):
+			var request := CityGpuBuildContext.artwork_request(mixed, view * 500)
+			for original_id: int in mixed.building_variants:
+				var variant_id := BuildingVariants.FIRST + original_id
+				if original_id / 500 != view:
+					assert(not request.hd_sprites.has(variant_id))
+					continue
+				assert(request.hd_sprites[variant_id] == own.high_resolution[original_id].image)
+				if own.high_resolution[original_id].animation != null:
+					assert(request.hd_animations[variant_id] == own.high_resolution[original_id].animation)
+					assert(request.hd_frames[variant_id] == own.high_resolution[original_id].frames)
 	_check_painters(large,small)
 	_check_rotations(large)
 	var save := AppSettingsStore.SaveOptions.new()
@@ -79,6 +96,12 @@ func _run() -> void:
 	assert(applied.is_empty())
 	(dialog.body.get_child(-1) as Button).pressed.emit()
 	assert(applied.size() == 1 and applied[0].rs_weight == 25 and not applied[0].has("packs"))
+	assert(applied[0].seed == options.seed + 1)
+	(dialog.body.get_child(-1) as Button).pressed.emit()
+	assert(applied[1].seed == options.seed + 2)
+	dialog.options.enabled = false
+	(dialog.body.get_child(-1) as Button).pressed.emit()
+	assert(applied[2].seed == options.seed + 2)
 	dialog.show_values({},PackedStringArray(),false)
 	assert((dialog.body.get_child(0) as CheckBox).disabled)
 	dialog.queue_free()

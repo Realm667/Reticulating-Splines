@@ -1,5 +1,20 @@
 [
   {
+    "id": "building_mix_animation_gpu_test",
+    "script": "tests/building_mix_animation_gpu_test.gd",
+    "domain": "rendering",
+    "lane": "native",
+    "driver": "scene-batch",
+    "requires": ["ext/graphics/pack.json"]
+  },
+  {
+    "id": "native_artwork_filter_test",
+    "script": "tests/native_artwork_filter_test.gd",
+    "domain": "rendering",
+    "lane": "native",
+    "driver": "scene-batch"
+  },
+  {
     "id": "classic_native_pack_test",
     "script": "tests/classic_native_pack_test.gd",
     "domain": "rendering",

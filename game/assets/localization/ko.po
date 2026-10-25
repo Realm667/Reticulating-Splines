@@ -9685,3 +9685,11 @@ msgstr "가중치는 선택한 범주의 호환 건물에 상대적으로 적용
 #. Supplementary RS + SC2000 mixing UI; AI-assisted translation.
 msgid "Mix Reticulating Splines and original SC2000 buildings. Apply changes when ready; visual presets leave these choices unchanged."
 msgstr "Reticulating Splines와 원본 SC2000 건물을 혼합합니다. 준비되면 변경 사항을 적용하세요. 시각 효과 사전 설정은 이 선택을 바꾸지 않습니다."
+
+#. Tileset shuffle refinement; AI-assisted supplementary translation.
+msgid "Tileset Shuffle"
+msgstr "타일 세트 섞기"
+
+#. Tileset shuffle refinement; AI-assisted supplementary translation.
+msgid "Mix Reticulating Splines and original SC2000 buildings. Apply shuffles the selection again. Runways, piers, hydro and wind power plants always use SC2000 graphics."
+msgstr "Reticulating Splines와 SC2000 원본 건물을 섞습니다. 적용하면 다시 섞습니다. 활주로, 부두, 수력 발전소와 풍력 발전소는 항상 SC2000 그래픽을 사용합니다."

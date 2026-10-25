@@ -31480,3 +31480,11 @@ msgstr "Os pesos são relativos para edifícios compatíveis nas categorias esco
 #. Supplementary RS + SC2000 mixing UI; AI-assisted translation.
 msgid "Mix Reticulating Splines and original SC2000 buildings. Apply changes when ready; visual presets leave these choices unchanged."
 msgstr "Mistura edifícios de Reticulating Splines e SC2000 original. Aplique ao terminar; as predefinições visuais mantêm estas escolhas."
+
+#. Tileset shuffle refinement; AI-assisted supplementary translation.
+msgid "Tileset Shuffle"
+msgstr "Misturar conjuntos gráficos"
+
+#. Tileset shuffle refinement; AI-assisted supplementary translation.
+msgid "Mix Reticulating Splines and original SC2000 buildings. Apply shuffles the selection again. Runways, piers, hydro and wind power plants always use SC2000 graphics."
+msgstr "Mistura edifícios de Reticulating Splines e do SC2000 original. Aplicar mistura a seleção novamente. Pistas, píeres e usinas hidrelétricas e eólicas sempre usam gráficos do SC2000."

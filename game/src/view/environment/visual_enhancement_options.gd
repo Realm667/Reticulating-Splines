@@ -112,6 +112,7 @@ static func preset(level: int, current: Dictionary) -> Dictionary:
 		result.life_car_amount = 0.5
 		result.life_people_amount = 0.5
 	if level == 4:
+		result.night_daytime_enabled = false
 		result.water_reflections = 1
 		result.night_glow = 35.0
 		result.night_ground = 45.0
