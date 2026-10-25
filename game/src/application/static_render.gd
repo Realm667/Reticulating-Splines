@@ -510,8 +510,9 @@ func update_palette_cycle_texture() -> void:
 
 
 func update_palette_blending(force := false) -> void:
-	var fraction := palette_clock.elapsed_msec / GameSpeedController.BASE_TICK_MSEC if app.preferences.visual_enhancements.disaster_blending else 0.0
-	if not palette_clock.update_textures(app.asset_state.palette, fraction, true, force):
+	var water_fraction := palette_clock.elapsed_msec / GameSpeedController.BASE_TICK_MSEC
+	var fraction := water_fraction if app.preferences.visual_enhancements.disaster_blending else 0.0
+	if not palette_clock.update_textures(app.asset_state.palette, fraction, true, force, water_fraction):
 		return
 	if app.map_view != null:
 		# Update texture contents in place; do not rebind every region each frame.

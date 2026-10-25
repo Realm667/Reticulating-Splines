@@ -1,6 +1,8 @@
 //! Whole-city renders of a supplied city with the imported graphics pack. The
 //! hashes are of index-path renders that matched the Godot CPU painter pixel for
-//! pixel. The test skips when the pack or the city is not present.
+//! pixel. Surface baselines include the hydro water underlay correction;
+//! pixel comparisons restrict that change to the dam footprints in all views.
+//! The test skips when the pack or the city is not present.
 
 use sc2k_assets::packs::graphics::GraphicsPack;
 use sc2k_sim::formats::document::Document;
@@ -15,9 +17,9 @@ const EXPORT_BACKGROUND: u32 = 0x0018242c;
 const UNDERGROUND_INDEX: usize = 0xff;
 /// (view, underground, sha256 of "w h\n" and the RGBA bytes)
 const EXPECTED: [(usize, bool, &str); 6] = [
-    (0, false, "628495de12db2b151cea873424088b2e8dad8169b4ec9222f50fcb2f878049e5"),
-    (1, false, "acba97149affe5d8167928ed7d2c282156dd117268c5b829fec9df725940c05a"),
-    (2, false, "c32867176ce7299fba0bd5d61543a1cc576674daaf8a0d7d5d9e4662bfb5cb00"),
+    (0, false, "fb85e4ed0d4386518903ac1d89accf2a609a9672c00a7c22fbeb81852954efa9"),
+    (1, false, "16c7a0ae3cb915de691f7d0dc5c309c735621d858f53518748d8d0198429ad48"),
+    (2, false, "85009e0f49f8724f891112c71879945b1720d6de5d44b09d565d3f87c59ab153"),
     (0, true, "12ad81b0635369f13f4da86a46b16a811cec5108aafbc978d667d647548edd98"),
     (1, true, "5855401b27f4e7794ee40e55519174f0c34d7d0508bc642db18ec7baaa06a56d"),
     (2, true, "36a2d8f0929ac1d2f2e603b06454973c597cafabe34323819fb57debf0402213"),

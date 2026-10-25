@@ -42,6 +42,19 @@ func _run() -> void:
 	lights.process(true, 1.0, options, 0.0, 0.5)
 	assert(is_equal_approx(lights.street_activation, 1.0), "Street lights must finish fading after one second")
 	assert(lights.ground.visible and lights.detail_enabled)
+	var original_large := main.asset_state.large_sprites
+	var original_small := main.asset_state.small_medium_sprites
+	for rgba_art in [false, true]:
+		var archive := Sc2SpriteArchive.new()
+		if rgba_art:
+			archive.high_resolution[BuildingVariants.FIRST + 1112] = HdSprite.new()
+		main.asset_state.large_sprites = archive
+		main.asset_state.small_medium_sprites = archive
+		lights.process(true, 1.0, options, 0.0, 0.0)
+		assert(lights.ground.roads.raster_scale == 1, "RGBA or mixed artwork enabled HD street furniture")
+		assert(lights.ground.signals.texture_filter == CanvasItem.TEXTURE_FILTER_NEAREST)
+	main.asset_state.large_sprites = original_large
+	main.asset_state.small_medium_sprites = original_small
 	main.map_view.zoom_factor = 0.1
 	options.detail_lights_min_zoom = 0
 	lights.process(true, 1.0, options, 0.0, 0.0)

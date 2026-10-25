@@ -132,7 +132,55 @@ func _run() -> void:
 	await _check_type_fronts()
 	print("PASS: GPU cloud tops/shadows, sunny gaps, movement, frozen clock, region seams, transparency, foreground and exact disable")
 	await _check_cached_cover()
+	await _check_sidebar_extent()
 	quit()
+
+
+func _check_sidebar_extent() -> void:
+	var viewport := SubViewport.new()
+	viewport.size = Vector2i(256, 256)
+	viewport.transparent_bg = true
+	viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	root.add_child(viewport)
+	var app := CityApplication.new()
+	var map := CityMapControl.new()
+	map.size = Vector2(viewport.size)
+	app.map_view = map
+	viewport.add_child(map)
+	var clouds := app.visual_environment.clouds
+	clouds.opacity = 1.0
+	clouds._sync_layer(Transform2D.IDENTITY, 256, 0)
+	var material := clouds.material
+	for pair in [["cloud_enabled", true], ["cloud_field", CityVisualClouds.make_field()],
+		["cloud_density", 1.0], ["cloud_projection", Vector4(1, 0, 0, 1)]]:
+		material.set_shader_parameter(pair[0], pair[1])
+	var basis := CityVisualClouds.shader_basis(Transform2D(Vector2(0.75, 0), Vector2(0, 0.75), Vector2.ZERO))
+	material.set_shader_parameter("cloud_canvas_to_body_grid", basis)
+	await RenderingServer.frame_post_draw
+	var whole := viewport.get_texture().get_image()
+	var visible_below := 0
+	for y in range(128, 256):
+		for x in range(0, 96):
+			visible_below += int(whole.get_pixel(x, y).a > 0.05)
+	assert(visible_below > 100, "Cloud fixture must cover the city below the sidebar")
+	for width in [96.0, 144.0, 0.0]:
+		map.camera_view_rect = Rect2(width, 0, 256 - width, 256)
+		clouds._sync_layer(Transform2D.IDENTITY, 256, 0)
+		material.set_shader_parameter("cloud_canvas_to_body_grid", basis)
+		await RenderingServer.frame_post_draw
+		assert(viewport.get_texture().get_image().get_data() == whole.get_data(),
+			"Camera sidebar exclusion clipped or shifted the cloud field")
+	var sidebar := ColorRect.new()
+	sidebar.size = Vector2(96, 128)
+	sidebar.color = Color("202830")
+	viewport.add_child(sidebar)
+	await RenderingServer.frame_post_draw
+	var covered := viewport.get_texture().get_image()
+	assert(covered.get_pixel(48, 64).is_equal_approx(sidebar.color), "Clouds painted over the sidebar")
+	assert(covered.get_region(Rect2i(0, 128, 96, 128)).get_data() == whole.get_region(Rect2i(0, 128, 96, 128)).get_data())
+	viewport.queue_free()
+	app.free()
+	await process_frame
 
 
 func _check_overview_stability() -> void:

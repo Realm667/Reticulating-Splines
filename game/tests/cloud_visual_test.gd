@@ -46,6 +46,14 @@ func _run() -> void:
 	main.visual_environment.process(0.0)
 	var clouds := main.visual_environment.clouds
 	assert(clouds.parameters.cloud_enabled and clouds.layer.visible)
+	var camera_bounds := main.map_view.camera_view_rect
+	for sidebar_width in [0.0, 160.0, 320.0]:
+		main.map_view.camera_view_rect = Rect2(sidebar_width, 0, main.map_view.size.x - sidebar_width, main.map_view.size.y)
+		main.visual_environment.process(0.0)
+		assert(clouds.layer.position.x == 0.0 and clouds.layer.size.x == main.map_view.size.x,
+			"Clouds must cover the visible city below the short sidebar")
+	main.map_view.camera_view_rect = camera_bounds
+	main.visual_environment.process(0.0)
 	var texture := clouds.field
 	var initial := clouds.drift
 	main.visual_environment.process(2.0)

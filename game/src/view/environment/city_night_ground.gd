@@ -66,7 +66,7 @@ func _init() -> void:
 	add_child(fixtures)
 	fixtures.draw.connect(_draw_fixtures)
 	fixtures.add_child(signals)
-	signals.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	signals.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	signals.use_parent_material = true
 	signals.draw.connect(_draw_signals)
 
@@ -126,9 +126,10 @@ func sync(app: CityApplication, strength: float, elapsed := 0.0, prepare := fals
 	if signature != revision:
 		reset()
 		signature = revision
-		roads.set_raster_scale(4 if archive != null and not archive.high_resolution.is_empty() else 1)
-		(material as ShaderMaterial).set_shader_parameter("edge_softness", 4.0 if roads.raster_scale > 1 else 0.0)
-		signals.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR if roads.raster_scale > 1 else CanvasItem.TEXTURE_FILTER_NEAREST
+		# Street furniture always uses the native pixel raster, including RS and
+		# mixed archives whose editable RGBA artwork lives in high_resolution.
+		roads.set_raster_scale(1)
+		(material as ShaderMaterial).set_shader_parameter("edge_softness", 0.0)
 	var changed := roads.sync_geometry(city)
 	var shape := [app.view_state.surface_visibility.duplicate()]
 	if roads.geometry_reset or geometry != shape:

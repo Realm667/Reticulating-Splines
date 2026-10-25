@@ -242,14 +242,18 @@ impl Builder {
 
         let composite = (tiles::HIGHWAY_SLOPE_1..=tiles::REINFORCED_HIGHWAY_BRIDGE).contains(&b);
         let developed = b >= tiles::DEVELOPED_FIRST;
+        // Dam sprites contain the concrete structure, not the water around it.
+        // Unlike ordinary developed parcels they still need their terrain below.
+        let hydro = matches!(b, tiles::HYDRO_POWER_1 | tiles::HYDRO_POWER_2);
 
-        if !developed && !composite {
+        if (!developed && !composite) || hydro {
             let ground = self.ground(i, t);
-            if c.effects & effects::WATERFALL != 0 && ground == WATER_SIDE_SPRITE && t == terrain::WATERFALL {
+            if ground == WATER_SIDE_SPRITE && (hydro || (c.effects & effects::WATERFALL != 0 && t == terrain::WATERFALL)) {
                 // The original waterfall omits a few cap-edge pixels. A real
                 // water diamond below it closes pinholes between adjacent falls
                 // without changing imported artwork or extending the curtains.
-                // The unenhanced reference/export path remains byte-exact.
+                // Unenhanced falls remain byte-exact; dams need this terrain
+                // in both modes, including the older coastal waterfall code.
                 self.add(&mut draws, c.base() + WATER_SPRITE, false, sx, base - c.step())?;
             }
             self.add(&mut draws, self.nature_ground(c.base() + ground), false, sx, base)?;
@@ -290,7 +294,7 @@ impl Builder {
             let sprite = self.building_variant(x, y, sprite);
             let image = self.sprites.get(sprite, flip)?;
             let width = self.sprites.footprint_width(image);
-            if developed && c.building_ground {
+            if developed && c.building_ground && !hydro {
                 // Paint the whole footprint before its one anchored building.
                 // Per-cell draws can cover the building's front in later tiles.
                 let area = (width / (c.hw() * 2)).max(1);

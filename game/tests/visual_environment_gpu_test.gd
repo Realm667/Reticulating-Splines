@@ -95,6 +95,9 @@ func _run() -> void:
 	await _check_parcel_border(true)
 	await _check_night_glow(false)
 	await _check_night_glow(true)
+	await _check_artwork_window_glow(false)
+	await _check_artwork_window_glow(true)
+	await _check_water_palette_motion()
 	await _check_city_life_glow(false)
 	await _check_city_life_glow(true)
 	await _check_street_fixtures(false)
@@ -317,6 +320,86 @@ func _check_night_glow(hdr: bool) -> void:
 	assert(not lighting.output.visible)
 	for buffer in lighting.buffers:
 		assert(buffer.render_target_update_mode == SubViewport.UPDATE_DISABLED)
+	viewport.queue_free()
+	app.free()
+	await process_frame
+
+
+func _check_water_palette_motion() -> void:
+	var palette := FixtureGraphics.pack().palette
+	var viewport := SubViewport.new()
+	viewport.size = Vector2i(9, 1)
+	viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	root.add_child(viewport)
+	var image := Image.create(9, 1, false, Image.FORMAT_RGBA8)
+	for index in 9:
+		var color := 200 + index if index < 8 else 195
+		image.set_pixel(index, 0, Color8(color, color, color))
+	var sprite := Sprite2D.new()
+	sprite.centered = false
+	sprite.texture = ImageTexture.create_from_image(image)
+	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	var material := ShaderMaterial.new()
+	material.shader = CityMapControl.PALETTE_CYCLE_SHADER
+	material.set_shader_parameter("palette_lookup_all", true)
+	material.set_shader_parameter("palette_cycle_enabled", true)
+	sprite.material = material
+	viewport.add_child(sprite)
+	var clock := PaletteAnimationClock.new()
+	var frames: Array[Image] = []
+	for state in [Vector2(7, 0.0), Vector2(7, 0.5), Vector2(7, 0.99), Vector2(8, 0.0)]:
+		clock.cycle_ticks = int(state.x)
+		clock.update_textures(palette, 0.0, false, false, state.y)
+		material.set_shader_parameter("animated_palette", clock.cycle_texture)
+		await RenderingServer.frame_post_draw
+		frames.append(viewport.get_texture().get_image())
+	assert(frames[0].get_data() != frames[1].get_data(), "Vanilla water remained frozen between palette ticks")
+	assert(frames[0].get_pixel(8, 0) == frames[2].get_pixel(8, 0), "Water smoothing changed the power-warning cycle")
+	for index in 8:
+		var delta := frames[2].get_pixel(index, 0) - frames[3].get_pixel(index, 0)
+		assert(maxf(absf(delta.r), maxf(absf(delta.g), absf(delta.b))) < 0.02, "Water flashes when the palette cycle wraps")
+	viewport.queue_free()
+	await process_frame
+
+
+func _check_artwork_window_glow(hdr: bool) -> void:
+	# Title-screen windows are rasterized at 1x/2x/4x, but retain their logical
+	# map bounds. Exercise the same tile publication and glow-copy path.
+	var viewport := SubViewport.new()
+	viewport.size = Vector2i(400, 300)
+	viewport.transparent_bg = true
+	viewport.use_hdr_2d = hdr
+	viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	root.add_child(viewport)
+	var app := CityApplication.new()
+	var map := CityMapControl.new()
+	map.size = Vector2(viewport.size)
+	app.map_view = map
+	viewport.add_child(map)
+	map.source_center = map.size / 2.0
+	var light := Image.create(160, 120, false, Image.FORMAT_RGBA8)
+	light.fill_rect(Rect2i(36, 26, 8, 8), Color.WHITE)
+	var options := VisualEnhancementOptions.normalize({"night_ground": 0.0, "night_glow": 100.0})
+	var lighting := app.visual_environment.night_lighting
+	for density in [1, 2, 4]:
+		var art := Image.create(160 * density, 120 * density, false, Image.FORMAT_RGBA8)
+		art.fill(Color.BLACK)
+		var source := CityMapSource.new(Vector2i(viewport.size))
+		var tile := CityMapSource.TileEntry.new(Vector2(20, 20), Vector2(160, 120),
+			ImageTexture.create_from_image(art), CityDynamicSpriteCanvas.ARTWORK_TAG)
+		tile.emission = ImageTexture.create_from_image(light)
+		source.tiles.append(tile)
+		map.city_source = source
+		for pan in [Vector2.ZERO, Vector2(10, 6)]:
+			map.source_center = map.size / 2.0 + pan
+			lighting.process(true, 1.0, options)
+			for frame in 4:
+				await RenderingServer.frame_post_draw
+			assert(lighting.copies[0].size == tile.size, "Glow stretched a menu artwork window to its texture size")
+			var image := viewport.get_texture().get_image()
+			var lamp := Vector2i(Vector2(60, 50) - pan)
+			assert(image.get_pixelv(lamp).r > 0.1, "Menu glow missed its actual lamp")
+			assert(image.get_pixel(180, 140).r < 0.001, "Displaced menu glow leaked into the water")
 	viewport.queue_free()
 	app.free()
 	await process_frame

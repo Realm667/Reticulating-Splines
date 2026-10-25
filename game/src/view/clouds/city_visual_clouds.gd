@@ -217,7 +217,11 @@ func _sync_layer(source_to_canvas: Transform2D, edge: int, rotation: int) -> voi
 			foreground = app.map_view.layers.overlay_layer
 		if foreground != null:
 			app.map_view.move_child(layer, foreground.get_index())
-	var bounds := app.map_view.camera._camera_rect()
+	var bounds := app.map_view.camera._camera_rect().intersection(Rect2(Vector2.ZERO, app.map_view.size))
+	# Camera centering excludes the sidebar column, but the short sidebar does
+	# not cover its lower part. Draw clouds across that visible city as well.
+	bounds.position.x = 0.0
+	bounds.size.x = app.map_view.size.x
 	layer.position = bounds.position
 	layer.size = bounds.size
 	layer.show()

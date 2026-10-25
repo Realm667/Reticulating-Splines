@@ -328,10 +328,13 @@ func _sync_moving() -> void:
 
 func _add_texture(texture: Texture2D, emission: Texture2D, position: Vector2, size: Vector2) -> void:
 	var rect := TextureRect.new()
+	# Menu artwork windows can have more texels than their logical map size.
+	# Disable the texture minimum before assigning that logical size; otherwise
+	# Control clamps it to the native image dimensions and displaces the glow.
+	rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	rect.texture = texture
 	rect.position = position
 	rect.size = size
-	rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_register(rect, emission)
 
 

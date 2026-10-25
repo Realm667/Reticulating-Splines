@@ -961,7 +961,10 @@ func _check_power_warning_clock(main: CityApplication) -> void:
 	assert(clock.cycle_ticks == ticks and clock.elapsed_msec == elapsed)
 	main.preferences.visual_enhancements.disaster_blending = false
 	main.frame._advance_palette_animation(0.0, true)
-	assert(clock._blended.get_data() == first.get_data())
+	var water_only := first.duplicate()
+	for index in range(200, 208):
+		water_only.set_pixel(index, 0, blended.get_pixel(index, 0))
+	assert(clock._blended.get_data() == water_only.get_data(), "Vanilla must keep only water colors interpolated")
 	main.preferences.visual_enhancements.disaster_blending = true
 	main.frame._advance_palette_animation(0.0, true)
 	assert(clock._blended.get_data() == blended.get_data())
@@ -1284,6 +1287,22 @@ func _check_palette_colors() -> void:
 					and abs(dark_value.b8 - expected_dark.b8) <= 1, "Underground endpoints were not remapped before blending")
 				if first.get_pixel(index, 0) == next.get_pixel(index, 0):
 					assert(value == first.get_pixel(index, 0), "A stationary palette entry changed")
+	# Vanilla disables disaster fades, not smooth water motion. Only the eight
+	# water entries may interpolate, including the last-to-first cycle join.
+	for tick in [0, 7, 8]:
+		clock.cycle_ticks = tick
+		var first := palette.animation_image(tick)
+		var next := palette.animation_image(tick + 1)
+		for phase in [0.0, 0.5, 1.0]:
+			assert(clock.update_textures(palette, 0.0, true, false, phase))
+			assert(not clock.update_textures(palette, 0.0, true, false, phase))
+			for index in 256:
+				var expected := first.get_pixel(index, 0)
+				if index >= 200 and index < 208:
+					expected = expected.lerp(next.get_pixel(index, 0), phase)
+				var actual := clock._blended.get_pixel(index, 0)
+				assert(abs(actual.r8 - expected.r8) <= 1 and abs(actual.g8 - expected.g8) <= 1 and abs(actual.b8 - expected.b8) <= 1,
+					"Independent water interpolation changed a non-water palette entry")
 	# Replacing artwork at the same tick invalidates cached colors.
 	var replacement := Sc2Palette.index_encoding()
 	assert(clock.update_textures(replacement, 0.0))

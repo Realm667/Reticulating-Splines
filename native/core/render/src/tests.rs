@@ -1240,6 +1240,44 @@ fn hd_effects_add_grid_lines_and_no_palette_overlay() {
 }
 
 #[test]
+fn hydro_dams_keep_water_under_the_structure_in_all_views_and_rotations() {
+    for view in 0..3 {
+        for rotation in 0..4 {
+            for tile in [tiles::HYDRO_POWER_1, tiles::HYDRO_POWER_2] {
+                for (terrain, building_ground) in [
+                    (ids::terrain_tile_ids::WATERFALL, false),
+                    (ids::terrain_tile_ids::WATERFALL, true),
+                    (ids::terrain_tile_ids::FORBIDDEN_COAST, false),
+                ] {
+                    let mut b = fixture(8, view);
+                    b.city.rotation = rotation;
+                    b.config.building_ground = building_ground;
+                    let i = b.city.index(3, 3);
+                    b.city.buildings[i] = tile;
+                    b.city.zones[i] = 0xf0;
+                    b.city.terrain[i] = terrain;
+                    b.city.flags[i] = 4;
+                    b.city.altitude[i] = 3 | (3 << 5);
+                    let altitude = b.city.altitude.clone();
+                    let draws = b.paint(3, 3).unwrap();
+                    let ids: Vec<_> = draws.iter().map(|draw| draw.sprite - view * 500).collect();
+                    assert_eq!(
+                        ids,
+                        [270, 284, i32::from(tile)],
+                        "dam must cover one cap and one waterfall, without duplicate underlays"
+                    );
+                    assert_eq!(
+                        draws[0].rect.y + draws[0].rect.h,
+                        draws[1].rect.y + draws[1].rect.h - b.config.step()
+                    );
+                    assert_eq!(b.city.altitude, altitude, "water underlay must not change terrain");
+                }
+            }
+        }
+    }
+}
+
+#[test]
 fn waterfalls_have_the_waterfall_tag_with_the_effect() {
     let mut b = fixture(4, 2);
     b.config.effects = effects::WATERFALL;

@@ -362,7 +362,8 @@ func _refresh_palette() -> void:
 		return
 	var phase := elapsed * 5.0
 	palette_clock.cycle_ticks = int(phase)
-	palette_clock.update_textures(demo_palette, fposmod(phase, 1.0) if visual_options.disaster_blending else 0.0, false)
+	var water_fraction := fposmod(phase, 1.0)
+	palette_clock.update_textures(demo_palette, water_fraction if visual_options.disaster_blending else 0.0, false, false, water_fraction)
 	cycle_texture = palette_clock.cycle_texture
 
 
