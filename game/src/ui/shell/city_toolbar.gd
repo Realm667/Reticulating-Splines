@@ -53,6 +53,7 @@ const LANDSCAPE_TOOL_ORDER := [
 ]
 const Tools = preload("res://src/tools/shared/tool_catalog.gd")
 const HoldMenu = preload("res://src/ui/shell/city_tool_hold_menu.gd")
+const ToolbarIcons = preload("res://src/ui/shell/city_toolbar_icons.gd")
 const HOLD_SECONDS := 0.45
 # data view list id of the zones view, after the data mode ids
 const ZONES_VIEW_ID := 1000
@@ -320,7 +321,7 @@ func group_icon(group_index: int) -> Texture2D:
 	if group_index < 0 or group_index >= GROUP_ICON_REGIONS.size():
 		return null
 
-	return _toolbar_icon(GROUP_ICON_REGIONS[group_index])
+	return ToolbarIcons.CATEGORIES[group_index]
 
 
 func _notification(what: int) -> void:
@@ -436,7 +437,7 @@ func _add_group_button(
 	button.button_group = button_group
 	button.tooltip_text = Tools.GROUPS[group_index].name
 	button.theme_type_variation = "ToolbarCategoryButton"
-	button.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	button.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	button.icon = group_icon(group_index)
 	button.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	button.vertical_icon_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -649,8 +650,9 @@ func _refresh_artwork_buttons(node: Node) -> void:
 			node.expand_icon = true
 			node.add_theme_constant_override("icon_max_width", 28)
 			node.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		node.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		node.icon = _toolbar_icon(node.get_meta("toolbar_region"))
+		node.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+		var region: Rect2i = node.get_meta("toolbar_region")
+		node.icon = ToolbarIcons.NAVIGATION.get(region.position.x)
 		node.text = node.tooltip_text.left(1) if node.icon == null else ""
 
 	for child in node.get_children():
