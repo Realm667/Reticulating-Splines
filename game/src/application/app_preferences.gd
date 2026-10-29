@@ -25,7 +25,7 @@ var sprite_corrections := false
 var hd_graphics := true
 # autosaves of the last ten minutes in the temporary folder (ApplicationAutosave)
 var recent_autosaves := true
-var share_singleplayer_activity := false
+var share_singleplayer_activity := true
 var default_mayor_name := "Mayor"
 var use_classic_zoom_graphics := false
 var overview_graphics := 0

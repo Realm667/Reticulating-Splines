@@ -36,13 +36,21 @@ func run() -> void:
 	check(CityActivityIdentity.read(clean) == legacy, "single-player copy retains identity")
 	check(SingleplayerActivity.public_name("a\nb\tc") == "abc", "control characters removed from public name")
 	var options := AppSettingsStore.SaveOptions.new()
-	check(not AppSettingsStore.load_values("user://missing-activity.cfg").share_singleplayer_activity, "opt-in defaults off")
+	check(AppPreferences.new().share_singleplayer_activity, "application defaults on")
+	check(AppSettingsStore.Values.new().share_singleplayer_activity, "settings values default on")
+	check(AppSettingsStore.load_values("user://missing-activity.cfg").share_singleplayer_activity, "new profile defaults on")
+	var old_settings := ConfigFile.new()
+	old_settings.set_value("general", "recent_autosaves", false)
+	old_settings.save("user://legacy-activity.cfg")
+	check(AppSettingsStore.load_values("user://legacy-activity.cfg").share_singleplayer_activity, "existing profile without activity preference defaults on")
 	options.share_singleplayer_activity = true
 	AppSettingsStore.save_values(0.0, 0.0, false, "user://activity.cfg", options)
 	check(AppSettingsStore.load_values("user://activity.cfg").share_singleplayer_activity, "opt-in persisted")
 	options.share_singleplayer_activity = false
 	AppSettingsStore.save_values(0.0, 0.0, false, "user://activity.cfg", options)
 	check(not AppSettingsStore.load_values("user://activity.cfg").share_singleplayer_activity, "opt-out persisted")
+	AppSettingsStore.save_values(0.5, 0.5, false, "user://activity.cfg")
+	check(not AppSettingsStore.load_values("user://activity.cfg").share_singleplayer_activity, "unrelated settings preserve explicit opt-out")
 	if OS.get_environment("RS_MULTIPLAYER_URL").begins_with("http://127.0.0.1:"):
 		# Consume the expensive fixture-creation frame before timed HTTP work.
 		await process_frame
@@ -68,6 +76,7 @@ func settled(manager: SingleplayerActivity) -> void:
 func lifecycle() -> void:
 	# Construct only the application model: no personal profiles or game startup.
 	var app := CityApplication.new()
+	app.preferences.share_singleplayer_activity = false
 	app.coop.session = CoopSession.new()
 	app.main_menu = MainMenuControl.new()
 	app.main_menu.hide()

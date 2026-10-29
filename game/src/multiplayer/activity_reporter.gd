@@ -1,6 +1,6 @@
 class_name ActivityReporter
 extends HTTPRequest
-## One short-lived opt-in presence lease. Never opens a listener or maps a port.
+## One short-lived preference-controlled lease. Never opens a listener or maps a port.
 
 var room := Crypto.new().generate_random_bytes(16).hex_encode()
 var secret := Crypto.new().generate_random_bytes(32).hex_encode()

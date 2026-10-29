@@ -14,6 +14,8 @@ static func configure(main: Node, skip_menu_city := false) -> void:
 	main.asset_state.reference_root = ProjectSettings.globalize_path("res://../references/SIMCITY2000")
 	var settings := ConfigFile.new()
 	settings.load(main.preferences.settings_path)
+	# Synthetic application fixtures must never publish activity to production.
+	settings.set_value("privacy", "share_singleplayer_activity", false)
 
 	for kind in ["sound", "music"]:
 		var key: String = kind + "_pack_folder"

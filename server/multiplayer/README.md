@@ -81,7 +81,9 @@ performed. Old session totals remain unchanged.
 
 ## Optional single-player activity
 
-Settings > General offers **Share single-player activity online**, off by default.
+Settings > General offers **Share single-player activity online**, on by default.
+New profiles and existing profiles without this preference start enabled. An
+explicitly saved disabled preference remains disabled, including across updates.
 It publishes city name, mode, paused/running state and population, but no player
 names, files, host endpoint or city IDs in public responses. The city ID is sent
 privately for counting. Menus, terrain previews/editors and multiplayer do not
