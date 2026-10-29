@@ -25,6 +25,7 @@ var sprite_corrections := false
 var hd_graphics := true
 # autosaves of the last ten minutes in the temporary folder (ApplicationAutosave)
 var recent_autosaves := true
+var share_singleplayer_activity := false
 var default_mayor_name := "Mayor"
 var use_classic_zoom_graphics := false
 var overview_graphics := 0
@@ -83,6 +84,7 @@ func save_options(include_ui_scale := true) -> SettingsStore.SaveOptions:
 	options.sprite_corrections = sprite_corrections
 	options.hd_graphics = hd_graphics
 	options.recent_autosaves = recent_autosaves
+	options.share_singleplayer_activity = share_singleplayer_activity
 	options.translucent_menus = translucent_menus
 	options.check_for_updates = check_for_updates
 	options.cities_folder = cities_folder

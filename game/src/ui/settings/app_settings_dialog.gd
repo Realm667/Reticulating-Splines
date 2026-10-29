@@ -52,6 +52,7 @@ var hd_pack_loaded := false
 # the HD graphics choice, which a disabled check box keeps while it shows off
 var hd_graphics_choice := true
 var recent_autosaves_check: CheckBox
+var share_activity_check: CheckBox
 var fullscreen_check: CheckBox
 var resolution_selector: OptionButton
 var exact_scale_check: CheckBox
@@ -119,6 +120,7 @@ func _ready() -> void:
 
 		_sync_hd_controls())
 	recent_autosaves_check = %RecentAutosavesCheck
+	share_activity_check = %ShareActivityCheck
 	fullscreen_check = %FullscreenCheck
 	exact_scale_check = %ExactScaleCheck
 	resolution_selector = %ResolutionSelector
@@ -452,6 +454,7 @@ func selected_values() -> AppSettingsStore.Values:
 	result.sprite_corrections = sprite_corrections_check.button_pressed
 	result.hd_graphics = hd_graphics_choice
 	result.recent_autosaves = recent_autosaves_check.button_pressed
+	result.share_singleplayer_activity = share_activity_check.button_pressed
 	result.fullscreen = fullscreen_check.button_pressed
 	result.window_resolution = AppDisplayOptions.SIZES[maxi(0, resolution_selector.selected)]
 	result.exact_ui_scale = exact_scale_check.button_pressed

@@ -40372,3 +40372,11 @@ msgstr "%d%% / %d%%"
 #. Map navigation; AI-assisted supplementary translation.
 msgid "Swipe to move the map and pinch to zoom. On a touchscreen, tap to use the selected tool; drag to move the map."
 msgstr "Balayez pour déplacer la carte et pincez pour zoomer. Sur un écran tactile, touchez pour utiliser l’outil sélectionné et faites glisser pour déplacer la carte."
+
+#. Optional public single-player activity; supplementary translation.
+msgid "Share single-player activity online"
+msgstr "Afficher l’activité solo en ligne"
+
+#. Optional public single-player activity; supplementary translation.
+msgid "City name, game mode and population are public on rs.realm667.com. No save files or player names are uploaded."
+msgstr "Le nom de la ville, le mode et la population sont publics sur rs.realm667.com. Aucune sauvegarde ni aucun nom de joueur n’est envoyé."

@@ -69,6 +69,23 @@ layout_mode = 2
 tooltip_text = "Save a copy of the open city each minute to the OpenSC2K Autosaves folder\nin the temporary folder, and keep the copies of the last 10 minutes.\nFile > Open Autosave Folder shows them. The city file does not change."
 text = "Keep autosaves of the last 10 minutes"
 
+[node name="ActivitySpacer" type="Control" parent="Tabs/General/Fields"]
+layout_mode = 2
+
+[node name="ActivityOptions" type="VBoxContainer" parent="Tabs/General/Fields"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ShareActivityCheck" type="CheckBox" parent="Tabs/General/Fields/ActivityOptions"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Share single-player activity online"
+
+[node name="ActivityNotice" type="Label" parent="Tabs/General/Fields/ActivityOptions"]
+layout_mode = 2
+autowrap_mode = 3
+text = "City name, game mode and population are public on rs.realm667.com. No save files or player names are uploaded."
+
 [node name="UpdatesSpacer" type="Control" parent="Tabs/General/Fields"]
 custom_minimum_size = Vector2(150, 32)
 layout_mode = 2

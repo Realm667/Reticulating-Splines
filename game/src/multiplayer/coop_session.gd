@@ -171,6 +171,12 @@ func host(document: Sc2File, port: int, join_code: String, player_name: String, 
 	goal.hold_days = host_goal_years * CityCalendar.DAYS_PER_YEAR
 	goal.duration_days = clampi(host_duration_years, 1, 100) * CityCalendar.DAYS_PER_YEAR
 	world = candidate
+	if not world is SharedWorld:
+		var saved_activity := MultiplayerSingleplayer.metadata(document)
+		var legacy_activity := ""
+		if saved_activity.has("session"):
+			legacy_activity = ("rs-activity-city-v1:" + str(saved_activity.session) + ":coop").sha256_text()
+		CityActivityIdentity.ensure(world.city.document, legacy_activity)
 	if world is SharedWorld:
 		var shared_error: String = world.add_player(token)
 		if not shared_error.is_empty():
@@ -1035,6 +1041,7 @@ func save_session(path: String) -> String:
 	path = ProjectSettings.globalize_path(path)
 	if not hosting:
 		return "Only the host saves the shared session."
+	CityActivityIdentity.ensure_world(world, session_id, starts.round_number)
 	var checkpoint_error := Sc2xCheckpoint.save_error(world.controller)
 	if not checkpoint_error.is_empty():
 		return checkpoint_error
@@ -1113,6 +1120,7 @@ func resume_session(path: String, port: int, join_code: String, player_name: Str
 	var own_seat := saved_seat(data, credential)
 	if own_seat.is_empty() and not data.members.has(selected_seat):
 		return "Choose a saved player seat before hosting."
+	CityActivityIdentity.ensure(document, ("rs-activity-city-v1:" + str(data.session) + ":coop").sha256_text())
 	var host_error := host(document, port, join_code, player_name)
 	if not host_error.is_empty():
 		return host_error
@@ -1250,6 +1258,7 @@ func city_checkpoint() -> Dictionary:
 	var error := Sc2xCheckpoint.save_error(world.controller)
 	if not error.is_empty():
 		return {"error": error}
+	CityActivityIdentity.ensure_world(world, session_id, starts.round_number)
 	Sc2xCheckpoint.capture(world.controller, world.city.document.sc2x_metadata)
 	var document := world.city.document.duplicate_document()
 	var data := {"version": 1, "host": token, "session": session_id, "members": members, "seats": seats.saved(),
@@ -1528,6 +1537,8 @@ func prepare_rematch(actor: String) -> Dictionary:
 	world = candidate
 	members = next_members
 	starts = next_starts
+	for municipality: CoopWorld in world.municipalities.values():
+		CityActivityIdentity.replace(municipality.city.document)
 	loans = MultiplayerLoans.new()
 	history = MultiplayerHistory.new()
 	goal.reset_clock(world)

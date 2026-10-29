@@ -92,6 +92,7 @@ func open_settings_dialog() -> void:
 	app.main_overlays.settings_dialog.sprite_corrections_check.button_pressed = preferences.sprite_corrections
 	app.main_overlays.settings_dialog.show_hd_graphics(preferences.hd_graphics)
 	app.main_overlays.settings_dialog.recent_autosaves_check.button_pressed = preferences.recent_autosaves
+	app.main_overlays.settings_dialog.share_activity_check.button_pressed = preferences.share_singleplayer_activity
 	app.main_overlays.settings_dialog.theme_selector.select(AppUiTheme.IDS.find(preferences.ui_theme))
 	app.main_overlays.settings_dialog.language_selector.select(AppLocalization.codes().find(preferences.ui_language))
 	app.main_overlays.settings_dialog.translucent_menus_check.button_pressed = preferences.translucent_menus
@@ -300,6 +301,9 @@ func apply_settings() -> void:
 	app.assets.set_hd_graphics(bool(values.hd_graphics))
 	app.assets.set_sprite_corrections(bool(values.sprite_corrections) and not app.asset_state.hd_active())
 	preferences.recent_autosaves = bool(values.recent_autosaves)
+	preferences.share_singleplayer_activity = bool(values.share_singleplayer_activity)
+	if app.activity != null:
+		app.activity.sync()
 
 	if preferences.ui_language != str(values.ui_language):
 		preferences.ui_language = AppLocalization.normalize(values.ui_language)
@@ -512,6 +516,7 @@ func load_app_settings() -> void:
 	app.asset_state.hd_enabled = preferences.hd_graphics
 	app.assets.set_sprite_corrections(bool(values.sprite_corrections))
 	preferences.recent_autosaves = bool(values.recent_autosaves)
+	preferences.share_singleplayer_activity = bool(values.share_singleplayer_activity)
 	preferences.ui_language = AppLocalization.normalize(values.ui_language)
 	AppLocalization.select(preferences.ui_language)
 	preferences.ui_theme = str(values.ui_theme)

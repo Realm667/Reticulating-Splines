@@ -20,6 +20,7 @@
       style.textContent = ':host{display:block;font:14px system-ui;color:inherit}section{padding:16px;border:1px solid #66717b;border-radius:6px}h3{margin:0 0 12px;font-size:16px}ul{list-style:none;padding:0;margin:0}li{padding:8px 0;border-top:1px solid #66717b}small{opacity:.8}';
       style.textContent += ':host{position:relative}h3{padding-right:30px}table{width:100%;border-collapse:collapse;margin-top:18px;font:inherit}th,td{padding:9px 0;border-top:1px solid #515c65}th{font-weight:400;text-align:left;padding-right:16px}td{text-align:right;font-size:19px;font-weight:650;font-variant-numeric:tabular-nums;white-space:nowrap}button{position:absolute;right:14px;top:14px;width:28px;height:28px;border:1px solid #849099;border-radius:50%;background:transparent;color:inherit;font:600 16px system-ui;cursor:pointer}button:hover,button:focus-visible{color:#dfff63;border-color:#dfff63}button:focus-visible{outline:2px solid #dfff63;outline-offset:3px}.note{position:fixed;inset:auto;margin:0;box-sizing:border-box;width:440px;max-width:calc(100vw - 24px);padding:14px 16px;border:1px solid #849099;border-radius:8px;background:#171c22;color:#f2f5f7;box-shadow:0 10px 30px #0008;font:13px/1.55 system-ui;overflow:auto;z-index:2147483647}.note[hidden],button[hidden]{display:none}';
       const section = document.createElement('section');
+      style.textContent += 'h4{margin:14px 0 5px;font-size:14px}.matrix{overflow-x:auto;margin-top:18px}table{margin-top:0;table-layout:auto;min-width:300px}thead th{text-align:right;font-size:11px;font-weight:600;overflow-wrap:normal}thead th:first-child{width:36%;text-align:left}th,td{padding:9px 4px;overflow-wrap:anywhere}tbody th{font-size:13px}td{font-size:16px;white-space:nowrap}thead th:last-child,td:last-child{font-weight:750;background:#84909912}small{display:block;margin-top:8px}';
       section.setAttribute('aria-live', 'polite');
       section.textContent = 'Loading activity…';
       const help = document.createElement('button');
@@ -98,9 +99,10 @@
           const data = await response.json();
           if (data.version !== 2 || !Array.isArray(data.games)) throw Error('version');
           const games = data.games.slice(0, 256);
+          const solos = Array.isArray(data.singleplayer) ? data.singleplayer.slice(0, 1024) : [];
           const heading = document.createElement('h3');
           const players = games.reduce((n,g) => n + g.players, 0);
-          heading.textContent = `${players} ${players === 1 ? 'player' : 'players'} online · ${games.length} ${games.length === 1 ? 'game' : 'games'}`;
+          heading.textContent = `${players + solos.length} active players · ${solos.length} single-player · ${players} multiplayer`;
           const list = document.createElement('ul');
           for (const game of games.slice(0, 10)) {
             const item = document.createElement('li');
@@ -110,29 +112,66 @@
           }
           const hint = document.createElement('small');
           hint.textContent = games.length ? 'Join from Multiplayer → Internet in the game.' : 'No public games right now.';
-          section.replaceChildren(heading, list, hint);
+          const multiTitle = document.createElement('h4');
+          multiTitle.textContent = 'Multiplayer';
+          const soloTitle = document.createElement('h4');
+          soloTitle.textContent = 'Single-player';
+          const soloList = document.createElement('ul');
+          for (const solo of solos.slice(0, 10)) {
+            const item = document.createElement('li');
+            const population = Number.isSafeInteger(solo.population) && solo.population >= 0
+              ? solo.population.toLocaleString('en') : '—';
+            item.textContent = `${solo.city} · ${population} residents · ${solo.phase === 'paused' ? 'Paused' : 'In progress'}`;
+            soloList.append(item);
+          }
+          if (!solos.length) {
+            const item = document.createElement('li');
+            item.textContent = 'No shared single-player activity right now.';
+            soloList.append(item);
+          }
+          section.replaceChildren(heading, multiTitle, list, hint, soloTitle, soloList);
           const totals = data.totals;
           if (totals?.available && ['sessions', 'today', 'peak_players'].every(
             key => Number.isSafeInteger(totals[key]) && totals[key] >= 0)) {
-          const summary = document.createElement('table');
-            summary.setAttribute('aria-label', 'Totals');
-            for (const [key, label] of [['sessions', 'Total sessions started'],
+              const summary = document.createElement('table');
+            summary.setAttribute('aria-label', 'Activity statistics by game type');
+            const head = document.createElement('thead');
+            const header = document.createElement('tr');
+            for (const label of ['Statistics', 'Single-player', 'Multiplayer', 'Total']) {
+              const cell = document.createElement('th');
+              cell.scope = 'col';
+              cell.textContent = label;
+              header.append(cell);
+            }
+            head.append(header);
+            const rows = document.createElement('tbody');
+            const groups = data.statistics || {multiplayer: totals};
+            for (const [key, label] of [['online_players', 'Players online'], ['online_sessions', 'Active sessions'], ['sessions', 'Sessions started'],
               ['today', 'Sessions today (UTC)'], ['peak_players', 'Peak concurrent players'],
-              ['cities_founded', 'Cities founded'], ['total_population', 'Total population']]) {
+              ['cities_founded', 'Cities recorded'], ['total_population', 'Reported population']]) {
               const cell = document.createElement('tr');
               const title = document.createElement('th');
               title.setAttribute('scope', 'row');
               title.textContent = label;
-              const value = document.createElement('td');
-              value.textContent = Number.isSafeInteger(totals[key]) && totals[key] >= 0
-                ? totals[key].toLocaleString('en') : '—';
-              cell.append(title, value);
-              summary.append(cell);
+              cell.append(title);
+              for (const group of ['singleplayer', 'multiplayer', 'total']) {
+                const value = document.createElement('td');
+                const number = groups[group]?.[key];
+                value.textContent = Number.isSafeInteger(number) && number >= 0 ? number.toLocaleString('en') : '—';
+                cell.append(value);
+              }
+              rows.append(cell);
             }
-            note.textContent = `Sessions since ${totals.since} · Online play only; resumed games count as new sessions. `
-              + (totals.cities_since ? `City reporting since ${totals.cities_since}. ` : '')
-              + 'Cities are counted once; population reflects each city’s latest reported total. Requires a game version with city reporting; earlier and offline play are not included.';
-            section.append(summary);
+            summary.append(head, rows);
+            const matrix = document.createElement('div');
+            matrix.className = 'matrix';
+            matrix.append(summary);
+            note.textContent = `Multiplayer sessions since ${totals.since}. `
+              + (groups.singleplayer?.since ? `Single-player reporting since ${groups.singleplayer.since}. ` : '')
+              + 'Only reported sessions are included; single-player sharing is optional. Resumed games and reconnects after expiry count as new sessions, not unique people. '
+              + 'Saved city IDs prevent double counting, including copied saves. A city played in both modes appears in both columns but once in Total; population uses its latest report, including offline cities. Older saves without an ID must first be saved by a reporting version. '
+              + 'The total peak is simultaneous activity, not the sum of the two peaks. Up to ten sessions of each type are listed; counters include all active reports.';
+            section.append(matrix);
             help.hidden = false;
             positionNote();
           } else {

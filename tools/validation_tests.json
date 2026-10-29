@@ -2346,6 +2346,12 @@
     "lane": "product"
   },
   {
+    "id": "singleplayer_activity_test",
+    "script": "tests/singleplayer_activity_test.gd",
+    "domain": "ui",
+    "lane": "product"
+  },
+  {
     "id": "multiplayer_lan_test",
     "script": "tests/multiplayer_lan_test.gd",
     "domain": "ui",

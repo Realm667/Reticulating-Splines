@@ -122,7 +122,10 @@ func check_activity_cities() -> void:
 		host.starts.restore(saved_starts)
 		check(online.activity_cities() == cities, "restored round preserves city identities")
 		host.starts.round_number += 1
-		check(online.activity_cities()[0].id != cities[0].id, "new rematch counts newly founded municipalities")
+		check(online.activity_cities() == cities, "changing round metadata alone cannot rename an existing city")
+		for child: CoopWorld in shared.municipalities.values():
+			CityActivityIdentity.replace(child.city.document)
+		check(online.activity_cities()[0].id != cities[0].id, "fresh rematch cities receive new identities")
 	online.free()
 	host.free()
 

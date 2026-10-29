@@ -3,8 +3,11 @@ extends RefCounted
 ## Explicit copy conversion. Source archives and multiplayer identities stay private.
 
 static func metadata(document: Sc2File) -> Dictionary:
-	var parsed: Variant = JSON.parse_string(document.sc2x_extra_entries.get("multiplayer.json", PackedByteArray()).get_string_from_utf8())
-	return parsed if parsed is Dictionary else {}
+	var bytes: PackedByteArray = document.sc2x_extra_entries.get("multiplayer.json", PackedByteArray())
+	if bytes.is_empty():
+		return {}
+	var parser := JSON.new()
+	return parser.data if parser.parse(bytes.get_string_from_utf8()) == OK and parser.data is Dictionary else {}
 
 static func clean(document: Sc2File) -> Sc2File:
 	var copy := document.duplicate_document()
@@ -20,6 +23,7 @@ static func convert(document: Sc2File, actor := "") -> Dictionary:
 	if data.is_empty():
 		return {"error": "Invalid multiplayer save."}
 	if not data.has("shared"):
+		CityActivityIdentity.ensure(document, ("rs-activity-city-v1:" + str(data.get("session", "")) + ":coop").sha256_text())
 		return {"error": "", "document": clean(document)}
 	if not data.shared is Dictionary:
 		return {"error": "Invalid multiplayer save."}
@@ -29,6 +33,7 @@ static func convert(document: Sc2File, actor := "") -> Dictionary:
 	var error := world.restore_shared(data.shared)
 	if not error.is_empty():
 		return {"error": error}
+	CityActivityIdentity.ensure_world(world, str(data.get("session", "")), int(data.get("starts", {}).get("round", 1)))
 	return from_world(world, actor if not actor.is_empty() else world.host_actor)
 
 static func from_world(world: CoopWorld, actor: String) -> Dictionary:
@@ -55,6 +60,13 @@ static func from_world(world: CoopWorld, actor: String) -> Dictionary:
 	if not snapshot.has("city") or not merged.parse(Marshalls.base64_to_raw(snapshot.city)):
 		return {"error": "Cannot compose the shared city."}
 	merged = clean(merged)
+	# Merging several municipalities creates a distinct city. Repeating the same
+	# conversion retains a stable identity without borrowing the host city's ID.
+	var identities := PackedStringArray()
+	for id: String in world.actors:
+		identities.append(CityActivityIdentity.ensure(world.municipalities[id].city.document))
+	identities.sort()
+	CityActivityIdentity.replace(merged, ("rs-merged-city-v1:" + ":".join(identities)).sha256_text())
 	var cash := 0
 	var rates: Array[int] = []
 	for child: CoopWorld in world.municipalities.values():

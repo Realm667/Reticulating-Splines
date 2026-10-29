@@ -2,6 +2,7 @@
 declare(strict_types=1);
 // HTTP-only discovery. Never receives game state, game passwords or chat.
 const DIRECTORY_LEASE = 180;
+require_once __DIR__ . '/activity.php';
 
 function directory_db(string $path): PDO {
     $db = new PDO('sqlite:' . $path, null, null, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
@@ -13,6 +14,7 @@ function directory_db(string $path): PDO {
     $db->exec('CREATE TABLE IF NOT EXISTS activity_cities (id TEXT PRIMARY KEY, population INTEGER NOT NULL, updated INTEGER NOT NULL)');
     $db->exec('CREATE TABLE IF NOT EXISTS activity_city_epoch (id INTEGER PRIMARY KEY CHECK(id=1), since TEXT NOT NULL)');
     $db->exec("INSERT OR IGNORE INTO activity_city_epoch VALUES (1, date('now'))");
+    activity_schema($db);
     return $db;
 }
 
@@ -64,6 +66,7 @@ function directory_handle(PDO $db, string $method, string $path, mixed $body, st
     $db->exec('BEGIN IMMEDIATE');
     try {
         directory_query($db, 'DELETE FROM games WHERE expires<=?', [$now]);
+        directory_query($db, 'DELETE FROM solo_sessions WHERE expires<=?', [$now]);
         directory_query($db, 'DELETE FROM limits WHERE expires<=?', [$now]);
         $result = directory_dispatch($db, $method, $path, $body, $auth, $ip, $now);
         $db->exec('COMMIT');
@@ -93,7 +96,18 @@ function directory_dispatch(PDO $db, string $method, string $path, mixed $body, 
         $cities = $db->query('SELECT count(*) AS cities_founded, coalesce(sum(population), 0) AS total_population FROM activity_cities')->fetch(PDO::FETCH_ASSOC);
         $totals = array_merge($totals, $cities);
         $totals['cities_since'] = $db->query('SELECT since FROM activity_city_epoch WHERE id=1')->fetchColumn();
-        return [200, ['version' => 2, 'games' => $games, 'totals' => $totals]];
+        $response = ['version' => 2, 'games' => $games, 'totals' => $totals];
+        if ($path === '/activity') {
+            $response['singleplayer'] = [];
+            foreach ($db->query('SELECT info FROM solo_sessions ORDER BY id') as $row) {
+                $response['singleplayer'][] = json_decode($row['info'], true, 16, JSON_THROW_ON_ERROR);
+            }
+            $response['statistics'] = activity_statistics($db, $totals, $day);
+        }
+        return [200, $response];
+    }
+    if (preg_match('#^/singleplayer/([a-f0-9]{32})$#D', $path, $match)) {
+        return activity_dispatch($db, $method, $match[1], $body, $auth, $ip, $now);
     }
     if (!preg_match('#^/games/([a-f0-9]{32})$#D', $path, $match) || !in_array($method, ['PUT', 'DELETE'], true)) return [404, ['error' => 'not_found']];
     if (!preg_match('/^Bearer ([a-f0-9]{64})$/D', $auth, $token)) return [401, ['error' => 'unauthorized']];
@@ -129,6 +143,7 @@ function directory_dispatch(PDO $db, string $method, string $path, mixed $body, 
     }
     $players = 0;
     foreach ($db->query('SELECT info FROM games') as $game) $players += json_decode($game['info'], true)['players'];
-    directory_query($db, 'UPDATE totals SET peak_players=max(peak_players, ?) WHERE id=1', [$players]);
+    directory_query($db, 'UPDATE totals SET peak_players=max(peak_players, CAST(? AS INTEGER)) WHERE id=1', [$players]);
+    activity_update_peak($db);
     return [200, ['version' => 2, 'id' => $id, 'lease' => DIRECTORY_LEASE]];
 }

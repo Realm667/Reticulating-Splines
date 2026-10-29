@@ -47,6 +47,7 @@ static func load_values(
 	result.sprite_corrections = bool(config.get_value("graphics", "sc2kfix_sprite_corrections", false))
 	result.hd_graphics = bool(config.get_value("graphics", "hd_graphics", true))
 	result.recent_autosaves = bool(config.get_value("general", "recent_autosaves", true))
+	result.share_singleplayer_activity = bool(config.get_value("privacy", "share_singleplayer_activity", false))
 	result.ui_theme = normalize_theme(config.get_value("general", "ui_theme", "dark"))
 	result.ui_language = AppLocalization.normalize(config.get_value("general", "ui_language", AppLocalization.DEFAULT))
 	result.translucent_menus = bool(config.get_value("general", "translucent_menus", true))
@@ -285,6 +286,8 @@ static func save_values(
 
 	if options.recent_autosaves != null:
 		config.set_value("general", "recent_autosaves", bool(options.recent_autosaves))
+	if options.share_singleplayer_activity != null:
+		config.set_value("privacy", "share_singleplayer_activity", bool(options.share_singleplayer_activity))
 
 	if options.ui_theme != null:
 		config.set_value("general", "ui_theme", normalize_theme(options.ui_theme))
@@ -423,6 +426,7 @@ class Values extends RefCounted:
 	var sprite_corrections := false
 	var hd_graphics := true
 	var recent_autosaves := true
+	var share_singleplayer_activity := false
 	var use_classic_zoom_graphics := false
 	var overview_graphics := 0
 	var music_volume := 0.8
@@ -488,6 +492,7 @@ class SaveOptions extends RefCounted:
 	var sprite_corrections: Variant = null
 	var hd_graphics: Variant = null
 	var recent_autosaves: Variant = null
+	var share_singleplayer_activity: Variant = null
 	var translucent_menus: Variant = null
 	var check_for_updates: Variant = null
 	var cities_folder: Variant = null

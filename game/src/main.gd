@@ -108,6 +108,7 @@ var debug_tools: ApplicationDebugTools = ApplicationDebugTools.new(self)
 var coop := ApplicationMultiplayer.new(self)
 var classic_cheats := ApplicationClassicCheats.new(self)
 var updates := ApplicationUpdates.new(preferences)
+var activity: SingleplayerActivity
 var autosave: ApplicationAutosave = ApplicationAutosave.new(self)
 # the JavaScript runtime of mods and developer scripts
 var scripting: ApplicationScripting = ApplicationScripting.new(self)
@@ -148,6 +149,9 @@ func _ready() -> void:
 		if first_start:
 			assets.show_reference_import_dialog.call_deferred()
 	updates.check_on_startup()
+	activity = SingleplayerActivity.new()
+	activity.app = self
+	add_child(activity)
 
 	if not AppPaths.error().is_empty():
 		_show_data_folder_error()

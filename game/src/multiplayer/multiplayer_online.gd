@@ -212,14 +212,13 @@ func activity_cities() -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
 	if session == null or not session.hosting or session.waiting_for_start or session.world == null or session.session_id.is_empty():
 		return result
-	var prefix := "rs-activity-city-v1:" + session.session_id + ":"
+	CityActivityIdentity.ensure_world(session.world, session.session_id, session.starts.round_number)
 	if session.world is SharedWorld:
-		prefix += str(session.starts.round_number) + ":"
 		for actor: String in session.world.actors:
 			var municipality: CoopWorld = session.world.municipalities[actor]
-			result.append({"id": (prefix + actor).sha256_text(), "population": municipality.city.population()})
+			result.append({"id": CityActivityIdentity.read(municipality.city.document), "population": municipality.city.population()})
 	else:
-		result.append({"id": (prefix + "coop").sha256_text(), "population": session.world.city.population()})
+		result.append({"id": CityActivityIdentity.read(session.world.city.document), "population": session.world.city.population()})
 	return result
 
 

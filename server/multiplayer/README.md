@@ -16,7 +16,7 @@ use the existing game protocol and password handling, not the directory token.
 
 Requires PHP 8.1+ with PDO SQLite, HTTPS and a private writable directory under
 the same hosting account. No persistent process, WebSocket proxy or relay is
-needed. Keep directory.php, directory_entry.php and directory.sqlite outside the
+needed. Keep activity.php, reachability.php, directory.php, directory_entry.php and directory.sqlite outside the
 public document root. Back up the SQLite database; it holds aggregate totals,
 short-lived listings and rate-limit counters.
 
@@ -29,6 +29,8 @@ paths to that wrapper, preserving REQUEST_URI and the Authorization header:
 - GET /api/multiplayer/v2/health: database/service health.
 - PUT /api/multiplayer/v2/games/{32-character hex ID}: create or update.
 - DELETE /api/multiplayer/v2/games/{ID}: unlist.
+- PUT /api/multiplayer/v2/singleplayer/{32-character hex ID}: opt-in presence.
+- DELETE /api/multiplayer/v2/singleplayer/{ID}: remove opt-in presence.
 
 PUT requires JSON {version:2, game:{...}} and an Authorization Bearer token
 containing 64 hexadecimal characters. The client generates a fresh ID and token
@@ -56,12 +58,16 @@ or completed matches. Preserve existing totals during migration; never silently
 reset a damaged database.
 
 New clients also send optional top-level `cities: [{id, population}, ...]` in
-PUT requests (at most eight). Each opaque 64-hex ID derives from the saved
-multiplayer session; competitive municipalities also use their saved seat and
-round. Co-op counts one city, shared/region modes count each municipality.
-Rehosting, renaming and restoring the same multiplayer save keep these IDs;
-rematches found new cities. Starting separate games from an ordinary imported
-city is a new founding; no content fingerprinting of private save files is used.
+PUT requests (at most eight). Each city has a cryptographically random 256-bit ID,
+stored in SC2X metadata (`extensions.rs_activity_city_id`) or an opaque legacy
+SC2/SCLG `RSID` chunk. Co-op counts one city; shared/region count municipalities.
+Rehosting, renaming, Save As, copying and SP/MP conversion retain the ID.
+Rematches create new IDs. Shared-city merges use a stable new ID derived from
+the sorted source IDs; region and co-op exports retain their city IDs.
+Older multiplayer saves migrate their previous session/seat/round-derived IDs
+to preserve already counted cities. Old files without an ID must be saved by the
+new version to retain their assigned identity on disk. Copies made before that
+migration cannot reliably be deduplicated. No private save fingerprinting is used.
 
 Only running games update the persistent activity_cities table. Reports replace
 each city's population, including declines and zero, in the existing transaction.
@@ -70,8 +76,37 @@ Missing reports, lobby status, expired rooms and unlisting do not erase cities.
 Public totals expose cities_founded, total_population and cities_since; IDs and
 per-city reports are never exposed by GET endpoints. These host-reported values
 are community counters, not verified census data. Existing clients still work
-but contribute no city/population data. No offline/single-player tracking or
-historical backfill is performed. Old session totals remain unchanged.
+but cannot report the new single-player activity. No historical backfill is
+performed. Old session totals remain unchanged.
+
+## Optional single-player activity
+
+Settings > General offers **Share single-player activity online**, off by default.
+It publishes city name, mode, paused/running state and population, but no player
+names, files, host endpoint or city IDs in public responses. The city ID is sent
+privately for counting. Menus, terrain previews/editors and multiplayer do not
+register solo sessions. Opt-out, switching cities/modes and normal quit unlist the
+session; a three-minute lease handles crashes and offline clients. Updates run
+asynchronously once per minute, without a listener, UPnP or gameplay interruption.
+
+Solo PUT uses the same random session ID and Bearer token format, with body
+`{version:2, activity:{city,phase}, cities:[{id,population}]}`. Exactly one city is
+required; phase is `running` or `paused`. Limits are 8 active sessions per source,
+1024 globally, 12 creations and 120 updates per source/minute. Solo records never
+appear in the join directory. Repeated PUTs renew one session; resuming after an
+expired lease counts a new session but never a new city with the same ID.
+
+The activity endpoint adds `singleplayer` listings and `statistics` with
+`singleplayer`, `multiplayer` and `total` groups. Legacy `totals` remains MP-only.
+Cities seen in both modes count in both mode columns but once overall. Overall
+population uses the latest report per city, including declines; equal timestamp
+ties prefer the solo record. Overall peak tracks simultaneous activity, not the
+sum of separate peaks. These are reported community figures, not tamper-proof
+counts or unique people. Opt-out removes presence but retains aggregate history.
+
+Deploy activity.php before directory.php and extend only the v2 rewrite to allow
+`singleplayer/[a-f0-9]{32}`. Back up SQLite consistently first. Schema additions
+preserve old tables and counters; never replace/reset the database.
 
 ## Widget
 
@@ -85,14 +120,15 @@ Existing embeds keep the same script URL:
 The script now reads v2/activity once per minute while the page is visible.
 Names are inserted as text. The widget shows no IP addresses or passwords.
 CMS placeholder fallback and aggregate counters remain supported.
-The counters use a two-column table. The reporting explanation floats over the
+The counters use a matrix with Single-player, Multiplayer and Total columns.
+Narrow embeds allow horizontal scrolling. The reporting explanation floats over the
 page when the card is hovered or its information button receives focus. The
 button also toggles the explanation on touch devices; Escape or clicking outside
 closes it. The explanation does not add height to the card.
 
 ## Validation and compatibility
 
-Run php server/multiplayer/test_directory.php for isolated in-memory database
+Run php server/multiplayer/test_activity.php for isolated in-memory database
 checks. Run node --test server/multiplayer/test_widget.cjs for the widget.
 run_game_test.py --godot PATH --project ISOLATED_PROJECT uses a loopback HTTP
 fixture and real game TCP connections with Dummy audio. It checks discovery,
@@ -108,7 +144,8 @@ regression coverage. It is no longer the default game path or production service
 On rs.realm667.com v1 returns HTTP 410 and the old supervisor is disabled.
 Installed v1 clients need an updated Runtime for automatic Internet discovery;
 manual TCP joining and LAN continue to work. Updating the Runtime is a separate
-release task. Game network protocol and save format are unchanged.
+release task. Game network protocol is unchanged; opaque city identity metadata
+is additive and does not alter simulation bytes.
 
 ## Automatic forwarding and reachability
 

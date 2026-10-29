@@ -284,6 +284,8 @@ func _perform_city_exit(action: String, path := "") -> void:
 		"load_city":
 			_load_city_in_background(path)
 		"quit":
+			if app.activity != null:
+				await app.activity.shutdown()
 			app.get_tree().quit()
 
 

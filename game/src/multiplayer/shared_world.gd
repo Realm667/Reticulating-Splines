@@ -70,6 +70,7 @@ func add_player(actor: String) -> String:
 		document.find_chunk("XBLD").set_decoded_payload(natural)
 		for field in [Sc2MiscLayout.START_YEAR, Sc2MiscLayout.DIFFICULTY, Sc2MiscLayout.NO_DISASTERS]:
 			document.set_misc_u32(field, template.misc_u32(field))
+	CityActivityIdentity.ensure(document)
 	var child := CoopWorld.new()
 	if not child.open(document):
 		return child.error
