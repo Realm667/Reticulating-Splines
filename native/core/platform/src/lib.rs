@@ -6,6 +6,7 @@ pub mod console;
 pub mod dirs;
 pub mod mods;
 pub mod paths;
+pub mod pointer_source;
 pub mod release;
 pub mod shell;
 pub mod text;

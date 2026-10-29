@@ -153,10 +153,12 @@ var camera: CityMapCamera = CityMapCamera.new(self)
 var presentation: CityMapPresentation = CityMapPresentation.new(self)
 var selection: CityMapSelection = CityMapSelection.new(self)
 var interaction: CityMapInteraction = CityMapInteraction.new(self)
+var navigation: CityMapNavigation = CityMapNavigation.new(self)
 var debug_view: CityMapDebugView = CityMapDebugView.new(self)
 
 
 func _ready() -> void:
+	navigation.attach_window()
 	theme_changed.connect(queue_redraw)
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	clip_contents = true
@@ -188,8 +190,18 @@ func _gui_input(event: InputEvent) -> void:
 	interaction._gui_input(event)
 
 
+func _exit_tree() -> void:
+	navigation.detach_window()
+
+
 func _input(event: InputEvent) -> void:
 	interaction._input(event)
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_APPLICATION_FOCUS_OUT or (what == NOTIFICATION_VISIBILITY_CHANGED and not is_visible_in_tree()):
+		if navigation != null:
+			navigation.reset()
 
 
 func advance_artwork_animation(delta: float) -> void:

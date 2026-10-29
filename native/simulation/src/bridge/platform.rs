@@ -74,6 +74,21 @@ pub struct NativePlatform {}
 
 #[godot_api]
 impl NativePlatform {
+    #[func]
+    fn attach_pointer_source(window: i64) -> bool {
+        sc2k_platform::pointer_source::attach(window as usize)
+    }
+
+    #[func]
+    fn detach_pointer_source(window: i64) {
+        sc2k_platform::pointer_source::detach(window as usize);
+    }
+
+    #[func]
+    fn take_touchpad_scroll(window: i64, axis: i32, delta: f64) -> bool {
+        sc2k_platform::pointer_source::take(window as usize, axis, delta)
+    }
+
     /// Compare dotted versions: -1, 0, or 1.
     #[func]
     fn compare_versions(first: GString, second: GString) -> i64 {

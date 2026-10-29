@@ -588,6 +588,7 @@ func apply_ui_scale() -> void:
 func apply_control_bindings() -> void:
 	if app.map_view != null:
 		app.map_view.control_bindings = preferences.control_bindings
+		app.map_view.navigation.allowed = app.camera_input.camera_keys_allowed.bind(true)
 
 	if app.city_toolbar != null:
 		app.city_toolbar.control_bindings = preferences.control_bindings

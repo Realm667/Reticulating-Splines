@@ -1,5 +1,11 @@
 [
   {
+    "id": "map_navigation_test",
+    "script": "tests/map_navigation_test.gd",
+    "domain": "ui",
+    "lane": "product"
+  },
+  {
     "id": "building_mix_animation_gpu_test",
     "script": "tests/building_mix_animation_gpu_test.gd",
     "domain": "rendering",

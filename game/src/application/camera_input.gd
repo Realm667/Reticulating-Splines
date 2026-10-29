@@ -70,6 +70,10 @@ func update_keyboard_camera(delta: float) -> void:
 
 
 func input(event: InputEvent) -> void:
+	# Classify before any UI capture can consume a wheel packet. Map input may
+	# observe it first; the event marker makes this idempotent.
+	if app.map_view != null:
+		app.map_view.navigation.classify_scroll(event)
 	if event is InputEventKey and event.pressed and not event.echo and (app.controls.handle_music_key(event)
 			or app.controls.handle_console_key(event)):
 		app.get_viewport().set_input_as_handled()

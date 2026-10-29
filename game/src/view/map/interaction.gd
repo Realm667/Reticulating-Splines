@@ -30,6 +30,10 @@ func _gui_input(event: InputEvent) -> void:
 	if map.city_source == null:
 		return
 
+	if map.navigation.handle(event):
+		map.accept_event()
+		return
+
 	if event is InputEventMouseButton:
 		_handle_mouse_button(event)
 	elif event is InputEventMouseMotion:
@@ -37,6 +41,7 @@ func _gui_input(event: InputEvent) -> void:
 
 
 func _input(event: InputEvent) -> void:
+	map.navigation.observe(event)
 	if not event is InputEventKey:
 		return
 
@@ -86,6 +91,8 @@ func update_modifiers(event: InputEvent) -> bool:
 
 
 func _process(delta: float) -> void:
+	map.navigation.process()
+
 	if not map.continuous_placement or map.brush_box_selection or not map.edit_enabled or map.selection_start.x < 0:
 		_brush_elapsed = 0.0
 

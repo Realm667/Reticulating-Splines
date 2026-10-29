@@ -39814,3 +39814,7 @@ msgstr "RS"
 #. Tileset mix slider; AI-assisted supplementary translation.
 msgid "%d%% / %d%%"
 msgstr "%d%% / %d%%"
+
+#. Map navigation; AI-assisted supplementary translation.
+msgid "Swipe to move the map and pinch to zoom. On a touchscreen, tap to use the selected tool; drag to move the map."
+msgstr "Scorri per spostare la mappa e pizzica per regolare lo zoom. Su un touchscreen, tocca per usare lo strumento selezionato e trascina per spostare la mappa."

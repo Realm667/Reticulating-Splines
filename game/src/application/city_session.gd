@@ -19,6 +19,7 @@ func activate_document(
 	document: Sc2File, loaded_scenario: ScenarioState = null, status_text := "", loaded_from_file := false,
 	content_snapshot := PackedByteArray()
 ) -> bool:
+	app.map_view.navigation.reset()
 	app.map_view.clear_trip_reach()
 	var loaded_city := CityModel.from_document(document)
 
