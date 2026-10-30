@@ -114,6 +114,13 @@ fn bridge(building: u8) -> bool {
         || [HIGHWAY_STRAIGHT_1, HIGHWAY_STRAIGHT_2, HIGHWAY_BRIDGE, REINFORCED_HIGHWAY_BRIDGE].contains(&building)
 }
 
+fn ground_transport(building: u8) -> bool {
+    use crate::ids::building_tile_ids::*;
+    // Pavement and track lie on the terrain, including slopes and crossings.
+    // Keep bridges, elevated highways and tunnel portals as upright sources.
+    (ROAD_STRAIGHT_1..=RAIL_SLOPE_8).contains(&building) || (ROAD_POWER_CROSSING_1..=RAIL_POWER_CROSSING_2).contains(&building)
+}
+
 fn contact_twice(draw: &Draw, column: i32, building: u8) -> i32 {
     use crate::ids::building_tile_ids::{DEVELOPED_FIRST, HIGHWAY_STRAIGHT_2};
     if bridge(building) {
@@ -302,6 +309,7 @@ impl Builder {
                 || draw.moving
                 || crate::nature::original(draw.sprite) != self.config.base() + i32::from(self.city.buildings[i])
                 || self.city.buildings[i] == 0
+                || ground_transport(self.city.buildings[i])
                 || draw.image >= 1_u64 << 32
             {
                 continue;
@@ -906,6 +914,39 @@ mod tests {
             (((config.base() + 0x70) * 2) as u64, building),
         ]);
         Builder::new(city, config, images, [161; 4], 2048, false).unwrap()
+    }
+
+    #[test]
+    fn ground_transport_has_no_reflection_or_reflected_emission() {
+        use crate::ids::building_tile_ids::*;
+        for view in 0..3 {
+            for building in (ROAD_STRAIGHT_1..=RAIL_SLOPE_8).chain(ROAD_POWER_CROSSING_1..=RAIL_POWER_CROSSING_2) {
+                let mut builder = fixture(view);
+                let c = builder.config;
+                let key = ((c.base() + i32::from(building)) * 2) as u64;
+                // Deliberately tall and emissive art: exclusion must depend on
+                // the tile's meaning, not artwork height, palette or pack.
+                let sprite = builder.sprites.images[&(((c.base() + 112) * 2) as u64)].clone();
+                builder.sprites.images.insert(key, sprite.clone());
+                builder.city.buildings[0] = building;
+                let emission = HashMap::from([(key, sprite)]);
+                let bounds = Rect::new(c.side(), c.top() - 32 / c.divisor(), 160 / c.divisor(), 160 / c.divisor());
+                let mut indices = [0; 256];
+                indices[96] = 1;
+                let out = builder.water_pixels(bounds, &indices, &emission, &HashMap::new()).unwrap();
+                assert!(out.surface.chunks_exact(4).any(|p| p[3] != 0));
+                assert!(out.reflected.iter().all(|v| *v == 0), "ground tile {building}, view {view}");
+                assert!(out.emission.iter().all(|v| *v == 0));
+                assert!(out.lights.iter().all(|v| *v == 0));
+            }
+        }
+        for building in (SUSPENSION_BRIDGE_1..=POWER_BRIDGE)
+            .chain(HIGHWAY_STRAIGHT_1..=HIGHWAY_POWER_CROSSING_2)
+            .chain(HIGHWAY_ONRAMP_1..=REINFORCED_HIGHWAY_BRIDGE)
+            .chain([TUNNEL_ENTRANCE_1, RAIL_SUBWAY_ENTRANCE_1, DEVELOPED_FIRST])
+        {
+            assert!(!ground_transport(building), "upright tile {building} must remain eligible");
+        }
     }
 
     #[test]
