@@ -53,7 +53,7 @@ func choose(peer: int, choice: Variant, city_name: Variant = "") -> void:
 		if not city_name is String or city_name.length() > Sc2xMetadata.MAX_NAME_CODE_POINTS:
 			reject(peer, "Invalid city name.", false)
 			return
-		if session.members.size() >= CoopSession.MAX_PLAYERS:
+		if not session.new_seats_allowed():
 			reject(peer, "All player seats are occupied. Request an unoccupied seat instead.", false)
 			return
 		var actor := Crypto.new().generate_random_bytes(24).hex_encode()
@@ -167,7 +167,7 @@ func send_lobby(peer: int) -> void:
 				"status": row.get("seat_status", "unoccupied")})
 	session.channels[peer].send({"type": "seat_lobby", "seats": rows,
 		"shared": session.world is SharedWorld,
-		"new_allowed": session.members.size() < CoopSession.MAX_PLAYERS,
+		"new_allowed": session.new_seats_allowed(),
 		"waiting": not str(pending[peer].seat).is_empty()})
 
 

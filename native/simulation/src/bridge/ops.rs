@@ -91,6 +91,7 @@ pub const OPERATIONS: &[&str] = &[
     "budget.funding_values",
     "rotation",
     "new_terrain",
+    "region.terrain",
 ];
 
 pub struct Outcome {
@@ -366,6 +367,13 @@ fn dispatch(op: &str, args: &VarDictionary, city: &mut City, randoms: &mut Rando
             sc2k_sim::sim::civic::mayor::run(city, &mut randoms.random, convert::int(args, "previous_approval", 0)).to_value(),
         ),
         "new_terrain" => new_terrain(args, city, randoms),
+        "region.terrain" => {
+            match sc2k_sim::sim::new_city::region::constrain(city, &convert::ints32(args, "boundaries"), convert::int(args, "sea_level", 0))
+            {
+                Ok(()) => Outcome::value(Value::Bool(true)),
+                Err(error) => Outcome::failure(error),
+            }
+        }
         "rotation" => {
             Outcome::value(sc2k_sim::sim::tools::rotation::rotate(city, convert::boolean(args, "counter_clockwise", false)).to_value())
         }

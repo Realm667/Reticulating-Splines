@@ -633,7 +633,7 @@ fn make_water(maps: &mut Maps, point: Vec2i) {
     terrain::place_water(maps, point);
 }
 
-fn recount_buildings(buildings: &[u8], misc: &mut [u8]) {
+pub(crate) fn recount_buildings(buildings: &[u8], misc: &mut [u8]) {
     let mut counts = [0i64; tiles::COUNT as usize];
 
     for &building in buildings {

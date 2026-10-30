@@ -1,0 +1,518 @@
+class_name ApplicationRegions
+extends RefCounted
+## Local region lifecycle and the common, owner-filtered region overview.
+
+var app: CityApplication
+var campaign: RegionCampaign
+var pending_edge := 0
+var switching := false
+var window: QolDialog
+var grid: GridContainer
+var heading: Label
+var details: Label
+var preview: TextureRect
+var buy_button: Button
+var open_button: Button
+var selected := Vector2i(-1, -1)
+var quote := {}
+var confirmation: ConfirmationDialog
+var last_revision := -1
+const LOCAL_OWNER := "local"
+
+
+func _init(application: CityApplication) -> void:
+	app = application
+
+
+func active() -> bool:
+	return campaign != null or (app.coop.active() and not app.coop.session.latest.get("region_campaign", {}).is_empty())
+
+
+func tip_context() -> Dictionary:
+	var result := {"mode": "single", "expansion": campaign != null, "administration": campaign != null,
+		"equity_check": campaign != null, "own_cities": campaign.own_count(LOCAL_OWNER) if campaign != null else 1}
+	if app.coop.active():
+		var state: Dictionary = app.coop.session.latest
+		result.mode = state.get("mode", "coop")
+		var region: Dictionary = state.get("region_campaign", {})
+		result.expansion = not region.is_empty()
+		result.administration = result.expansion
+		result.equity_check = result.expansion
+		result.own_cities = 0 if result.expansion else 1
+		for item: Dictionary in region.get("cells", []):
+			if item.get("own", false):
+				result.own_cities += 1
+	return result
+
+
+func activated(document: Sc2File) -> String:
+	if switching or app.coop.active():
+		return ""
+	if not document.sc2x_extra_entries.has(RegionCampaign.ENTRY):
+		campaign = null
+		return ""
+	var loaded := RegionCampaign.new()
+	var error := loaded.restore(document)
+	if not error.is_empty():
+		return error
+	if loaded.multiplayer:
+		return "Open this regional save through the multiplayer continuation lobby."
+	campaign = loaded
+	return ""
+
+
+func found_region() -> bool:
+	if pending_edge == 0 or app.coop.active():
+		return false
+	var edge := pending_edge
+	pending_edge = 0
+	var error := Sc2xCheckpoint.save_error(app.simulation_state.speed_controller)
+	if not error.is_empty():
+		app.interface.show_error(tr(error))
+		return false
+	var document := app.document_state.current_document.duplicate_document(true)
+	Sc2xCheckpoint.capture(app.simulation_state.speed_controller, document.sc2x_metadata)
+	var staged := RegionCampaign.new()
+	var rng := RandomNumberGenerator.new()
+	rng.randomize()
+	error = staged.initialize(document, edge, rng.randi(), LOCAL_OWNER)
+	if not error.is_empty():
+		app.interface.show_error(tr(error))
+		return false
+	return _activate_staged(staged, staged.active_cells[LOCAL_OWNER], "", false)
+
+
+func process() -> void:
+	if app.coop.active():
+		if window != null and window.visible:
+			var revision: int = int(app.coop.session.latest.get("revision", -1))
+			if revision != last_revision:
+				last_revision = revision
+				refresh()
+		return
+	if campaign == null or app.document_state.city == null or app.tool_state.landscape_editor:
+		return
+	var day := app.document_state.city.age_in_days()
+	if day > campaign.current_day:
+		campaign.advance(day)
+		campaign.collect_funds(LOCAL_OWNER, app.document_state.current_document)
+		if window != null and window.visible:
+			refresh()
+
+
+func prepare_save() -> String:
+	if campaign == null or app.coop.active():
+		return ""
+	var error := Sc2xCheckpoint.save_error(app.simulation_state.speed_controller)
+	if not error.is_empty():
+		return error
+	Sc2xCheckpoint.capture(app.simulation_state.speed_controller, app.document_state.current_document.sc2x_metadata)
+	return campaign.pack(app.document_state.current_document)
+
+
+func open_overview() -> void:
+	if not active():
+		open_conversion()
+		return
+	if window == null:
+		_build_window()
+	selected = Vector2i(-1, -1)
+	quote.clear()
+	details.text = tr("Select a city area.")
+	preview.texture = null
+	details.text = tr("Select a city area.")
+	refresh()
+	window.theme = AppUiTheme.current()
+	_popup_fitted(window, Vector2i(620, 620))
+
+
+func open() -> void:
+	open_overview()
+
+
+func _build_window() -> void:
+	window = QolDialog.new()
+	window.title = "Region overview"
+	window.wrap_controls = false
+	window.min_size = Vector2i(300, 300)
+	app.add_child(window)
+	var scroll := ScrollContainer.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	window.column.add_child(scroll)
+	var content := VBoxContainer.new()
+	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(content)
+	var frame := window.column
+	window.column = content
+	heading = window.label("")
+	heading.custom_minimum_size.x = 0
+	window.label(RegionBoundary.ERROR).custom_minimum_size.x = 0
+	grid = GridContainer.new()
+	grid.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	window.column.add_child(grid)
+	preview = TextureRect.new()
+	preview.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	preview.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	preview.custom_minimum_size.y = 110
+	preview.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	window.column.add_child(preview)
+	details = window.label("Select a city area.")
+	details.custom_minimum_size.x = 0
+	var actions := HFlowContainer.new()
+	frame.add_child(actions)
+	buy_button = window.button(actions, "Buy city area", _confirm_purchase)
+	open_button = window.button(actions, "Open city", _open_selected)
+	window.button(actions, "Close", window.hide)
+	window.column = frame
+	confirmation = ConfirmationDialog.new()
+	confirmation.title = "Buy city area"
+	confirmation.get_label().autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	confirmation.get_label().custom_minimum_size = Vector2(240, 0)
+	app.add_child(confirmation)
+	confirmation.confirmed.connect(_purchase)
+	app.coop.session.command_resolved.connect(_command_resolved)
+
+
+func summary() -> Dictionary:
+	if app.coop.active():
+		return app.coop.session.latest.get("region_campaign", {})
+	if campaign == null:
+		return {}
+	var cells := []
+	for id: String in campaign.documents:
+		var position := RegionRules.cell(id)
+		var city := CityState.from_document(campaign.documents[id])
+		cells.append({"cell": [position.x, position.y], "own": true, "name": city.city_name(), "population": city.population()})
+	var active_cell := RegionRules.cell(campaign.active_cells[LOCAL_OWNER])
+	return {"edge": campaign.edge, "cells": cells, "active": [active_cell.x, active_cell.y],
+		"funds": campaign.own_funds(LOCAL_OWNER), "debt": campaign.own_debt(LOCAL_OWNER),
+		"administration": (campaign.own_count(LOCAL_OWNER) - 1) * RegionRules.ANNUAL_ADMINISTRATION}
+
+
+func refresh() -> void:
+	var state := summary()
+	if state.is_empty():
+		window.hide()
+		return
+	for child in grid.get_children():
+		grid.remove_child(child)
+		child.queue_free()
+	grid.columns = int(state.edge)
+	heading.text = tr("Own funds: %s · Debt: %s · Administration: %s/year") % [
+		BudgetReport.currency(int(state.get("funds", 0))), BudgetReport.currency(int(state.get("debt", 0))),
+		BudgetReport.currency(int(state.get("administration", 0)))]
+	for y in grid.columns:
+		for x in grid.columns:
+			var position := Vector2i(x, y)
+			var item := _cell_summary(position, state)
+			var title: String = item.get("name", tr("Unowned city area"))
+			var button := Button.new()
+			button.text = "%d,%d\n%s" % [x + 1, y + 1, title]
+			button.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+			button.clip_text = true
+			button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			button.size_flags_vertical = Control.SIZE_EXPAND_FILL
+			button.toggle_mode = true
+			button.button_pressed = selected == position
+			button.tooltip_text = title
+			button.pressed.connect(_select.bind(position))
+			grid.add_child(button)
+	var item := _cell_summary(selected, state)
+	open_button.disabled = item.is_empty() or not item.get("own", false)
+	buy_button.disabled = quote.is_empty() or not item.is_empty()
+	preview.visible = preview.texture != null and (not quote.is_empty() or bool(item.get("own", false)))
+
+
+static func _cell_summary(position: Vector2i, state: Dictionary) -> Dictionary:
+	for item: Dictionary in state.get("cells", []):
+		if item.get("cell") == [position.x, position.y]:
+			return item
+	return {}
+
+
+func _select(position: Vector2i) -> void:
+	selected = position
+	quote.clear()
+	preview.texture = null
+	var state := summary()
+	var item := _cell_summary(position, state)
+	if not item.is_empty():
+		details.text = str(item.get("name", "")) + "\n" + tr("Population: %d") % int(item.get("population", 0))
+		if item.get("own", false):
+			if app.coop.active():
+				app.coop.session.request({"kind": "region_offer", "cell": [position.x, position.y]})
+			else:
+				var document: Sc2File = campaign.documents[RegionRules.key(position)]
+				var city := CityState.from_document(document)
+				var budget := BudgetReport.capture(city, BudgetPhase.funding_values(city))
+				var administration := RegionCampaign.administration_report(document)
+				preview.texture = ImageTexture.create_from_image(terrain_preview(document))
+				_show_owned_city(item, budget.estimated_cash - int(administration.estimated))
+		refresh()
+		return
+	if app.coop.active():
+		app.coop.session.request({"kind": "region_offer", "cell": [position.x, position.y]})
+	else:
+		if not campaign.adjacent(LOCAL_OWNER, position):
+			details.text = tr("Choose an available city area next to your own territory.")
+			refresh()
+			return
+		var result := campaign.offer(position)
+		if not result.ok:
+			details.text = tr(result.error)
+		else:
+			quote = result
+			quote["cell"] = [position.x, position.y]
+			quote["quote_revision"] = campaign.revision
+			preview.texture = ImageTexture.create_from_image(terrain_preview(result.document))
+			_show_quote()
+			app.knowledge.region_tip("mp_landscape")
+	refresh()
+
+
+static func terrain_preview(document: Sc2File) -> Image:
+	var size := document.map_size
+	var image := Image.create(size, size, false, Image.FORMAT_RGB8)
+	var terrain := document.find_chunk("XTER").decoded_payload
+	var flags := document.find_chunk("XBIT").decoded_payload
+	for x in size:
+		for y in size:
+			var index := x * size + y
+			image.set_pixel(x, y, Color("397ab4") if flags[index] & Sc2TileFlags.WATER else
+				Color("9b8c63") if terrain[index] & TerrainTileIds.SHAPE_MASK else Color("78954f"))
+	return image
+
+
+func _show_quote() -> void:
+	details.text = tr("Purchase: %s · Additional administration: %s/year\nFlat land: %d · Slopes: %d · Water: %d") % [
+		BudgetReport.currency(int(quote.price)), BudgetReport.currency(RegionRules.ANNUAL_ADMINISTRATION),
+		int(quote.flat), int(quote.slope), int(quote.water)]
+	var state := summary()
+	details.text += "\n" + tr("Annual administration after purchase: %s\nFunds after purchase: %s") % [
+		BudgetReport.currency(int(state.get("administration", 0)) + RegionRules.ANNUAL_ADMINISTRATION),
+		BudgetReport.currency(int(state.get("funds", 0)) - int(quote.price))]
+
+
+func _show_owned_city(item: Dictionary, annual_balance: int) -> void:
+	details.text = str(item.get("name", "")) + "\n" + tr("Population: %d") % int(item.get("population", 0))
+	details.text += "\n" + tr("Projected annual balance: %s") % BudgetReport.currency(annual_balance)
+
+
+func _confirm_purchase() -> void:
+	if quote.is_empty():
+		return
+	_show_quote()
+	confirmation.dialog_text = details.text + "\n" + tr("Keep one year of administration costs in reserve. Borrowed funds do not increase your purchasing power.")
+	confirmation.theme = AppUiTheme.current()
+	_popup_fitted(confirmation, Vector2i(540, 260))
+
+
+func _purchase() -> void:
+	if quote.get("cell") != [selected.x, selected.y]:
+		return
+	if app.coop.active():
+		app.coop.session.request({"kind": "region_buy", "cell": [selected.x, selected.y], "quote_revision": quote.quote_revision})
+		return
+	var error := prepare_save()
+	if not error.is_empty():
+		app.interface.show_error(tr(error))
+		return
+	# Stage the complete transaction, including cash and archive, before publishing it.
+	var staged := RegionCampaign.new()
+	error = staged.restore(app.document_state.current_document.duplicate_document(true))
+	if not error.is_empty():
+		app.interface.show_error(tr(error))
+		return
+	var result := staged.purchase(LOCAL_OWNER, selected, staged.current_day)
+	if not result.ok:
+		app.interface.show_error(tr(result.error))
+		app.knowledge.region_tip("mp_equity")
+		return
+	var path: String = app.document_state.current_save_path
+	if not _activate_staged(staged, RegionRules.key(selected), path, not path.is_empty()):
+		return
+	quote.clear()
+	_select(selected)
+	app.knowledge.region_tip("mp_administration")
+	app.city_files.open_rename_dialog()
+
+
+func _open_selected() -> void:
+	if app.coop.active():
+		app.coop.session.request({"kind": "region_switch", "cell": [selected.x, selected.y]})
+	else:
+		if not _switch_local(RegionRules.key(selected)):
+			return
+	window.hide()
+
+
+func _switch_local(id: String) -> bool:
+	if campaign == null or not campaign.documents.has(id) or campaign.owners[id] != LOCAL_OWNER:
+		return false
+	# Pack the live document first so edits since the previous save are included.
+	var error := prepare_save()
+	if not error.is_empty():
+		app.interface.show_error(tr(error))
+		return false
+	var staged := RegionCampaign.new()
+	error = staged.restore(app.document_state.current_document.duplicate_document(true))
+	if not error.is_empty():
+		app.interface.show_error(tr(error))
+		return false
+	return _activate_staged(staged, id, app.document_state.current_save_path, false)
+
+
+static func prepare_activation(staged: RegionCampaign, id: String, path: String) -> Dictionary:
+	if not staged.documents.has(id) or staged.owners.get(id) != LOCAL_OWNER:
+		return RegionCampaign.failure("This city area does not belong to you.")
+	var document: Sc2File = staged.documents[id]
+	var model := CityState.from_document(document)
+	if not model.is_valid():
+		return RegionCampaign.failure(model.load_error)
+	if not staged.collect_funds(LOCAL_OWNER, document):
+		return RegionCampaign.failure("The regional treasury exceeds the supported balance.")
+	staged.active_cells[LOCAL_OWNER] = id
+	document.source_path = path
+	var error := staged.pack(document)
+	if not error.is_empty():
+		return RegionCampaign.failure(error)
+	var verified := RegionCampaign.new()
+	error = verified.restore(document.duplicate_document(true))
+	if not error.is_empty():
+		return RegionCampaign.failure(error)
+	return {"ok": true, "error": "", "document": document}
+
+
+func _activate_staged(staged: RegionCampaign, id: String, path: String, write: bool) -> bool:
+	# Callers own an isolated campaign. A rejected pack/write never touches live money.
+	var result := prepare_activation(staged, id, path)
+	if not result.ok:
+		app.interface.show_error(tr(result.error))
+		return false
+	var document: Sc2File = result.document
+	if write:
+		var prepared := CityFileStore.prepare(document, path, app.asset_state.reference_root)
+		prepared.backup_previous = true
+		if not prepared.ok:
+			app.interface.show_error(tr(prepared.error))
+			return false
+		var written := CityFileStore.write(prepared)
+		if not written.ok:
+			app.interface.show_error(tr(written.error))
+			return false
+	# Activation has two rejection points: model validation (above), then regions.
+	# Switching bypasses only the latter; publish the staged context for UI callbacks.
+	var previous := campaign
+	campaign = staged
+	switching = true
+	var activated_ok := app.city_session.activate_document(document, null, "", true)
+	switching = false
+	if not activated_ok:
+		campaign = previous
+		return false
+	app.document_state.current_save_path = path
+	app.document_state.saved_city_snapshot = PackedByteArray()
+	app.simulation_state.simulation_engine.clock.city_days = campaign.current_day
+	app.frame.select_speed(GameSpeedController.Speed.PAUSED)
+	app.interface.refresh_details()
+	return true
+
+
+func _command_resolved(_id: int, result: Dictionary) -> void:
+	if window == null or not window.visible:
+		return
+	if result.has("region_city"):
+		var item: Dictionary = result.region_city
+		if item.get("cell") != [selected.x, selected.y] or not item.get("own", false):
+			return
+		if not _cell_summary(selected, summary()).get("own", false):
+			return
+		var image := Image.new()
+		if image.load_png_from_buffer(Marshalls.base64_to_raw(str(item.get("preview", "")))) == OK:
+			preview.texture = ImageTexture.create_from_image(image)
+		_show_owned_city(item, int(item.get("budget", {}).get("projected_cash", 0)))
+	if result.has("region_offer"):
+		var offered: Dictionary = result.region_offer
+		if offered.get("cell") != [selected.x, selected.y]:
+			return
+		quote = offered
+		var image := Image.new()
+		if image.load_png_from_buffer(Marshalls.base64_to_raw(str(offered.get("preview", "")))) == OK:
+			preview.texture = ImageTexture.create_from_image(image)
+		_show_quote()
+	refresh()
+
+
+func open_conversion() -> void:
+	if app.coop.active() or app.document_state.city == null or app.simulation_state.simulation_engine.scenario != null:
+		return
+	var dialog := QolDialog.new()
+	dialog.title = "Create a region"
+	dialog.wrap_controls = false
+	dialog.label("Turn this city into the first city of a new region. A separate backup is saved first. No additional starting funds are granted.").custom_minimum_size.x = 0
+	dialog.label("Region size").custom_minimum_size.x = 0
+	var sizes := OptionButton.new()
+	for value in RegionRules.SIZES:
+		sizes.add_item("%d × %d" % [value, value], value)
+	sizes.select(1)
+	dialog.column.add_child(sizes)
+	app.add_child(dialog)
+	var actions := HFlowContainer.new()
+	dialog.column.add_child(actions)
+	dialog.button(actions, "Create a region", func() -> void:
+		if _convert_local(sizes.get_selected_id()):
+			dialog.queue_free()
+			open_overview())
+	dialog.button(actions, "Cancel", dialog.queue_free)
+	dialog.close_requested.connect(dialog.queue_free)
+	_popup_fitted(dialog, Vector2i(520, 300))
+
+
+static func conversion_document(source: Sc2File) -> Dictionary:
+	if source == null or not source.is_valid():
+		return RegionCampaign.failure("No city is loaded.")
+	if source.is_sc2x():
+		return {"ok": true, "error": "", "document": source.duplicate_document(true)}
+	var converted := Sc2xDocument.from_legacy(source)
+	return {"ok": converted.ok, "error": converted.error, "document": converted.document}
+
+
+func _convert_local(edge: int) -> bool:
+	if active() or app.coop.active() or app.document_state.city == null:
+		return false
+	var error := Sc2xCheckpoint.save_error(app.simulation_state.speed_controller)
+	if not error.is_empty():
+		app.interface.show_error(tr(error))
+		return false
+	var result := conversion_document(app.document_state.current_document)
+	if not result.ok:
+		app.interface.show_error(tr(result.error))
+		return false
+	var document: Sc2File = result.document
+	Sc2xCheckpoint.capture(app.simulation_state.speed_controller, document.sc2x_metadata)
+	var staged := RegionCampaign.new()
+	var rng := RandomNumberGenerator.new()
+	rng.randomize()
+	# The backup remains a single city; initialization changes only the second copy.
+	error = staged.initialize(document.duplicate_document(true), edge, rng.randi(), LOCAL_OWNER)
+	if not error.is_empty():
+		app.interface.show_error(tr(error))
+		return false
+	var checked := prepare_activation(staged, staged.active_cells[LOCAL_OWNER], "")
+	if not checked.ok:
+		app.interface.show_error(tr(checked.error))
+		return false
+	var backup_path := AppPaths.path("cities").path_join(document.city_name().validate_filename() + "-before-region-" + str(Time.get_unix_time_from_system()).replace(".", "-") + ".sc2x")
+	var backup := CityFileStore.save_copy(document, backup_path, app.asset_state.reference_root)
+	if not backup.ok:
+		app.interface.show_error(tr(backup.error))
+		return false
+	return _activate_staged(staged, staged.active_cells[LOCAL_OWNER], "", false)
+
+
+func _popup_fitted(dialog: Window, preferred: Vector2i) -> void:
+	var available := (Vector2i(app.get_viewport_rect().size) - Vector2i(24, 48)).max(Vector2i(1, 1))
+	dialog.min_size = Vector2i(240, 180).min(available)
+	dialog.max_size = available
+	dialog.popup_centered(preferred.min(available))

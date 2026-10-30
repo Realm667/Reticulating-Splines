@@ -89,6 +89,7 @@ pub fn city(request: &VarDictionary) -> City {
     let source = dictionary(request, "city");
     let mut city = City::new(int(&source, "map_size", 128), int(&source, "large_version", 2));
     city.disaster_damage_class = int(&source, "disaster_damage_class", -1);
+    city.region_connections = region_connections(&source);
     let chunks = dictionary(&source, "chunks");
 
     for id in CHUNK_IDS {
@@ -129,8 +130,14 @@ pub fn cached_city(request: &VarDictionary, cache: &mut super::city_cache::Cache
 
     let mut city = super::city_cache::sync(cache, int(&source, "map_size", 128), int(&source, "large_version", 2), incoming);
     city.disaster_damage_class = int(&source, "disaster_damage_class", -1);
+    city.region_connections = region_connections(&source);
 
     city
+}
+
+fn region_connections(source: &VarDictionary) -> Option<[i64; 2]> {
+    let values = source.get("region_connections")?.try_to::<PackedInt64Array>().ok()?;
+    (values.len() == 2).then(|| [values[0].max(0), values[1].max(0)])
 }
 
 /// The written chunks as `{id: bytes}`, in document chunk-id order.

@@ -49,6 +49,7 @@ func _run() -> void:
 	rules.observe(tick)
 	assert(not rules.candidates.has("age"), "Existing event notices take precedence")
 	_test_contexts()
+	_test_multiplayer_contexts()
 	for edge in [128, 512]:
 		var city := CityState.from_document(EmptyCityTemplate.create(edge))
 		var point := Vector2i(edge - 2, edge - 2)
@@ -189,3 +190,44 @@ func _test_contexts() -> void:
 	rules.advance(360)
 	rules.condition("power", true, 90, 1)
 	assert(rules.take() == "power", "Each topic has its own repeat cooldown")
+
+
+func _test_multiplayer_contexts() -> void:
+	var single := {"mode": "single"}
+	var coop := {"mode": "coop"}
+	var shared := {"mode": "shared", "goal": "population"}
+	var region := {"mode": "region", "expansion": true, "administration": true,
+		"equity_check": true, "goal": "wealth"}
+	for item: Array in KnowledgeCatalog.ENTRIES:
+		var id: String = item[0]
+		if id.begins_with("mp_"):
+			assert(not KnowledgeCatalog.available(id, single), "Single cities must not receive multiplayer advice")
+	assert(KnowledgeCatalog.available("mp_clock", coop))
+	assert(KnowledgeCatalog.available("mp_coop", coop))
+	assert(not KnowledgeCatalog.available("mp_goals", coop))
+	assert(not KnowledgeCatalog.available("mp_visits", shared))
+	assert(KnowledgeCatalog.available("mp_goals", shared))
+	assert(not KnowledgeCatalog.available("mp_wealth", shared))
+	shared.goal = "endless"
+	assert(not KnowledgeCatalog.available("mp_goals", shared), "Endless games must not promise a victory objective")
+	shared.goal = "timed_score"
+	assert(KnowledgeCatalog.available("mp_wealth", shared))
+	for id in ["mp_administration", "mp_equity", "mp_boundaries", "mp_landscape", "mp_treasury", "mp_spacing"]:
+		assert(KnowledgeCatalog.available(id, region))
+		assert(not KnowledgeCatalog.available(id, single, false), "Unavailable region mechanics must not appear in the library")
+	region.equity_check = false
+	assert(not KnowledgeCatalog.available("mp_equity", region))
+	assert(KnowledgeCatalog.available("mp_administration", region))
+	region.expansion = false
+	assert(not KnowledgeCatalog.available("mp_administration", region))
+	assert(KnowledgeCatalog.available("mp_visits", region), "Ordinary Region games retain visiting advice")
+	assert(KnowledgeCatalog.available("mp_coop", single, false), "The library may explain another existing mode explicitly")
+	var window := KnowledgeWindow.new()
+	root.add_child(window)
+	window.topics.select(5)
+	window.tip_context = single
+	window.refresh()
+	assert(window.ids.has("mp_clock") and not window.ids.has("mp_equity"))
+	for id in window.ids:
+		assert(id.begins_with("mp_"))
+	window.queue_free()

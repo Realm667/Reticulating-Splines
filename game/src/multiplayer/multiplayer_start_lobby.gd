@@ -117,6 +117,10 @@ func update(state: Dictionary) -> void:
 	summary.text = "%s · %s\n%s" % [mode, target, tr("Simulation and construction begin together after the host starts.")]
 	if resuming:
 		summary.text = "%s · %s" % [mode, target]
+	if lobby.get("region_expansion", false):
+		var edge := int(lobby.get("region_edge", 3))
+		summary.text += "\n" + tr("%d × %d areas · maximum %d players") % [edge, edge, edge]
+		summary.text += "\n" + tr("Each player owns a private treasury. Additional areas cost money and $1,200 per year for administration. These rules cannot change after starting.")
 	if goal.get("kind") == "timed_score":
 		summary.text += "\n" + MultiplayerGoal.score_help()
 	elif state.get("mode", "coop") != "coop" and goal.get("kind", "endless") != "endless":
@@ -137,6 +141,8 @@ func update(state: Dictionary) -> void:
 			var area: Dictionary = state.get("start_preview", {}).get(player.id, {})
 			if not area.is_empty() and state.get("mode") == "shared":
 				row.set_text(4, tr("%d land · %d water") % [area.land, area.water])
+			elif area.has("cell"):
+				row.set_text(4, "%d · %d" % [int(area.cell[0]) + 1, int(area.cell[1]) + 1])
 			if resuming:
 				row.set_text(3, MultiplayerScoreboard.money(player.funds))
 				row.set_text(4, str(player.get("land", 0)))

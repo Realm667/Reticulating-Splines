@@ -2280,6 +2280,24 @@
     "lane": "product"
   },
   {
+    "id": "region_campaign_test",
+    "script": "tests/region_campaign_test.gd",
+    "domain": "simulation",
+    "lane": "product"
+  },
+  {
+    "id": "region_ui_test",
+    "script": "tests/region_ui_test.gd",
+    "domain": "ui",
+    "lane": "product"
+  },
+  {
+    "id": "multiplayer_region_expansion_test",
+    "script": "tests/multiplayer_region_expansion_test.gd",
+    "domain": "simulation",
+    "lane": "product"
+  },
+  {
     "id": "multiplayer_large_map_test",
     "script": "tests/multiplayer_large_map_test.gd",
     "domain": "simulation",

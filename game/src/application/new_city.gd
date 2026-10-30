@@ -34,6 +34,7 @@ func open_new_city_dialog() -> void:
 	app.city_dialogs.new_city_dialog.preview_timer.stop()
 	app.new_city_state.session.begin(app.tool_state.tool_random.state, app.simulation_state.nuisance_random.state)
 	app.city_dialogs.new_city_dialog.reset_fields(app.preferences.default_mayor_name)
+	app.city_dialogs.new_city_dialog.set_multiplayer_setup(app.coop.pending_new_city)
 	app.city_dialogs.new_city_dialog.show()
 	app.city_dialogs.new_city_dialog.invalidate()
 	app.city_dialogs.new_city_dialog.focus_city_name()
@@ -160,6 +161,7 @@ func create_new_city_unchecked() -> void:
 		return
 
 	var setup := app.city_dialogs.new_city_dialog.setup_options()
+	app.regions.pending_edge = app.city_dialogs.new_city_dialog.region_edge() if not app.coop.pending_new_city else 0
 	var result := app.new_city_state.session.create_city(
 		setup.city_name,
 		setup.mayor_name,
@@ -239,6 +241,11 @@ func start_city() -> void:
 		return
 
 	app.tool_state.landscape_editor = false
+	var region_edge := app.regions.pending_edge
+	if region_edge > 0 and not app.regions.found_region():
+		app.regions.pending_edge = region_edge
+		_enter_landscape_editor()
+		return
 	app.city_toolbar.set_landscape_editor(false)
 	app.city_menu_bar.disasters_menu.disabled = false
 	app.tool_state.last_edit_command = null

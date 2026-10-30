@@ -486,10 +486,15 @@ func on_save_dialog_canceled() -> void:
 func _save_copy(path: String, on_saved := Callable()) -> bool:
 	if save_in_progress:
 		app.interface.show_error("The city is still being saved.")
-
 		return false
-
+	var region_error := app.regions.prepare_save()
+	if not region_error.is_empty():
+		app.interface.show_error(tr(region_error))
+		return false
 	var document := document_state.current_document
+	if document.sc2x_extra_entries.has(RegionCampaign.ENTRY) and path.get_extension().to_lower() != "sc2x":
+		app.interface.show_error(tr("Regions must be saved as SC2X to preserve all cities and their treasury."))
+		return false
 
 	if document.is_sc2x() and document.map_size > BACKGROUND_SAVE_EDGE:
 		save_in_progress = true

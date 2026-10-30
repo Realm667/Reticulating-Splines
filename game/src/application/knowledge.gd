@@ -182,8 +182,9 @@ func loading(parent: VBoxContainer) -> void:
 func _show_loading_tip() -> void:
 	var entry: Array = KnowledgeCatalog.ENTRIES[load_index]
 	var initial_index := load_index
+	var context := _tip_context()
 	# Loading knowledge must never claim a problem exists in the new city.
-	while rules.muted.has(entry[0]):
+	while rules.muted.has(entry[0]) or not KnowledgeCatalog.available(entry[0], context):
 		load_index = (load_index + 1) % KnowledgeCatalog.ENTRIES.size()
 		if load_index == initial_index:
 			loading_card.hide()
@@ -270,6 +271,10 @@ func _process(delta: float) -> void:
 		return
 	if mode == 0:
 		return
+	var context := _tip_context()
+	if card.id.begins_with("mp_") and not KnowledgeCatalog.available(card.id, context):
+		card.hide()
+		suspended_card = false
 	if suspended_card:
 		suspended_card = false
 		card.show()
@@ -288,10 +293,12 @@ func _process(delta: float) -> void:
 		rules.advance(delta)
 	if mode == 2:
 		_observe_tool(delta)
+		_observe_multiplayer(context)
 	if mode == 2 and not card.visible:
 		var id := rules.take()
 		if not id.is_empty():
 			card.show_entry(id)
+			_update_action_access(id, context)
 			if id == "recovery":
 				card.action_button.visible = _event_target().x >= 0
 	layout_elapsed += delta
@@ -313,6 +320,7 @@ func _layout() -> void:
 
 func _next_tip() -> void:
 	var entries := KnowledgeCatalog.ENTRIES
+	var context := _tip_context()
 	var current := -1
 	for index in entries.size():
 		if entries[index][0] == card.id:
@@ -320,10 +328,11 @@ func _next_tip() -> void:
 			break
 	for step in range(1, entries.size() + 1):
 		var id: String = entries[posmod(current + step, entries.size())][0]
-		if id == card.id or rules.muted.has(id):
+		if id == card.id or rules.muted.has(id) or not KnowledgeCatalog.available(id, context):
 			continue
 		var pinned := card.pin.button_pressed
 		card.show_entry(id)
+		_update_action_access(id, context)
 		card.pin.set_pressed_no_signal(pinned)
 		# Manual browsing must not assert a live diagnosis or invent an event target.
 		if id in ["power", "water"]:
@@ -336,6 +345,7 @@ func _next_tip() -> void:
 
 
 func open() -> void:
+	window.tip_context = _tip_context()
 	window.open(rules.history, card.id if not card.id.is_empty() else "start")
 
 
@@ -359,6 +369,8 @@ func _action(action: String) -> void:
 		return
 	if city == null:
 		return
+	if action == "budget" and bool(_tip_context().get("visiting", false)):
+		return
 	window.hide()
 	var modes := {"water": CityViewMode.Mode.WATER, "power": CityViewMode.Mode.POWER,
 		"growth": CityViewMode.Mode.GROWTH, "land": CityViewMode.Mode.LAND_VALUE,
@@ -380,6 +392,55 @@ func _action(action: String) -> void:
 			card.action_button.hide()
 	elif action == "scenario":
 		app.reports.on_windows_menu(CityMenuBar.MENU_SCENARIO_GOALS)
+	elif action == "region":
+		var regions: Object = app.get("regions")
+		if regions != null and regions.has_method("open_overview") and bool(_tip_context().get("expansion", false)):
+			regions.call("open_overview")
+
+
+func _tip_context() -> Dictionary:
+	var context := {"mode": "single", "expansion": false, "administration": false,
+		"equity_check": false, "own_cities": 1, "visiting": false, "goal": "endless"}
+	if app.coop.active():
+		context.mode = str(app.coop.session.latest.get("mode", "coop"))
+		context.visiting = bool(app.coop.session.latest.get("visiting", false))
+		var goal: Dictionary = app.coop.session.latest.get("goal", {})
+		context.goal = "endless" if bool(goal.get("unscored", false)) else str(goal.get("kind", "endless"))
+	var regions: Object = app.get("regions")
+	if regions != null and regions.has_method("tip_context"):
+		var supplied: Variant = regions.call("tip_context")
+		if supplied is Dictionary:
+			context.merge(supplied, true)
+	return context
+
+
+func _observe_multiplayer(context: Dictionary) -> void:
+	for entry: Array in KnowledgeCatalog.ENTRIES:
+		var id: String = entry[0]
+		if not id.begins_with("mp_"):
+			continue
+		var eligible := KnowledgeCatalog.available(id, context) and not rules.shown_at.has(id)
+		# Advice is general guidance, never a diagnosis derived from another city's finances.
+		var priority: int = maxi(5, int(rules.candidates.get(id, {}).get("priority", 5)))
+		rules.condition(id, eligible, priority, 1)
+
+
+func region_tip(id: String) -> void:
+	# Called after an actual local offer/purchase response; retain existing cooldowns.
+	var context := _tip_context()
+	if id.begins_with("mp_") and KnowledgeCatalog.available(id, context) and not rules.shown_at.has(id):
+		rules.condition(id, true, 15, 1)
+
+
+func _update_action_access(id: String, context: Dictionary) -> void:
+	var entry := KnowledgeCatalog.entry(id)
+	if entry.is_empty():
+		return
+	if entry[4] == "budget" and bool(context.get("visiting", false)):
+		card.action_button.hide()
+	elif entry[4] == "region":
+		var regions: Object = app.get("regions")
+		card.action_button.visible = regions != null and regions.has_method("open_overview") and bool(context.get("expansion", false))
 
 
 func disaster_started(result: DisasterStartResult) -> void:

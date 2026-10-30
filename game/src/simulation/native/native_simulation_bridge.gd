@@ -110,6 +110,22 @@ static func run(
 		"budget": city.simulation_slice.handle if city.simulation_slice != null else 0,
 	}
 	var response: Dictionary = NativeSimulation.run(request)
+	# Reject the complete tool transaction before applying arrays or random draws.
+	# Flooding, smoothing and bridge abutments can affect tiles outside the cursor.
+	if operation.begins_with("tool.") and RegionBoundary.changed(city.document, response.written):
+		city.native_cache = null
+		response.result = decode(response.result)
+		if response.result is EditCommandResult:
+			response.result.ok = false
+			response.result.error = RegionBoundary.ERROR
+		else:
+			response.result = EditCommandResult.failure(RegionBoundary.ERROR)
+		response.written = {}
+		response.revisions = {}
+		response.randoms = request.randoms
+		response.failed_chunk = ""
+		response.disaster_damage_class = city.disaster_damage_class
+		return response
 
 	if random != null and random.get_script() == SimRandom:
 		random.state = response.randoms[0]
@@ -150,6 +166,7 @@ static func city_fields(city: CityState) -> Dictionary:
 		"map_size": city.map_size,
 		"large_version": city.document.large_version,
 		"disaster_damage_class": city.disaster_damage_class,
+		"region_connections": RegionCampaign.connection_counts(city.document),
 		"chunks": chunks,
 		"revisions": revisions,
 	}

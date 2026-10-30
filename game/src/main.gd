@@ -106,6 +106,7 @@ var route_edits: ApplicationRouteEdits = ApplicationRouteEdits.new(self)
 var debug: ApplicationDebug = ApplicationDebug.new(self)
 var debug_tools: ApplicationDebugTools = ApplicationDebugTools.new(self)
 var coop := ApplicationMultiplayer.new(self)
+var regions := ApplicationRegions.new(self)
 var classic_cheats := ApplicationClassicCheats.new(self)
 var updates := ApplicationUpdates.new(preferences)
 var activity: SingleplayerActivity
@@ -209,6 +210,7 @@ func _process(delta: float) -> void:
 		return
 	classic_cheats.process()
 	frame.process(delta)
+	regions.process()
 	autosave.process(delta)
 	scripting.process(delta)
 

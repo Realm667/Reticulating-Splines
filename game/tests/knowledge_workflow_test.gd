@@ -10,11 +10,17 @@ func _run() -> void:
 	OS.set_environment("OPENSC2K_ASSET_SOURCE", "original")
 	OS.set_environment("OPENSC2K_GRAPHICS_PACK", ProjectSettings.globalize_path("user://missing-test-art"))
 	var path := "user://knowledge-%d.cfg" % OS.get_process_id()
+	# Activity tracking adds the RSID identity chunk asynchronously; synthetic UI
+	# fixtures must not publish activity or let that unrelated mutation affect this test.
+	var initial_settings := ConfigFile.new()
+	initial_settings.set_value("privacy", "share_singleplayer_activity", false)
+	assert(initial_settings.save(path) == OK)
 	var app := (load("res://main.tscn") as PackedScene).instantiate() as CityApplication
 	app.preferences.settings_path = path
 	app.asset_state.reference_root = ProjectSettings.globalize_path("user://missing-test-originals")
 	root.add_child(app)
 	await process_frame
+	assert(not app.preferences.share_singleplayer_activity)
 	app.set_process(false)
 	app.main_menu.city_background.set_process(false)
 	assert(app.city_session.activate_document(EmptyCityTemplate.create(128)))
@@ -113,7 +119,11 @@ func _run() -> void:
 		assert(not knowledge.window.card.visible)
 		knowledge.window.search.clear()
 		knowledge.window.refresh()
-		assert(knowledge.window.items.item_count == KnowledgeCatalog.ENTRIES.size())
+		var expected := 0
+		for entry: Array in KnowledgeCatalog.ENTRIES:
+			expected += int(KnowledgeCatalog.available(entry[0], knowledge.window.tip_context, false))
+		assert(knowledge.window.items.item_count == expected, "The library shows only available features")
+		assert(not knowledge.window.ids.has("mp_administration"), "Single cities do not advertise regional administration")
 		knowledge.window.hide()
 		knowledge.growth_dialog.open(inputs)
 		await process_frame

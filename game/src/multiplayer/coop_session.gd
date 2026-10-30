@@ -23,7 +23,7 @@ signal seat_lobby_received(data: Dictionary)
 
 const PROTOCOL := 1
 const BUILD := "opensc2k-coop-1"
-const NETWORK_BUILD := "opensc2k-multiplayer-23"
+const NETWORK_BUILD := "opensc2k-multiplayer-24"
 const MAX_PLAYERS := 8
 var world: CoopWorld
 var lan: MultiplayerLanDiscovery
@@ -38,6 +38,8 @@ var credential := ""
 var seats: MultiplayerSeats
 var local_player_name := ""
 var host_land_price := 10
+var host_region_expansion := false
+var host_region_edge := 3
 var host_starter_tiles := 0
 var host_goal_kind := "endless"
 var host_goal_target := 10000
@@ -155,6 +157,10 @@ func host(document: Sc2File, port: int, join_code: String, player_name: String, 
 	if candidate is SharedWorld:
 		candidate.land_price = host_land_price
 		candidate.starter_tiles = host_starter_tiles
+	if candidate is RegionWorld:
+		candidate.expansion_enabled = host_region_expansion
+		candidate.region_edge = host_region_edge
+		candidate.region_seed = int(Time.get_unix_time_from_system()) ^ int(Time.get_ticks_usec())
 	if not candidate.open(document):
 		return candidate.error
 	var listener := TCPServer.new()
@@ -215,7 +221,13 @@ func lan_description() -> Dictionary:
 		"city": MultiplayerLanDiscovery.plain_name(world.city.document.city_name()),
 		"mode": "region" if world is RegionWorld else "shared" if world is SharedWorld else "coop",
 		"phase": "lobby" if waiting_for_start else "running", "locked": not code.is_empty(),
-		"players": requested_speed.size(), "open": channels.size() < MAX_PLAYERS - 1}
+		"players": requested_speed.size(), "open": channels.size() < player_limit() - 1}
+
+func player_limit() -> int:
+	return world.player_limit() if world is RegionWorld else MAX_PLAYERS
+
+func new_seats_allowed() -> bool:
+	return members.size() < player_limit() and not (world is RegionWorld and world.campaign != null)
 
 
 func join(address: String, port: int, join_code: String, player_name: String, intent := "new") -> String:
@@ -686,12 +698,18 @@ func execute_ordered(actor: String, message: Dictionary) -> Dictionary:
 		goal.unscored = true
 		apply_speed()
 		return CoopWorld.accepted("The game continues without scoring.")
-	if world is RegionWorld and viewed_cities.get(actor, actor) != actor and message.get("kind") not in ["speed"]:
+	if world is RegionWorld and viewed_cities.get(actor, actor) != actor and message.get("kind") not in ["speed", "region_switch", "region_offer"]:
 		return CoopWorld.rejected("This city view is read-only. Return to your own city to make changes.")
 	if message.get("kind") == "debug":
 		return MultiplayerDebug.execute(self, actor, message)
 	if goal.blocked() and message.get("kind") != "speed":
 		return CoopWorld.rejected("The victory target was reached. The host can continue without scoring.")
+	if world is RegionWorld and message.get("kind") in ["region_offer", "region_buy", "region_switch"]:
+		result = world.region_command(actor, message, loans.debt(actor))
+		if result.get("ok", false) and message.get("kind") == "region_switch":
+			viewed_cities[actor] = actor
+		result["id"] = sequence
+		return result
 	if actor != token and (message.get("kind") in ["disaster", "no_disasters"] or (message.get("kind") == "city_option" and message.get("option") == "no_disasters")):
 		return CoopWorld.rejected("Only the host can control disasters.")
 	if str(message.get("kind", "")).begins_with("loan_"):
@@ -766,6 +784,8 @@ func request(command: Dictionary) -> void:
 	command["lobby_generation"] = latest.get("lobby", {}).get("generation", -1)
 	if latest.get("mode") == "region":
 		command["view_owner"] = latest.get("view_owner", "")
+		if latest.has("region_campaign"):
+			command["view_cell"] = latest.region_campaign.active
 	next_command += 1
 	command_started[int(command.id)] = Time.get_ticks_usec()
 	if command_started.size() > 1024:
@@ -878,6 +898,10 @@ func receive_client(message: Dictionary, decoded := false) -> void:
 
 
 func resolve_command(id: int, result: Dictionary) -> void:
+	if result.get("region_offer") is Dictionary:
+		normalize_region_cell(result.region_offer, "cell")
+	if result.get("region_city") is Dictionary:
+		normalize_region_cell(result.region_city, "cell")
 	if command_started.has(id):
 		acknowledgement_usec.append(Time.get_ticks_usec() - int(command_started[id]))
 		command_started.erase(id)
@@ -892,6 +916,8 @@ func make_state(recipient := "") -> Dictionary:
 	var actor := recipient if not recipient.is_empty() else token
 	if world is RegionWorld:
 		state = world.snapshot_region(actor, viewed_cities.get(actor, actor), true)
+		if state.has("region_campaign"):
+			state.region_campaign.debt += loans.debt(actor)
 	else:
 		state = world.snapshot_for(actor, true) if world is SharedWorld else world.snapshot(false, true)
 	if common_state.is_empty() or common_revision != world.revision:
@@ -910,6 +936,10 @@ func make_common_state() -> Dictionary:
 	state["starts"] = starts.public_positions()
 	state["round"] = starts.round_number
 	state["lobby"] = {"waiting": waiting_for_start, "continuing": continuing, "can_start": can_start_lobby(), "generation": lobby_generation}
+	if world is RegionWorld:
+		state.lobby["region_expansion"] = world.expansion_enabled
+		state.lobby["region_edge"] = world.region_edge
+		state.lobby["player_limit"] = world.player_limit()
 	state["start_preview"] = starts.preview.duplicate(true)
 	var players: Array[String] = []
 	for player: String in requested_speed:
@@ -961,6 +991,14 @@ func publish() -> void:
 
 
 func accept_state(state: Dictionary) -> void:
+	if state.get("region_campaign") is Dictionary:
+		# JSON decodes all numbers as floats; Array equality distinguishes them
+		# from integer coordinates used by the region UI and command targets.
+		state.region_campaign = state.region_campaign.duplicate(true)
+		normalize_region_cell(state.region_campaign, "active")
+		for item: Variant in state.region_campaign.get("cells", []):
+			if item is Dictionary:
+				normalize_region_cell(item, "cell")
 	if int(state.get("summary_sequence", -1)) < int(latest.get("summary_sequence", -1)):
 		state = state.duplicate()
 		for field: String in SUMMARY_FIELDS:
@@ -976,6 +1014,11 @@ func accept_state(state: Dictionary) -> void:
 	state_received.emit(state)
 	if not hosting and state.get("weather") is Dictionary:
 		environment_received.emit(state.weather)
+
+static func normalize_region_cell(record: Dictionary, field: String) -> void:
+	var value: Variant = record.get(field)
+	if value is Array and value.size() == 2 and CoopWorld.whole_number(value[0], 0, 3) and CoopWorld.whole_number(value[1], 0, 3):
+		record[field] = [int(value[0]), int(value[1])]
 
 
 func drop(id: int) -> void:
@@ -1515,6 +1558,10 @@ func prepare_rematch(actor: String) -> Dictionary:
 		return CoopWorld.rejected("Only the host can propose a rematch after the result.")
 	var candidate: SharedWorld = RegionWorld.new() if world is RegionWorld else SharedWorld.new()
 	candidate.land_price = world.land_price
+	if candidate is RegionWorld:
+		candidate.expansion_enabled = world.expansion_enabled
+		candidate.region_edge = world.region_edge
+		candidate.region_seed = world.region_seed + 1
 	candidate.starter_tiles = world.starter_tiles
 	# Reuse the original terrain and difficulty, not the developed end-game city.
 	if not candidate.open(world.template):

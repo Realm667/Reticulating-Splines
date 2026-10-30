@@ -12,6 +12,9 @@ var password_label: Label
 var action: Button
 var shared_fields: VBoxContainer
 var land_price: SpinBox
+var region_fields: VBoxContainer
+var region_expansion: CheckBox
+var region_size: OptionButton
 var goal_fields: VBoxContainer
 var goal_picker: OptionButton
 var goal_target: SpinBox
@@ -125,6 +128,18 @@ func setup(body: VBoxContainer) -> void:
 	land_price.prefix = "$"
 	shared_fields.add_child(land_price)
 	land_price.tooltip_text = "Price for additional neutral land. At the shared start, every city receives an equal free starting area; its treasury stays intact. Saved games retain their rules."
+	region_fields = VBoxContainer.new()
+	host_fields.add_child(region_fields)
+	region_expansion = CheckBox.new()
+	region_expansion.text = "Buy additional city areas"
+	region_expansion.tooltip_text = "Each player owns a private treasury. Additional areas cost money and $1,200 per year for administration. These rules cannot change after starting."
+	region_fields.add_child(region_expansion)
+	region_size = OptionButton.new()
+	for edge in RegionRules.SIZES:
+		region_size.add_item(tr("%d × %d areas · maximum %d players") % [edge, edge, edge])
+	region_size.select(1)
+	region_fields.add_child(region_size)
+	region_expansion.toggled.connect(func(_value: bool) -> void: update())
 	goal_fields = VBoxContainer.new()
 	host_fields.add_child(goal_fields)
 	ApplicationMultiplayer.label(goal_fields, "Victory goal")
@@ -242,6 +257,8 @@ func update() -> void:
 	action.text = "Create game" if hosting else "Join / Reconnect"
 	coop.use_current.visible = coop.city_picker.selected == 1
 	shared_fields.visible = coop.mode_picker.selected == 1 and coop.city_picker.selected == 0
+	region_fields.visible = coop.mode_picker.selected == 2 and coop.city_picker.selected == 0
+	region_size.visible = region_expansion.button_pressed
 	goal_fields.visible = coop.mode_picker.selected != 0 and coop.city_picker.selected == 0
 	goal_target.visible = goal_picker.selected in [1, 2]
 	duration.visible = goal_picker.selected == 3

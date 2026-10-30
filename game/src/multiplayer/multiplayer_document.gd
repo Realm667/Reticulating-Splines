@@ -32,6 +32,9 @@ func capture(document: Sc2File, shared: MultiplayerDocument = null, shared_ids: 
 	# Never expose the private session/reconnect identities as a public extra.
 	extras.sc2x_extra_entries = extras.sc2x_extra_entries.duplicate()
 	extras.sc2x_extra_entries.erase("multiplayer.json")
+	for entry: String in extras.sc2x_extra_entries.keys():
+		if entry == RegionCampaign.ENTRY or entry == RegionCampaign.TEMPLATE_ENTRY or entry.begins_with(RegionCampaign.PREFIX):
+			extras.sc2x_extra_entries.erase(entry)
 	result[EXTRA] = encode_buffer(EXTRA, var_to_bytes(extras))
 	versions[EXTRA] = page_versions[EXTRA]
 	result["chunk_pages"] = versions
@@ -167,4 +170,7 @@ static func restore(state: Dictionary, previous: Dictionary = {}, old: Sc2File =
 			document.set(field, extras[field])
 	if document.sc2x_extra_entries.has("multiplayer.json"):
 		return null
+	for entry: String in document.sc2x_extra_entries:
+		if entry == RegionCampaign.ENTRY or entry == RegionCampaign.TEMPLATE_ENTRY or entry.begins_with(RegionCampaign.PREFIX):
+			return null
 	return document

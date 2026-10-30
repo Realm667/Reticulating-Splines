@@ -48,6 +48,15 @@ static func name_index(city: CityState, slot: int) -> int:
 	return low - 0x10000 if low & 0x8000 else low
 
 
+static func city_name(city: CityState, slot: int) -> String:
+	if city.document.sc2x_extra_entries.has(RegionCampaign.NEIGHBORS_ENTRY):
+		var data: Variant = JSON.parse_string(city.document.sc2x_extra_entries[RegionCampaign.NEIGHBORS_ENTRY].get_string_from_utf8())
+		if data is Dictionary and data.get("names") is Array and data.names.size() == COUNT:
+			var label := str(data.names[slot])
+			return TranslationServer.translate("Unsettled city area") if label.is_empty() else label
+	return name_of(name_index(city, slot))
+
+
 # Move the ocean neighbor of a city from an earlier New City to the side of the
 # map with the ocean. See repair_ocean_side in native/core/sim/src/sim/civic/neighbors.rs
 static func repair_ocean_side(city: CityState) -> bool:
@@ -66,7 +75,7 @@ static func connection_sign_texts(city: CityState) -> Dictionary[int, String]:
 	var names: Array[String] = []
 
 	for slot in COUNT:
-		names.append(name_of(name_index(city, slot)).left(SIGN_NAME_LENGTH))
+		names.append(city_name(city, slot).left(SIGN_NAME_LENGTH))
 
 	var index := OverlayData.find(city.text_overlays, Sc2OverlayLayout.CONNECTION_MARKER)
 

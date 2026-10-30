@@ -40,6 +40,7 @@ var live_policy := -1
 var newspaper_sequence := 0
 var newspaper_paper := -1
 var tree_growth_enabled := false
+var day_barrier := -1 # Optional expanded-region limit; other modes leave it unset.
 
 
 func open(document: Sc2File) -> bool:
@@ -122,6 +123,12 @@ func advance(delta: float) -> void:
 		revision += 1
 		policy_revision += 1
 	controller.terminal_blocked = false
+	# Resolving a pending annual budget can itself complete a day. A regional
+	# barrier must also apply here, before advance_time can run the next one.
+	if day_barrier >= 0 and city.age_in_days() >= day_barrier and engine.active_disaster_type == 0:
+		undo_document = null
+		mark_changes(before, city.document)
+		return
 	var pending := engine.pending_interaction
 	var blocked := controller.interaction_blocked
 	var result := controller.advance_time(minf(delta, 0.25) * 1000.0, Time.get_ticks_msec())

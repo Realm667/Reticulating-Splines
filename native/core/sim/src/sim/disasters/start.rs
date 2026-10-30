@@ -1651,6 +1651,7 @@ fn start_volcano(city: &mut City, center: Vec2i, random: Option<&mut SimRandom>)
     };
 
     let edge = city.map_size;
+    let preserve_region_boundary = city.region_connections.is_some();
     let maps = city.disaster_maps();
     let maps = maps.maps;
     let mut heights: Vec<i64> = (0..(edge * edge) as usize)
@@ -1692,7 +1693,17 @@ fn start_volcano(city: &mut City, center: Vec2i, random: Option<&mut SimRandom>)
             plan_raise(&heights, maps.zones, maps.buildings, near_point, remaining_budget, edge)
         } else {
             None
-        };
+        }
+        .filter(|plan| {
+            // Retiling can raise basins and change coastlines beyond the raised
+            // tiles. Keep the complete retile footprint outside both seam rows.
+            !preserve_region_boundary
+                || expanded_indices(&plan.modified.order, edge).iter().all(|index| {
+                    let x = index / edge;
+                    let y = index % edge;
+                    x >= 2 && y >= 2 && x < edge - 2 && y < edge - 2
+                })
+        });
 
         match plan {
             Some(plan) => {
@@ -1778,6 +1789,46 @@ fn start_volcano(city: &mut City, center: Vec2i, random: Option<&mut SimRandom>)
 mod rule_tests {
     use super::*;
     use crate::sim::testing::{empty_city, sequence_lfsr, sequence_random};
+
+    #[test]
+    fn regional_volcano_preserves_land_water_and_slopes_on_all_borders() {
+        let edge = 32;
+        for center in [
+            Vec2i::new(1, 16),
+            Vec2i::new(16, 1),
+            Vec2i::new(30, 16),
+            Vec2i::new(16, 30),
+            Vec2i::new(16, 16),
+        ] {
+            let mut city = empty_city(edge);
+            city.region_connections = Some([0, 0]);
+            for tile in 0..edge * edge {
+                crate::sim::tools::terrain::set_land_altitude(&mut city.altm.data, tile, 5);
+            }
+            let before_altitude = city.altm.data.clone();
+            let before_terrain = city.xter.data.clone();
+            let before_flags = city.xbit.data.clone();
+            let result = start_volcano(&mut city, center, Some(&mut SimRandom::new(413)));
+            assert!(result.started);
+            for tile in 0..edge * edge {
+                let x = tile / edge;
+                let y = tile % edge;
+                if x < 2 || y < 2 || x >= edge - 2 || y >= edge - 2 {
+                    let i = tile as usize;
+                    assert_eq!(
+                        &city.altm.data[i * 2..i * 2 + 2],
+                        &before_altitude[i * 2..i * 2 + 2],
+                        "border height at {center:?}/{tile}"
+                    );
+                    assert_eq!(city.xter.data[i], before_terrain[i]);
+                    assert_eq!(city.xbit.data[i] & 5, before_flags[i] & 5);
+                }
+            }
+            if center == Vec2i::new(16, 16) {
+                assert_ne!(city.altm.data, before_altitude, "interior volcano still raises terrain");
+            }
+        }
+    }
 
     /// The original hurricane comes from the side of neighbor slot 0. With the
     /// ocean in another slot, it comes from the side of that slot.

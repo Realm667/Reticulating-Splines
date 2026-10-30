@@ -54,6 +54,19 @@ const ENTRIES := [
 	["abandoned", "Abandoned buildings can recover", "Do not demolish every abandoned building immediately. Check power, reachable destinations and demand, then allow development time after repairing the cause.", "", "growth"],
 	["outside", "Outside connections support growth", "Neighbor roads and developed airports can lift commercial limits; seaports and suitable rail or highway connections can help industry. Empty port zoning alone is not enough.", "", "growth"],
 	["road_distance", "Keep zones close to roads", "Along a straight road, plan no more than three rows of zones; roads on both sides can serve six rows. Distance counts horizontal and vertical grid steps together. A route to a suitable destination is still needed.", "", "traffic"],
+	["mp_administration", "Every additional city needs administration", "Even an undeveloped city area has running administration costs. Before buying, check the annual charge and the funds you will have left.", "Region play with area expansion enabled.", "budget"],
+	["mp_equity", "Borrowing does not increase your area-buying funds", "Area purchases subtract outstanding debt from your cash. You must also retain one year's administration costs for all your additional city areas.", "Region play with the purchase reserve rule enabled.", "budget"],
+	["mp_boundaries", "The region has fixed boundaries", "You can buy only available city areas inside the region grid. Consider your location before other players buy nearby areas.", "Competitive Region with area expansion enabled.", "region"],
+	["mp_landscape", "Cheap land may cost more to develop", "Water and slopes lower an area's purchase price. Preparing building sites, transport and utilities can still require substantial spending.", "Region play with area expansion enabled.", "region"],
+	["mp_treasury", "Several cities, your own funds", "Your cities keep separate budgets. Purchases use your combined available funds; debts and administration costs in your other cities still count.", "Region play with area expansion enabled.", "budget"],
+	["mp_spacing", "Start apart. Plan your expansion.", "Starting positions are placed as far apart as possible. The remaining city areas are limited, so plan expansion together with its running costs.", "Competitive Region with area expansion enabled.", "region"],
+	["mp_clock", "The game continues while you plan", "In multiplayer, the host controls speed and pause. Opening a window does not pause the game. Agree on longer planning breaks together.", "Multiplayer", ""],
+	["mp_goals", "Check the victory conditions before starting", "Population, net wealth and timed scoring reward different priorities. Review the agreed objective and duration before marking yourself ready.", "Competitive multiplayer", ""],
+	["mp_wealth", "Cash is not net wealth", "Wealth-based objectives account for debt. Borrowing provides cash, but that alone does not give you the same increase in the wealth ranking.", "Competitive multiplayer", ""],
+	["mp_loans", "Player loans are still debts", "A loan from another player carries interest and must be repaid. Check the amount, rate and your budget before accepting it.", "Competitive multiplayer", ""],
+	["mp_visits", "Visit other cities", "In Competitive Region you can inspect other cities. These views are read-only. Return to your own city before building.", "Competitive Region", ""],
+	["mp_coop", "Coordinate your shared city", "In co-op, divide tasks such as utilities, transport and zoning. Agree on major expenses before starting several projects at once.", "Co-op", ""],
+	["mp_seat", "Keep your player seat", "When continuing a game, choose your previous player seat. Taking over another seat needs approval; a new seat does not restore your previous city.", "Multiplayer", ""],
 ]
 
 
@@ -62,6 +75,38 @@ static func entry(id: String) -> Array:
 		if value[0] == id:
 			return value
 	return []
+
+
+static func available(id: String, context: Dictionary, automatic := true) -> bool:
+	if not id.begins_with("mp_"):
+		return true
+	var mode: String = str(context.get("mode", "single"))
+	var multiplayer := mode in ["coop", "shared", "region"]
+	var expansion: bool = bool(context.get("expansion", false))
+	match id:
+		"mp_administration":
+			return expansion and bool(context.get("administration", false))
+		"mp_equity":
+			return expansion and bool(context.get("equity_check", false))
+		"mp_landscape", "mp_treasury":
+			return expansion
+		"mp_boundaries", "mp_spacing":
+			return expansion and mode == "region"
+	if not automatic:
+		return true # Library entries identify their applicable mode explicitly.
+	match id:
+		"mp_coop":
+			return mode == "coop"
+		"mp_visits":
+			return mode == "region"
+		"mp_goals":
+			return mode in ["shared", "region"] and context.get("goal", "endless") != "endless"
+		"mp_wealth":
+			return mode in ["shared", "region"] and context.get("goal", "endless") in ["wealth", "timed_score"]
+		"mp_loans":
+			return mode in ["shared", "region"]
+		_:
+			return multiplayer
 
 
 static func for_tool(group: int, subtool: int) -> String:

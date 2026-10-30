@@ -61,6 +61,9 @@ fn in_ranges(value: i64, ranges: &[(i64, i64)]) -> bool {
 }
 
 pub fn connection_counts(city: &City) -> ConnectionCounts {
+    if let Some([commerce, industry]) = city.region_connections {
+        return ConnectionCounts { commerce, industry };
+    }
     let overlays = &city.xtxt.data;
     let buildings = &city.xbld.data;
     let cells = overlay::count(overlays);
@@ -446,6 +449,30 @@ pub fn industry(city: &mut City, random: &mut SimRandom, lfsr: &mut SimLfsrRando
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn region_connections_replace_legacy_boundary_markers() {
+        let mut city = crate::sim::testing::empty_city(16);
+        city.xbld.data[10] = tiles::ROAD_STRAIGHT_1 as u8;
+        city.xbld.data[11] = tiles::RAIL_STRAIGHT_1 as u8;
+        overlay::write(&mut city.xtxt.data, 10, sc2overlay_layout::CONNECTION_MARKER);
+        overlay::write(&mut city.xtxt.data, 11, sc2overlay_layout::CONNECTION_MARKER);
+        assert_eq!(connection_counts(&city), ConnectionCounts { commerce: 1, industry: 1 });
+        city.region_connections = Some([0, 0]);
+        assert_eq!(
+            connection_counts(&city),
+            ConnectionCounts::default(),
+            "unmatched regional roads do not gain neighbor bonuses"
+        );
+        city.region_connections = Some([3, 2]);
+        assert_eq!(connection_counts(&city), ConnectionCounts { commerce: 3, industry: 2 });
+        city.region_connections = None;
+        assert_eq!(
+            connection_counts(&city),
+            ConnectionCounts { commerce: 1, industry: 1 },
+            "single-city marker behavior is unchanged"
+        );
+    }
 
     /// Each ordinance moves one category's tax rate. Unknown bits change nothing.
     #[test]

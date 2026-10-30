@@ -28559,3 +28559,418 @@ msgstr "Einzelspieler-Aktivität online anzeigen"
 #. Optional public single-player activity; supplementary translation.
 msgid "City name, game mode and population are public on rs.realm667.com. No save files or player names are uploaded."
 msgstr "Stadtname, Spielmodus und Einwohnerzahl sind auf rs.realm667.com öffentlich. Spielstände und Spielernamen werden nicht hochgeladen."
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "Every additional city needs administration"
+msgstr "Jede weitere Stadt braucht Verwaltung"
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "Even an undeveloped city area has running administration costs. Before buying, check the annual charge and the funds you will have left."
+msgstr "Auch ein unbebautes Stadtgebiet verursacht laufende Verwaltungskosten. Prüfe vor dem Kauf den Jahresbetrag und deine verbleibenden Mittel."
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "Borrowing does not increase your area-buying funds"
+msgstr "Kreditgeld erweitert deinen Kaufspielraum nicht"
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "Area purchases subtract outstanding debt from your cash. You must also retain one year's administration costs for all your additional city areas."
+msgstr "Beim Gebietskauf werden ausstehende Schulden vom Kassenbestand abgezogen. Zusätzlich muss eine Jahresreserve für die Verwaltung aller deiner weiteren Stadtgebiete übrig bleiben."
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "The region has fixed boundaries"
+msgstr "Die Region hat feste Grenzen"
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "You can buy only available city areas inside the region grid. Consider your location before other players buy nearby areas."
+msgstr "Du kannst nur verfügbare Stadtgebiete innerhalb des Regionsrasters kaufen. Berücksichtige deine Lage, bevor andere Spieler benachbarte Gebiete erwerben."
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "Cheap land may cost more to develop"
+msgstr "Günstiges Gelände kann teuer zu erschließen sein"
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "Water and slopes lower an area's purchase price. Preparing building sites, transport and utilities can still require substantial spending."
+msgstr "Wasser und Hänge senken den Kaufpreis eines Gebiets. Bauflächen, Verkehrswege und Versorgung vorzubereiten kann trotzdem viel Geld kosten."
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "Several cities, your own funds"
+msgstr "Mehrere Städte, dein eigenes Vermögen"
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "Your cities keep separate budgets. Purchases use your combined available funds; debts and administration costs in your other cities still count."
+msgstr "Deine Städte behalten getrennte Budgets. Für Käufe zählen deine gesamten verfügbaren Mittel; Schulden und Verwaltungskosten deiner anderen Städte bleiben bestehen."
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "Start apart. Plan your expansion."
+msgstr "Weit auseinander starten. Vorausschauend wachsen."
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "Starting positions are placed as far apart as possible. The remaining city areas are limited, so plan expansion together with its running costs."
+msgstr "Die Startplätze liegen möglichst weit auseinander. Die übrigen Stadtgebiete sind begrenzt. Plane deine Erweiterung deshalb zusammen mit ihren laufenden Kosten."
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "The game continues while you plan"
+msgstr "Das Spiel läuft während deiner Planung weiter"
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "In multiplayer, the host controls speed and pause. Opening a window does not pause the game. Agree on longer planning breaks together."
+msgstr "Im Multiplayer bestimmt der Host Tempo und Pause. Ein geöffnetes Fenster hält die Partie nicht an. Sprecht längere Planungspausen miteinander ab."
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "Check the victory conditions before starting"
+msgstr "Prüfe die Siegbedingungen vor dem Start"
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "Population, net wealth and timed scoring reward different priorities. Review the agreed objective and duration before marking yourself ready."
+msgstr "Bevölkerung, Nettovermögen und zeitbasierte Wertung verlangen unterschiedliche Schwerpunkte. Prüfe das vereinbarte Ziel und die Laufzeit, bevor du dich bereitmeldest."
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "Cash is not net wealth"
+msgstr "Kontostand ist nicht Nettovermögen"
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "Wealth-based objectives account for debt. Borrowing provides cash, but that alone does not give you the same increase in the wealth ranking."
+msgstr "Vermögensziele berücksichtigen Schulden. Ein Kredit schafft Liquidität, aber allein dadurch keinen entsprechenden Vorsprung in der Vermögenswertung."
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "Player loans are still debts"
+msgstr "Spielerkredite bleiben Verpflichtungen"
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "A loan from another player carries interest and must be repaid. Check the amount, rate and your budget before accepting it."
+msgstr "Ein Kredit eines Mitspielers hat Zinsen und muss zurückgezahlt werden. Prüfe Betrag, Zinssatz und deinen Haushalt, bevor du ihn annimmst."
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "Visit other cities"
+msgstr "Andere Städte besuchen"
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "In Competitive Region you can inspect other cities. These views are read-only. Return to your own city before building."
+msgstr "In Competitive Region kannst du andere Städte ansehen. Diese Ansichten sind schreibgeschützt. Kehre zum Bauen in deine eigene Stadt zurück."
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "Coordinate your shared city"
+msgstr "Stimmt euch beim gemeinsamen Bauen ab"
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "In co-op, divide tasks such as utilities, transport and zoning. Agree on major expenses before starting several projects at once."
+msgstr "Teilt euch im Koop Aufgaben wie Versorgung, Verkehrswege und Zonenausweisung auf. Stimmt größere Ausgaben ab, bevor ihr gleichzeitig mehrere Projekte beginnt."
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "Keep your player seat"
+msgstr "Behalte deinen Spielerplatz"
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "When continuing a game, choose your previous player seat. Taking over another seat needs approval; a new seat does not restore your previous city."
+msgstr "Wähle beim Fortsetzen deinen bisherigen Spielerplatz. Einen anderen Platz übernimmst du nur nach Freigabe; ein neuer Platz stellt deine bisherige Stadt nicht wieder her."
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "Region play with area expansion enabled."
+msgstr "Regionsspiel mit aktiviertem Gebietskauf."
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "Region play with the purchase reserve rule enabled."
+msgstr "Regionsspiel mit aktivierter Kaufreserve-Regel."
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "Competitive Region with area expansion enabled."
+msgstr "Competitive Region mit aktiviertem Gebietskauf."
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "Competitive multiplayer"
+msgstr "Kompetitiver Multiplayer"
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "Open region overview"
+msgstr "Regionsübersicht öffnen"
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "Buy additional city areas"
+msgstr "Weitere Stadtgebiete kaufen"
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "Each player owns a private treasury. Additional areas cost money and $1,200 per year for administration. These rules cannot change after starting."
+msgstr "Jeder Spieler hat eine eigene Kasse. Weitere Gebiete kosten Geld und jährlich $1.200 für die Verwaltung. Diese Regeln können nach dem Start nicht geändert werden."
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "%d × %d areas · maximum %d players"
+msgstr "%d × %d Gebiete · höchstens %d Spieler"
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "Regional expansion is not enabled for this game."
+msgstr "Die Regionserweiterung ist für diese Partie nicht aktiviert."
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "This region changed. Review the offer before buying."
+msgstr "Diese Region hat sich geändert. Prüfe das Angebot vor dem Kauf erneut."
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "City area purchased."
+msgstr "Stadtgebiet gekauft."
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "This city area does not belong to you."
+msgstr "Dieses Stadtgebiet gehört dir nicht."
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "No new player seats are available in this region."
+msgstr "In dieser Region sind keine neuen Spielerplätze verfügbar."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Open this regional save through the multiplayer continuation lobby."
+msgstr "Öffne diesen Regionsspielstand über die Multiplayer-Fortsetzungslobby."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Region overview"
+msgstr "Regionsübersicht"
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Select a city area."
+msgstr "Wähle ein Stadtgebiet aus."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Buy city area"
+msgstr "Stadtgebiet kaufen"
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Population: %d"
+msgstr "Einwohner: %d"
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Choose an available city area next to your own territory."
+msgstr "Wähle ein freies Stadtgebiet direkt neben deinem eigenen Gebiet."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Keep one year of administration costs in reserve. Borrowed funds do not increase your purchasing power."
+msgstr "Behalte die Verwaltungskosten für ein Jahr als Reserve. Kredite erhöhen deinen Kaufspielraum nicht."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Create a region"
+msgstr "Region gründen"
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Turn this city into the first city of a new region. Save a separate copy first. No additional starting funds are granted."
+msgstr "Mache diese Stadt zur ersten Stadt einer neuen Region. Speichere vorher eine separate Kopie. Es gibt kein zusätzliches Startkapital."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Own funds: %s · Debt: %s · Administration: %s/year"
+msgstr "Eigene Mittel: %s · Schulden: %s · Verwaltung: %s/Jahr"
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Purchase: %s · Additional administration: %s/year\nFlat land: %d · Slopes: %d · Water: %d"
+msgstr "Kaufpreis: %s · Zusätzliche Verwaltung: %s/Jahr\nEbene Flächen: %d · Hänge: %d · Wasser: %d"
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Invalid region configuration."
+msgstr "Ungültige Regionskonfiguration."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Invalid region coordinates."
+msgstr "Ungültige Regionskoordinaten."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "This city area is not available."
+msgstr "Dieses Stadtgebiet ist nicht verfügbar."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Insufficient own funds for the purchase and administration reserve."
+msgstr "Die Eigenmittel reichen nicht für den Kauf und die Verwaltungsreserve."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "The regional treasury exceeds the supported balance."
+msgstr "Die Regionskasse überschreitet den unterstützten Höchstbetrag."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "The current city is not part of this region."
+msgstr "Die aktuelle Stadt gehört nicht zu dieser Region."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "The region exceeds the supported save size."
+msgstr "Die Region überschreitet die unterstützte Spielstandgröße."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Unsupported or invalid region save."
+msgstr "Nicht unterstützter oder ungültiger Regionsspielstand."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Invalid region ownership data."
+msgstr "Ungültige Eigentumsdaten der Region."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Invalid region city count."
+msgstr "Ungültige Anzahl an Regionsstädten."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Invalid region terrain reference."
+msgstr "Ungültiger Geländeverweis der Region."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Invalid region city data."
+msgstr "Ungültige Stadtdaten der Region."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Invalid region offer."
+msgstr "Ungültiges Regionsangebot."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Invalid region player data."
+msgstr "Ungültige Spielerdaten der Region."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Invalid region terrain template."
+msgstr "Ungültige Geländevorlage der Region."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Invalid neighboring city."
+msgstr "Ungültige Nachbarstadt."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Neighboring city sizes do not match."
+msgstr "Die Größen der Nachbarstädte stimmen nicht überein."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Region terrain generation failed."
+msgstr "Das Regionsgelände konnte nicht erzeugt werden."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Cannot store generated region terrain."
+msgstr "Das erzeugte Regionsgelände kann nicht gespeichert werden."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Game type"
+msgstr "Spieltyp"
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Single city"
+msgstr "Einzelstadt"
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Region"
+msgstr "Region"
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Region size"
+msgstr "Regionsgröße"
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Regional administration"
+msgstr "Regionsverwaltung"
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "The outer two tile rows preserve the landscape transition to neighboring city areas."
+msgstr "Die beiden äußeren Kachelreihen erhalten den Landschaftsübergang zu benachbarten Stadtgebieten."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Unsettled city area"
+msgstr "Unbesiedeltes Stadtgebiet"
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Regions must be saved as SC2X to preserve all cities and their treasury."
+msgstr "Regionen müssen als SC2X gespeichert werden, damit alle Städte und ihre Kasse erhalten bleiben."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Turn this city into the first city of a new region. A separate backup is saved first. No additional starting funds are granted."
+msgstr "Mache diese Stadt zur ersten Stadt einer neuen Region. Zuvor wird eine separate Sicherung gespeichert. Es gibt kein zusätzliches Startkapital."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "No city is loaded."
+msgstr "Es ist keine Stadt geladen."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Wait until the region's cities reach the same day before switching."
+msgstr "Warte mit dem Stadtwechsel, bis die Städte der Region denselben Tag erreicht haben."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Unowned city area"
+msgstr "Unbesiedelt"
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Annual administration after purchase: %s\nFunds after purchase: %s"
+msgstr "Jährliche Verwaltung nach Kauf: %s\nKassenbestand nach Kauf: %s"
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Projected annual balance: %s"
+msgstr "Voraussichtliche Jahresbilanz: %s"

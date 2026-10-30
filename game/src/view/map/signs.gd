@@ -15,6 +15,7 @@ var sign_entries_zoom := -1.0
 var _sign_layout_signature: Array = []
 var external_sign_layout_token: Array = []
 var sign_cache_build_count := 0
+var region_neighbors := PackedByteArray()
 
 
 func _init(control: CityMapControl) -> void:
@@ -50,9 +51,11 @@ func sign_source_entries() -> Array[CityMapSigns.Entry]:
 
 func _ensure_sign_entries() -> void:
 	var map_edge: int = map.city.map_size if map.city != null else 128
+	var neighbors: PackedByteArray = map.city.document.sc2x_extra_entries.get(RegionCampaign.NEIGHBORS_ENTRY, PackedByteArray()) if map.city != null else PackedByteArray()
 
-	if sign_entries_city == map.city and is_equal_approx(sign_entries_zoom, map.zoom_factor):
+	if sign_entries_city == map.city and is_equal_approx(sign_entries_zoom, map.zoom_factor) and region_neighbors == neighbors:
 		return
+	region_neighbors = neighbors
 
 	if map.city == null:
 		sign_entries.clear()

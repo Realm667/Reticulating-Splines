@@ -5,6 +5,19 @@ extends RefCounted
 static func capture(world: CoopWorld, actor: String) -> Dictionary:
 	var own: CoopWorld = world.municipalities[actor] if world is SharedWorld else world
 	var city := own.city
+	if world is RegionWorld and world.campaign != null:
+		var combined := capture(own, actor)
+		for id: String in world.campaign.documents:
+			if world.campaign.owners[id] != actor or id == world.campaign.active_cells[actor]:
+				continue
+			var other: CoopWorld = world.city_worlds.get(id)
+			if other == null:
+				other = CoopWorld.new()
+				other.city = CityState.from_document(world.campaign.documents[id])
+			var row := capture(other, actor)
+			for field: String in ["population", "funds", "balance", "debt", "land", "built", "residential", "commercial", "industrial", "builds", "spent", "units"]:
+				combined[field] += row[field]
+		return combined
 	var result := {"city": city.city_name(), "population": city.population(), "funds": city.funds(),
 		"balance": BudgetReport.capture(city, BudgetPhase.funding_values(city)).ytd_cash,
 		"debt": city.document.misc_u32(Sc2MiscLayout.BONDS) * BondCommand.BOND_VALUE,

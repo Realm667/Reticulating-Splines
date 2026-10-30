@@ -47,6 +47,31 @@ static func from_world(world: CoopWorld, actor: String) -> Dictionary:
 		var own: CoopWorld = world.municipalities[actor]
 		var copy := clean(own.city.document)
 		Sc2xCheckpoint.capture(own.controller, copy.sc2x_metadata)
+		if world.campaign != null:
+			world.sync_campaign()
+			var source: RegionCampaign = world.campaign
+			var retained := RegionCampaign.new()
+			retained.edge = source.edge
+			retained.seed_value = source.seed_value
+			retained.origin = source.origin
+			retained.template = RegionCampaign.clean_copy(source.template)
+			retained.name = copy.city_name()
+			retained.current_day = source.current_day
+			retained.first_cells[ApplicationRegions.LOCAL_OWNER] = source.first_cells[actor]
+			retained.active_cells[ApplicationRegions.LOCAL_OWNER] = source.active_cells[actor]
+			for id: String in source.documents:
+				if source.owners[id] != actor:
+					continue
+				var document := copy if id == source.active_cells[actor] else clean(RegionCampaign.clean_copy(source.documents[id]))
+				if world.city_worlds.has(id):
+					Sc2xCheckpoint.capture(world.city_worlds[id].controller, document.sc2x_metadata)
+				retained.documents[id] = document
+				retained.owners[id] = ApplicationRegions.LOCAL_OWNER
+				retained.acquired[id] = source.acquired[id]
+				retained.settled[id] = source.settled[id]
+			var error := retained.pack(copy)
+			if not error.is_empty():
+				return {"error": error}
 		return {"error": "", "document": copy}
 	# snapshot_for composes each tile/record once according to its owner. It does
 	# not add populations of multiple copies of the same physical terrain.

@@ -16,6 +16,8 @@ var cache_key := ""
 func prepare(world: SharedWorld, members: Dictionary, commit := true) -> String:
 	if assigned:
 		return ""
+	if world is RegionWorld and world.expansion_enabled:
+		return prepare_region(world, members, commit)
 	var next_key := str(world.city.document.get_instance_id()) + ":" + str(hash(world.owners))
 	if next_key != cache_key:
 		cache_key = next_key
@@ -88,6 +90,32 @@ func prepare(world: SharedWorld, members: Dictionary, commit := true) -> String:
 	world.tile_versions.fill(world.revision)
 	world.snapshot_cache.clear()
 	assigned = true
+	return ""
+
+func prepare_region(world: RegionWorld, members: Dictionary, commit: bool) -> String:
+	if world.actors.size() > world.player_limit():
+		return "No new player seats are available in this region."
+	var cells := RegionRules.start_positions(world.region_edge, world.actors.size(), world.region_seed)
+	preview.clear()
+	for index in world.actors.size():
+		preview[world.actors[index].sha256_text()] = {"cell": [cells[index].x, cells[index].y], "land": 0, "water": 0, "tiles": 0, "reserved": 0}
+	if not commit:
+		return ""
+	var error := world.prepare_campaign(cells)
+	if not error.is_empty():
+		return error
+	for index in world.actors.size():
+		var actor := world.actors[index]
+		var child: CoopWorld = world.municipalities[actor]
+		if handicaps.get(actor, {}).has("funds"):
+			child.city.set_funds(int(handicaps[actor].funds))
+			child.revision += 1
+		var point := world.city.map_size / 2
+		positions[actor] = {"slot": cells[index].x * GRID + cells[index].y, "point": [point, point], "tiles": 0,
+			"land": 0, "water": 0, "reserved": 0, "cell": [cells[index].x, cells[index].y]}
+		members[actor]["ranked"] = true
+	assigned = true
+	world.revision += 1
 	return ""
 
 

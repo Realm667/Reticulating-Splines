@@ -19,14 +19,18 @@ func activate_document(
 	document: Sc2File, loaded_scenario: ScenarioState = null, status_text := "", loaded_from_file := false,
 	content_snapshot := PackedByteArray()
 ) -> bool:
-	app.map_view.navigation.reset()
-	app.map_view.clear_trip_reach()
 	var loaded_city := CityModel.from_document(document)
 
 	if not loaded_city.is_valid():
 		app.interface.show_error(loaded_city.load_error)
 
 		return false
+	var region_error := app.regions.activated(document)
+	if not region_error.is_empty():
+		app.interface.show_error(tr(region_error))
+		return false
+	app.map_view.navigation.reset()
+	app.map_view.clear_trip_reach()
 
 	app.newspaper_state.founding_pending = false
 	app.newspaper_state.scheduled_pending = false
@@ -69,7 +73,7 @@ func activate_document(
 	document_state.saved_city_snapshot = content_snapshot if not content_snapshot.is_empty() else document.content_snapshot()
 	var facility_repair := FacilityRecordRepair.apply(app.document_state.city)
 	# Multiplayer display documents must retain the host's authoritative neighbors.
-	var ocean_repaired := loaded_from_file and not app.coop.session.active and CityNeighbors.repair_ocean_side(app.document_state.city)
+	var ocean_repaired := loaded_from_file and not app.coop.session.active and not app.regions.active() and CityNeighbors.repair_ocean_side(app.document_state.city)
 
 	if not facility_repair.ok:
 		status_text += " " + str(facility_repair.error)

@@ -133,7 +133,7 @@ pub fn run(city: &mut City, random: &mut SimRandom) -> SimNationResult {
         let mut population = read_u32_be(&data, base + NEIGHBOR_POPULATION);
         let mut value = read_u32_be(&data, base + NEIGHBOR_VALUE);
 
-        if population != 0 {
+        if population != 0 && city.region_connections.is_none() {
             let factor = economy_trend + random.next_u15() % 3;
             let change = scaled_change(population, factor);
             population = move_about_center(population, change, NATIONAL_POPULATION_CENTER);
@@ -157,7 +157,7 @@ pub fn run(city: &mut City, random: &mut SimRandom) -> SimNationResult {
 
     let mut shocked_neighbor = -1;
 
-    if random.next_u15() & 0x3f == 0 {
+    if city.region_connections.is_none() && random.next_u15() & 0x3f == 0 {
         shocked_neighbor = random.next_u15() & 3;
         let index = shocked_neighbor as usize;
         let shock_base = misc_layout::NEIGHBORS + shocked_neighbor * NEIGHBOR_STRIDE;
@@ -195,6 +195,35 @@ mod tests {
         city.set_misc_u32(misc_layout::NATIONAL_FEDERAL_RATE, federal_rate);
         city.set_misc_u32(misc_layout::NATIONAL_ECONOMY_TREND, 0);
         city
+    }
+
+    #[test]
+    fn regional_neighbors_never_receive_synthetic_growth_or_random_shocks() {
+        let mut city = nation_fixture(3, 800_000);
+        city.region_connections = Some([0, 0]);
+        for neighbor in 0..4 {
+            let base = misc_layout::NEIGHBORS + neighbor * NEIGHBOR_STRIDE;
+            city.set_misc_u32(base + NEIGHBOR_POPULATION, 10_000 + neighbor * 1000);
+            city.set_misc_u32(base + NEIGHBOR_VALUE, 5_000 + neighbor * 500);
+        }
+        let before = city.misc.data[misc_layout::NEIGHBORS as usize..(misc_layout::NEIGHBORS + 4 * NEIGHBOR_STRIDE) as usize].to_vec();
+        let mut random = sequence_random(&[1, 123, 0, 0, 0, 0]);
+        let result = run(&mut city, &mut random);
+        assert!(result.base().ok);
+        assert_eq!(result.shocked_neighbor, -1);
+        assert_eq!(
+            &city.misc.data[misc_layout::NEIGHBORS as usize..(misc_layout::NEIGHBORS + 4 * NEIGHBOR_STRIDE) as usize],
+            &before
+        );
+        assert_eq!(random.next_u15(), 123, "only the national-economy draw was consumed");
+    }
+
+    #[test]
+    fn ordinary_neighbors_keep_their_random_shock() {
+        let mut city = nation_fixture(3, 800_000);
+        let result = run(&mut city, &mut sequence_random(&[1, 0, 2]));
+        assert!(result.base().ok);
+        assert_eq!(result.shocked_neighbor, 2);
     }
 
     #[test]

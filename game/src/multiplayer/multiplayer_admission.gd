@@ -29,7 +29,7 @@ func poll(session: CoopSession) -> void:
 			if message.get("type") == "compatibility" and MultiplayerLanDiscovery.valid_nonce(message.get("nonce")):
 				channel.send({"type": "compatibility", "nonce": message.nonce,
 					"protocol": CoopSession.PROTOCOL, "build": CoopSession.NETWORK_BUILD,
-					"open": session.channels.size() < CoopSession.MAX_PLAYERS - 1})
+					"open": session.channels.size() < session.player_limit() - 1})
 				entry.reply = true
 				entry.until = Time.get_ticks_msec() + 1000
 			elif message.get("type") == "reachability":
@@ -39,7 +39,7 @@ func poll(session: CoopSession) -> void:
 					entry.until = Time.get_ticks_msec() + 1000
 				else:
 					channel.failed = true
-			elif session.channels.size() < CoopSession.MAX_PLAYERS - 1:
+			elif session.channels.size() < session.player_limit() - 1:
 				var id := session.next_peer
 				session.next_peer += 1
 				session.channels[id] = channel

@@ -9721,3 +9721,418 @@ msgstr "싱글 플레이 활동 온라인 공개"
 #. Optional public single-player activity; supplementary translation.
 msgid "City name, game mode and population are public on rs.realm667.com. No save files or player names are uploaded."
 msgstr "도시 이름, 게임 모드, 인구가 rs.realm667.com에 공개됩니다. 저장 파일과 플레이어 이름은 업로드되지 않습니다."
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "Every additional city needs administration"
+msgstr "추가 도시마다 행정 비용이 필요합니다"
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "Even an undeveloped city area has running administration costs. Before buying, check the annual charge and the funds you will have left."
+msgstr "미개발 도시 구역에도 지속적인 행정 비용이 듭니다. 구매 전에 연간 비용과 남을 자금을 확인하세요."
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "Borrowing does not increase your area-buying funds"
+msgstr "대출로 구역 구매 여력이 늘어나지는 않습니다"
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "Area purchases subtract outstanding debt from your cash. You must also retain one year's administration costs for all your additional city areas."
+msgstr "구역 구매 시 보유 현금에서 미상환 부채를 뺍니다. 모든 추가 도시 구역의 1년 치 행정 비용도 남겨 두어야 합니다."
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "The region has fixed boundaries"
+msgstr "지역의 경계는 고정되어 있습니다"
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "You can buy only available city areas inside the region grid. Consider your location before other players buy nearby areas."
+msgstr "지역 격자 안에서 구매 가능한 도시 구역만 살 수 있습니다. 다른 플레이어가 인근 구역을 구매하기 전에 자신의 위치를 고려하세요."
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "Cheap land may cost more to develop"
+msgstr "싼 땅도 개발 비용이 많이 들 수 있습니다"
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "Water and slopes lower an area's purchase price. Preparing building sites, transport and utilities can still require substantial spending."
+msgstr "물과 경사지는 구역의 구매 가격을 낮춥니다. 하지만 건설 부지, 교통망, 기반 시설을 마련하는 데는 여전히 큰 비용이 들 수 있습니다."
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "Several cities, your own funds"
+msgstr "여러 도시, 하나의 내 자금"
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "Your cities keep separate budgets. Purchases use your combined available funds; debts and administration costs in your other cities still count."
+msgstr "각 도시의 예산은 별도로 유지됩니다. 구매에는 합산된 가용 자금을 사용하며, 다른 도시의 부채와 행정 비용도 계속 반영됩니다."
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "Start apart. Plan your expansion."
+msgstr "멀리 떨어져 시작하고 확장을 계획하세요."
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "Starting positions are placed as far apart as possible. The remaining city areas are limited, so plan expansion together with its running costs."
+msgstr "시작 위치는 가능한 한 멀리 배치됩니다. 남은 도시 구역은 한정되어 있으므로 유지 비용도 함께 고려하며 확장을 계획하세요."
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "The game continues while you plan"
+msgstr "계획하는 동안에도 게임은 진행됩니다"
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "In multiplayer, the host controls speed and pause. Opening a window does not pause the game. Agree on longer planning breaks together."
+msgstr "멀티플레이어에서는 호스트가 속도와 일시 정지를 제어합니다. 창을 열어도 게임이 멈추지 않습니다. 긴 계획 시간이 필요하면 함께 상의하세요."
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "Check the victory conditions before starting"
+msgstr "시작 전에 승리 조건을 확인하세요"
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "Population, net wealth and timed scoring reward different priorities. Review the agreed objective and duration before marking yourself ready."
+msgstr "인구, 순자산, 시간 제한 점수는 각각 다른 전략을 요구합니다. 준비 완료를 누르기 전에 정해진 목표와 기간을 확인하세요."
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "Cash is not net wealth"
+msgstr "현금과 순자산은 다릅니다"
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "Wealth-based objectives account for debt. Borrowing provides cash, but that alone does not give you the same increase in the wealth ranking."
+msgstr "자산 목표에는 부채가 반영됩니다. 대출은 현금을 제공하지만, 그것만으로 자산 순위가 같은 만큼 올라가지는 않습니다."
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "Player loans are still debts"
+msgstr "플레이어에게 받은 대출도 부채입니다"
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "A loan from another player carries interest and must be repaid. Check the amount, rate and your budget before accepting it."
+msgstr "다른 플레이어에게 받은 대출에는 이자가 붙으며 상환해야 합니다. 수락하기 전에 금액, 이율, 예산을 확인하세요."
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "Visit other cities"
+msgstr "다른 도시를 방문하세요"
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "In Competitive Region you can inspect other cities. These views are read-only. Return to your own city before building."
+msgstr "경쟁 지역 모드에서는 다른 도시를 살펴볼 수 있습니다. 이 화면에서는 변경할 수 없습니다. 건설하려면 자신의 도시로 돌아가세요."
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "Coordinate your shared city"
+msgstr "공동 도시 건설을 조율하세요"
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "In co-op, divide tasks such as utilities, transport and zoning. Agree on major expenses before starting several projects at once."
+msgstr "협동 모드에서는 기반 시설, 교통, 구역 지정 등의 일을 나누세요. 여러 프로젝트를 동시에 시작하기 전에 큰 지출을 상의하세요."
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "Keep your player seat"
+msgstr "기존 플레이어 자리를 유지하세요"
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "When continuing a game, choose your previous player seat. Taking over another seat needs approval; a new seat does not restore your previous city."
+msgstr "게임을 이어 할 때는 이전 플레이어 자리를 선택하세요. 다른 자리를 인계받으려면 승인이 필요하며, 새 자리를 선택해도 이전 도시가 복원되지는 않습니다."
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "Region play with area expansion enabled."
+msgstr "구역 확장이 활성화된 지역 게임."
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "Region play with the purchase reserve rule enabled."
+msgstr "구매 예비금 규칙이 활성화된 지역 게임."
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "Competitive Region with area expansion enabled."
+msgstr "구역 확장이 활성화된 경쟁 지역 모드."
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "Competitive multiplayer"
+msgstr "경쟁 멀티플레이어"
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "Open region overview"
+msgstr "지역 개요 열기"
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "Buy additional city areas"
+msgstr "추가 도시 구역 구매"
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "Each player owns a private treasury. Additional areas cost money and $1,200 per year for administration. These rules cannot change after starting."
+msgstr "각 플레이어는 별도 자금을 소유합니다. 추가 구역은 구매 비용 외에도 연간 $1,200의 관리비가 듭니다. 게임 시작 후에는 이 규칙을 변경할 수 없습니다."
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "%d × %d areas · maximum %d players"
+msgstr "%d × %d 구역 · 최대 %d명"
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "Regional expansion is not enabled for this game."
+msgstr "이 게임에서는 지역 확장이 활성화되어 있지 않습니다."
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "This region changed. Review the offer before buying."
+msgstr "지역이 변경되었습니다. 구매 전에 제안을 다시 확인하세요."
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "City area purchased."
+msgstr "도시 구역을 구매했습니다."
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "This city area does not belong to you."
+msgstr "이 도시 구역은 소유하고 있지 않습니다."
+
+#. Reticulating Splines multiplayer knowledge; supplementary AI-assisted translation.
+#: src/ui/knowledge/knowledge_catalog.gd
+msgid "No new player seats are available in this region."
+msgstr "이 지역에는 신규 플레이어 자리가 없습니다."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Open this regional save through the multiplayer continuation lobby."
+msgstr "멀티플레이 이어하기 대기실에서 이 지역 저장 파일을 여세요."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Region overview"
+msgstr "지역 개요"
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Select a city area."
+msgstr "도시 구역을 선택하세요."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Buy city area"
+msgstr "도시 구역 구매"
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Population: %d"
+msgstr "인구: %d"
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Choose an available city area next to your own territory."
+msgstr "소유한 영토에 인접한 빈 도시 구역을 선택하세요."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Keep one year of administration costs in reserve. Borrowed funds do not increase your purchasing power."
+msgstr "1년치 관리비를 예비금으로 남겨 두세요. 빌린 돈은 구매 여력을 늘리지 않습니다."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Create a region"
+msgstr "지역 만들기"
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Turn this city into the first city of a new region. Save a separate copy first. No additional starting funds are granted."
+msgstr "이 도시를 새 지역의 첫 도시로 전환합니다. 먼저 별도 사본을 저장하세요. 추가 초기 자금은 지급되지 않습니다."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Own funds: %s · Debt: %s · Administration: %s/year"
+msgstr "보유 자금: %s · 부채: %s · 관리비: %s/년"
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Purchase: %s · Additional administration: %s/year\nFlat land: %d · Slopes: %d · Water: %d"
+msgstr "구매: %s · 추가 관리비: %s/년\n평지: %d · 경사: %d · 물: %d"
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Invalid region configuration."
+msgstr "지역 설정이 올바르지 않습니다."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Invalid region coordinates."
+msgstr "지역 좌표가 올바르지 않습니다."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "This city area is not available."
+msgstr "이 도시 구역은 사용할 수 없습니다."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Insufficient own funds for the purchase and administration reserve."
+msgstr "구매 비용과 관리 예비금을 충당할 자기자금이 부족합니다."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "The regional treasury exceeds the supported balance."
+msgstr "지역 자금이 지원 가능한 한도를 초과합니다."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "The current city is not part of this region."
+msgstr "현재 도시는 이 지역에 속하지 않습니다."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "The region exceeds the supported save size."
+msgstr "지역이 지원 가능한 저장 크기를 초과합니다."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Unsupported or invalid region save."
+msgstr "지원하지 않거나 올바르지 않은 지역 저장 파일입니다."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Invalid region ownership data."
+msgstr "지역 소유권 데이터가 올바르지 않습니다."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Invalid region city count."
+msgstr "지역 내 도시 수가 올바르지 않습니다."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Invalid region terrain reference."
+msgstr "지역 지형 참조가 올바르지 않습니다."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Invalid region city data."
+msgstr "지역 도시 데이터가 올바르지 않습니다."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Invalid region offer."
+msgstr "지역 구매 제안이 올바르지 않습니다."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Invalid region player data."
+msgstr "지역 플레이어 데이터가 올바르지 않습니다."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Invalid region terrain template."
+msgstr "지역 지형 템플릿이 올바르지 않습니다."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Invalid neighboring city."
+msgstr "인접 도시가 올바르지 않습니다."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Neighboring city sizes do not match."
+msgstr "인접 도시의 크기가 일치하지 않습니다."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Region terrain generation failed."
+msgstr "지역 지형 생성에 실패했습니다."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Cannot store generated region terrain."
+msgstr "생성한 지역 지형을 저장할 수 없습니다."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Game type"
+msgstr "게임 유형"
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Single city"
+msgstr "단일 도시"
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Region"
+msgstr "지역"
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Region size"
+msgstr "지역 크기"
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Regional administration"
+msgstr "지역 관리"
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "The outer two tile rows preserve the landscape transition to neighboring city areas."
+msgstr "바깥쪽 두 줄의 타일은 인접한 도시 구역과의 지형 연결을 유지합니다."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Unsettled city area"
+msgstr "미개발 도시 구역"
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Regions must be saved as SC2X to preserve all cities and their treasury."
+msgstr "모든 도시와 자금을 보존하려면 지역을 SC2X 형식으로 저장해야 합니다."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Turn this city into the first city of a new region. A separate backup is saved first. No additional starting funds are granted."
+msgstr "이 도시를 새 지역의 첫 도시로 전환합니다. 먼저 별도 백업을 저장합니다. 추가 초기 자금은 지급되지 않습니다."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "No city is loaded."
+msgstr "불러온 도시가 없습니다."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Wait until the region's cities reach the same day before switching."
+msgstr "지역 내 도시들이 같은 날짜에 도달한 후 도시를 전환하세요."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Unowned city area"
+msgstr "미소유 도시 구역"
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Annual administration after purchase: %s\nFunds after purchase: %s"
+msgstr "구매 후 연간 관리비: %s\n구매 후 자금: %s"
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Projected annual balance: %s"
+msgstr "예상 연간 수지: %s"

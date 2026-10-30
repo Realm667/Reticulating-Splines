@@ -51,6 +51,7 @@ var refreshing := false
 var action_buttons: Array[Button] = []
 var group_edits: Dictionary[int, float] = {}
 var previous_funding := PackedInt32Array()
+var administration_nodes: Array[Control] = []
 
 
 func _ready() -> void:
@@ -178,6 +179,12 @@ func _build_rows() -> void:
 					rows.add_child(node)
 					detail_nodes.append(node)
 					node.hide()
+
+
+	for node: Control in [_label("Regional administration"), _label(""), _label("$0", true), _label("$0", true), _label("")]:
+		rows.add_child(node)
+		administration_nodes.append(node)
+		node.hide()
 
 
 func _spin(maximum: int) -> SpinBox:
@@ -325,14 +332,20 @@ func refresh_report() -> void:
 		return
 
 	report = BudgetReport.capture(city, values)
+	var administration := RegionCampaign.administration_report(city.document)
+	for node in administration_nodes:
+		node.visible = administration.annual > 0
+	_set_amount(administration_nodes[2] as Label, -administration.ytd)
+	_set_amount(administration_nodes[3] as Label, -administration.estimated)
 	for group in BudgetReport.GROUPS.size():
 		_set_amount(ytd_labels[group], BudgetReport.group_amount(report.year_to_date, group))
 		_set_amount(estimate_labels[group], BudgetReport.group_amount(report.estimated, group))
 	var totals := [
-		report.ytd_cash,
-		report.estimated_cash,
+		report.ytd_cash - administration.ytd,
+		report.estimated_cash - administration.estimated,
 		city.funds(),
-		BudgetReport.wrap_i32(city.funds() + (report.ytd_cash if report.year_end else report.estimated_cash)),
+		BudgetReport.budget_integer(city.funds() + (report.ytd_cash if report.year_end else report.estimated_cash)
+			- administration.remaining, city.document.is_extended()),
 	]
 	total_captions[3].text = "Funds after settlement" if report.year_end else "Year-end funds"
 	total_captions[1].text = "Projected annual flow" if report.year_end else "Year-end cash flow"

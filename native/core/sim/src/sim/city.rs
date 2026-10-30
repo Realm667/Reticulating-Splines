@@ -86,6 +86,9 @@ pub struct City {
     pub tmpl: Chunk,
     /// Runtime only. The most important building class that disaster damage reached.
     pub disaster_damage_class: i64,
+    /// Region campaigns supply actual paired transport connections. None keeps
+    /// the original single-city neighbor simulation.
+    pub region_connections: Option<[i64; 2]>,
 }
 
 impl City {

@@ -170,6 +170,9 @@ func start_disaster_at(id: int, point: Vector2i) -> DisasterReportResult:
 
 
 func on_windows_menu(id: int) -> void:
+	if id == CityMenuBar.MENU_REGION:
+		app.regions.open_overview()
+		return
 	if app.coop.active() and id in [7, CityMenuBarView.MENU_CONSOLE] and (not app.coop.session.hosting or app.coop.session.latest.get("visiting", false)):
 		return
 	if app.coop.active() and app.coop.session.latest.get("visiting", false) and id in [0, 1, 3]:

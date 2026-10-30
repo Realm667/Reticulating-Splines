@@ -26,6 +26,7 @@ const MENU_MUSIC_BOX := 0x8401
 const MENU_PHOTO_MODE := 0x8402
 const MENU_ABOUT := 0
 const MENU_KNOWLEDGE := 0x8403
+const MENU_REGION := 0x8404
 const MENU_AUTO_BUDGET := 0x8004
 const MENU_AUTO_GOTO := 0x8005
 const MENU_SOUND_EFFECTS := 0x8006
@@ -408,6 +409,7 @@ func set_scenario_available(available: bool) -> void:
 
 	popup.add_separator()
 	popup.add_item("Console", MENU_CONSOLE)
+	popup.add_item("Region overview", MENU_REGION)
 	popup.add_item("Debug", 7)
 	refresh_shortcut_hints(bindings)
 

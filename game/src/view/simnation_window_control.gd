@@ -81,7 +81,7 @@ func _draw() -> void:
 	for position_index in displayed.size():
 		var neighbor: Neighbor = data.neighbors[displayed[position_index]]
 		_draw_record_label(
-			neighbor_name(int(neighbor.name_index)),
+			CityNeighbors.city_name(city, int(neighbor.index)),
 			int(neighbor.population),
 			LABEL_POSITIONS[position_index + 1] * layout_scale,
 			font_size,

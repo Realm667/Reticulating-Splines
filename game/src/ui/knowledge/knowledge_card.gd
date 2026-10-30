@@ -112,7 +112,7 @@ func show_entry(value: String, _full := false) -> void:
 	details.visible = not str(entry[3]).is_empty()
 	summary.show()
 	action_button.visible = not library and not str(entry[4]).is_empty()
-	action_button.text = {"water": "Open water view", "power": "Open power view", "land": "Show land value", "budget": "Open budget", "event": "Go to event"}.get(entry[4], "Open view")
+	action_button.text = {"water": "Open water view", "power": "Open power view", "land": "Show land value", "budget": "Open budget", "event": "Go to event", "region": "Open region overview"}.get(entry[4], "Open view")
 	close_button.visible = not library
 	next_button.visible = contextual and not library
 	pin.set_pressed_no_signal(false)

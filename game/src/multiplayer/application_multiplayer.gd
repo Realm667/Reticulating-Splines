@@ -220,6 +220,8 @@ func host_document(document: Sc2File) -> void:
 		document = converted.document
 	session.player_color = color_picker.color.to_html(false)
 	session.host_land_price = int(launch.land_price.value)
+	session.host_region_expansion = mode_picker.selected == 2 and city_picker.selected == 0 and launch.region_expansion.button_pressed
+	session.host_region_edge = RegionRules.SIZES[launch.region_size.selected]
 	session.host_starter_tiles = 1024
 	session.host_goal_kind = ["endless", "population", "wealth", "timed_score"][launch.goal_picker.selected]
 	session.host_duration_years = int(launch.duration.value)

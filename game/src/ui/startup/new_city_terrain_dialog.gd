@@ -42,6 +42,10 @@ const FEATURE_TOOLTIPS := {
 }
 
 var city_name_input: LineEdit
+var game_type_input: OptionButton
+var game_type_label: Label
+var region_size_input: OptionButton
+var region_size_label: Label
 var mayor_name_input: LineEdit
 var difficulty_input: OptionButton
 var year_input: OptionButton
@@ -101,6 +105,7 @@ func _ready() -> void:
 	preview_timer = get_node("PreviewTimer")
 	compatibility_input = $Center/NewCityDialog/Content/Buttons/CompatibilityInput
 	done_button = $Center/NewCityDialog/Content/Buttons/Start
+	_build_region_fields()
 	var feature_titles := {"meander": "Meandering River", "delta": "River Delta", "peninsula": "Peninsula",
 		"crossing": "Intersecting rivers", "branch": "Forked River",
 		"rejoin": "Split and rejoin river", "bay": "Ocean bay", "island": "Single Island", "islands": "Two islands", "plateau": "Plateau",
@@ -198,6 +203,9 @@ func _input(event: InputEvent) -> void:
 
 
 func reset_fields(default_mayor: String) -> void:
+	game_type_input.select(0)
+	region_size_input.select(1)
+	_region_type_changed(0)
 	preview_view.texture = null
 	landscape_background.texture = null
 	if is_instance_valid(visual_preview):
@@ -220,6 +228,50 @@ func reset_fields(default_mayor: String) -> void:
 func focus_city_name() -> void:
 	city_name_input.grab_focus()
 	city_name_input.select_all()
+
+
+func _build_region_fields() -> void:
+	var fields := city_name_input.get_parent().get_parent()
+	var label := Label.new()
+	label.text = "Game type"
+	game_type_label = label
+	game_type_input = OptionButton.new()
+	game_type_input.add_item("Single city")
+	game_type_input.add_item("Region")
+	region_size_label = Label.new()
+	region_size_label.text = "Region size"
+	region_size_input = OptionButton.new()
+	for edge in RegionRules.SIZES:
+		region_size_input.add_item("%d × %d" % [edge, edge], edge)
+	region_size_input.select(1)
+	var controls := [label, game_type_input, region_size_label, region_size_input]
+	for index in controls.size():
+		fields.add_child(controls[index])
+		fields.move_child(controls[index], index)
+	game_type_input.item_selected.connect(_region_type_changed)
+	_region_type_changed(0)
+
+
+func _region_type_changed(index: int) -> void:
+	region_size_label.visible = index == 1
+	region_size_input.visible = index == 1
+	compatibility_input.visible = index == 0
+	if index == 1:
+		compatibility_input.set_pressed_no_signal(false)
+		compatibility_changed(false)
+
+
+func region_edge() -> int:
+	return region_size_input.get_selected_id() if game_type_input.selected == 1 else 0
+
+
+func set_multiplayer_setup(value: bool) -> void:
+	# Competitive Region is configured in the lobby for all players together.
+	game_type_input.visible = not value
+	game_type_label.visible = not value
+	if value:
+		game_type_input.select(0)
+		_region_type_changed(0)
 
 
 func setup_options() -> SetupOptions:

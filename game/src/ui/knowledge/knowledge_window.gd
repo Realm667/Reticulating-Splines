@@ -13,6 +13,7 @@ var tips_mode: OptionButton
 var position_choice: OptionButton
 var recent: Array[String] = []
 var ids: Array[String] = []
+var tip_context: Dictionary = {}
 
 
 func _init() -> void:
@@ -43,7 +44,7 @@ func _init() -> void:
 	search.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	filters.add_child(search)
 	topics = OptionButton.new()
-	for text in ["All topics", "Recently shown", "Growth", "Utilities", "Finances"]:
+	for text in ["All topics", "Recently shown", "Growth", "Utilities", "Finances", "Multiplayer"]:
 		topics.add_item(text)
 	filters.add_child(topics)
 	search.text_changed.connect(func(_text: String) -> void: refresh())
@@ -93,6 +94,8 @@ func refresh() -> void:
 		for id in recent:
 			entries.append(KnowledgeCatalog.entry(id))
 	for entry: Array in entries:
+		if entry.is_empty() or not KnowledgeCatalog.available(entry[0], tip_context, false):
+			continue
 		if topics.selected == 1 and not recent.has(entry[0]):
 			continue
 		if topics.selected == 2 and entry[4] not in ["growth", "demand", "land"]:
@@ -100,6 +103,8 @@ func refresh() -> void:
 		if topics.selected == 3 and entry[4] not in ["power", "water", "traffic"]:
 			continue
 		if topics.selected == 4 and entry[4] not in ["budget", "ordinances"]:
+			continue
+		if topics.selected == 5 and not str(entry[0]).begins_with("mp_"):
 			continue
 		var text := tr(entry[1]) + " " + tr(entry[2]) + " " + tr(entry[3])
 		if not search.text.is_empty() and text.findn(search.text) < 0:

@@ -132,3 +132,32 @@ desalination salt-water intake, tower storage, rainfall reserve, service funding
 education/health over time, recovery from abandonment and conditional growth caps
 follow the implemented rules. Original walkthroughs are context, not authority for
 mechanics absent from this fork. No new simulation, RNG, save or multiplayer rules.
+
+## Multiplayer category and regional expansion
+
+The existing library includes a Multiplayer category and thirteen additional entries.
+Existing-mode advice covers host-controlled time, agreed victory conditions, debt
+in net wealth, player loans, read-only visits, cooperative planning and saved player
+seats. Evidence is `MultiplayerGoal`, `MultiplayerLoans`, `MultiplayerSeats`,
+`RegionWorld` and the existing host-speed contract.
+
+Expansion advice covers administration, the purchase reserve, fixed grid boundaries,
+terrain pricing, combined own-city funds and separated starting positions. These
+entries require the actual regional feature flags, even in the library. They cannot
+silently advertise mechanics that are unavailable in an ordinary city or older game.
+`KnowledgeCatalog.available` is the single eligibility check for loading, automatic
+cards, Next tip and library filtering. Existing-mode library entries explicitly name
+their applicable mode. Automatic victory advice excludes endless games; net-wealth
+advice requires a wealth-based objective. Co-op and city-visit advice are mode-specific.
+
+`ApplicationRegions.tip_context()` supplies public mode/rule flags, never another
+player's financial records. `ApplicationKnowledge.region_tip(id)` lets a completed
+offer or purchase response prioritize applicable general guidance while preserving
+muting, the normal cooldown and once-per-city-session delivery. These cards do not
+infer insolvency or hidden city conditions. Region actions require an available
+overview; budget actions are suppressed when visiting another player's city.
+
+All thirteen entries use the central English template and six locale catalogs.
+Fee amounts remain in the authoritative purchase/budget UI rather than being copied
+into editorial prose. Pure-context and category tests cover old games, single cities,
+co-op, competition, endless goals and regional feature availability.

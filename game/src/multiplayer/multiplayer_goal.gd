@@ -27,7 +27,9 @@ func advance(world: CoopWorld, delta: float) -> void:
 	if kind != "timed_score" or start_age < 0 or not winners.is_empty() or unscored or not world is SharedWorld:
 		world.advance(delta)
 		return
-	var remaining := maxi(0, start_age + duration_days - world.city.age_in_days())
+	var regional: bool = world is RegionWorld and world.campaign != null
+	var current_day: int = world.campaign.current_day if regional else world.city.age_in_days()
+	var remaining := maxi(0, start_age + duration_days - current_day)
 	if remaining == 0:
 		return
 	# A long frame can run several days. Use the existing day boundary to take
@@ -36,7 +38,7 @@ func advance(world: CoopWorld, delta: float) -> void:
 	for actor: String in world.actors:
 		var child: CoopWorld = world.municipalities[actor]
 		previous[actor] = [child.controller.pause_at_day, child.controller.speed]
-		var deadline := child.city.age_in_days() + remaining
+		var deadline := start_age + duration_days if regional else child.city.age_in_days() + remaining
 		child.controller.pause_at_day = mini(deadline, child.controller.pause_at_day) if child.controller.pause_at_day >= 0 else deadline
 	world.advance(delta)
 	for actor: String in world.actors:
@@ -81,7 +83,7 @@ func evaluate(world: CoopWorld, members: Dictionary, loans: MultiplayerLoans = n
 	for actor: String in world.actors:
 		if not members[actor].get("ranked", true):
 			continue
-		var score := city_value(world.municipalities[actor].city, actor, loans)
+		var score := world_value(world, actor, loans)
 		if score > best:
 			best = score
 			leaders = [actor.sha256_text()]
@@ -93,13 +95,14 @@ func evaluate(world: CoopWorld, members: Dictionary, loans: MultiplayerLoans = n
 		if not members[actor].get("ranked", true):
 			continue
 		var city: CityState = world.municipalities[actor].city
-		var value := city_value(city, actor, loans)
+		var day: int = world.campaign.current_day if world is RegionWorld and world.campaign != null else city.age_in_days()
+		var value := world_value(world, actor, loans)
 		var key := actor.sha256_text()
 		if rule == "leadership":
 			if not holding.has(key):
-				holding[key] = {"since": city.age_in_days(), "days": 0}
-			var elapsed := maxi(0, city.age_in_days() - int(holding[key].since))
-			holding[key].since = city.age_in_days()
+				holding[key] = {"since": day, "days": 0}
+			var elapsed := maxi(0, day - int(holding[key].since))
+			holding[key].since = day
 			if key == leader:
 				holding[key].days = mini(hold_days, int(holding[key].days) + elapsed)
 		else:
@@ -107,8 +110,8 @@ func evaluate(world: CoopWorld, members: Dictionary, loans: MultiplayerLoans = n
 				holding.erase(key)
 				continue
 			if not holding.has(key):
-				holding[key] = {"since": city.age_in_days(), "days": 0}
-			holding[key].days = maxi(0, city.age_in_days() - int(holding[key].since))
+				holding[key] = {"since": day, "days": 0}
+			holding[key].days = maxi(0, day - int(holding[key].since))
 		if int(holding[key].days) < hold_days:
 			continue
 		var tile: int = world.owners.find(world.actors.find(actor) + 1)
@@ -122,14 +125,15 @@ func evaluate(world: CoopWorld, members: Dictionary, loans: MultiplayerLoans = n
 func evaluate_timed(world: SharedWorld, members: Dictionary, loans: MultiplayerLoans) -> bool:
 	if start_age < 0:
 		return false
-	elapsed_days = clampi(world.city.age_in_days() - start_age, 0, duration_days)
+	var current_day: int = world.campaign.current_day if world is RegionWorld and world.campaign != null else world.city.age_in_days()
+	elapsed_days = clampi(current_day - start_age, 0, duration_days)
 	var best := -9223372036854775807
 	var leaders: Array[String] = []
 	var scores := {}
 	for actor: String in world.actors:
 		if not members[actor].get("ranked", true):
 			continue
-		var value := city_value(world.municipalities[actor].city, actor, loans)
+		var value := world_value(world, actor, loans)
 		scores[actor.sha256_text()] = value
 		if value > best:
 			best = value
@@ -154,6 +158,15 @@ func city_value(city: CityState, actor: String, loans: MultiplayerLoans) -> int:
 		return city.population()
 	var wealth := city.funds() - city.document.misc_u32(Sc2MiscLayout.BONDS) * BondCommand.BOND_VALUE - (loans.debt(actor) if loans != null else 0)
 	return score_units(city.population(), wealth) if kind == "timed_score" else wealth
+
+func world_value(world: SharedWorld, actor: String, loans: MultiplayerLoans) -> int:
+	if world is RegionWorld and world.campaign != null:
+		var population: int = world.population_for(actor)
+		if kind == "population":
+			return population
+		var wealth: int = world.campaign.own_funds(actor) - world.campaign.own_debt(actor) - (loans.debt(actor) if loans != null else 0)
+		return score_units(population, wealth) if kind == "timed_score" else wealth
+	return city_value(world.municipalities[actor].city, actor, loans)
 
 func saved() -> Dictionary:
 	return {"kind": kind, "target": target, "winners": winners.duplicate(true), "unscored": unscored,

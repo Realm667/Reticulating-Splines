@@ -54,6 +54,8 @@ func save_now() -> bool:
 
 	if app.coop.active():
 		return _save_multiplayer()
+	if not app.regions.prepare_save().is_empty():
+		return false
 
 	var document := app.document_state.current_document
 
@@ -124,6 +126,8 @@ func _finish_job() -> void:
 # or a renamed city changes the signature too.
 static func _content_signature(document: Sc2File) -> Array:
 	var signature: Array = [document.get_instance_id(), document.city_name(), document.chunks.size()]
+	if document.sc2x_extra_entries.has(RegionCampaign.ENTRY):
+		signature.append(document.sc2x_extra_entries[RegionCampaign.ENTRY])
 
 	for chunk in document.chunks:
 		signature.append(chunk.mutation_revision)
