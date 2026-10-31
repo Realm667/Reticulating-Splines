@@ -127,6 +127,7 @@
           if (!solos.length) {
             const item = document.createElement('li');
             item.textContent = 'No shared single-player activity right now.';
+            item.style.fontSize = 'smaller';
             soloList.append(item);
           }
           section.replaceChildren(heading, multiTitle, list, hint, soloTitle, soloList);
