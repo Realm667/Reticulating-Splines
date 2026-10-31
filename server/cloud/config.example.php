@@ -10,6 +10,8 @@ return [
     'trash_days' => 30,
     'upload_hours' => 48,
     'session_days' => 90,
+    // Optional hourly request-triggered fallback when cron is unavailable; 0 disables it.
+    'garbage_interval' => 3600,
     // Explicitly configure an adapter before account creation/reset can work.
     // Adapter: function(string $email, string $purpose, string $code): void.
     // Throw on failure. Never log codes or write them in public files.

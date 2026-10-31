@@ -33,6 +33,7 @@ def main() -> None:
             config.write_text(
                 "<?php return ['storage'=>" + quote(storage) + ", 'secret'=>str_repeat('7',64),"
                 "'allow_local_http'=>" + ("true" if allow_http else "false") + ","
+                "'garbage_interval'=>3600,"
                 "'base_path'=>'/cloud-saves/api/cloud/v1',"
                 "'mail'=>static function($email,$purpose,$code){file_put_contents("
                 + quote(spool) + ",json_encode(['email'=>$email,'purpose'=>$purpose,'code'=>$code]));}];",
@@ -88,7 +89,14 @@ def main() -> None:
                     time.sleep(0.03)
             else:
                 raise TimeoutError("PHP server did not start")
+            (folder / "data" / "blobs").mkdir(parents=True)
+            orphan = folder / "data" / "blobs" / "expired-orphan"
+            orphan.write_bytes(b"synthetic orphan")
             call("GET", "/me", expected=401)
+            check(not orphan.exists(), "HTTP maintenance runs without bypassing authentication")
+            orphan.write_bytes(b"next-hour orphan")
+            call("GET", "/me", expected=401)
+            check(orphan.exists(), "HTTP maintenance is throttled across requests")
             call("POST", "/register", b"{broken", expected=400)
             call("POST", "/register", [], expected=400)
             call("POST", "/register", b"{}", expected=415, content_type="text/plain")

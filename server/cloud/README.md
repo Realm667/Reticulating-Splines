@@ -61,6 +61,7 @@ return [
     'trash_days' => 30,
     'upload_hours' => 48,
     'session_days' => 90,
+    'garbage_interval' => 3600,
     'mail' => new ReticulatingSplines\Cloud\SmtpMailer([
         'host' => 'SMTP-HOST-FROM-REL',
         'username' => 'rs@realm667.com',
@@ -98,7 +99,15 @@ php /private/backend/maintenance.php
 
 This expires staged uploads after 48 hours, sessions after 90 days, codes after 15 minutes,
 and trash after 30 days; then removes orphaned/pruned blobs and chunks. Row expiry also
-runs on API requests, but filesystem space requires the scheduled collector. Configure
+runs on API requests. If cron is unavailable, set `garbage_interval => 3600` in the private
+configuration. After the HTTPS/input guards, the first eligible request attempts collection,
+at most once per hour. A private persistent file lock is acquired nonblocking; its timestamp
+is written before work, so parallel requests and failures cannot trigger a collection storm.
+A busy database skips this optional run without waiting. Maintenance failures do not change
+authentication or normal API handling. With no traffic, the fallback does not run; the next
+request resumes it. Set the interval to 0 to disable the fallback (the service default).
+The CLI collector remains available independently, including for hosting scheduled tasks.
+Configure
 host disk monitoring and backups before enabling public registrations.
 
 500 MiB is the default **per account** quota. All five retained versions and trash count.

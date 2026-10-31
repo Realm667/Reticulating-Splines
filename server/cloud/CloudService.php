@@ -26,7 +26,8 @@ final class CloudService
     public function __construct(array $config)
     {
         $this->config = $config + ['quota' => 524288000, 'versions' => 5, 'trash_days' => 30,
-            'upload_hours' => 48, 'session_days' => 90, 'base_path' => '/api/cloud/v1'];
+            'upload_hours' => 48, 'session_days' => 90, 'base_path' => '/api/cloud/v1',
+            'garbage_interval' => 0];
         if (!isset($config['storage'], $config['secret']) || !is_string($config['secret']) ||
             !preg_match('/^[a-f0-9]{64}$/D', $config['secret'])) {
             throw new RuntimeException('Cloud storage and a random secret are required');
@@ -35,6 +36,9 @@ final class CloudService
             if (!is_int($this->config[$key]) || $this->config[$key] < 1) {
                 throw new RuntimeException('Invalid cloud configuration');
             }
+        }
+        if (!is_int($this->config['garbage_interval']) || $this->config['garbage_interval'] < 0) {
+            throw new RuntimeException('Invalid cloud garbage collection interval');
         }
         foreach (['', '/blobs', '/chunks'] as $suffix) {
             $directory = $config['storage'] . $suffix;
@@ -507,7 +511,41 @@ final class CloudService
         $this->sql('DELETE FROM saves WHERE deleted_at IS NOT NULL AND deleted_at<=?', [$this->now - $this->config['trash_days'] * 86400]);
     }
 
-    /** Run from cron. Write lock prevents deleting files between rename and DB commit. */
+    /** Optional shared-host fallback. Failed maintenance never bypasses normal API handling. */
+    public function maybeCollectGarbage(?int $now = null): array
+    {
+        $interval = $this->config['garbage_interval'];
+        if ($interval === 0) { return ['ran' => false]; }
+        $now ??= time();
+        // Never unlink/replace this file: every worker must lock the same inode.
+        $lock = @fopen($this->config['storage'] . '/maintenance.lock', 'c+b');
+        if (!$lock) { return ['ran' => false]; }
+        $locked = false;
+        try {
+            $locked = flock($lock, LOCK_EX | LOCK_NB);
+            if (!$locked) { return ['ran' => false]; }
+            $stamp = stream_get_contents($lock, 32);
+            $lastAttempt = is_string($stamp) && ctype_digit($stamp) ? (int)$stamp : 0;
+            if ($lastAttempt > 0 && $now - $lastAttempt < $interval) { return ['ran' => false]; }
+            // Persist the attempt before collecting. Even a failed/crashed collector
+            // is throttled, so a storage fault cannot make every request retry it.
+            $nextStamp = (string)$now;
+            if (!rewind($lock) || !ftruncate($lock, 0) || fwrite($lock, $nextStamp) !== strlen($nextStamp) ||
+                !fflush($lock) || !fsync($lock)) { return ['ran' => false]; }
+            // Do not queue behind an active upload or account transaction. The next
+            // eligible request retries after the interval; CLI maintenance can still run.
+            $this->db->exec('PRAGMA busy_timeout=0');
+            return ['ran' => true] + $this->collectGarbage($now);
+        } catch (Throwable) {
+            return ['ran' => false];
+        } finally {
+            $this->db->exec('PRAGMA busy_timeout=10000');
+            if ($locked) { flock($lock, LOCK_UN); }
+            fclose($lock);
+        }
+    }
+
+    /** Run from cron or the fallback. Write lock protects publication from collection. */
     public function collectGarbage(?int $now = null): array
     {
         $this->now = $now ?? time();

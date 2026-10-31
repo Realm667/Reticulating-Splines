@@ -9,5 +9,6 @@ while (!is_file($job['go'])) {
     if (microtime(true) > $deadline) { exit(2); }
     usleep(10000);
 }
-$result = $service->handle($job['method'], $job['path'], $job['body'], $job['token']);
+$result = ($job['action'] ?? '') === 'maintenance' ? $service->maybeCollectGarbage($job['now']) :
+    $service->handle($job['method'], $job['path'], $job['body'], $job['token']);
 echo json_encode($result, JSON_THROW_ON_ERROR);

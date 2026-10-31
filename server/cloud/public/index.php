@@ -52,6 +52,7 @@ try {
     $authorization = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
     $token = preg_match('/^Bearer ([a-f0-9]{64})$/D', $authorization, $match) ? $match[1] : '';
     $service = new CloudService($config);
+    $service->maybeCollectGarbage();
     $result = $service->handle($method, $_SERVER['REQUEST_URI'] ?? '', $body, $token, $raw, $_SERVER['REMOTE_ADDR'] ?? 'unknown');
     http_response_code($result['status']);
     if (isset($result['stream'])) {
