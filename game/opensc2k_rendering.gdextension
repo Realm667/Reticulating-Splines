@@ -6,6 +6,9 @@ reloadable = false
 
 [libraries]
 
+android.debug.arm64 = "res://bin/opensc2k_rendering/android-arm64/libopensc2k_rendering.so"
+android.release.arm64 = "res://bin/opensc2k_rendering/android-arm64/libopensc2k_rendering.so"
+
 macos.debug = "res://bin/opensc2k_rendering/macos/libopensc2k_rendering.dylib"
 macos.release = "res://bin/opensc2k_rendering/macos/libopensc2k_rendering.dylib"
 linux.debug.x86_64 = "res://bin/opensc2k_rendering/linux-x86_64/libopensc2k_rendering.so"

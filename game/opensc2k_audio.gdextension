@@ -6,6 +6,9 @@ reloadable = false
 
 [libraries]
 
+android.debug.arm64 = "res://bin/opensc2k_audio/android-arm64/libopensc2k_audio.so"
+android.release.arm64 = "res://bin/opensc2k_audio/android-arm64/libopensc2k_audio.so"
+
 macos.debug = "res://bin/opensc2k_audio/macos/libopensc2k_audio.dylib"
 macos.release = "res://bin/opensc2k_audio/macos/libopensc2k_audio.dylib"
 linux.debug.x86_64 = "res://bin/opensc2k_audio/linux-x86_64/libopensc2k_audio.so"
@@ -32,3 +35,6 @@ windows.debug.x86_64 = { "res://bin/opensc2k_audio/windows-x86_64/libfluidsynth-
 windows.release.x86_64 = { "res://bin/opensc2k_audio/windows-x86_64/libfluidsynth-3.dll": "" }
 windows.debug.arm64 = { "res://bin/opensc2k_audio/windows-arm64/libfluidsynth-3.dll": "" }
 windows.release.arm64 = { "res://bin/opensc2k_audio/windows-arm64/libfluidsynth-3.dll": "" }
+
+android.debug.arm64 = { "res://bin/opensc2k_audio/android-arm64/libfluidsynth.so": "" }
+android.release.arm64 = { "res://bin/opensc2k_audio/android-arm64/libfluidsynth.so": "" }

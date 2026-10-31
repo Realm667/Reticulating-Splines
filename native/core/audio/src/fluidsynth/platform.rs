@@ -67,7 +67,7 @@ mod os {
         symbol: *mut c_void,
     }
 
-    #[cfg_attr(target_os = "linux", link(name = "dl"))]
+    #[cfg_attr(any(target_os = "linux", target_os = "android"), link(name = "dl"))]
     unsafe extern "C" {
         fn dlopen(file_name: *const c_char, flags: c_int) -> *mut c_void;
 

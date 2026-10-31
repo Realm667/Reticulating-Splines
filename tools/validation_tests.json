@@ -6,6 +6,12 @@
     "lane": "product"
   },
   {
+    "id": "android_bundled_packs_test",
+    "script": "tests/android_bundled_packs_test.gd",
+    "domain": "ui",
+    "lane": "product"
+  },
+  {
     "id": "cloud_credentials_test",
     "script": "tests/cloud_credentials_test.gd",
     "domain": "ui",

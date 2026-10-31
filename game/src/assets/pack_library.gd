@@ -19,6 +19,9 @@ static func is_music_package(folder: String) -> bool:
 
 
 static func application_pack_root() -> String:
+	if OS.has_feature("android"):
+		AppPaths.root()
+		return AndroidBundledPacks.installed_root
 	if OS.has_feature("template") and OS.has_feature("macos"):
 		return OS.get_executable_path().get_base_dir().path_join("../Resources/bundled-packs").simplify_path()
 	return ""

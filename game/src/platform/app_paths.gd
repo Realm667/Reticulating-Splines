@@ -15,7 +15,7 @@ static var _error := ""
 static func root() -> String:
 	if _root.is_empty():
 		use_executable_folder(OS.get_executable_path().get_base_dir(),
-			OS.has_feature("template") and not OS.has_feature("macos"))
+			OS.has_feature("template") and not OS.has_feature("macos") and not OS.has_feature("android"))
 
 	return _root
 
@@ -43,6 +43,10 @@ static func use_executable_folder(folder: String, allow_portable: bool) -> void:
 	_root = selected.root
 	_portable = selected.portable
 	_error = selected.error
+	if OS.has_feature("android"):
+		var installed := AndroidBundledPacks.install(_root)
+		if installed != OK:
+			_error = error_string(installed)
 
 
 ## Portable settings keep paths in the data folder relative, thus the folder can move

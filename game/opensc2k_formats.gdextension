@@ -6,6 +6,9 @@ reloadable = false
 
 [libraries]
 
+android.debug.arm64 = "res://bin/opensc2k_formats/android-arm64/libopensc2k_formats.so"
+android.release.arm64 = "res://bin/opensc2k_formats/android-arm64/libopensc2k_formats.so"
+
 macos.debug = "res://bin/opensc2k_formats/macos/libopensc2k_formats.dylib"
 macos.release = "res://bin/opensc2k_formats/macos/libopensc2k_formats.dylib"
 linux.debug.x86_64 = "res://bin/opensc2k_formats/linux-x86_64/libopensc2k_formats.so"
