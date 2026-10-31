@@ -15,6 +15,8 @@ import subprocess
 import zipfile
 
 import rs_release_assets
+from android_manifest import align_template
+from build_android_native import API as ANDROID_API
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -50,10 +52,15 @@ def build(args):
                 destination = 'licenses/' + relative.removeprefix('game/assets/licenses/')
             if destination:
                 archive.write(ROOT / relative, destination)
-    digest = hashlib.file_digest(bundle.open('rb'), 'sha256').hexdigest()
+        archive.write(ROOT / 'LICENSE', 'licenses/LICENSE.txt')
+        archive.write(ROOT / 'THIRD_PARTY_NOTICES.md', 'licenses/THIRD_PARTY_NOTICES.md')
+    with bundle.open('rb') as stream:
+        digest = hashlib.file_digest(stream, 'sha256').hexdigest()
     (project / 'android-packs.zip.sha256').write_text(digest)
     preset = project / 'export_presets.cfg'
     preset.write_text(preset.read_text().replace('include_filter="', 'include_filter="android-packs.zip,android-packs.zip.sha256,'))
+    if args.dummy_audio:
+        preset.write_text(preset.read_text().replace('[preset.5.options]', '[preset.5.options]\ncommand_line/extra_args="--audio-driver Dummy --verbose --max-fps 60 --print-fps"'))
     engine = work / 'engine'
     engine.mkdir(exist_ok=True)
     executable = engine / ('Godot.exe' if os.name == 'nt' else 'godot')
@@ -68,8 +75,10 @@ def build(args):
     templates.mkdir(parents=True, exist_ok=True)
     for name in ('android_debug.apk', 'android_release.apk'):
         shutil.copy2(args.templates / name, templates / name)
+        align_template(templates / name, int(ANDROID_API))
     args.output.mkdir(parents=True, exist_ok=True)
-    apk = args.output.resolve() / f'ReticulatingSplines-{version}-android-arm64.apk'
+    suffix = '-test.apk' if args.dummy_audio else '.apk'
+    apk = args.output.resolve() / f'ReticulatingSplines-{version}-android-arm64{suffix}'
     env = dict(os.environ, JAVA_HOME=str(args.java.resolve()), ANDROID_HOME=str(args.sdk.resolve()))
     env['TEMP'] = env['TMP'] = str(work / 'tmp')
     Path(env['TEMP']).mkdir(exist_ok=True)
@@ -83,7 +92,8 @@ def build(args):
     with apk.open('rb') as stream:
         checksum = hashlib.file_digest(stream, 'sha256').hexdigest()
     (args.output / 'android-build-info.json').write_text(json.dumps(dict(commit=commit, version=version,
-        platform='android-arm64', debug=args.debug, archive=apk.name, sha256=checksum, bundled_sha256=digest), indent=2) + '\n')
+        platform='android-arm64', debug=args.debug, dummy_audio=args.dummy_audio, min_sdk=int(ANDROID_API),
+        archive=apk.name, sha256=checksum, bundled_sha256=digest), indent=2) + '\n')
     print(apk)
 
 
@@ -92,4 +102,5 @@ if __name__ == '__main__':
     for name in ('godot', 'work', 'output', 'sdk', 'java', 'templates'):
         parser.add_argument('--' + name, type=Path, required=True)
     parser.add_argument('--debug', action='store_true')
+    parser.add_argument('--dummy-audio', action='store_true', help='Internal device tests only; never publish this silent test APK')
     build(parser.parse_args())

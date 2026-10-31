@@ -18,6 +18,11 @@ archives as desktop builds and the Android CMake toolchain. FluidSynth remains
 a separate shared library; corresponding sources and LGPL notices must accompany
 distribution. Never package Windows/Linux binaries as Android libraries.
 
+The native target is Android API 28 (Android 9) or newer. The APK exporter raises
+the prebuilt Godot templates' manifest minimum to the same API before Godot
+signs the final package; engine code and assets remain unchanged. This avoids
+advertising the template's lower minimum for libraries built against API 28.
+
 ## Data and credentials
 
 Android always uses the application's private Godot user directory, not a
@@ -26,6 +31,12 @@ graphics/sound/music packs as `res://android-packs.zip`. First use extracts an
 immutable directory named by the archive SHA256. A completion marker is written
 last. Native asset readers can then use ordinary paths. Existing user imports
 and previous complete bundles are preserved if extraction fails.
+
+The archive is first copied to a regular private file and its SHA256 checked.
+Android then uses the platform's indexed ZIP reader, bounded entry counts and
+sizes, safe relative paths, and CRC validation. Godot's name-based ZIP reader
+otherwise rescans the directory for every file. The existing reader remains
+available for host-side tests. The APK carries project/dependency license notices.
 
 Cloud device tokens use AES-GCM with a per-account key held by AndroidKeyStore.
 Only ciphertext and a random IV enter private SharedPreferences. The account is
@@ -40,6 +51,18 @@ and Java SDK paths in an isolated editor profile. Use a debug signing key only
 for internal tests. A public release needs a protected, durable signing key,
 the common release source commit/version, APK inventory, license/source bundle,
 `SHA256SUMS.txt` and `build-info.json`.
+
+`tools/build_android_release.py` exports a clean committed tree in a separate
+work directory. Supply `--godot`, `--work`, `--output`, `--sdk`, `--java`, and
+`--templates`. Release signing uses Godot's keystore environment variables;
+never put passwords in command arguments or Git. `--debug --dummy-audio` creates
+an internal `-android-arm64-test.apk` and records the silent test mode in its
+build information. Never publish that test artifact. Real audio requires a
+separate manual listening check; automated checks use Dummy audio.
+
+`input_devices/pointing/android/disable_scroll_deadzone` is enabled so symmetric
+two-finger pinches deliver raw touch drags to the existing navigation code.
+Native pan/scale emulation stays at its default to avoid duplicate gestures.
 
 Before accepting a build, verify native library ABI/dependencies and 16KiB page
 alignment, install and launch on the authorized device, then test bundled assets,
