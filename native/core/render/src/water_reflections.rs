@@ -322,7 +322,9 @@ impl Builder {
             } else {
                 None
             };
-            self.water_lights(&mut out, bounds, draw, emission, &levels, facade);
+            if !bridge(building) {
+                self.water_lights(&mut out, bounds, draw, emission, &levels, facade);
+            }
             let footprint = self.sprites.footprint_draw(draw);
             let (left, _) = self.sprites.canvas_padding(draw.image);
             let contacts: Vec<_> = (0..sprite.w)
@@ -406,13 +408,13 @@ impl Builder {
                         let distance = (y - plane).max(0);
                         let fade = (255 - distance * self.config.divisor()).max(0) as u8;
                         owners[pixel] = draw.order;
-                        out.reflected[dst..dst + 4].copy_from_slice(&[sprite.rgba[src], 0, 0, fade]);
-                        out.emission[dst..dst + 4].copy_from_slice(&if draw.emission_disabled {
+                        out.reflected[dst..dst + 4].copy_from_slice(&[sprite.rgba[src], if bridge(building) { 255 } else { 0 }, 0, fade]);
+                        out.emission[dst..dst + 4].copy_from_slice(&if draw.emission_disabled || bridge(building) {
                             [0; 4]
                         } else {
                             auxiliary(emission, draw, sprite, sx, sy)
                         });
-                        out.seasons[dst..dst + 4].copy_from_slice(&season);
+                        out.seasons[dst..dst + 4].copy_from_slice(&if bridge(building) { [0; 4] } else { season });
                     }
                 }
             }
@@ -1299,10 +1301,10 @@ mod tests {
     #[test]
     fn bridge_sprite_pixels_reflect_without_rotating_in_both_directions() {
         use crate::ids::{
-            building_tile_ids::{HIGHWAY_STRAIGHT_1, HIGHWAY_STRAIGHT_2, ROAD_BRIDGE},
+            building_tile_ids::{HIGHWAY_STRAIGHT_1, HIGHWAY_STRAIGHT_2, POWER_BRIDGE, SUSPENSION_BRIDGE_1},
             sc2tile_flags::FLIPPED,
         };
-        for building in [ROAD_BRIDGE, HIGHWAY_STRAIGHT_1, HIGHWAY_STRAIGHT_2] {
+        for building in (SUSPENSION_BRIDGE_1..=POWER_BRIDGE).chain([HIGHWAY_STRAIGHT_1, HIGHWAY_STRAIGHT_2]) {
             for view in 0..3 {
                 for flip in [false, true] {
                     let mut builder = fixture(view);
@@ -1375,10 +1377,13 @@ mod tests {
                             40 + original_x as u8,
                             "tile {building}, view {view}, flip {flip}, column {x}"
                         );
+                        assert_eq!(out.reflected[at + 1], 255, "Bridge must use a palette-independent silhouette");
                         assert!(out.reflected[at + 3] > 0);
                         pixels += 1;
                     }
                     assert!(pixels >= width / 2, "bridge reflection was clipped in view {view}, flip {flip}");
+                    assert!(out.emission.iter().all(|v| *v == 0));
+                    assert!(out.lights.iter().all(|v| *v == 0));
                 }
             }
         }

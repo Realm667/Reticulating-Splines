@@ -65,6 +65,30 @@ func _run() -> void:
 		var custom := Sc2SpriteArchive.entry_from_indices(id, entry.width, entry.height, indices)
 		var custom_image := custom.create_image(app.asset_state.palette_index_encoding).image
 		assert(CityShipArtwork.clean(custom, custom_image, pack.palette, true) == custom_image, "Custom ship artwork changed")
+	for id: int in CityShipArtwork.RS_SOURCES:
+		var image := Image.load_from_file(ProjectSettings.globalize_path("res://../packs/standalone-graphics/graphics/masters/%d.png" % id))
+		assert(image != null)
+		var before := image.get_data()
+		assert(CityShipArtwork.clean_artwork(id, image, pack.palette, false) == image)
+		var clean := CityShipArtwork.clean_artwork(id, image, pack.palette, true)
+		assert(clean != image, "RS master fingerprint did not match")
+		for view_id: int in [id - 1000, id - 500]:
+			assert(CityShipArtwork.clean_artwork(view_id, image, pack.palette, true).get_data() == clean.get_data(), "RS zoom alias kept baked water")
+		var removed := 0
+		var retained := 0
+		for y in image.get_height():
+			for x in image.get_width():
+				var old := image.get_pixel(x, y)
+				var pixel := clean.get_pixel(x, y)
+				if pixel.a > 0.99:
+					assert(pixel == old, "RS hull/cargo changed")
+					retained += 1
+				removed += int(old.a > 0.99 and pixel.a < 0.41)
+		assert(removed > 0 and retained > 50, "Missing RS hull or water correction")
+		assert(image.get_data() == before)
+		var custom := image.duplicate()
+		custom.set_pixel(0, 0, Color.RED)
+		assert(CityShipArtwork.clean_artwork(id, custom, pack.palette, true) == custom)
 	pack.large_sprites.water_reflections = true
 	var viewport := SubViewport.new()
 	viewport.size = Vector2i(896, 256)

@@ -51,6 +51,18 @@ func _run() -> void:
 	assert(reflected.get_pixel(8, 8).r > 0.6, "Geometric reflection lost its source color")
 	assert(reflected.get_pixel(24, 8).is_equal_approx(original.get_pixel(24, 8)), "Water shader changed land")
 	assert(reflected.get_pixel(1, 8).is_equal_approx(original.get_pixel(1, 8)), "Padded region edge was drawn twice")
+	# The bridge marker resolves to black even when its palette index is red.
+	mirror.fill(Color(40.0 / 255.0, 1, 0, 1))
+	sprite.texture = ImageTexture.create_from_image(mirror)
+	await RenderingServer.frame_post_draw
+	var silhouette := viewport.get_texture().get_image().get_pixel(8, 8)
+	assert(silhouette.r < 0.01 and silhouette.g < 0.01 and silhouette.b < 0.01)
+	material.set_shader_parameter("water_geometry_preview", false)
+	await RenderingServer.frame_post_draw
+	var shadow := viewport.get_texture().get_image().get_pixel(8, 8)
+	assert(shadow.b > 0.0 and shadow.b < original.get_pixel(8, 8).b, "Bridge silhouette must remain translucent")
+	mirror.fill(Color(40.0 / 255.0, 0, 0, 1))
+	sprite.texture = ImageTexture.create_from_image(mirror)
 	material.set_shader_parameter("water_geometry_preview", false)
 	material.set_shader_parameter("water_clock", 0.0)
 	await RenderingServer.frame_post_draw

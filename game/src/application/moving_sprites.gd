@@ -702,7 +702,8 @@ func _complete_sprite_textures(resource: CitySpriteResource, sprite_archive: Sc2
 	resource.texture = ImageTexture.create_from_image(resource.image)
 	resource.index_texture = resource.texture
 	if _shows_artwork(sprite_archive, sprite_id):
-		resource.artwork_image = HdSprite.scaled(sprite_archive.high_resolution[sprite_id].image, resource.image.get_size())
+		var source_artwork := CityShipArtwork.clean_artwork(sprite_id, sprite_archive.high_resolution[sprite_id].image, app.asset_state.palette, sprite_archive.water_reflections)
+		resource.artwork_image = HdSprite.scaled(source_artwork, resource.image.get_size())
 		if flip:
 			resource.artwork_image.flip_x()
 		resource.artwork_texture = ImageTexture.create_from_image(resource.artwork_image)

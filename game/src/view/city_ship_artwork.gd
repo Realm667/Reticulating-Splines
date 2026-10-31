@@ -47,3 +47,45 @@ static func clean(entry: Sc2SpriteArchive.SpriteEntry, image: Image, palette: Sc
 			else:
 				result.set_pixel(x, y, Color.TRANSPARENT)
 	return result
+
+
+# Only the bundled RS masters are recognized; arbitrary replacement art is preserved.
+const RS_SOURCES := {
+	1369: "7e1bc6f06e65743861c8d269ecb683785e384594803538add4ffd319ff384e7b",
+	1370: "f09a434c71bff421bebc79cfe1fc081d8abc7a6fcc40dcf31d4595f30c33bce9",
+	1371: "5c5c1f8fa076d31540900cb8bd96c70002eb01a24adff1e2b4eb1ae1065c3f95",
+	1372: "5e7a1fec8777158c967fa9eb740f2779507f9925368fce8c8fefb96aeb5072e4",
+	1373: "60848b7e4455e2af78f5d06007c073af5572c70375017044b9d1c3f2026b63a6",
+}
+
+
+static func clean_artwork(id: int, image: Image, palette: Sc2Palette, enhanced_water: bool) -> Image:
+	var master_id := id if id >= 1000 else id % 500 + 1000
+	if not enhanced_water or not RS_SOURCES.has(master_id) or palette == null or not palette.is_valid() or palette.is_index_encoding:
+		return image
+	var hash_context := HashingContext.new()
+	hash_context.start(HashingContext.HASH_SHA256)
+	hash_context.update(image.get_data())
+	if hash_context.finish().hex_encode() != RS_SOURCES[master_id]:
+		return image
+	# Classify the actual RS artwork rather than borrowing the original hull geometry.
+	var indexed := Image.create(image.get_width(), image.get_height(), false, Image.FORMAT_RGBA8)
+	var lookup := {}
+	for index in 256:
+		lookup[palette.color(index).to_rgba32()] = index
+	for y in image.get_height():
+		for x in image.get_width():
+			var pixel := image.get_pixel(x, y)
+			indexed.set_pixel(x, y, Color(float(lookup.get(pixel.to_rgba32(), 0)) / 255.0, 0.0, 0.0, pixel.a))
+	var columns := WaterReflectionSprite.hull_columns(indexed, palette)
+	var result := image.duplicate()
+	for y in image.get_height():
+		for x in image.get_width():
+			if y >= columns[x].x and y < columns[x].y:
+				continue
+			var color := image.get_pixel(x, y)
+			if color.a > 0.0 and color.r > 0.25 and color.g > 0.65 and color.g > color.b * 0.8:
+				result.set_pixel(x, y, Color(0.72, 0.79, 0.81, 0.4))
+			else:
+				result.set_pixel(x, y, Color.TRANSPARENT)
+	return result

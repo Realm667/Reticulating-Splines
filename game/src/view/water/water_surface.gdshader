@@ -63,7 +63,10 @@ vec4 mirror_sample(vec4 source, vec2 uv, float level, float shade) {
 	float distance = (1.0 - source.a) * 255.0;
 	float coverage = source.a * (water_geometry_preview ? 1.0 : 1.0 - smoothstep(6.0, 80.0, distance));
 	if (coverage <= 0.0) { return vec4(0.0); }
-	return vec4(environment_color(palette_color(source.r) * shade, uv) * coverage, coverage);
+	// Green marks palette-independent bridge silhouettes. Keep alpha as distance
+	// so they share water clipping, waves, blur and attenuation with other sources.
+	vec3 color = source.g > 0.5 ? vec3(0.0) : environment_color(palette_color(source.r) * shade, uv);
+	return vec4(color * coverage, coverage);
 }
 
 vec4 shore_light(vec2 uv, float level) {
