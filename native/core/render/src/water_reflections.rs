@@ -140,6 +140,68 @@ fn contact_twice(draw: &Draw, column: i32, building: u8) -> i32 {
     }
 }
 
+// A horizontal deck keeps both isometric axes. A reflection about one diagonal
+// instead shears its transverse width. Infer the deck elevation from the active
+// silhouette, then translate its planar pixels; supports retain their real foot.
+struct BridgeProjection {
+    height: i32,
+    // Rear/front ground edges, support foot, front edge of the raised deck.
+    columns: Vec<[i32; 4]>,
+}
+
+impl BridgeProjection {
+    fn new(draw: &Draw, footprint: &Draw, sprite: &Sprite, seasons: &HashMap<u64, Sprite>, fallback: i32) -> Self {
+        let left = footprint.rect.x - draw.rect.x;
+        let mut columns = Vec::with_capacity(sprite.w as usize);
+        let mut elevations = HashMap::<i32, i32>::new();
+        for x in 0..sprite.w {
+            let column = x - left;
+            let inset = ((2 * column + 1 - footprint.rect.w).abs() - 1).max(0) / 4;
+            let front = footprint.rect.y + footprint.rect.h - inset;
+            let rear = footprint.rect.y + footprint.rect.h - footprint.rect.w / 2 - 1 + inset;
+            let mut top = None;
+            let mut foot = rear;
+            for y in 0..sprite.h {
+                if sprite.rgba[((y * sprite.w + x) * 4 + 3) as usize] == 0
+                    || (140..=166).contains(&auxiliary(seasons, draw, sprite, x, y)[2])
+                {
+                    continue;
+                }
+                top.get_or_insert(draw.rect.y + y);
+                foot = draw.rect.y + y + 1;
+            }
+            if let Some(top) = top.filter(|_| column >= 0 && column < footprint.rect.w) {
+                let elevation = rear - top;
+                if elevation > 0 {
+                    *elevations.entry(elevation).or_default() += 1;
+                }
+            }
+            columns.push([rear, front, foot, 0]);
+        }
+        // Broad repeated edges identify the deck. Sparse cables/open leaves use
+        // one terrain step instead. Explicit ties keep cache output deterministic.
+        let height = elevations
+            .into_iter()
+            .max_by_key(|&(height, count)| (count, -height))
+            .filter(|&(_, count)| count >= footprint.rect.w.max(4) / 4)
+            .map_or(fallback.max(1), |(height, _)| height);
+        for column in &mut columns {
+            column[3] = column[1] - height;
+        }
+        Self { height, columns }
+    }
+
+    fn contact(&self, x: i32, row: i32) -> i32 {
+        let [rear, front, foot, deck_front] = self.columns[x as usize];
+        if foot > deck_front && row >= deck_front {
+            2 * foot
+        } else {
+            // Pixel centres inside the plane reflect to row + 2*height.
+            2 * (row + self.height).clamp(rear, front.max(rear + 1) - 1) + 1
+        }
+    }
+}
+
 fn contact_twice_at_foot(draw: &Draw, column: i32, building: u8, sprite: &Sprite) -> i32 {
     let axis = contact_twice(draw, column, building);
     if !bridge(building) {
@@ -343,8 +405,15 @@ impl Builder {
                     (axis, foot, if bridge(building) { pier_start(sprite, x) } else { sprite.h })
                 })
                 .collect();
-            let lowest = contacts.iter().map(|v| v.0.min(v.1)).min().unwrap();
-            let highest = contacts.iter().map(|v| v.0.max(v.1)).max().unwrap();
+            let projection = bridge(building).then(|| BridgeProjection::new(draw, &footprint, sprite, seasons, self.config.step()));
+            let lowest = projection.as_ref().map_or_else(
+                || contacts.iter().map(|v| v.0.min(v.1)).min().unwrap(),
+                |p| p.columns.iter().map(|c| 2 * c[0].min(c[2])).min().unwrap(),
+            );
+            let highest = projection.as_ref().map_or_else(
+                || contacts.iter().map(|v| v.0.max(v.1)).max().unwrap(),
+                |p| p.columns.iter().map(|c| 2 * c[1].max(c[2]) + 1).max().unwrap(),
+            );
             for (level, present) in levels.iter().enumerate() {
                 if !present || altitude < level as i32 {
                     continue;
@@ -371,7 +440,9 @@ impl Builder {
                         if facade_column.is_some_and(|(top, foot, _)| (sy as f32 + 0.5) < top || sy as f32 + 0.5 >= foot) {
                             continue;
                         }
-                        let contact = if sy >= pier { foot } else { axis };
+                        let contact = projection
+                            .as_ref()
+                            .map_or(if sy >= pier { foot } else { axis }, |p| p.contact(sx, draw.rect.y + sy));
                         let plane = (contact + lift).div_euclid(2);
                         let src = ((sy * sprite.w + sx) * 4) as usize;
                         if sprite.rgba[src + 3] == 0 || 2 * (draw.rect.y + sy) + 1 >= contact {
@@ -1237,6 +1308,24 @@ mod tests {
     }
 
     #[test]
+    fn horizontal_bridge_plane_preserves_both_axes_and_support_water_contact() {
+        for scale in [1, 2, 4] {
+            let projection = BridgeProjection {
+                height: 12 * scale,
+                columns: vec![[20 * scale, 36 * scale, 30 * scale, 24 * scale]; (32 * scale) as usize],
+            };
+            for x in 0..32 * scale {
+                for ground in 20 * scale..35 * scale {
+                    let row = ground - projection.height;
+                    assert_eq!(projection.contact(x, row) - row - 1, row + 2 * projection.height);
+                }
+                let row = 30 * scale - 1;
+                assert_eq!(projection.contact(x, row) - row - 1, 30 * scale);
+            }
+        }
+    }
+
+    #[test]
     fn bridge_contact_tracks_the_diagonal_axis_across_spans_and_flips() {
         use crate::ids::building_tile_ids::*;
         for building in (SUSPENSION_BRIDGE_1..=POWER_BRIDGE).chain([HIGHWAY_BRIDGE, REINFORCED_HIGHWAY_BRIDGE]) {
@@ -1301,16 +1390,25 @@ mod tests {
     #[test]
     fn bridge_sprite_pixels_reflect_without_rotating_in_both_directions() {
         use crate::ids::{
-            building_tile_ids::{HIGHWAY_STRAIGHT_1, HIGHWAY_STRAIGHT_2, POWER_BRIDGE, SUSPENSION_BRIDGE_1},
+            building_tile_ids::{
+                HIGHWAY_BRIDGE, HIGHWAY_STRAIGHT_1, HIGHWAY_STRAIGHT_2, POWER_BRIDGE, REINFORCED_HIGHWAY_BRIDGE, SUSPENSION_BRIDGE_1,
+            },
             sc2tile_flags::FLIPPED,
         };
-        for building in (SUSPENSION_BRIDGE_1..=POWER_BRIDGE).chain([HIGHWAY_STRAIGHT_1, HIGHWAY_STRAIGHT_2]) {
+        for building in
+            (SUSPENSION_BRIDGE_1..=POWER_BRIDGE).chain([HIGHWAY_STRAIGHT_1, HIGHWAY_STRAIGHT_2, HIGHWAY_BRIDGE, REINFORCED_HIGHWAY_BRIDGE])
+        {
             for view in 0..3 {
                 for flip in [false, true] {
                     let mut builder = fixture(view);
                     let c = builder.config;
-                    let width = c.hw() * 2;
-                    let height = c.height() + 12 / c.divisor();
+                    let width = c.hw()
+                        * if matches!(building, HIGHWAY_BRIDGE | REINFORCED_HIGHWAY_BRIDGE) {
+                            4
+                        } else {
+                            2
+                        };
+                    let height = width / 2 + 1 + 12 / c.divisor();
                     let mut image = Sprite {
                         w: width,
                         h: height,
@@ -1318,13 +1416,8 @@ mod tests {
                         la: vec![0; (width * height * 2) as usize],
                     };
                     for x in 0..width {
-                        let direction = if building == HIGHWAY_STRAIGHT_2 {
-                            x - width / 2
-                        } else {
-                            width / 2 - 1 - x
-                        };
-                        let plane = (2 * height + direction).div_euclid(2);
-                        let row = plane - 16 / c.divisor();
+                        let inset = ((2 * x + 1 - width).abs() - 1).max(0) / 4;
+                        let row = height - width / 2 - 1 + inset - 12 / c.divisor();
                         let at = (row * width + x) as usize;
                         let index = 40 + x as u8;
                         image.rgba[at * 4..at * 4 + 4].copy_from_slice(&[index, index, index, 255]);
@@ -1338,9 +1431,14 @@ mod tests {
                         image.rgba[at * 4..at * 4 + 4].copy_from_slice(&[200, 200, 200, 255]);
                         image.la[at * 2..at * 2 + 2].copy_from_slice(&[200, 255]);
                     }
-                    builder.city.buildings[0] = building;
+                    builder.city.buildings[0] = 0;
                     builder.city.terrain[0] = 0x10;
-                    builder.city.flags[0] = 4 | if flip { FLIPPED } else { 0 };
+                    builder.city.flags[0] = 4;
+                    let anchor = builder.city.index(1, 2);
+                    builder.city.buildings[anchor] = building;
+                    builder.city.zones[anchor] = 0x80;
+                    builder.city.terrain[anchor] = 0x10;
+                    builder.city.flags[anchor] = 4 | if flip { FLIPPED } else { 0 };
                     builder.sprites.images.insert(((c.base() + i32::from(building)) * 2) as u64, image);
                     let bounds = Rect::new(c.side(), c.top() - 32 / c.divisor(), 160 / c.divisor(), 160 / c.divisor());
                     let mut indices = [0; 256];
@@ -1355,19 +1453,11 @@ mod tests {
                     let mut pixels = 0;
                     for x in 0..width {
                         let original_x = if flip { width - 1 - x } else { x };
-                        let direction = if building == HIGHWAY_STRAIGHT_2 {
-                            original_x - width / 2
-                        } else {
-                            width / 2 - 1 - original_x
-                        };
-                        let source_row = (2 * height + direction).div_euclid(2) - 16 / c.divisor();
-                        let axis = 2 * (draw.rect.y + height)
-                            + if flip ^ (building == HIGHWAY_STRAIGHT_2) {
-                                x - width / 2
-                            } else {
-                                width / 2 - 1 - x
-                            };
-                        let y = axis - (draw.rect.y + source_row) - 1;
+                        let inset = ((2 * original_x + 1 - width).abs() - 1).max(0) / 4;
+                        let source_row = height - width / 2 - 1 + inset - 12 / c.divisor();
+                        let source = &builder.sprites.images[&draw.image];
+                        let plane = BridgeProjection::new(&draw, &draw, source, &HashMap::new(), c.step());
+                        let y = plane.contact(x, draw.rect.y + source_row) - (draw.rect.y + source_row) - 1;
                         let at = (((y - bounds.y) * bounds.w + draw.rect.x + x - bounds.x) * 4) as usize;
                         if out.surface[at + 3] == 0 {
                             continue;
