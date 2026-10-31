@@ -6,15 +6,41 @@ static var installed_root := ""
 
 
 static func install(user_root: String, archive := "res://android-packs.zip") -> Error:
-	var digest := FileAccess.get_sha256(archive)
+	var digest := FileAccess.get_file_as_string(archive + ".sha256").strip_edges() if FileAccess.file_exists(archive + ".sha256") else FileAccess.get_sha256(archive)
 	if digest.is_empty():
 		return ERR_FILE_NOT_FOUND
 	var destination := user_root.path_join("bundled").path_join(digest)
 	if FileAccess.file_exists(destination.path_join("complete")):
 		installed_root = destination
 		return OK
+	# Seeking backwards in a compressed APK asset re-inflates the outer archive.
+	# Copy once to a private regular file before ZIPReader seeks among its entries.
+	var local_archive := user_root.path_join("bundled-packs.install.zip")
+	var error := DirAccess.make_dir_recursive_absolute(user_root)
+	if error != OK:
+		return error
+	var source := FileAccess.open(archive, FileAccess.READ)
+	var target_archive := FileAccess.open(local_archive, FileAccess.WRITE)
+	if source == null or target_archive == null:
+		return FileAccess.get_open_error()
+	if source.get_length() > 512 * 1024 * 1024:
+		return ERR_FILE_CORRUPT
+	# One read also avoids repeated underlying APK seek/decompression per chunk.
+	var archive_bytes := source.get_buffer(source.get_length())
+	if archive_bytes.size() != source.get_length():
+		return ERR_FILE_CANT_READ
+	target_archive.store_buffer(archive_bytes)
+	archive_bytes.clear()
+	target_archive.flush()
+	error = target_archive.get_error()
+	target_archive.close()
+	source.close()
+	if error != OK:
+		return error
+	if FileAccess.get_sha256(local_archive) != digest:
+		return ERR_FILE_CORRUPT
 	var reader := ZIPReader.new()
-	var error := reader.open(archive)
+	error = reader.open(local_archive)
 	if error != OK:
 		return error
 	var total := 0
@@ -50,6 +76,7 @@ static func install(user_root: String, archive := "res://android-packs.zip") -> 
 			reader.close()
 			return error
 	reader.close()
+	DirAccess.remove_absolute(local_archive)
 	var marker := FileAccess.open(destination.path_join("complete"), FileAccess.WRITE)
 	if marker == null:
 		return FileAccess.get_open_error()

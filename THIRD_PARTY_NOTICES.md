@@ -105,3 +105,9 @@ See `game/assets/licenses/Reticulating-Splines-assets.txt` and `CC-BY-4.0.txt`
 Existing CC0/public-domain audio source entries keep their documented terms;
 see `packs/standalone-audio/provenance.json` (in downloads:
 `licenses/reticulating-splines/audio-provenance.json`).
+
+## Rust credential and platform dependencies
+
+The locked dependency inventory, upstream license and attribution texts are in `licenses/rust/dependencies` (source: `game/assets/licenses/rust/dependencies`). This is a workspace superset; each platform uses a subset. It includes keyring and the Secret Service/DBus backend. Vendored DBus keeps its upstream license notices.
+
+Unmodified godot-rust bindings use MPL-2.0. Their exact source archives, and all other locked Rust dependency sources, are provided in `ReticulatingSplines-0.3.0-rs.8-rust-sources.zip` alongside this release. Each crate retains its own license and copyright notices; the game license does not replace them.

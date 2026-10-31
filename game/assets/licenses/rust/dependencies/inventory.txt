@@ -1,0 +1,4326 @@
+[
+  {
+    "name": "adler2",
+    "version": "2.0.1",
+    "spdx": "0BSD OR MIT OR Apache-2.0",
+    "repository": "https://github.com/oyvindln/adler2",
+    "files": [
+      "adler2-2.0.1-LICENSE-0BSD.txt",
+      "adler2-2.0.1-LICENSE-APACHE.txt",
+      "adler2-2.0.1-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Jonas Schievink <jonasschievink@gmail.com>",
+      "oyvindln <oyvindln@users.noreply.github.com>"
+    ]
+  },
+  {
+    "name": "aes",
+    "version": "0.8.4",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/RustCrypto/block-ciphers",
+    "files": [
+      "aes-0.8.4-LICENSE-APACHE.txt",
+      "aes-0.8.4-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "RustCrypto Developers"
+    ]
+  },
+  {
+    "name": "ahash",
+    "version": "0.8.12",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/tkaitchuck/ahash",
+    "files": [
+      "ahash-0.8.12-LICENSE-APACHE.txt",
+      "ahash-0.8.12-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Tom Kaitchuck <Tom.Kaitchuck@gmail.com>"
+    ]
+  },
+  {
+    "name": "aho-corasick",
+    "version": "1.1.5",
+    "spdx": "Unlicense OR MIT",
+    "repository": "https://github.com/BurntSushi/aho-corasick",
+    "files": [
+      "aho-corasick-1.1.5-COPYING.txt",
+      "aho-corasick-1.1.5-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Andrew Gallant <jamslam@gmail.com>"
+    ]
+  },
+  {
+    "name": "alsa",
+    "version": "0.9.1",
+    "spdx": "Apache-2.0/MIT",
+    "repository": "https://github.com/diwic/alsa-rs",
+    "files": [
+      "alsa-0.9.1-LICENSE-APACHE.txt",
+      "alsa-0.9.1-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "David Henningsson <coding@diwic.se>"
+    ]
+  },
+  {
+    "name": "alsa-sys",
+    "version": "0.3.1",
+    "spdx": "MIT",
+    "repository": "https://github.com/diwic/alsa-sys",
+    "files": [
+      "alsa-sys-0.3.1-LICENSE.txt"
+    ],
+    "authors": [
+      "Pierre Krieger <pierre.krieger1708@gmail.com>",
+      "David Henningsson <coding@diwic.se>"
+    ]
+  },
+  {
+    "name": "android-activity",
+    "version": "0.6.1",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-mobile/android-activity",
+    "files": [
+      "android-activity-0.6.1-LICENSE-APACHE.txt",
+      "android-activity-0.6.1-LICENSE-MIT.txt",
+      "android-activity-0.6.1-LICENSE.txt"
+    ],
+    "authors": []
+  },
+  {
+    "name": "android-properties",
+    "version": "0.2.2",
+    "spdx": "MIT",
+    "repository": "https://github.com/miklelappo/android-properties",
+    "files": [
+      "android-properties-0.2.2-LICENSE.txt"
+    ],
+    "authors": [
+      "Mikhail Lappo <mikhail.lappo@esrlabs.com>"
+    ]
+  },
+  {
+    "name": "as-raw-xcb-connection",
+    "version": "1.0.1",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/psychon/as-raw-xcb-connection",
+    "files": [
+      "as-raw-xcb-connection-1.0.1-LICENSE-APACHE.txt",
+      "as-raw-xcb-connection-1.0.1-LICENSE-MIT.txt"
+    ],
+    "authors": []
+  },
+  {
+    "name": "async-broadcast",
+    "version": "0.7.2",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/smol-rs/async-broadcast",
+    "files": [
+      "async-broadcast-0.7.2-LICENSE-APACHE.txt",
+      "async-broadcast-0.7.2-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Stjepan Glavina <stjepang@gmail.com>",
+      "Yoshua Wuyts <yoshuawuyts@gmail.com>",
+      "Zeeshan Ali Khan <zeeshanak@gnome.org>"
+    ]
+  },
+  {
+    "name": "async-channel",
+    "version": "2.5.0",
+    "spdx": "Apache-2.0 OR MIT",
+    "repository": "https://github.com/smol-rs/async-channel",
+    "files": [
+      "async-channel-2.5.0-LICENSE-APACHE.txt",
+      "async-channel-2.5.0-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Stjepan Glavina <stjepang@gmail.com>"
+    ]
+  },
+  {
+    "name": "async-io",
+    "version": "2.6.0",
+    "spdx": "Apache-2.0 OR MIT",
+    "repository": "https://github.com/smol-rs/async-io",
+    "files": [
+      "async-io-2.6.0-LICENSE-APACHE.txt",
+      "async-io-2.6.0-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Stjepan Glavina <stjepang@gmail.com>"
+    ]
+  },
+  {
+    "name": "async-lock",
+    "version": "3.4.2",
+    "spdx": "Apache-2.0 OR MIT",
+    "repository": "https://github.com/smol-rs/async-lock",
+    "files": [
+      "async-lock-3.4.2-LICENSE-APACHE.txt",
+      "async-lock-3.4.2-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Stjepan Glavina <stjepang@gmail.com>"
+    ]
+  },
+  {
+    "name": "async-process",
+    "version": "2.5.0",
+    "spdx": "Apache-2.0 OR MIT",
+    "repository": "https://github.com/smol-rs/async-process",
+    "files": [
+      "async-process-2.5.0-LICENSE-APACHE.txt",
+      "async-process-2.5.0-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Stjepan Glavina <stjepang@gmail.com>"
+    ]
+  },
+  {
+    "name": "async-recursion",
+    "version": "1.2.0",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/dcchut/async-recursion",
+    "files": [
+      "async-recursion-1.2.0-LICENSE-APACHE.txt",
+      "async-recursion-1.2.0-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Robert Usher <266585+dcchut@users.noreply.github.com>"
+    ]
+  },
+  {
+    "name": "async-signal",
+    "version": "0.2.14",
+    "spdx": "Apache-2.0 OR MIT",
+    "repository": "https://github.com/smol-rs/async-signal",
+    "files": [
+      "async-signal-0.2.14-LICENSE-APACHE.txt",
+      "async-signal-0.2.14-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "John Nunley <dev@notgull.net>"
+    ]
+  },
+  {
+    "name": "async-task",
+    "version": "4.7.1",
+    "spdx": "Apache-2.0 OR MIT",
+    "repository": "https://github.com/smol-rs/async-task",
+    "files": [
+      "async-task-4.7.1-LICENSE-APACHE.txt",
+      "async-task-4.7.1-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Stjepan Glavina <stjepang@gmail.com>"
+    ]
+  },
+  {
+    "name": "async-trait",
+    "version": "0.1.92",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/dtolnay/async-trait",
+    "files": [
+      "async-trait-0.1.92-LICENSE-APACHE.txt",
+      "async-trait-0.1.92-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "David Tolnay <dtolnay@gmail.com>"
+    ]
+  },
+  {
+    "name": "atomic-waker",
+    "version": "1.1.2",
+    "spdx": "Apache-2.0 OR MIT",
+    "repository": "https://github.com/smol-rs/atomic-waker",
+    "files": [
+      "atomic-waker-1.1.2-LICENSE-APACHE.txt",
+      "atomic-waker-1.1.2-LICENSE-MIT.txt",
+      "atomic-waker-1.1.2-LICENSE-THIRD-PARTY.txt"
+    ],
+    "authors": [
+      "Stjepan Glavina <stjepang@gmail.com>",
+      "Contributors to futures-rs"
+    ]
+  },
+  {
+    "name": "autocfg",
+    "version": "1.5.1",
+    "spdx": "Apache-2.0 OR MIT",
+    "repository": "https://github.com/cuviper/autocfg",
+    "files": [
+      "autocfg-1.5.1-LICENSE-APACHE.txt",
+      "autocfg-1.5.1-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Josh Stone <cuviper@gmail.com>"
+    ]
+  },
+  {
+    "name": "bindgen",
+    "version": "0.72.1",
+    "spdx": "BSD-3-Clause",
+    "repository": "https://github.com/rust-lang/rust-bindgen",
+    "files": [
+      "bindgen-0.72.1-LICENSE.txt"
+    ],
+    "authors": [
+      "Jyun-Yan You <jyyou.tw@gmail.com>",
+      "Emilio Cobos \u00c1lvarez <emilio@crisal.io>",
+      "Nick Fitzgerald <fitzgen@gmail.com>",
+      "The Servo project developers"
+    ]
+  },
+  {
+    "name": "bitflags",
+    "version": "1.3.2",
+    "spdx": "MIT/Apache-2.0",
+    "repository": "https://github.com/bitflags/bitflags",
+    "files": [
+      "bitflags-1.3.2-LICENSE-APACHE.txt",
+      "bitflags-1.3.2-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "The Rust Project Developers"
+    ]
+  },
+  {
+    "name": "bitflags",
+    "version": "2.13.2",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/bitflags/bitflags",
+    "files": [
+      "bitflags-2.13.2-LICENSE-APACHE.txt",
+      "bitflags-2.13.2-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "The Rust Project Developers"
+    ]
+  },
+  {
+    "name": "block-buffer",
+    "version": "0.10.4",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/RustCrypto/utils",
+    "files": [
+      "block-buffer-0.10.4-LICENSE-APACHE.txt",
+      "block-buffer-0.10.4-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "RustCrypto Developers"
+    ]
+  },
+  {
+    "name": "block-padding",
+    "version": "0.3.3",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/RustCrypto/utils",
+    "files": [
+      "block-padding-0.3.3-LICENSE-APACHE.txt",
+      "block-padding-0.3.3-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "RustCrypto Developers"
+    ]
+  },
+  {
+    "name": "blocking",
+    "version": "1.7.0",
+    "spdx": "Apache-2.0 OR MIT",
+    "repository": "https://github.com/smol-rs/blocking",
+    "files": [
+      "blocking-1.7.0-LICENSE-APACHE.txt",
+      "blocking-1.7.0-LICENSE-MIT.txt"
+    ],
+    "authors": []
+  },
+  {
+    "name": "bumpalo",
+    "version": "3.20.3",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/fitzgen/bumpalo",
+    "files": [
+      "bumpalo-3.20.3-LICENSE-APACHE.txt",
+      "bumpalo-3.20.3-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Nick Fitzgerald <fitzgen@gmail.com>"
+    ]
+  },
+  {
+    "name": "bytemuck",
+    "version": "1.25.2",
+    "spdx": "Zlib OR Apache-2.0 OR MIT",
+    "repository": "https://github.com/Lokathor/bytemuck",
+    "files": [
+      "bytemuck-1.25.2-LICENSE-APACHE.txt",
+      "bytemuck-1.25.2-LICENSE-MIT.txt",
+      "bytemuck-1.25.2-LICENSE-ZLIB.txt"
+    ],
+    "authors": [
+      "Lokathor <zefria@gmail.com>"
+    ]
+  },
+  {
+    "name": "byteorder",
+    "version": "1.5.0",
+    "spdx": "Unlicense OR MIT",
+    "repository": "https://github.com/BurntSushi/byteorder",
+    "files": [
+      "byteorder-1.5.0-COPYING.txt",
+      "byteorder-1.5.0-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Andrew Gallant <jamslam@gmail.com>"
+    ]
+  },
+  {
+    "name": "bytes",
+    "version": "1.12.1",
+    "spdx": "MIT",
+    "repository": "https://github.com/tokio-rs/bytes",
+    "files": [
+      "bytes-1.12.1-LICENSE.txt"
+    ],
+    "authors": [
+      "Carl Lerche <me@carllerche.com>",
+      "Sean McArthur <sean@seanmonstar.com>"
+    ]
+  },
+  {
+    "name": "calloop",
+    "version": "0.13.0",
+    "spdx": "MIT",
+    "repository": "https://github.com/Smithay/calloop",
+    "files": [
+      "calloop-0.13.0-LICENSE.txt.txt"
+    ],
+    "authors": [
+      "Elinor Berger <elinor@safaradeg.net>"
+    ]
+  },
+  {
+    "name": "calloop-wayland-source",
+    "version": "0.3.0",
+    "spdx": "MIT",
+    "repository": "https://github.com/smithay/calloop-wayland-source",
+    "files": [
+      "calloop-wayland-source-0.3.0-LICENSE.txt.txt"
+    ],
+    "authors": [
+      "Kirill Chibisov <contact@kchibisov.com>"
+    ]
+  },
+  {
+    "name": "cbc",
+    "version": "0.1.2",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/RustCrypto/block-modes",
+    "files": [
+      "cbc-0.1.2-LICENSE-APACHE.txt",
+      "cbc-0.1.2-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "RustCrypto Developers"
+    ]
+  },
+  {
+    "name": "cc",
+    "version": "1.6.0",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-lang/cc-rs",
+    "files": [
+      "cc-1.6.0-LICENSE-APACHE.txt",
+      "cc-1.6.0-LICENSE-MIT.txt"
+    ],
+    "authors": []
+  },
+  {
+    "name": "cesu8",
+    "version": "1.1.0",
+    "spdx": "Apache-2.0/MIT",
+    "repository": "https://github.com/emk/cesu8-rs",
+    "files": [
+      "cesu8-1.1.0-COPYRIGHT-RUST.txt.txt"
+    ],
+    "authors": [
+      "Eric Kidd <git@randomhacks.net>"
+    ]
+  },
+  {
+    "name": "cexpr",
+    "version": "0.6.0",
+    "spdx": "Apache-2.0/MIT",
+    "repository": "https://github.com/jethrogb/rust-cexpr",
+    "files": [
+      "cexpr-0.6.0-LICENSE-APACHE.txt",
+      "cexpr-0.6.0-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Jethro Beekman <jethro@jbeekman.nl>"
+    ]
+  },
+  {
+    "name": "cfg-if",
+    "version": "1.0.5",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-lang/cfg-if",
+    "files": [
+      "cfg-if-1.0.5-LICENSE-APACHE.txt",
+      "cfg-if-1.0.5-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Alex Crichton <alex@alexcrichton.com>"
+    ]
+  },
+  {
+    "name": "cfg_aliases",
+    "version": "0.2.2",
+    "spdx": "MIT",
+    "repository": "https://github.com/katharostech/cfg_aliases",
+    "files": [
+      "cfg_aliases-0.2.2-LICENSE.txt",
+      "cfg_aliases-0.2.2-NOTICES.md.txt"
+    ],
+    "authors": [
+      "Zicklag <zicklag@katharostech.com>"
+    ]
+  },
+  {
+    "name": "cipher",
+    "version": "0.4.4",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/RustCrypto/traits",
+    "files": [
+      "cipher-0.4.4-LICENSE-APACHE.txt",
+      "cipher-0.4.4-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "RustCrypto Developers"
+    ]
+  },
+  {
+    "name": "clang-sys",
+    "version": "1.9.1",
+    "spdx": "Apache-2.0",
+    "repository": "https://github.com/KyleMayes/clang-sys",
+    "files": [
+      "clang-sys-1.9.1-LICENSE.txt.txt"
+    ],
+    "authors": [
+      "Kyle Mayes <kyle@mayeses.com>"
+    ]
+  },
+  {
+    "name": "combine",
+    "version": "4.6.8",
+    "spdx": "MIT",
+    "repository": "https://github.com/Marwes/combine",
+    "files": [
+      "combine-4.6.8-LICENSE.txt"
+    ],
+    "authors": [
+      "Markus Westerlind <marwes91@gmail.com>"
+    ]
+  },
+  {
+    "name": "concurrent-queue",
+    "version": "2.5.0",
+    "spdx": "Apache-2.0 OR MIT",
+    "repository": "https://github.com/smol-rs/concurrent-queue",
+    "files": [
+      "concurrent-queue-2.5.0-LICENSE-APACHE.txt",
+      "concurrent-queue-2.5.0-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Stjepan Glavina <stjepang@gmail.com>",
+      "Taiki Endo <te316e89@gmail.com>",
+      "John Nunley <dev@notgull.net>"
+    ]
+  },
+  {
+    "name": "core-foundation",
+    "version": "0.9.4",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/servo/core-foundation-rs",
+    "files": [
+      "core-foundation-0.9.4-LICENSE-APACHE.txt",
+      "core-foundation-0.9.4-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "The Servo Project Developers"
+    ]
+  },
+  {
+    "name": "core-foundation",
+    "version": "0.10.1",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/servo/core-foundation-rs",
+    "files": [
+      "core-foundation-0.10.1-LICENSE-APACHE.txt",
+      "core-foundation-0.10.1-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "The Servo Project Developers"
+    ]
+  },
+  {
+    "name": "core-foundation-sys",
+    "version": "0.8.7",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/servo/core-foundation-rs",
+    "files": [
+      "core-foundation-sys-0.8.7-LICENSE-APACHE.txt",
+      "core-foundation-sys-0.8.7-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "The Servo Project Developers"
+    ]
+  },
+  {
+    "name": "core-graphics",
+    "version": "0.23.2",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/servo/core-foundation-rs",
+    "files": [
+      "core-graphics-0.23.2-COPYRIGHT.txt",
+      "core-graphics-0.23.2-LICENSE-APACHE.txt",
+      "core-graphics-0.23.2-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "The Servo Project Developers"
+    ]
+  },
+  {
+    "name": "core-graphics-types",
+    "version": "0.1.3",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/servo/core-foundation-rs",
+    "files": [
+      "core-graphics-types-0.1.3-LICENSE-APACHE.txt",
+      "core-graphics-types-0.1.3-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "The Servo Project Developers"
+    ]
+  },
+  {
+    "name": "coreaudio-rs",
+    "version": "0.11.3",
+    "spdx": "MIT/Apache-2.0",
+    "repository": "https://github.com/RustAudio/coreaudio-rs.git",
+    "files": [
+      "coreaudio-rs-0.11.3-LICENSE-APACHE.txt",
+      "coreaudio-rs-0.11.3-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "mitchmindtree <mitchell.nordine@gmail.com>",
+      "yupferris <jake@fusetools.com>"
+    ]
+  },
+  {
+    "name": "coreaudio-sys",
+    "version": "0.2.18",
+    "spdx": "MIT",
+    "repository": "https://github.com/RustAudio/coreaudio-sys.git",
+    "files": [
+      "coreaudio-sys-0.2.18-LICENSE.txt"
+    ],
+    "authors": [
+      "Mitchell Nordine <mitchell.nordine@gmail.com>"
+    ]
+  },
+  {
+    "name": "cpal",
+    "version": "0.15.3",
+    "spdx": "Apache-2.0",
+    "repository": "https://github.com/rustaudio/cpal",
+    "files": [
+      "cpal-0.15.3-LICENSE.txt"
+    ],
+    "authors": []
+  },
+  {
+    "name": "cpufeatures",
+    "version": "0.2.17",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/RustCrypto/utils",
+    "files": [
+      "cpufeatures-0.2.17-LICENSE-APACHE.txt",
+      "cpufeatures-0.2.17-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "RustCrypto Developers"
+    ]
+  },
+  {
+    "name": "crossbeam-utils",
+    "version": "0.8.23",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/crossbeam-rs/crossbeam",
+    "files": [
+      "crossbeam-utils-0.8.23-LICENSE-APACHE.txt",
+      "crossbeam-utils-0.8.23-LICENSE-MIT.txt"
+    ],
+    "authors": []
+  },
+  {
+    "name": "crypto-common",
+    "version": "0.1.7",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/RustCrypto/traits",
+    "files": [
+      "crypto-common-0.1.7-LICENSE-APACHE.txt",
+      "crypto-common-0.1.7-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "RustCrypto Developers"
+    ]
+  },
+  {
+    "name": "ctor",
+    "version": "0.10.1",
+    "spdx": "Apache-2.0 OR MIT",
+    "repository": "https://github.com/mmastrac/rust-ctor",
+    "files": [
+      "ctor-0.10.1-LICENSE-APACHE.txt",
+      "ctor-0.10.1-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Matt Mastracci <matthew@mastracci.com>"
+    ]
+  },
+  {
+    "name": "cursor-icon",
+    "version": "1.2.0",
+    "spdx": "MIT OR Apache-2.0 OR Zlib",
+    "repository": "https://github.com/rust-windowing/cursor-icon",
+    "files": [
+      "cursor-icon-1.2.0-LICENSE-APACHE.txt",
+      "cursor-icon-1.2.0-LICENSE-MIT.txt",
+      "cursor-icon-1.2.0-LICENSE-ZLIB.txt"
+    ],
+    "authors": [
+      "Kirill Chibisov <contact@kchibisov.com>"
+    ]
+  },
+  {
+    "name": "dbus",
+    "version": "0.9.12",
+    "spdx": "Apache-2.0/MIT",
+    "repository": "https://github.com/diwic/dbus-rs",
+    "files": [
+      "dbus-0.9.12-LICENSE-APACHE.txt",
+      "dbus-0.9.12-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "David Henningsson <diwic@ubuntu.com>"
+    ]
+  },
+  {
+    "name": "dbus-secret-service",
+    "version": "4.1.0",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/brotskydotcom/dbus-secret-service.git",
+    "files": [
+      "dbus-secret-service-4.1.0-LICENSE-APACHE.txt",
+      "dbus-secret-service-4.1.0-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Daniel Brotsky <dev@brotsky.com>"
+    ]
+  },
+  {
+    "name": "digest",
+    "version": "0.10.7",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/RustCrypto/traits",
+    "files": [
+      "digest-0.10.7-LICENSE-APACHE.txt",
+      "digest-0.10.7-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "RustCrypto Developers"
+    ]
+  },
+  {
+    "name": "dlib",
+    "version": "0.5.3",
+    "spdx": "MIT",
+    "repository": "https://github.com/elinorbgr/dlib",
+    "files": [
+      "dlib-0.5.3-LICENSE.txt.txt"
+    ],
+    "authors": [
+      "Elinor Berger <elinor@safaradeg.net>"
+    ]
+  },
+  {
+    "name": "downcast-rs",
+    "version": "1.2.1",
+    "spdx": "MIT/Apache-2.0",
+    "repository": "https://github.com/marcianx/downcast-rs",
+    "files": [
+      "downcast-rs-1.2.1-LICENSE-APACHE.txt",
+      "downcast-rs-1.2.1-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Ashish Myles <marcianx@gmail.com>",
+      "Runji Wang <wangrunji0408@163.com>"
+    ]
+  },
+  {
+    "name": "dpi",
+    "version": "0.1.2",
+    "spdx": "Apache-2.0 AND MIT",
+    "repository": "https://github.com/rust-windowing/winit",
+    "files": [
+      "dpi-0.1.2-LICENSE-LIBM-MIT.txt",
+      "dpi-0.1.2-LICENSE.txt"
+    ],
+    "authors": []
+  },
+  {
+    "name": "dtor",
+    "version": "0.8.1",
+    "spdx": "Apache-2.0 OR MIT",
+    "repository": "https://github.com/mmastrac/rust-ctor",
+    "files": [
+      "dtor-0.8.1-LICENSE-APACHE.txt",
+      "dtor-0.8.1-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Matt Mastracci <matthew@mastracci.com>"
+    ]
+  },
+  {
+    "name": "either",
+    "version": "1.18.0",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rayon-rs/either",
+    "files": [
+      "either-1.18.0-LICENSE-APACHE.txt",
+      "either-1.18.0-LICENSE-MIT.txt"
+    ],
+    "authors": []
+  },
+  {
+    "name": "endi",
+    "version": "1.1.1",
+    "spdx": "MIT",
+    "repository": "https://github.com/zeenix/endi",
+    "files": [
+      "endi-1.1.1-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Zeeshan Ali Khan <zeenix@gmail.com>"
+    ]
+  },
+  {
+    "name": "enumflags2",
+    "version": "0.7.12",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/meithecatte/enumflags2",
+    "files": [
+      "enumflags2-0.7.12-LICENSE-APACHE.txt",
+      "enumflags2-0.7.12-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "maik klein <maikklein@googlemail.com>",
+      "Maja K\u0105dzio\u0142ka <maya@compilercrim.es>"
+    ]
+  },
+  {
+    "name": "enumflags2_derive",
+    "version": "0.7.12",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/meithecatte/enumflags2",
+    "files": [
+      "enumflags2_derive-0.7.12-LICENSE-APACHE.txt",
+      "enumflags2_derive-0.7.12-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "maik klein <maikklein@googlemail.com>",
+      "Maja K\u0105dzio\u0142ka <maya@compilercrim.es>"
+    ]
+  },
+  {
+    "name": "equivalent",
+    "version": "1.0.2",
+    "spdx": "Apache-2.0 OR MIT",
+    "repository": "https://github.com/indexmap-rs/equivalent",
+    "files": [
+      "equivalent-1.0.2-LICENSE-APACHE.txt",
+      "equivalent-1.0.2-LICENSE-MIT.txt"
+    ],
+    "authors": []
+  },
+  {
+    "name": "errno",
+    "version": "0.3.14",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/lambda-fairy/rust-errno",
+    "files": [
+      "errno-0.3.14-LICENSE-APACHE.txt",
+      "errno-0.3.14-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Chris Wong <lambda.fairy@gmail.com>",
+      "Dan Gohman <dev@sunfishcode.online>"
+    ]
+  },
+  {
+    "name": "event-listener",
+    "version": "5.4.2",
+    "spdx": "Apache-2.0 OR MIT",
+    "repository": "https://github.com/smol-rs/event-listener",
+    "files": [
+      "event-listener-5.4.2-LICENSE-APACHE.txt",
+      "event-listener-5.4.2-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Stjepan Glavina <stjepang@gmail.com>",
+      "John Nunley <dev@notgull.net>"
+    ]
+  },
+  {
+    "name": "event-listener-strategy",
+    "version": "0.5.4",
+    "spdx": "Apache-2.0 OR MIT",
+    "repository": "https://github.com/smol-rs/event-listener-strategy",
+    "files": [
+      "event-listener-strategy-0.5.4-LICENSE-APACHE.txt",
+      "event-listener-strategy-0.5.4-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "John Nunley <dev@notgull.net>"
+    ]
+  },
+  {
+    "name": "fastrand",
+    "version": "2.5.0",
+    "spdx": "Apache-2.0 OR MIT",
+    "repository": "https://github.com/smol-rs/fastrand",
+    "files": [
+      "fastrand-2.5.0-LICENSE-APACHE.txt",
+      "fastrand-2.5.0-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Stjepan Glavina <stjepang@gmail.com>"
+    ]
+  },
+  {
+    "name": "find-msvc-tools",
+    "version": "0.1.14",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-lang/cc-rs",
+    "files": [
+      "find-msvc-tools-0.1.14-LICENSE-APACHE.txt",
+      "find-msvc-tools-0.1.14-LICENSE-MIT.txt"
+    ],
+    "authors": []
+  },
+  {
+    "name": "foreign-types",
+    "version": "0.3.2",
+    "spdx": "MIT/Apache-2.0",
+    "repository": "https://github.com/sfackler/foreign-types",
+    "files": [
+      "foreign-types-0.3.2-LICENSE-APACHE.txt",
+      "foreign-types-0.3.2-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Steven Fackler <sfackler@gmail.com>"
+    ]
+  },
+  {
+    "name": "foreign-types",
+    "version": "0.5.0",
+    "spdx": "MIT/Apache-2.0",
+    "repository": "https://github.com/sfackler/foreign-types",
+    "files": [
+      "foreign-types-0.5.0-LICENSE-APACHE.txt",
+      "foreign-types-0.5.0-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Steven Fackler <sfackler@gmail.com>"
+    ]
+  },
+  {
+    "name": "foreign-types-macros",
+    "version": "0.2.4",
+    "spdx": "MIT/Apache-2.0",
+    "repository": "https://github.com/sfackler/foreign-types",
+    "files": [
+      "foreign-types-macros-0.2.4-LICENSE-APACHE.txt",
+      "foreign-types-macros-0.2.4-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Steven Fackler <sfackler@gmail.com>"
+    ]
+  },
+  {
+    "name": "foreign-types-shared",
+    "version": "0.1.1",
+    "spdx": "MIT/Apache-2.0",
+    "repository": "https://github.com/sfackler/foreign-types",
+    "files": [
+      "foreign-types-shared-0.1.1-LICENSE-APACHE.txt",
+      "foreign-types-shared-0.1.1-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Steven Fackler <sfackler@gmail.com>"
+    ]
+  },
+  {
+    "name": "foreign-types-shared",
+    "version": "0.3.1",
+    "spdx": "MIT/Apache-2.0",
+    "repository": "https://github.com/sfackler/foreign-types",
+    "files": [
+      "foreign-types-shared-0.3.1-LICENSE-APACHE.txt",
+      "foreign-types-shared-0.3.1-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Steven Fackler <sfackler@gmail.com>"
+    ]
+  },
+  {
+    "name": "futures-core",
+    "version": "0.3.34",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-lang/futures-rs",
+    "files": [
+      "futures-core-0.3.34-LICENSE-APACHE.txt",
+      "futures-core-0.3.34-LICENSE-MIT.txt"
+    ],
+    "authors": []
+  },
+  {
+    "name": "futures-io",
+    "version": "0.3.34",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-lang/futures-rs",
+    "files": [
+      "futures-io-0.3.34-LICENSE-APACHE.txt",
+      "futures-io-0.3.34-LICENSE-MIT.txt"
+    ],
+    "authors": []
+  },
+  {
+    "name": "futures-lite",
+    "version": "2.6.1",
+    "spdx": "Apache-2.0 OR MIT",
+    "repository": "https://github.com/smol-rs/futures-lite",
+    "files": [
+      "futures-lite-2.6.1-LICENSE-APACHE.txt",
+      "futures-lite-2.6.1-LICENSE-MIT.txt",
+      "futures-lite-2.6.1-LICENSE-THIRD-PARTY.txt"
+    ],
+    "authors": [
+      "Stjepan Glavina <stjepang@gmail.com>",
+      "Contributors to futures-rs"
+    ]
+  },
+  {
+    "name": "futures-macro",
+    "version": "0.3.34",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-lang/futures-rs",
+    "files": [
+      "futures-macro-0.3.34-LICENSE-APACHE.txt",
+      "futures-macro-0.3.34-LICENSE-MIT.txt"
+    ],
+    "authors": []
+  },
+  {
+    "name": "futures-sink",
+    "version": "0.3.34",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-lang/futures-rs",
+    "files": [
+      "futures-sink-0.3.34-LICENSE-APACHE.txt",
+      "futures-sink-0.3.34-LICENSE-MIT.txt"
+    ],
+    "authors": []
+  },
+  {
+    "name": "futures-task",
+    "version": "0.3.34",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-lang/futures-rs",
+    "files": [
+      "futures-task-0.3.34-LICENSE-APACHE.txt",
+      "futures-task-0.3.34-LICENSE-MIT.txt"
+    ],
+    "authors": []
+  },
+  {
+    "name": "futures-util",
+    "version": "0.3.34",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-lang/futures-rs",
+    "files": [
+      "futures-util-0.3.34-LICENSE-APACHE.txt",
+      "futures-util-0.3.34-LICENSE-MIT.txt"
+    ],
+    "authors": []
+  },
+  {
+    "name": "generic-array",
+    "version": "0.14.7",
+    "spdx": "MIT",
+    "repository": "https://github.com/fizyk20/generic-array.git",
+    "files": [
+      "generic-array-0.14.7-LICENSE.txt"
+    ],
+    "authors": [
+      "Bart\u0142omiej Kami\u0144ski <fizyk20@gmail.com>",
+      "Aaron Trent <novacrazy@gmail.com>"
+    ]
+  },
+  {
+    "name": "gethostname",
+    "version": "1.1.0",
+    "spdx": "Apache-2.0",
+    "repository": "https://codeberg.org/swsnr/gethostname.rs.git",
+    "files": [
+      "gethostname-1.1.0-LICENSE.txt"
+    ],
+    "authors": [
+      "Sebastian Wiesner <sebastian@swsnr.de>"
+    ]
+  },
+  {
+    "name": "getrandom",
+    "version": "0.2.17",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-random/getrandom",
+    "files": [
+      "getrandom-0.2.17-LICENSE-APACHE.txt",
+      "getrandom-0.2.17-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "The Rand Project Developers"
+    ]
+  },
+  {
+    "name": "getrandom",
+    "version": "0.3.4",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-random/getrandom",
+    "files": [
+      "getrandom-0.3.4-LICENSE-APACHE.txt",
+      "getrandom-0.3.4-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "The Rand Project Developers"
+    ]
+  },
+  {
+    "name": "getrandom",
+    "version": "0.4.3",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-random/getrandom",
+    "files": [
+      "getrandom-0.4.3-LICENSE-APACHE.txt",
+      "getrandom-0.4.3-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "The Rand Project Developers"
+    ]
+  },
+  {
+    "name": "glam",
+    "version": "0.32.1",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/bitshifter/glam-rs",
+    "files": [
+      "glam-0.32.1-LICENSE-APACHE.txt",
+      "glam-0.32.1-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Cameron Hart <cameron.hart@gmail.com>"
+    ]
+  },
+  {
+    "name": "glob",
+    "version": "0.3.4",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-lang/glob",
+    "files": [
+      "glob-0.3.4-LICENSE-APACHE.txt",
+      "glob-0.3.4-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "The Rust Project Developers"
+    ]
+  },
+  {
+    "name": "hashbrown",
+    "version": "0.17.1",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-lang/hashbrown",
+    "files": [
+      "hashbrown-0.17.1-LICENSE-APACHE.txt",
+      "hashbrown-0.17.1-LICENSE-MIT.txt"
+    ],
+    "authors": []
+  },
+  {
+    "name": "heck",
+    "version": "0.5.0",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/withoutboats/heck",
+    "files": [
+      "heck-0.5.0-LICENSE-APACHE.txt",
+      "heck-0.5.0-LICENSE-MIT.txt"
+    ],
+    "authors": []
+  },
+  {
+    "name": "hermit-abi",
+    "version": "0.5.3",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/hermit-os/hermit-rs",
+    "files": [
+      "hermit-abi-0.5.3-LICENSE-APACHE.txt",
+      "hermit-abi-0.5.3-LICENSE-MIT.txt"
+    ],
+    "authors": []
+  },
+  {
+    "name": "hex",
+    "version": "0.4.3",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/KokaKiwi/rust-hex",
+    "files": [
+      "hex-0.4.3-LICENSE-APACHE.txt",
+      "hex-0.4.3-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "KokaKiwi <kokakiwi@kokakiwi.net>"
+    ]
+  },
+  {
+    "name": "hkdf",
+    "version": "0.12.4",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/RustCrypto/KDFs/",
+    "files": [
+      "hkdf-0.12.4-LICENSE-APACHE.txt",
+      "hkdf-0.12.4-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "RustCrypto Developers"
+    ]
+  },
+  {
+    "name": "hmac",
+    "version": "0.12.1",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/RustCrypto/MACs",
+    "files": [
+      "hmac-0.12.1-LICENSE-APACHE.txt",
+      "hmac-0.12.1-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "RustCrypto Developers"
+    ]
+  },
+  {
+    "name": "indexmap",
+    "version": "2.14.2",
+    "spdx": "Apache-2.0 OR MIT",
+    "repository": "https://github.com/indexmap-rs/indexmap",
+    "files": [
+      "indexmap-2.14.2-LICENSE-APACHE.txt",
+      "indexmap-2.14.2-LICENSE-MIT.txt"
+    ],
+    "authors": []
+  },
+  {
+    "name": "inout",
+    "version": "0.1.4",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/RustCrypto/utils",
+    "files": [
+      "inout-0.1.4-LICENSE-APACHE.txt",
+      "inout-0.1.4-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "RustCrypto Developers"
+    ]
+  },
+  {
+    "name": "itertools",
+    "version": "0.13.0",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-itertools/itertools",
+    "files": [
+      "itertools-0.13.0-LICENSE-APACHE.txt",
+      "itertools-0.13.0-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "bluss"
+    ]
+  },
+  {
+    "name": "jni",
+    "version": "0.21.1",
+    "spdx": "MIT/Apache-2.0",
+    "repository": "https://github.com/jni-rs/jni-rs",
+    "files": [
+      "jni-0.21.1-LICENSE-APACHE.txt",
+      "jni-0.21.1-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Josh Chase <josh@prevoty.com>"
+    ]
+  },
+  {
+    "name": "jni-sys",
+    "version": "0.3.1",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/jni-rs/jni-sys",
+    "files": [
+      "jni-sys-0.3.1-LICENSE-APACHE.txt",
+      "jni-sys-0.3.1-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Steven Fackler <sfackler@gmail.com>"
+    ]
+  },
+  {
+    "name": "jni-sys",
+    "version": "0.4.1",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/jni-rs/jni-sys",
+    "files": [
+      "jni-sys-0.4.1-LICENSE-APACHE.txt",
+      "jni-sys-0.4.1-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Steven Fackler <sfackler@gmail.com>",
+      "Robert Bragg <robert@sixbynine.org>"
+    ]
+  },
+  {
+    "name": "jobserver",
+    "version": "0.1.35",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-lang/jobserver-rs",
+    "files": [
+      "jobserver-0.1.35-LICENSE-APACHE.txt",
+      "jobserver-0.1.35-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Alex Crichton <alex@alexcrichton.com>"
+    ]
+  },
+  {
+    "name": "js-sys",
+    "version": "0.3.106",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/wasm-bindgen/wasm-bindgen/tree/master/crates/js-sys",
+    "files": [
+      "js-sys-0.3.106-LICENSE-APACHE.txt",
+      "js-sys-0.3.106-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "The wasm-bindgen Developers"
+    ]
+  },
+  {
+    "name": "keyring",
+    "version": "3.6.3",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/hwchen/keyring-rs.git",
+    "files": [
+      "keyring-3.6.3-LICENSE-APACHE.txt",
+      "keyring-3.6.3-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Walther Chen <walther.chen@gmail.com>",
+      "Daniel Brotsky <dev@brotsky.com>"
+    ]
+  },
+  {
+    "name": "libc",
+    "version": "0.2.189",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-lang/libc",
+    "files": [
+      "libc-0.2.189-LICENSE-APACHE.txt",
+      "libc-0.2.189-LICENSE-MIT.txt"
+    ],
+    "authors": []
+  },
+  {
+    "name": "libdbus-sys",
+    "version": "0.2.7",
+    "spdx": "Apache-2.0/MIT",
+    "repository": "https://github.com/diwic/dbus-rs",
+    "files": [
+      "libdbus-sys-0.2.7-LICENSE-APACHE.txt",
+      "libdbus-sys-0.2.7-LICENSE-MIT.txt",
+      "libdbus-sys-0.2.7-vendor_dbus_AUTHORS.txt",
+      "libdbus-sys-0.2.7-vendor_dbus_COPYING.txt",
+      "libdbus-sys-0.2.7-vendor_dbus_cmake_modules_COPYING-CMAKE-SCRIPTS.txt"
+    ],
+    "authors": [
+      "David Henningsson <diwic@ubuntu.com>"
+    ]
+  },
+  {
+    "name": "libloading",
+    "version": "0.8.9",
+    "spdx": "ISC",
+    "repository": "https://github.com/nagisa/rust_libloading/",
+    "files": [
+      "libloading-0.8.9-LICENSE.txt"
+    ],
+    "authors": [
+      "Simonas Kazlauskas <libloading@kazlauskas.me>"
+    ]
+  },
+  {
+    "name": "libredox",
+    "version": "0.1.25",
+    "spdx": "MIT",
+    "repository": "https://gitlab.redox-os.org/redox-os/libredox.git",
+    "files": [
+      "libredox-0.1.25-LICENSE.txt"
+    ],
+    "authors": [
+      "4lDO2 <4lDO2@protonmail.com>"
+    ]
+  },
+  {
+    "name": "linux-raw-sys",
+    "version": "0.4.15",
+    "spdx": "Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT",
+    "repository": "https://github.com/sunfishcode/linux-raw-sys",
+    "files": [
+      "linux-raw-sys-0.4.15-COPYRIGHT.txt",
+      "linux-raw-sys-0.4.15-LICENSE-APACHE.txt",
+      "linux-raw-sys-0.4.15-LICENSE-Apache-2.0_WITH_LLVM-exception.txt",
+      "linux-raw-sys-0.4.15-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Dan Gohman <dev@sunfishcode.online>"
+    ]
+  },
+  {
+    "name": "linux-raw-sys",
+    "version": "0.12.1",
+    "spdx": "Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT",
+    "repository": "https://github.com/sunfishcode/linux-raw-sys",
+    "files": [
+      "linux-raw-sys-0.12.1-COPYRIGHT.txt",
+      "linux-raw-sys-0.12.1-LICENSE-APACHE.txt",
+      "linux-raw-sys-0.12.1-LICENSE-Apache-2.0_WITH_LLVM-exception.txt",
+      "linux-raw-sys-0.12.1-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Dan Gohman <dev@sunfishcode.online>"
+    ]
+  },
+  {
+    "name": "log",
+    "version": "0.4.34",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-lang/log",
+    "files": [
+      "log-0.4.34-LICENSE-APACHE.txt",
+      "log-0.4.34-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "The Rust Project Developers"
+    ]
+  },
+  {
+    "name": "mach2",
+    "version": "0.4.3",
+    "spdx": "BSD-2-Clause OR MIT OR Apache-2.0",
+    "repository": "https://github.com/JohnTitor/mach2",
+    "files": [
+      "mach2-0.4.3-LICENSE-APACHE.txt",
+      "mach2-0.4.3-LICENSE-BSD.txt",
+      "mach2-0.4.3-LICENSE-MIT.txt"
+    ],
+    "authors": []
+  },
+  {
+    "name": "memchr",
+    "version": "2.8.3",
+    "spdx": "Unlicense OR MIT",
+    "repository": "https://github.com/BurntSushi/memchr",
+    "files": [
+      "memchr-2.8.3-COPYING.txt",
+      "memchr-2.8.3-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Andrew Gallant <jamslam@gmail.com>",
+      "bluss"
+    ]
+  },
+  {
+    "name": "memmap2",
+    "version": "0.9.11",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/RazrFalcon/memmap2-rs",
+    "files": [
+      "memmap2-0.9.11-LICENSE-APACHE.txt",
+      "memmap2-0.9.11-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Dan Burkert <dan@danburkert.com>",
+      "Yevhenii Reizner <razrfalcon@gmail.com>",
+      "The Contributors"
+    ]
+  },
+  {
+    "name": "memoffset",
+    "version": "0.9.1",
+    "spdx": "MIT",
+    "repository": "https://github.com/Gilnaa/memoffset",
+    "files": [
+      "memoffset-0.9.1-LICENSE.txt"
+    ],
+    "authors": [
+      "Gilad Naaman <gilad.naaman@gmail.com>"
+    ]
+  },
+  {
+    "name": "minimal-lexical",
+    "version": "0.2.1",
+    "spdx": "MIT/Apache-2.0",
+    "repository": "https://github.com/Alexhuszagh/minimal-lexical",
+    "files": [
+      "minimal-lexical-0.2.1-LICENSE-APACHE.txt",
+      "minimal-lexical-0.2.1-LICENSE-MIT.txt",
+      "minimal-lexical-0.2.1-LICENSE.md.txt"
+    ],
+    "authors": [
+      "Alex Huszagh <ahuszagh@gmail.com>"
+    ]
+  },
+  {
+    "name": "miniz_oxide",
+    "version": "0.9.1",
+    "spdx": "MIT OR Zlib OR Apache-2.0",
+    "repository": "https://github.com/Frommi/miniz_oxide/tree/master/miniz_oxide",
+    "files": [
+      "miniz_oxide-0.9.1-LICENSE-APACHE.md.txt",
+      "miniz_oxide-0.9.1-LICENSE-MIT.md.txt",
+      "miniz_oxide-0.9.1-LICENSE-ZLIB.md.txt",
+      "miniz_oxide-0.9.1-LICENSE.txt"
+    ],
+    "authors": [
+      "Frommi <daniil.liferenko@gmail.com>",
+      "oyvindln <oyvindln@users.noreply.github.com>",
+      "Rich Geldreich richgel99@gmail.com"
+    ]
+  },
+  {
+    "name": "nanoserde",
+    "version": "0.2.1",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/not-fl3/nanoserde",
+    "files": [
+      "nanoserde-0.2.1-LICENSE-APACHE.txt",
+      "nanoserde-0.2.1-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "makepad <info@makepad.nl>",
+      "Fedor <not.fl3@gmail.com>"
+    ]
+  },
+  {
+    "name": "nix",
+    "version": "0.29.0",
+    "spdx": "MIT",
+    "repository": "https://github.com/nix-rust/nix",
+    "files": [
+      "nix-0.29.0-LICENSE.txt"
+    ],
+    "authors": [
+      "The nix-rust Project Developers"
+    ]
+  },
+  {
+    "name": "nom",
+    "version": "7.1.3",
+    "spdx": "MIT",
+    "repository": "https://github.com/Geal/nom",
+    "files": [
+      "nom-7.1.3-LICENSE.txt"
+    ],
+    "authors": [
+      "contact@geoffroycouprie.com"
+    ]
+  },
+  {
+    "name": "num",
+    "version": "0.4.3",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-num/num",
+    "files": [
+      "num-0.4.3-LICENSE-APACHE.txt",
+      "num-0.4.3-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "The Rust Project Developers"
+    ]
+  },
+  {
+    "name": "num-bigint",
+    "version": "0.4.8",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-num/num-bigint",
+    "files": [
+      "num-bigint-0.4.8-LICENSE-APACHE.txt",
+      "num-bigint-0.4.8-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "The Rust Project Developers"
+    ]
+  },
+  {
+    "name": "num-complex",
+    "version": "0.4.6",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-num/num-complex",
+    "files": [
+      "num-complex-0.4.6-LICENSE-APACHE.txt",
+      "num-complex-0.4.6-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "The Rust Project Developers"
+    ]
+  },
+  {
+    "name": "num-derive",
+    "version": "0.4.2",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-num/num-derive",
+    "files": [
+      "num-derive-0.4.2-LICENSE-APACHE.txt",
+      "num-derive-0.4.2-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "The Rust Project Developers"
+    ]
+  },
+  {
+    "name": "num-integer",
+    "version": "0.1.47",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-num/num-integer",
+    "files": [
+      "num-integer-0.1.47-LICENSE-APACHE.txt",
+      "num-integer-0.1.47-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "The Rust Project Developers"
+    ]
+  },
+  {
+    "name": "num-iter",
+    "version": "0.1.46",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-num/num-iter",
+    "files": [
+      "num-iter-0.1.46-LICENSE-APACHE.txt",
+      "num-iter-0.1.46-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "The Rust Project Developers"
+    ]
+  },
+  {
+    "name": "num-rational",
+    "version": "0.4.2",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-num/num-rational",
+    "files": [
+      "num-rational-0.4.2-LICENSE-APACHE.txt",
+      "num-rational-0.4.2-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "The Rust Project Developers"
+    ]
+  },
+  {
+    "name": "num-traits",
+    "version": "0.2.19",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-num/num-traits",
+    "files": [
+      "num-traits-0.2.19-LICENSE-APACHE.txt",
+      "num-traits-0.2.19-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "The Rust Project Developers"
+    ]
+  },
+  {
+    "name": "num_enum",
+    "version": "0.7.6",
+    "spdx": "BSD-3-Clause OR MIT OR Apache-2.0",
+    "repository": "https://github.com/illicitonion/num_enum",
+    "files": [
+      "num_enum-0.7.6-LICENSE-APACHE.txt",
+      "num_enum-0.7.6-LICENSE-BSD.txt",
+      "num_enum-0.7.6-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Daniel Wagner-Hall <dawagner@gmail.com>",
+      "Daniel Henry-Mantilla <daniel.henry.mantilla@gmail.com>",
+      "Vincent Esche <regexident@gmail.com>"
+    ]
+  },
+  {
+    "name": "num_enum_derive",
+    "version": "0.7.6",
+    "spdx": "BSD-3-Clause OR MIT OR Apache-2.0",
+    "repository": "https://github.com/illicitonion/num_enum",
+    "files": [
+      "num_enum_derive-0.7.6-LICENSE-APACHE.txt",
+      "num_enum_derive-0.7.6-LICENSE-BSD.txt",
+      "num_enum_derive-0.7.6-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Daniel Wagner-Hall <dawagner@gmail.com>",
+      "Daniel Henry-Mantilla <daniel.henry.mantilla@gmail.com>",
+      "Vincent Esche <regexident@gmail.com>"
+    ]
+  },
+  {
+    "name": "objc2-foundation",
+    "version": "0.2.2",
+    "spdx": "MIT",
+    "repository": "https://github.com/madsmtm/objc2",
+    "files": [
+      "objc2-foundation-0.2.2-src_copying.rs.txt",
+      "objc2-foundation-0.2.2-src_tests_copying.rs.txt"
+    ],
+    "authors": []
+  },
+  {
+    "name": "objc2-foundation",
+    "version": "0.3.2",
+    "spdx": "MIT",
+    "repository": "https://github.com/madsmtm/objc2",
+    "files": [
+      "objc2-foundation-0.3.2-src_copying.rs.txt",
+      "objc2-foundation-0.3.2-src_tests_copying.rs.txt"
+    ],
+    "authors": []
+  },
+  {
+    "name": "once_cell",
+    "version": "1.21.4",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/matklad/once_cell",
+    "files": [
+      "once_cell-1.21.4-LICENSE-APACHE.txt",
+      "once_cell-1.21.4-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Aleksey Kladov <aleksey.kladov@gmail.com>"
+    ]
+  },
+  {
+    "name": "openssl",
+    "version": "0.10.81",
+    "spdx": "Apache-2.0",
+    "repository": "https://github.com/rust-openssl/rust-openssl",
+    "files": [
+      "openssl-0.10.81-LICENSE-APACHE.txt",
+      "openssl-0.10.81-LICENSE.txt"
+    ],
+    "authors": [
+      "Steven Fackler <sfackler@gmail.com>"
+    ]
+  },
+  {
+    "name": "openssl-macros",
+    "version": "0.1.1",
+    "spdx": "MIT/Apache-2.0",
+    "repository": null,
+    "files": [
+      "openssl-macros-0.1.1-LICENSE-APACHE.txt",
+      "openssl-macros-0.1.1-LICENSE-MIT.txt"
+    ],
+    "authors": []
+  },
+  {
+    "name": "openssl-src",
+    "version": "300.6.1+3.6.3",
+    "spdx": "MIT/Apache-2.0",
+    "repository": "https://github.com/alexcrichton/openssl-src-rs",
+    "files": [
+      "openssl-src-300.6.1+3.6.3-LICENSE-APACHE.txt",
+      "openssl-src-300.6.1+3.6.3-LICENSE-MIT.txt",
+      "openssl-src-300.6.1+3.6.3-openssl_LICENSE.txt.txt",
+      "openssl-src-300.6.1+3.6.3-openssl_external_perl_Text-Template-1.56_LICENSE.txt"
+    ],
+    "authors": [
+      "Alex Crichton <alex@alexcrichton.com>"
+    ]
+  },
+  {
+    "name": "openssl-sys",
+    "version": "0.9.117",
+    "spdx": "MIT",
+    "repository": "https://github.com/rust-openssl/rust-openssl",
+    "files": [
+      "openssl-sys-0.9.117-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Alex Crichton <alex@alexcrichton.com>",
+      "Steven Fackler <sfackler@gmail.com>"
+    ]
+  },
+  {
+    "name": "orbclient",
+    "version": "0.3.55",
+    "spdx": "MIT",
+    "repository": "https://gitlab.redox-os.org/redox-os/orbclient",
+    "files": [
+      "orbclient-0.3.55-LICENSE.txt"
+    ],
+    "authors": [
+      "Jeremy Soller <jackpot51@gmail.com>"
+    ]
+  },
+  {
+    "name": "ordered-stream",
+    "version": "0.2.0",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/danieldg/ordered-stream",
+    "files": [
+      "ordered-stream-0.2.0-LICENSE-APACHE.txt",
+      "ordered-stream-0.2.0-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Daniel De Graaf <code@danieldg.net>",
+      "Zeeshan Ali Khan <zeeshanak@gnome.org>"
+    ]
+  },
+  {
+    "name": "parking",
+    "version": "2.2.1",
+    "spdx": "Apache-2.0 OR MIT",
+    "repository": "https://github.com/smol-rs/parking",
+    "files": [
+      "parking-2.2.1-LICENSE-APACHE.txt",
+      "parking-2.2.1-LICENSE-MIT.txt",
+      "parking-2.2.1-LICENSE-THIRD-PARTY.txt"
+    ],
+    "authors": [
+      "Stjepan Glavina <stjepang@gmail.com>",
+      "The Rust Project Developers"
+    ]
+  },
+  {
+    "name": "percent-encoding",
+    "version": "2.3.2",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/servo/rust-url/",
+    "files": [
+      "percent-encoding-2.3.2-LICENSE-APACHE.txt",
+      "percent-encoding-2.3.2-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "The rust-url developers"
+    ]
+  },
+  {
+    "name": "pin-project",
+    "version": "1.1.13",
+    "spdx": "Apache-2.0 OR MIT",
+    "repository": "https://github.com/taiki-e/pin-project",
+    "files": [
+      "pin-project-1.1.13-LICENSE-APACHE.txt",
+      "pin-project-1.1.13-LICENSE-MIT.txt"
+    ],
+    "authors": []
+  },
+  {
+    "name": "pin-project-internal",
+    "version": "1.1.13",
+    "spdx": "Apache-2.0 OR MIT",
+    "repository": "https://github.com/taiki-e/pin-project",
+    "files": [
+      "pin-project-internal-1.1.13-LICENSE-APACHE.txt",
+      "pin-project-internal-1.1.13-LICENSE-MIT.txt"
+    ],
+    "authors": []
+  },
+  {
+    "name": "pin-project-lite",
+    "version": "0.2.17",
+    "spdx": "Apache-2.0 OR MIT",
+    "repository": "https://github.com/taiki-e/pin-project-lite",
+    "files": [
+      "pin-project-lite-0.2.17-LICENSE-APACHE.txt",
+      "pin-project-lite-0.2.17-LICENSE-MIT.txt"
+    ],
+    "authors": []
+  },
+  {
+    "name": "piper",
+    "version": "0.2.5",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/smol-rs/piper",
+    "files": [
+      "piper-0.2.5-LICENSE-APACHE.txt",
+      "piper-0.2.5-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Stjepan Glavina <stjepang@gmail.com>",
+      "John Nunley <dev@notgull.net>"
+    ]
+  },
+  {
+    "name": "pkg-config",
+    "version": "0.3.34",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-lang/pkg-config-rs",
+    "files": [
+      "pkg-config-0.3.34-LICENSE-APACHE.txt",
+      "pkg-config-0.3.34-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Alex Crichton <alex@alexcrichton.com>"
+    ]
+  },
+  {
+    "name": "plain",
+    "version": "0.2.3",
+    "spdx": "MIT/Apache-2.0",
+    "repository": "https://github.com/randomites/plain",
+    "files": [
+      "plain-0.2.3-LICENSE-APACHE.txt",
+      "plain-0.2.3-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "jzr"
+    ]
+  },
+  {
+    "name": "polling",
+    "version": "3.11.0",
+    "spdx": "Apache-2.0 OR MIT",
+    "repository": "https://github.com/smol-rs/polling",
+    "files": [
+      "polling-3.11.0-LICENSE-APACHE.txt",
+      "polling-3.11.0-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Stjepan Glavina <stjepang@gmail.com>",
+      "John Nunley <dev@notgull.net>"
+    ]
+  },
+  {
+    "name": "ppv-lite86",
+    "version": "0.2.21",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/cryptocorrosion/cryptocorrosion",
+    "files": [
+      "ppv-lite86-0.2.21-LICENSE-APACHE.txt",
+      "ppv-lite86-0.2.21-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "The CryptoCorrosion Contributors"
+    ]
+  },
+  {
+    "name": "proc-macro-crate",
+    "version": "3.5.0",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/bkchr/proc-macro-crate",
+    "files": [
+      "proc-macro-crate-3.5.0-LICENSE-APACHE.txt",
+      "proc-macro-crate-3.5.0-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Bastian K\u00f6cher <git@kchr.de>"
+    ]
+  },
+  {
+    "name": "proc-macro2",
+    "version": "1.0.107",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/dtolnay/proc-macro2",
+    "files": [
+      "proc-macro2-1.0.107-LICENSE-APACHE.txt",
+      "proc-macro2-1.0.107-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "David Tolnay <dtolnay@gmail.com>",
+      "Alex Crichton <alex@alexcrichton.com>"
+    ]
+  },
+  {
+    "name": "quick-xml",
+    "version": "0.41.0",
+    "spdx": "MIT",
+    "repository": "https://github.com/tafia/quick-xml",
+    "files": [
+      "quick-xml-0.41.0-LICENSE-MIT.md.txt"
+    ],
+    "authors": []
+  },
+  {
+    "name": "quote",
+    "version": "1.0.47",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/dtolnay/quote",
+    "files": [
+      "quote-1.0.47-LICENSE-APACHE.txt",
+      "quote-1.0.47-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "David Tolnay <dtolnay@gmail.com>"
+    ]
+  },
+  {
+    "name": "rand",
+    "version": "0.8.8",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-random/rand",
+    "files": [
+      "rand-0.8.8-COPYRIGHT.txt",
+      "rand-0.8.8-LICENSE-APACHE.txt",
+      "rand-0.8.8-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "The Rand Project Developers",
+      "The Rust Project Developers"
+    ]
+  },
+  {
+    "name": "rand_chacha",
+    "version": "0.3.1",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-random/rand",
+    "files": [
+      "rand_chacha-0.3.1-COPYRIGHT.txt",
+      "rand_chacha-0.3.1-LICENSE-APACHE.txt",
+      "rand_chacha-0.3.1-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "The Rand Project Developers",
+      "The Rust Project Developers",
+      "The CryptoCorrosion Contributors"
+    ]
+  },
+  {
+    "name": "rand_core",
+    "version": "0.6.4",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-random/rand",
+    "files": [
+      "rand_core-0.6.4-COPYRIGHT.txt",
+      "rand_core-0.6.4-LICENSE-APACHE.txt",
+      "rand_core-0.6.4-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "The Rand Project Developers",
+      "The Rust Project Developers"
+    ]
+  },
+  {
+    "name": "raw-window-handle",
+    "version": "0.6.2",
+    "spdx": "MIT OR Apache-2.0 OR Zlib",
+    "repository": "https://github.com/rust-windowing/raw-window-handle",
+    "files": [
+      "raw-window-handle-0.6.2-LICENSE-APACHE.md.txt",
+      "raw-window-handle-0.6.2-LICENSE-MIT.md.txt",
+      "raw-window-handle-0.6.2-LICENSE-ZLIB.md.txt"
+    ],
+    "authors": [
+      "Osspial <osspial@gmail.com>"
+    ]
+  },
+  {
+    "name": "redox_syscall",
+    "version": "0.4.1",
+    "spdx": "MIT",
+    "repository": "https://gitlab.redox-os.org/redox-os/syscall",
+    "files": [
+      "redox_syscall-0.4.1-LICENSE.txt"
+    ],
+    "authors": [
+      "Jeremy Soller <jackpot51@gmail.com>"
+    ]
+  },
+  {
+    "name": "redox_syscall",
+    "version": "0.5.18",
+    "spdx": "MIT",
+    "repository": "https://gitlab.redox-os.org/redox-os/syscall",
+    "files": [
+      "redox_syscall-0.5.18-LICENSE.txt"
+    ],
+    "authors": [
+      "Jeremy Soller <jackpot51@gmail.com>"
+    ]
+  },
+  {
+    "name": "redox_syscall",
+    "version": "0.9.4",
+    "spdx": "MIT",
+    "repository": "https://gitlab.redox-os.org/redox-os/kernel",
+    "files": [
+      "redox_syscall-0.9.4-LICENSE.txt"
+    ],
+    "authors": [
+      "Jeremy Soller <jackpot51@gmail.com>"
+    ]
+  },
+  {
+    "name": "regex",
+    "version": "1.13.1",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-lang/regex",
+    "files": [
+      "regex-1.13.1-LICENSE-APACHE.txt",
+      "regex-1.13.1-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "The Rust Project Developers",
+      "Andrew Gallant <jamslam@gmail.com>"
+    ]
+  },
+  {
+    "name": "regex-automata",
+    "version": "0.4.18",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-lang/regex",
+    "files": [
+      "regex-automata-0.4.18-LICENSE-APACHE.txt",
+      "regex-automata-0.4.18-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "The Rust Project Developers",
+      "Andrew Gallant <jamslam@gmail.com>"
+    ]
+  },
+  {
+    "name": "regex-syntax",
+    "version": "0.8.11",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-lang/regex",
+    "files": [
+      "regex-syntax-0.8.11-LICENSE-APACHE.txt",
+      "regex-syntax-0.8.11-LICENSE-MIT.txt",
+      "regex-syntax-0.8.11-src_unicode_tables_LICENSE-UNICODE.txt"
+    ],
+    "authors": [
+      "The Rust Project Developers",
+      "Andrew Gallant <jamslam@gmail.com>"
+    ]
+  },
+  {
+    "name": "rustc-hash",
+    "version": "2.1.3",
+    "spdx": "Apache-2.0 OR MIT",
+    "repository": "https://github.com/rust-lang/rustc-hash",
+    "files": [
+      "rustc-hash-2.1.3-LICENSE-APACHE.txt",
+      "rustc-hash-2.1.3-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "The Rust Project Developers"
+    ]
+  },
+  {
+    "name": "rustc_version",
+    "version": "0.4.1",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/djc/rustc-version-rs",
+    "files": [
+      "rustc_version-0.4.1-LICENSE-APACHE.txt",
+      "rustc_version-0.4.1-LICENSE-MIT.txt"
+    ],
+    "authors": []
+  },
+  {
+    "name": "rustix",
+    "version": "0.38.44",
+    "spdx": "Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT",
+    "repository": "https://github.com/bytecodealliance/rustix",
+    "files": [
+      "rustix-0.38.44-COPYRIGHT.txt",
+      "rustix-0.38.44-LICENSE-APACHE.txt",
+      "rustix-0.38.44-LICENSE-Apache-2.0_WITH_LLVM-exception.txt",
+      "rustix-0.38.44-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Dan Gohman <dev@sunfishcode.online>",
+      "Jakub Konka <kubkon@jakubkonka.com>"
+    ]
+  },
+  {
+    "name": "rustix",
+    "version": "1.1.5",
+    "spdx": "Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT",
+    "repository": "https://github.com/bytecodealliance/rustix",
+    "files": [
+      "rustix-1.1.5-COPYRIGHT.txt",
+      "rustix-1.1.5-LICENSE-APACHE.txt",
+      "rustix-1.1.5-LICENSE-Apache-2.0_WITH_LLVM-exception.txt",
+      "rustix-1.1.5-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Dan Gohman <dev@sunfishcode.online>",
+      "Jakub Konka <kubkon@jakubkonka.com>"
+    ]
+  },
+  {
+    "name": "rustversion",
+    "version": "1.0.23",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/dtolnay/rustversion",
+    "files": [
+      "rustversion-1.0.23-LICENSE-APACHE.txt",
+      "rustversion-1.0.23-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "David Tolnay <dtolnay@gmail.com>"
+    ]
+  },
+  {
+    "name": "same-file",
+    "version": "1.0.6",
+    "spdx": "Unlicense/MIT",
+    "repository": "https://github.com/BurntSushi/same-file",
+    "files": [
+      "same-file-1.0.6-COPYING.txt",
+      "same-file-1.0.6-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Andrew Gallant <jamslam@gmail.com>"
+    ]
+  },
+  {
+    "name": "scoped-tls",
+    "version": "1.0.1",
+    "spdx": "MIT/Apache-2.0",
+    "repository": "https://github.com/alexcrichton/scoped-tls",
+    "files": [
+      "scoped-tls-1.0.1-LICENSE-APACHE.txt",
+      "scoped-tls-1.0.1-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Alex Crichton <alex@alexcrichton.com>"
+    ]
+  },
+  {
+    "name": "secret-service",
+    "version": "4.0.0",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/hwchen/secret-service-rs.git",
+    "files": [
+      "secret-service-4.0.0-LICENSE-APACHE.txt",
+      "secret-service-4.0.0-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Walther Chen <walther.chen@gmail.com>"
+    ]
+  },
+  {
+    "name": "security-framework",
+    "version": "2.11.1",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/kornelski/rust-security-framework",
+    "files": [
+      "security-framework-2.11.1-LICENSE-APACHE.txt",
+      "security-framework-2.11.1-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Steven Fackler <sfackler@gmail.com>",
+      "Kornel <kornel@geekhood.net>"
+    ]
+  },
+  {
+    "name": "security-framework",
+    "version": "3.7.0",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/kornelski/rust-security-framework",
+    "files": [
+      "security-framework-3.7.0-LICENSE-APACHE.txt",
+      "security-framework-3.7.0-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Steven Fackler <sfackler@gmail.com>",
+      "Kornel <kornel@geekhood.net>"
+    ]
+  },
+  {
+    "name": "security-framework-sys",
+    "version": "2.17.0",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/kornelski/rust-security-framework",
+    "files": [
+      "security-framework-sys-2.17.0-LICENSE-APACHE.txt",
+      "security-framework-sys-2.17.0-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Steven Fackler <sfackler@gmail.com>",
+      "Kornel <kornel@geekhood.net>"
+    ]
+  },
+  {
+    "name": "semver",
+    "version": "1.0.28",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/dtolnay/semver",
+    "files": [
+      "semver-1.0.28-LICENSE-APACHE.txt",
+      "semver-1.0.28-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "David Tolnay <dtolnay@gmail.com>"
+    ]
+  },
+  {
+    "name": "serde",
+    "version": "1.0.229",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/serde-rs/serde",
+    "files": [
+      "serde-1.0.229-LICENSE-APACHE.txt",
+      "serde-1.0.229-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Erick Tryzelaar <erick.tryzelaar@gmail.com>",
+      "David Tolnay <dtolnay@gmail.com>"
+    ]
+  },
+  {
+    "name": "serde_core",
+    "version": "1.0.229",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/serde-rs/serde",
+    "files": [
+      "serde_core-1.0.229-LICENSE-APACHE.txt",
+      "serde_core-1.0.229-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Erick Tryzelaar <erick.tryzelaar@gmail.com>",
+      "David Tolnay <dtolnay@gmail.com>"
+    ]
+  },
+  {
+    "name": "serde_derive",
+    "version": "1.0.229",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/serde-rs/serde",
+    "files": [
+      "serde_derive-1.0.229-LICENSE-APACHE.txt",
+      "serde_derive-1.0.229-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Erick Tryzelaar <erick.tryzelaar@gmail.com>",
+      "David Tolnay <dtolnay@gmail.com>"
+    ]
+  },
+  {
+    "name": "serde_repr",
+    "version": "0.1.21",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/dtolnay/serde-repr",
+    "files": [
+      "serde_repr-0.1.21-LICENSE-APACHE.txt",
+      "serde_repr-0.1.21-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "David Tolnay <dtolnay@gmail.com>"
+    ]
+  },
+  {
+    "name": "sha1",
+    "version": "0.10.7",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/RustCrypto/hashes",
+    "files": [
+      "sha1-0.10.7-LICENSE-APACHE.txt",
+      "sha1-0.10.7-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "RustCrypto Developers"
+    ]
+  },
+  {
+    "name": "sha2",
+    "version": "0.10.9",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/RustCrypto/hashes",
+    "files": [
+      "sha2-0.10.9-LICENSE-APACHE.txt",
+      "sha2-0.10.9-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "RustCrypto Developers"
+    ]
+  },
+  {
+    "name": "shlex",
+    "version": "1.3.0",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/comex/rust-shlex",
+    "files": [
+      "shlex-1.3.0-LICENSE-APACHE.txt",
+      "shlex-1.3.0-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "comex <comexk@gmail.com>",
+      "Fenhl <fenhl@fenhl.net>",
+      "Adrian Taylor <adetaylor@chromium.org>",
+      "Alex Touchet <alextouchet@outlook.com>",
+      "Daniel Parks <dp+git@oxidized.org>",
+      "Garrett Berg <googberg@gmail.com>"
+    ]
+  },
+  {
+    "name": "shlex",
+    "version": "2.0.1",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/comex/rust-shlex",
+    "files": [
+      "shlex-2.0.1-LICENSE-APACHE.txt",
+      "shlex-2.0.1-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "comex <comexk@gmail.com>",
+      "Fenhl <fenhl@fenhl.net>",
+      "Adrian Taylor <adetaylor@chromium.org>",
+      "Alex Touchet <alextouchet@outlook.com>",
+      "Daniel Parks <dp+git@oxidized.org>",
+      "Garrett Berg <googberg@gmail.com>"
+    ]
+  },
+  {
+    "name": "signal-hook-registry",
+    "version": "1.4.8",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/vorner/signal-hook",
+    "files": [
+      "signal-hook-registry-1.4.8-LICENSE-APACHE.txt",
+      "signal-hook-registry-1.4.8-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Michal 'vorner' Vaner <vorner@vorner.cz>",
+      "Masaki Hara <ackie.h.gmai@gmail.com>"
+    ]
+  },
+  {
+    "name": "simd_cesu8",
+    "version": "1.2.0",
+    "spdx": "Apache-2.0 OR MIT",
+    "repository": "https://github.com/seancroach/simd_cesu8",
+    "files": [
+      "simd_cesu8-1.2.0-LICENSE-APACHE.txt",
+      "simd_cesu8-1.2.0-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Sean C. Roach <me@seancroach.dev>"
+    ]
+  },
+  {
+    "name": "simdutf8",
+    "version": "0.1.5",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rusticstuff/simdutf8",
+    "files": [
+      "simdutf8-0.1.5-LICENSE-Apache.txt",
+      "simdutf8-0.1.5-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Hans Kratz <hans@appfour.com>"
+    ]
+  },
+  {
+    "name": "slab",
+    "version": "0.4.12",
+    "spdx": "MIT",
+    "repository": "https://github.com/tokio-rs/slab",
+    "files": [
+      "slab-0.4.12-LICENSE.txt"
+    ],
+    "authors": [
+      "Carl Lerche <me@carllerche.com>"
+    ]
+  },
+  {
+    "name": "smallvec",
+    "version": "1.16.2",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/servo/rust-smallvec",
+    "files": [
+      "smallvec-1.16.2-LICENSE-APACHE.txt",
+      "smallvec-1.16.2-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "The Servo Project Developers"
+    ]
+  },
+  {
+    "name": "smithay-client-toolkit",
+    "version": "0.19.2",
+    "spdx": "MIT",
+    "repository": "https://github.com/smithay/client-toolkit",
+    "files": [
+      "smithay-client-toolkit-0.19.2-LICENSE.txt.txt"
+    ],
+    "authors": [
+      "Elinor Berger <elinor@safaradeg.net>",
+      "i509VCB <mail@i509.me>",
+      "Ashley Wulber <ashley@system76.com>"
+    ]
+  },
+  {
+    "name": "smol_str",
+    "version": "0.2.2",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-analyzer/smol_str",
+    "files": [
+      "smol_str-0.2.2-LICENSE-APACHE.txt",
+      "smol_str-0.2.2-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Aleksey Kladov <aleksey.kladov@gmail.com>"
+    ]
+  },
+  {
+    "name": "softbuffer",
+    "version": "0.4.8",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-windowing/softbuffer",
+    "files": [
+      "softbuffer-0.4.8-LICENSE-APACHE.txt",
+      "softbuffer-0.4.8-LICENSE-MIT.txt"
+    ],
+    "authors": []
+  },
+  {
+    "name": "static_assertions",
+    "version": "1.1.0",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/nvzqz/static-assertions-rs",
+    "files": [
+      "static_assertions-1.1.0-LICENSE-APACHE.txt",
+      "static_assertions-1.1.0-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Nikolai Vazquez"
+    ]
+  },
+  {
+    "name": "subtle",
+    "version": "2.6.1",
+    "spdx": "BSD-3-Clause",
+    "repository": "https://github.com/dalek-cryptography/subtle",
+    "files": [
+      "subtle-2.6.1-LICENSE.txt"
+    ],
+    "authors": [
+      "Isis Lovecruft <isis@patternsinthevoid.net>",
+      "Henry de Valence <hdevalence@hdevalence.ca>"
+    ]
+  },
+  {
+    "name": "syn",
+    "version": "2.0.119",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/dtolnay/syn",
+    "files": [
+      "syn-2.0.119-LICENSE-APACHE.txt",
+      "syn-2.0.119-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "David Tolnay <dtolnay@gmail.com>"
+    ]
+  },
+  {
+    "name": "syn",
+    "version": "3.0.6",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/dtolnay/syn",
+    "files": [
+      "syn-3.0.6-LICENSE-APACHE.txt",
+      "syn-3.0.6-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "David Tolnay <dtolnay@gmail.com>"
+    ]
+  },
+  {
+    "name": "tempfile",
+    "version": "3.27.0",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/Stebalien/tempfile",
+    "files": [
+      "tempfile-3.27.0-LICENSE-APACHE.txt",
+      "tempfile-3.27.0-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Steven Allen <steven@stebalien.com>",
+      "The Rust Project Developers",
+      "Ashley Mannix <ashleymannix@live.com.au>",
+      "Jason White <me@jasonwhite.io>"
+    ]
+  },
+  {
+    "name": "thiserror",
+    "version": "1.0.69",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/dtolnay/thiserror",
+    "files": [
+      "thiserror-1.0.69-LICENSE-APACHE.txt",
+      "thiserror-1.0.69-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "David Tolnay <dtolnay@gmail.com>"
+    ]
+  },
+  {
+    "name": "thiserror",
+    "version": "2.0.21",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/dtolnay/thiserror",
+    "files": [
+      "thiserror-2.0.21-LICENSE-APACHE.txt",
+      "thiserror-2.0.21-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "David Tolnay <dtolnay@gmail.com>"
+    ]
+  },
+  {
+    "name": "thiserror-impl",
+    "version": "1.0.69",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/dtolnay/thiserror",
+    "files": [
+      "thiserror-impl-1.0.69-LICENSE-APACHE.txt",
+      "thiserror-impl-1.0.69-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "David Tolnay <dtolnay@gmail.com>"
+    ]
+  },
+  {
+    "name": "thiserror-impl",
+    "version": "2.0.21",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/dtolnay/thiserror",
+    "files": [
+      "thiserror-impl-2.0.21-LICENSE-APACHE.txt",
+      "thiserror-impl-2.0.21-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "David Tolnay <dtolnay@gmail.com>"
+    ]
+  },
+  {
+    "name": "tiny-xlib",
+    "version": "0.2.5",
+    "spdx": "MIT OR Apache-2.0 OR Zlib",
+    "repository": "https://github.com/rust-windowing/tiny-xlib",
+    "files": [
+      "tiny-xlib-0.2.5-LICENSE-APACHE.md.txt",
+      "tiny-xlib-0.2.5-LICENSE-MIT.md.txt",
+      "tiny-xlib-0.2.5-LICENSE-ZLIB.md.txt"
+    ],
+    "authors": [
+      "John Nunley <dev@notgull.net>"
+    ]
+  },
+  {
+    "name": "tokio",
+    "version": "1.53.2",
+    "spdx": "MIT",
+    "repository": "https://github.com/tokio-rs/tokio",
+    "files": [
+      "tokio-1.53.2-LICENSE.txt"
+    ],
+    "authors": [
+      "Tokio Contributors <team@tokio.rs>"
+    ]
+  },
+  {
+    "name": "toml_datetime",
+    "version": "1.1.1+spec-1.1.0",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/toml-rs/toml",
+    "files": [
+      "toml_datetime-1.1.1+spec-1.1.0-LICENSE-APACHE.txt",
+      "toml_datetime-1.1.1+spec-1.1.0-LICENSE-MIT.txt"
+    ],
+    "authors": []
+  },
+  {
+    "name": "toml_edit",
+    "version": "0.25.15+spec-1.1.0",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/toml-rs/toml",
+    "files": [
+      "toml_edit-0.25.15+spec-1.1.0-LICENSE-APACHE.txt",
+      "toml_edit-0.25.15+spec-1.1.0-LICENSE-MIT.txt"
+    ],
+    "authors": []
+  },
+  {
+    "name": "toml_parser",
+    "version": "1.1.3+spec-1.1.0",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/toml-rs/toml",
+    "files": [
+      "toml_parser-1.1.3+spec-1.1.0-LICENSE-APACHE.txt",
+      "toml_parser-1.1.3+spec-1.1.0-LICENSE-MIT.txt"
+    ],
+    "authors": []
+  },
+  {
+    "name": "tracing",
+    "version": "0.1.44",
+    "spdx": "MIT",
+    "repository": "https://github.com/tokio-rs/tracing",
+    "files": [
+      "tracing-0.1.44-LICENSE.txt"
+    ],
+    "authors": [
+      "Eliza Weisman <eliza@buoyant.io>",
+      "Tokio Contributors <team@tokio.rs>"
+    ]
+  },
+  {
+    "name": "tracing-attributes",
+    "version": "0.1.31",
+    "spdx": "MIT",
+    "repository": "https://github.com/tokio-rs/tracing",
+    "files": [
+      "tracing-attributes-0.1.31-LICENSE.txt"
+    ],
+    "authors": [
+      "Tokio Contributors <team@tokio.rs>",
+      "Eliza Weisman <eliza@buoyant.io>",
+      "David Barsky <dbarsky@amazon.com>"
+    ]
+  },
+  {
+    "name": "tracing-core",
+    "version": "0.1.36",
+    "spdx": "MIT",
+    "repository": "https://github.com/tokio-rs/tracing",
+    "files": [
+      "tracing-core-0.1.36-LICENSE.txt",
+      "tracing-core-0.1.36-src_spin_LICENSE.txt"
+    ],
+    "authors": [
+      "Tokio Contributors <team@tokio.rs>"
+    ]
+  },
+  {
+    "name": "typenum",
+    "version": "1.20.1",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/paholg/typenum",
+    "files": [
+      "typenum-1.20.1-LICENSE-APACHE.txt",
+      "typenum-1.20.1-LICENSE-MIT.txt",
+      "typenum-1.20.1-LICENSE.txt"
+    ],
+    "authors": []
+  },
+  {
+    "name": "uds_windows",
+    "version": "1.2.1",
+    "spdx": "MIT",
+    "repository": "https://github.com/haraldh/rust_uds_windows",
+    "files": [
+      "uds_windows-1.2.1-LICENSE.txt"
+    ],
+    "authors": [
+      "Azure IoT Edge Devs",
+      "Harald Hoyer <harald@redhat.com>"
+    ]
+  },
+  {
+    "name": "unicode-ident",
+    "version": "1.0.26",
+    "spdx": "(MIT OR Apache-2.0) AND Unicode-3.0",
+    "repository": "https://github.com/dtolnay/unicode-ident",
+    "files": [
+      "unicode-ident-1.0.26-LICENSE-APACHE.txt",
+      "unicode-ident-1.0.26-LICENSE-MIT.txt",
+      "unicode-ident-1.0.26-LICENSE-UNICODE.txt"
+    ],
+    "authors": [
+      "David Tolnay <dtolnay@gmail.com>"
+    ]
+  },
+  {
+    "name": "unicode-segmentation",
+    "version": "1.13.3",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/unicode-rs/unicode-segmentation",
+    "files": [
+      "unicode-segmentation-1.13.3-COPYRIGHT.txt",
+      "unicode-segmentation-1.13.3-LICENSE-APACHE.txt",
+      "unicode-segmentation-1.13.3-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "kwantam <kwantam@gmail.com>",
+      "Manish Goregaokar <manishsmail@gmail.com>"
+    ]
+  },
+  {
+    "name": "vcpkg",
+    "version": "0.2.15",
+    "spdx": "MIT/Apache-2.0",
+    "repository": "https://github.com/mcgoo/vcpkg-rs",
+    "files": [
+      "vcpkg-0.2.15-LICENSE-APACHE.txt",
+      "vcpkg-0.2.15-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Jim McGrath <jimmc2@gmail.com>"
+    ]
+  },
+  {
+    "name": "venial",
+    "version": "0.6.1",
+    "spdx": "MIT",
+    "repository": "https://github.com/PoignardAzur/venial",
+    "files": [
+      "venial-0.6.1-LICENSE.txt"
+    ],
+    "authors": [
+      "Olivier Faure <olivier.cj.faure@gmail.com>"
+    ]
+  },
+  {
+    "name": "version_check",
+    "version": "0.9.5",
+    "spdx": "MIT/Apache-2.0",
+    "repository": "https://github.com/SergioBenitez/version_check",
+    "files": [
+      "version_check-0.9.5-LICENSE-APACHE.txt",
+      "version_check-0.9.5-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Sergio Benitez <sb@sergio.bz>"
+    ]
+  },
+  {
+    "name": "walkdir",
+    "version": "2.5.0",
+    "spdx": "Unlicense/MIT",
+    "repository": "https://github.com/BurntSushi/walkdir",
+    "files": [
+      "walkdir-2.5.0-COPYING.txt",
+      "walkdir-2.5.0-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Andrew Gallant <jamslam@gmail.com>"
+    ]
+  },
+  {
+    "name": "wasi",
+    "version": "0.11.1+wasi-snapshot-preview1",
+    "spdx": "Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT",
+    "repository": "https://github.com/bytecodealliance/wasi",
+    "files": [
+      "wasi-0.11.1+wasi-snapshot-preview1-LICENSE-APACHE.txt",
+      "wasi-0.11.1+wasi-snapshot-preview1-LICENSE-Apache-2.0_WITH_LLVM-exception.txt",
+      "wasi-0.11.1+wasi-snapshot-preview1-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "The Cranelift Project Developers"
+    ]
+  },
+  {
+    "name": "wasip2",
+    "version": "1.0.4+wasi-0.2.12",
+    "spdx": "Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT",
+    "repository": "https://github.com/bytecodealliance/wasi-rs",
+    "files": [
+      "wasip2-1.0.4+wasi-0.2.12-LICENSE-APACHE.txt",
+      "wasip2-1.0.4+wasi-0.2.12-LICENSE-Apache-2.0_WITH_LLVM-exception.txt",
+      "wasip2-1.0.4+wasi-0.2.12-LICENSE-MIT.txt"
+    ],
+    "authors": []
+  },
+  {
+    "name": "wasm-bindgen",
+    "version": "0.2.129",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/wasm-bindgen/wasm-bindgen",
+    "files": [
+      "wasm-bindgen-0.2.129-LICENSE-APACHE.txt",
+      "wasm-bindgen-0.2.129-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "The wasm-bindgen Developers"
+    ]
+  },
+  {
+    "name": "wasm-bindgen-futures",
+    "version": "0.4.79",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/wasm-bindgen/wasm-bindgen/tree/master/crates/futures",
+    "files": [
+      "wasm-bindgen-futures-0.4.79-LICENSE-APACHE.txt",
+      "wasm-bindgen-futures-0.4.79-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "The wasm-bindgen Developers"
+    ]
+  },
+  {
+    "name": "wasm-bindgen-macro",
+    "version": "0.2.129",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/wasm-bindgen/wasm-bindgen/tree/master/crates/macro",
+    "files": [
+      "wasm-bindgen-macro-0.2.129-LICENSE-APACHE.txt",
+      "wasm-bindgen-macro-0.2.129-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "The wasm-bindgen Developers"
+    ]
+  },
+  {
+    "name": "wasm-bindgen-macro-support",
+    "version": "0.2.129",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/wasm-bindgen/wasm-bindgen/tree/main/crates/macro-support",
+    "files": [
+      "wasm-bindgen-macro-support-0.2.129-LICENSE-APACHE.txt",
+      "wasm-bindgen-macro-support-0.2.129-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "The wasm-bindgen Developers"
+    ]
+  },
+  {
+    "name": "wasm-bindgen-shared",
+    "version": "0.2.129",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/wasm-bindgen/wasm-bindgen/tree/master/crates/shared",
+    "files": [
+      "wasm-bindgen-shared-0.2.129-LICENSE-APACHE.txt",
+      "wasm-bindgen-shared-0.2.129-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "The wasm-bindgen Developers"
+    ]
+  },
+  {
+    "name": "wayland-backend",
+    "version": "0.3.17",
+    "spdx": "MIT",
+    "repository": "https://github.com/smithay/wayland-rs",
+    "files": [
+      "wayland-backend-0.3.17-LICENSE.txt.txt"
+    ],
+    "authors": [
+      "Elinor Berger <elinor@safaradeg.net>"
+    ]
+  },
+  {
+    "name": "wayland-client",
+    "version": "0.31.15",
+    "spdx": "MIT",
+    "repository": "https://github.com/smithay/wayland-rs",
+    "files": [
+      "wayland-client-0.31.15-LICENSE.txt.txt"
+    ],
+    "authors": [
+      "Elinor Berger <elinor@safaradeg.net>"
+    ]
+  },
+  {
+    "name": "wayland-csd-frame",
+    "version": "0.3.0",
+    "spdx": "MIT",
+    "repository": "https://github.com/rust-windowing/wayland-csd-frame",
+    "files": [
+      "wayland-csd-frame-0.3.0-LICENSE.txt"
+    ],
+    "authors": [
+      "Kirill Chibisov <contact@kchibisov.com>"
+    ]
+  },
+  {
+    "name": "wayland-cursor",
+    "version": "0.31.14",
+    "spdx": "MIT",
+    "repository": "https://github.com/smithay/wayland-rs",
+    "files": [
+      "wayland-cursor-0.31.14-LICENSE.txt.txt"
+    ],
+    "authors": [
+      "Elinor Berger <elinor@safaradeg.net>"
+    ]
+  },
+  {
+    "name": "wayland-protocols",
+    "version": "0.32.13",
+    "spdx": "MIT",
+    "repository": "https://github.com/smithay/wayland-rs",
+    "files": [
+      "wayland-protocols-0.32.13-LICENSE.txt.txt",
+      "wayland-protocols-0.32.13-protocols_COPYING.txt"
+    ],
+    "authors": [
+      "Elinor Berger <elinor@safaradeg.net>"
+    ]
+  },
+  {
+    "name": "wayland-protocols-plasma",
+    "version": "0.3.12",
+    "spdx": "MIT",
+    "repository": "https://github.com/smithay/wayland-rs",
+    "files": [
+      "wayland-protocols-plasma-0.3.12-LICENSE.txt.txt",
+      "wayland-protocols-plasma-0.3.12-plasma-wayland-protocols_COPYING.LIB.txt"
+    ],
+    "authors": [
+      "Elinor Berger <elinor@safaradeg.net>"
+    ]
+  },
+  {
+    "name": "wayland-protocols-wlr",
+    "version": "0.3.12",
+    "spdx": "MIT",
+    "repository": "https://github.com/smithay/wayland-rs",
+    "files": [
+      "wayland-protocols-wlr-0.3.12-LICENSE.txt.txt"
+    ],
+    "authors": [
+      "Elinor Berger <elinor@safaradeg.net>"
+    ]
+  },
+  {
+    "name": "wayland-scanner",
+    "version": "0.31.11",
+    "spdx": "MIT",
+    "repository": "https://github.com/smithay/wayland-rs",
+    "files": [
+      "wayland-scanner-0.31.11-LICENSE.txt.txt"
+    ],
+    "authors": [
+      "Elinor Berger <elinor@safaradeg.net>"
+    ]
+  },
+  {
+    "name": "wayland-sys",
+    "version": "0.31.11",
+    "spdx": "MIT",
+    "repository": "https://github.com/smithay/wayland-rs",
+    "files": [
+      "wayland-sys-0.31.11-LICENSE.txt.txt"
+    ],
+    "authors": [
+      "Elinor Berger <elinor@safaradeg.net>"
+    ]
+  },
+  {
+    "name": "web-sys",
+    "version": "0.3.106",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/wasm-bindgen/wasm-bindgen/tree/master/crates/web-sys",
+    "files": [
+      "web-sys-0.3.106-LICENSE-APACHE.txt",
+      "web-sys-0.3.106-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "The wasm-bindgen Developers"
+    ]
+  },
+  {
+    "name": "web-time",
+    "version": "1.1.0",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/daxpedda/web-time",
+    "files": [
+      "web-time-1.1.0-LICENSE-APACHE.txt",
+      "web-time-1.1.0-LICENSE-MIT.txt"
+    ],
+    "authors": []
+  },
+  {
+    "name": "winapi-util",
+    "version": "0.1.11",
+    "spdx": "Unlicense OR MIT",
+    "repository": "https://github.com/BurntSushi/winapi-util",
+    "files": [
+      "winapi-util-0.1.11-COPYING.txt",
+      "winapi-util-0.1.11-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Andrew Gallant <jamslam@gmail.com>"
+    ]
+  },
+  {
+    "name": "windows",
+    "version": "0.54.0",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/microsoft/windows-rs",
+    "files": [
+      "windows-0.54.0-license-apache-2.0.txt",
+      "windows-0.54.0-license-mit.txt"
+    ],
+    "authors": [
+      "Microsoft"
+    ]
+  },
+  {
+    "name": "windows-core",
+    "version": "0.54.0",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/microsoft/windows-rs",
+    "files": [
+      "windows-core-0.54.0-license-apache-2.0.txt",
+      "windows-core-0.54.0-license-mit.txt"
+    ],
+    "authors": [
+      "Microsoft"
+    ]
+  },
+  {
+    "name": "windows-link",
+    "version": "0.2.1",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/microsoft/windows-rs",
+    "files": [
+      "windows-link-0.2.1-license-apache-2.0.txt",
+      "windows-link-0.2.1-license-mit.txt"
+    ],
+    "authors": []
+  },
+  {
+    "name": "windows-result",
+    "version": "0.1.2",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/microsoft/windows-rs",
+    "files": [
+      "windows-result-0.1.2-license-apache-2.0.txt",
+      "windows-result-0.1.2-license-mit.txt"
+    ],
+    "authors": [
+      "Microsoft"
+    ]
+  },
+  {
+    "name": "windows-sys",
+    "version": "0.45.0",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/microsoft/windows-rs",
+    "files": [
+      "windows-sys-0.45.0-license-apache-2.0.txt",
+      "windows-sys-0.45.0-license-mit.txt"
+    ],
+    "authors": [
+      "Microsoft"
+    ]
+  },
+  {
+    "name": "windows-sys",
+    "version": "0.52.0",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/microsoft/windows-rs",
+    "files": [
+      "windows-sys-0.52.0-license-apache-2.0.txt",
+      "windows-sys-0.52.0-license-mit.txt"
+    ],
+    "authors": [
+      "Microsoft"
+    ]
+  },
+  {
+    "name": "windows-sys",
+    "version": "0.59.0",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/microsoft/windows-rs",
+    "files": [
+      "windows-sys-0.59.0-license-apache-2.0.txt",
+      "windows-sys-0.59.0-license-mit.txt"
+    ],
+    "authors": [
+      "Microsoft"
+    ]
+  },
+  {
+    "name": "windows-sys",
+    "version": "0.60.2",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/microsoft/windows-rs",
+    "files": [
+      "windows-sys-0.60.2-license-apache-2.0.txt",
+      "windows-sys-0.60.2-license-mit.txt"
+    ],
+    "authors": [
+      "Microsoft"
+    ]
+  },
+  {
+    "name": "windows-sys",
+    "version": "0.61.2",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/microsoft/windows-rs",
+    "files": [
+      "windows-sys-0.61.2-license-apache-2.0.txt",
+      "windows-sys-0.61.2-license-mit.txt"
+    ],
+    "authors": []
+  },
+  {
+    "name": "windows-targets",
+    "version": "0.42.2",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/microsoft/windows-rs",
+    "files": [
+      "windows-targets-0.42.2-license-apache-2.0.txt",
+      "windows-targets-0.42.2-license-mit.txt"
+    ],
+    "authors": [
+      "Microsoft"
+    ]
+  },
+  {
+    "name": "windows-targets",
+    "version": "0.52.6",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/microsoft/windows-rs",
+    "files": [
+      "windows-targets-0.52.6-license-apache-2.0.txt",
+      "windows-targets-0.52.6-license-mit.txt"
+    ],
+    "authors": [
+      "Microsoft"
+    ]
+  },
+  {
+    "name": "windows-targets",
+    "version": "0.53.5",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/microsoft/windows-rs",
+    "files": [
+      "windows-targets-0.53.5-license-apache-2.0.txt",
+      "windows-targets-0.53.5-license-mit.txt"
+    ],
+    "authors": []
+  },
+  {
+    "name": "windows_aarch64_gnullvm",
+    "version": "0.42.2",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/microsoft/windows-rs",
+    "files": [
+      "windows_aarch64_gnullvm-0.42.2-license-apache-2.0.txt",
+      "windows_aarch64_gnullvm-0.42.2-license-mit.txt"
+    ],
+    "authors": [
+      "Microsoft"
+    ]
+  },
+  {
+    "name": "windows_aarch64_gnullvm",
+    "version": "0.52.6",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/microsoft/windows-rs",
+    "files": [
+      "windows_aarch64_gnullvm-0.52.6-license-apache-2.0.txt",
+      "windows_aarch64_gnullvm-0.52.6-license-mit.txt"
+    ],
+    "authors": [
+      "Microsoft"
+    ]
+  },
+  {
+    "name": "windows_aarch64_gnullvm",
+    "version": "0.53.1",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/microsoft/windows-rs",
+    "files": [
+      "windows_aarch64_gnullvm-0.53.1-license-apache-2.0.txt",
+      "windows_aarch64_gnullvm-0.53.1-license-mit.txt"
+    ],
+    "authors": []
+  },
+  {
+    "name": "windows_aarch64_msvc",
+    "version": "0.42.2",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/microsoft/windows-rs",
+    "files": [
+      "windows_aarch64_msvc-0.42.2-license-apache-2.0.txt",
+      "windows_aarch64_msvc-0.42.2-license-mit.txt"
+    ],
+    "authors": [
+      "Microsoft"
+    ]
+  },
+  {
+    "name": "windows_aarch64_msvc",
+    "version": "0.52.6",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/microsoft/windows-rs",
+    "files": [
+      "windows_aarch64_msvc-0.52.6-license-apache-2.0.txt",
+      "windows_aarch64_msvc-0.52.6-license-mit.txt"
+    ],
+    "authors": [
+      "Microsoft"
+    ]
+  },
+  {
+    "name": "windows_aarch64_msvc",
+    "version": "0.53.1",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/microsoft/windows-rs",
+    "files": [
+      "windows_aarch64_msvc-0.53.1-license-apache-2.0.txt",
+      "windows_aarch64_msvc-0.53.1-license-mit.txt"
+    ],
+    "authors": []
+  },
+  {
+    "name": "windows_i686_gnu",
+    "version": "0.42.2",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/microsoft/windows-rs",
+    "files": [
+      "windows_i686_gnu-0.42.2-license-apache-2.0.txt",
+      "windows_i686_gnu-0.42.2-license-mit.txt"
+    ],
+    "authors": [
+      "Microsoft"
+    ]
+  },
+  {
+    "name": "windows_i686_gnu",
+    "version": "0.52.6",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/microsoft/windows-rs",
+    "files": [
+      "windows_i686_gnu-0.52.6-license-apache-2.0.txt",
+      "windows_i686_gnu-0.52.6-license-mit.txt"
+    ],
+    "authors": [
+      "Microsoft"
+    ]
+  },
+  {
+    "name": "windows_i686_gnu",
+    "version": "0.53.1",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/microsoft/windows-rs",
+    "files": [
+      "windows_i686_gnu-0.53.1-license-apache-2.0.txt",
+      "windows_i686_gnu-0.53.1-license-mit.txt"
+    ],
+    "authors": []
+  },
+  {
+    "name": "windows_i686_gnullvm",
+    "version": "0.52.6",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/microsoft/windows-rs",
+    "files": [
+      "windows_i686_gnullvm-0.52.6-license-apache-2.0.txt",
+      "windows_i686_gnullvm-0.52.6-license-mit.txt"
+    ],
+    "authors": [
+      "Microsoft"
+    ]
+  },
+  {
+    "name": "windows_i686_gnullvm",
+    "version": "0.53.1",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/microsoft/windows-rs",
+    "files": [
+      "windows_i686_gnullvm-0.53.1-license-apache-2.0.txt",
+      "windows_i686_gnullvm-0.53.1-license-mit.txt"
+    ],
+    "authors": []
+  },
+  {
+    "name": "windows_i686_msvc",
+    "version": "0.42.2",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/microsoft/windows-rs",
+    "files": [
+      "windows_i686_msvc-0.42.2-license-apache-2.0.txt",
+      "windows_i686_msvc-0.42.2-license-mit.txt"
+    ],
+    "authors": [
+      "Microsoft"
+    ]
+  },
+  {
+    "name": "windows_i686_msvc",
+    "version": "0.52.6",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/microsoft/windows-rs",
+    "files": [
+      "windows_i686_msvc-0.52.6-license-apache-2.0.txt",
+      "windows_i686_msvc-0.52.6-license-mit.txt"
+    ],
+    "authors": [
+      "Microsoft"
+    ]
+  },
+  {
+    "name": "windows_i686_msvc",
+    "version": "0.53.1",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/microsoft/windows-rs",
+    "files": [
+      "windows_i686_msvc-0.53.1-license-apache-2.0.txt",
+      "windows_i686_msvc-0.53.1-license-mit.txt"
+    ],
+    "authors": []
+  },
+  {
+    "name": "windows_x86_64_gnu",
+    "version": "0.42.2",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/microsoft/windows-rs",
+    "files": [
+      "windows_x86_64_gnu-0.42.2-license-apache-2.0.txt",
+      "windows_x86_64_gnu-0.42.2-license-mit.txt"
+    ],
+    "authors": [
+      "Microsoft"
+    ]
+  },
+  {
+    "name": "windows_x86_64_gnu",
+    "version": "0.52.6",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/microsoft/windows-rs",
+    "files": [
+      "windows_x86_64_gnu-0.52.6-license-apache-2.0.txt",
+      "windows_x86_64_gnu-0.52.6-license-mit.txt"
+    ],
+    "authors": [
+      "Microsoft"
+    ]
+  },
+  {
+    "name": "windows_x86_64_gnu",
+    "version": "0.53.1",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/microsoft/windows-rs",
+    "files": [
+      "windows_x86_64_gnu-0.53.1-license-apache-2.0.txt",
+      "windows_x86_64_gnu-0.53.1-license-mit.txt"
+    ],
+    "authors": []
+  },
+  {
+    "name": "windows_x86_64_gnullvm",
+    "version": "0.42.2",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/microsoft/windows-rs",
+    "files": [
+      "windows_x86_64_gnullvm-0.42.2-license-apache-2.0.txt",
+      "windows_x86_64_gnullvm-0.42.2-license-mit.txt"
+    ],
+    "authors": [
+      "Microsoft"
+    ]
+  },
+  {
+    "name": "windows_x86_64_gnullvm",
+    "version": "0.52.6",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/microsoft/windows-rs",
+    "files": [
+      "windows_x86_64_gnullvm-0.52.6-license-apache-2.0.txt",
+      "windows_x86_64_gnullvm-0.52.6-license-mit.txt"
+    ],
+    "authors": [
+      "Microsoft"
+    ]
+  },
+  {
+    "name": "windows_x86_64_gnullvm",
+    "version": "0.53.1",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/microsoft/windows-rs",
+    "files": [
+      "windows_x86_64_gnullvm-0.53.1-license-apache-2.0.txt",
+      "windows_x86_64_gnullvm-0.53.1-license-mit.txt"
+    ],
+    "authors": []
+  },
+  {
+    "name": "windows_x86_64_msvc",
+    "version": "0.42.2",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/microsoft/windows-rs",
+    "files": [
+      "windows_x86_64_msvc-0.42.2-license-apache-2.0.txt",
+      "windows_x86_64_msvc-0.42.2-license-mit.txt"
+    ],
+    "authors": [
+      "Microsoft"
+    ]
+  },
+  {
+    "name": "windows_x86_64_msvc",
+    "version": "0.52.6",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/microsoft/windows-rs",
+    "files": [
+      "windows_x86_64_msvc-0.52.6-license-apache-2.0.txt",
+      "windows_x86_64_msvc-0.52.6-license-mit.txt"
+    ],
+    "authors": [
+      "Microsoft"
+    ]
+  },
+  {
+    "name": "windows_x86_64_msvc",
+    "version": "0.53.1",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/microsoft/windows-rs",
+    "files": [
+      "windows_x86_64_msvc-0.53.1-license-apache-2.0.txt",
+      "windows_x86_64_msvc-0.53.1-license-mit.txt"
+    ],
+    "authors": []
+  },
+  {
+    "name": "winit",
+    "version": "0.30.13",
+    "spdx": "Apache-2.0",
+    "repository": "https://github.com/rust-windowing/winit",
+    "files": [
+      "winit-0.30.13-LICENSE.txt"
+    ],
+    "authors": [
+      "The winit contributors",
+      "Pierre Krieger <pierre.krieger1708@gmail.com>"
+    ]
+  },
+  {
+    "name": "winnow",
+    "version": "1.0.4",
+    "spdx": "MIT",
+    "repository": "https://github.com/winnow-rs/winnow",
+    "files": [
+      "winnow-1.0.4-LICENSE-MIT.txt"
+    ],
+    "authors": []
+  },
+  {
+    "name": "wit-bindgen",
+    "version": "0.57.1",
+    "spdx": "Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT",
+    "repository": "https://github.com/bytecodealliance/wit-bindgen",
+    "files": [
+      "wit-bindgen-0.57.1-LICENSE-APACHE.txt",
+      "wit-bindgen-0.57.1-LICENSE-Apache-2.0_WITH_LLVM-exception.txt",
+      "wit-bindgen-0.57.1-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Alex Crichton <alex@alexcrichton.com>"
+    ]
+  },
+  {
+    "name": "x11-dl",
+    "version": "2.21.0",
+    "spdx": "MIT",
+    "repository": "https://github.com/AltF02/x11-rs.git",
+    "files": [
+      "x11-dl-2.21.0-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "daggerbot <daggerbot@gmail.com>",
+      "Erle Pereira <erle@erlepereira.com>",
+      "AltF02 <contact@altf2.dev>"
+    ]
+  },
+  {
+    "name": "x11rb",
+    "version": "0.13.2",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/psychon/x11rb",
+    "files": [
+      "x11rb-0.13.2-LICENSE-APACHE.txt",
+      "x11rb-0.13.2-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Uli Schlachter <psychon@znc.in>",
+      "Eduardo S\u00e1nchez Mu\u00f1oz <eduardosm-dev@e64.io>",
+      "notgull <jtnunley01@gmail.com>"
+    ]
+  },
+  {
+    "name": "x11rb-protocol",
+    "version": "0.13.2",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/psychon/x11rb",
+    "files": [
+      "x11rb-protocol-0.13.2-LICENSE-APACHE.txt",
+      "x11rb-protocol-0.13.2-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Uli Schlachter <psychon@znc.in>",
+      "Eduardo S\u00e1nchez Mu\u00f1oz <eduardosm-dev@e64.io>",
+      "notgull <jtnunley01@gmail.com>"
+    ]
+  },
+  {
+    "name": "xcursor",
+    "version": "0.3.11",
+    "spdx": "MIT",
+    "repository": "https://github.com/esposm03/xcursor-rs",
+    "files": [
+      "xcursor-0.3.11-LICENSE.txt"
+    ],
+    "authors": [
+      "Samuele Esposito"
+    ]
+  },
+  {
+    "name": "xdg-home",
+    "version": "1.3.0",
+    "spdx": "MIT",
+    "repository": "https://github.com/zeenix/xdg-home",
+    "files": [
+      "xdg-home-1.3.0-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Zeeshan Ali Khan <zeeshanak@gnome.org>"
+    ]
+  },
+  {
+    "name": "xkbcommon-dl",
+    "version": "0.4.2",
+    "spdx": "MIT",
+    "repository": "https://github.com/rust-windowing/xkbcommon-dl",
+    "files": [
+      "xkbcommon-dl-0.4.2-LICENSE.txt"
+    ],
+    "authors": [
+      "Francesca Frangipane <francesca@comfysoft.net>"
+    ]
+  },
+  {
+    "name": "xkeysym",
+    "version": "0.2.1",
+    "spdx": "MIT OR Apache-2.0 OR Zlib",
+    "repository": "https://github.com/notgull/xkeysym",
+    "files": [
+      "xkeysym-0.2.1-LICENSE-APACHE.txt",
+      "xkeysym-0.2.1-LICENSE-MIT.txt",
+      "xkeysym-0.2.1-LICENSE-ZLIB.txt"
+    ],
+    "authors": [
+      "John Nunley <jtnunley01@gmail.com>"
+    ]
+  },
+  {
+    "name": "zbus",
+    "version": "4.4.0",
+    "spdx": "MIT",
+    "repository": "https://github.com/dbus2/zbus/",
+    "files": [
+      "zbus-4.4.0-LICENSE.txt"
+    ],
+    "authors": [
+      "Zeeshan Ali Khan <zeeshanak@gnome.org>"
+    ]
+  },
+  {
+    "name": "zbus_macros",
+    "version": "4.4.0",
+    "spdx": "MIT",
+    "repository": "https://github.com/dbus2/zbus/",
+    "files": [
+      "zbus_macros-4.4.0-LICENSE.txt"
+    ],
+    "authors": [
+      "Marc-Andr\u00e9 Lureau <marcandre.lureau@redhat.com>",
+      "Zeeshan Ali Khan <zeeshanak@gnome.org>"
+    ]
+  },
+  {
+    "name": "zbus_names",
+    "version": "3.0.0",
+    "spdx": "MIT",
+    "repository": "https://github.com/dbus2/zbus/",
+    "files": [
+      "zbus_names-3.0.0-LICENSE.txt"
+    ],
+    "authors": [
+      "Zeeshan Ali Khan <zeeshanak@gnome.org>"
+    ]
+  },
+  {
+    "name": "zerocopy",
+    "version": "0.8.60",
+    "spdx": "BSD-2-Clause OR Apache-2.0 OR MIT",
+    "repository": "https://github.com/google/zerocopy",
+    "files": [
+      "zerocopy-0.8.60-LICENSE-APACHE.txt",
+      "zerocopy-0.8.60-LICENSE-BSD.txt",
+      "zerocopy-0.8.60-LICENSE-MIT.txt"
+    ],
+    "authors": []
+  },
+  {
+    "name": "zerocopy-derive",
+    "version": "0.8.60",
+    "spdx": "BSD-2-Clause OR Apache-2.0 OR MIT",
+    "repository": "https://github.com/google/zerocopy",
+    "files": [
+      "zerocopy-derive-0.8.60-LICENSE-APACHE.txt",
+      "zerocopy-derive-0.8.60-LICENSE-BSD.txt",
+      "zerocopy-derive-0.8.60-LICENSE-MIT.txt"
+    ],
+    "authors": []
+  },
+  {
+    "name": "zeroize",
+    "version": "1.9.1",
+    "spdx": "Apache-2.0 OR MIT",
+    "repository": "https://github.com/RustCrypto/utils",
+    "files": [
+      "zeroize-1.9.1-LICENSE-APACHE.txt",
+      "zeroize-1.9.1-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "The RustCrypto Project Developers"
+    ]
+  },
+  {
+    "name": "zeroize_derive",
+    "version": "1.5.0",
+    "spdx": "Apache-2.0 OR MIT",
+    "repository": "https://github.com/RustCrypto/utils",
+    "files": [
+      "zeroize_derive-1.5.0-LICENSE-APACHE.txt",
+      "zeroize_derive-1.5.0-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "The RustCrypto Project Developers"
+    ]
+  },
+  {
+    "name": "zvariant",
+    "version": "4.2.0",
+    "spdx": "MIT",
+    "repository": "https://github.com/dbus2/zbus/",
+    "files": [
+      "zvariant-4.2.0-LICENSE.txt"
+    ],
+    "authors": [
+      "Zeeshan Ali Khan <zeeshanak@gnome.org>"
+    ]
+  },
+  {
+    "name": "zvariant_derive",
+    "version": "4.2.0",
+    "spdx": "MIT",
+    "repository": "https://github.com/dbus2/zbus/",
+    "files": [
+      "zvariant_derive-4.2.0-LICENSE.txt"
+    ],
+    "authors": [
+      "Zeeshan Ali Khan <zeeshanak@gnome.org>"
+    ]
+  },
+  {
+    "name": "zvariant_utils",
+    "version": "2.1.0",
+    "spdx": "MIT",
+    "repository": "https://github.com/dbus2/zbus/",
+    "files": [
+      "zvariant_utils-2.1.0-LICENSE.txt"
+    ],
+    "authors": [
+      "Zeeshan Ali Khan <zeeshanak@gnome.org>",
+      "turbocooler <turbocooler@cocaine.ninja>"
+    ]
+  },
+  {
+    "name": "block2",
+    "version": "0.5.1",
+    "spdx": "MIT",
+    "repository": "https://github.com/madsmtm/objc2",
+    "source_commit": "4fc083f1c6d6784577e38b0ee8dbd344481e2fd2",
+    "files": [
+      "block2-0.5.1-LICENSE.txt.txt"
+    ],
+    "authors": [
+      "Steven Sheldon",
+      "Mads Marquart <mads@marquart.dk>"
+    ]
+  },
+  {
+    "name": "dasp_sample",
+    "version": "0.11.0",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rustaudio/sample",
+    "source_commit": "97c3bb9b2363c0b46ac1633858bf1054fd02a980",
+    "files": [
+      "dasp_sample-0.11.0-LICENSE-APACHE.txt",
+      "dasp_sample-0.11.0-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "mitchmindtree <mitchell.nordine@gmail.com>"
+    ]
+  },
+  {
+    "name": "dispatch2",
+    "version": "0.3.1",
+    "spdx": "Zlib OR Apache-2.0 OR MIT",
+    "repository": "https://github.com/madsmtm/objc2",
+    "source_commit": "8852b424193ca41602281b3d7540d7c8ed51e49a",
+    "files": [
+      "dispatch2-0.3.1-LICENSE.md.txt"
+    ],
+    "authors": [
+      "Mads Marquart <mads@marquart.dk>",
+      "Mary <mary@mary.zone>"
+    ]
+  },
+  {
+    "name": "jni",
+    "version": "0.22.4",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/jni-rs/jni-rs",
+    "source_commit": "5ae9458a4ec44c5318f37ddc7569c1d4ae8a69e7",
+    "files": [
+      "jni-0.22.4-LICENSE-APACHE.txt",
+      "jni-0.22.4-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "jni team"
+    ]
+  },
+  {
+    "name": "jni-macros",
+    "version": "0.22.4",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/jni-rs/jni-rs",
+    "source_commit": "33045a124105c939d1e2cbdcb5a39e5d868ffa03",
+    "files": [
+      "jni-macros-0.22.4-LICENSE-APACHE.txt",
+      "jni-macros-0.22.4-LICENSE-MIT.txt"
+    ],
+    "authors": []
+  },
+  {
+    "name": "jni-sys-macros",
+    "version": "0.4.1",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/jni-rs/jni-sys",
+    "source_commit": "64d77b7a5f119d7b55b4e2c169a4668067ff59e6",
+    "files": [
+      "jni-sys-macros-0.4.1-LICENSE-APACHE.txt",
+      "jni-sys-macros-0.4.1-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "Robert Bragg <robert@sixbynine.org>"
+    ]
+  },
+  {
+    "name": "ndk",
+    "version": "0.8.0",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-mobile/ndk",
+    "source_commit": "f414cabc12211ebcba4edb3da90950967d4a1933",
+    "files": [
+      "ndk-0.8.0-LICENSE-APACHE.txt",
+      "ndk-0.8.0-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "The Rust Mobile contributors"
+    ]
+  },
+  {
+    "name": "ndk",
+    "version": "0.9.0",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-mobile/ndk",
+    "source_commit": "49bbbba16c58ff63cb8a0ad0eca5a9fb7ecaec25",
+    "files": [
+      "ndk-0.9.0-LICENSE-APACHE.txt",
+      "ndk-0.9.0-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "The Rust Mobile contributors"
+    ]
+  },
+  {
+    "name": "ndk-context",
+    "version": "0.1.1",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-windowing/android-ndk-rs",
+    "source_commit": "10f2ba388fca20f7349996ebae26ccda7a6fda5c",
+    "files": [
+      "ndk-context-0.1.1-LICENSE-APACHE.txt",
+      "ndk-context-0.1.1-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "The Rust Windowing contributors"
+    ]
+  },
+  {
+    "name": "ndk-sys",
+    "version": "0.5.0+25.2.9519653",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-mobile/ndk",
+    "source_commit": "f414cabc12211ebcba4edb3da90950967d4a1933",
+    "files": [
+      "ndk-sys-0.5.0+25.2.9519653-LICENSE-APACHE.txt",
+      "ndk-sys-0.5.0+25.2.9519653-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "The Rust Windowing contributors"
+    ]
+  },
+  {
+    "name": "ndk-sys",
+    "version": "0.6.0+11769913",
+    "spdx": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-mobile/ndk",
+    "source_commit": "49bbbba16c58ff63cb8a0ad0eca5a9fb7ecaec25",
+    "files": [
+      "ndk-sys-0.6.0+11769913-LICENSE-APACHE.txt",
+      "ndk-sys-0.6.0+11769913-LICENSE-MIT.txt"
+    ],
+    "authors": [
+      "The Rust Windowing contributors"
+    ]
+  },
+  {
+    "name": "objc-sys",
+    "version": "0.3.5",
+    "spdx": "MIT",
+    "repository": "https://github.com/madsmtm/objc2",
+    "source_commit": "4fc083f1c6d6784577e38b0ee8dbd344481e2fd2",
+    "files": [
+      "objc-sys-0.3.5-LICENSE.txt.txt"
+    ],
+    "authors": [
+      "Mads Marquart <mads@marquart.dk>"
+    ]
+  },
+  {
+    "name": "objc2",
+    "version": "0.5.3",
+    "spdx": "MIT",
+    "repository": "https://github.com/madsmtm/objc2",
+    "source_commit": "5237cbf081d04ef75a1f6a207b4018e7c1ae7438",
+    "files": [
+      "objc2-0.5.3-LICENSE.txt.txt"
+    ],
+    "authors": [
+      "Steven Sheldon",
+      "Mads Marquart <mads@marquart.dk>"
+    ]
+  },
+  {
+    "name": "objc2",
+    "version": "0.6.5",
+    "spdx": "MIT",
+    "repository": "https://github.com/madsmtm/objc2",
+    "source_commit": "d7d2fa23ceaa5e6096c923b081040e5d81b3b9df",
+    "files": [
+      "objc2-0.6.5-LICENSE.md.txt"
+    ],
+    "authors": [
+      "Mads Marquart <mads@marquart.dk>"
+    ]
+  },
+  {
+    "name": "objc2-app-kit",
+    "version": "0.2.2",
+    "spdx": "MIT",
+    "repository": "https://github.com/madsmtm/objc2",
+    "source_commit": "e282618be4c3a3b9542957e0c8540e9588472ce8",
+    "files": [
+      "objc2-app-kit-0.2.2-LICENSE.txt.txt"
+    ],
+    "authors": []
+  },
+  {
+    "name": "objc2-cloud-kit",
+    "version": "0.2.2",
+    "spdx": "MIT",
+    "repository": "https://github.com/madsmtm/objc2",
+    "source_commit": "e282618be4c3a3b9542957e0c8540e9588472ce8",
+    "files": [
+      "objc2-cloud-kit-0.2.2-LICENSE.txt.txt"
+    ],
+    "authors": []
+  },
+  {
+    "name": "objc2-contacts",
+    "version": "0.2.2",
+    "spdx": "MIT",
+    "repository": "https://github.com/madsmtm/objc2",
+    "source_commit": "e282618be4c3a3b9542957e0c8540e9588472ce8",
+    "files": [
+      "objc2-contacts-0.2.2-LICENSE.txt.txt"
+    ],
+    "authors": []
+  },
+  {
+    "name": "objc2-core-data",
+    "version": "0.2.2",
+    "spdx": "MIT",
+    "repository": "https://github.com/madsmtm/objc2",
+    "source_commit": "e282618be4c3a3b9542957e0c8540e9588472ce8",
+    "files": [
+      "objc2-core-data-0.2.2-LICENSE.txt.txt"
+    ],
+    "authors": []
+  },
+  {
+    "name": "objc2-core-foundation",
+    "version": "0.3.2",
+    "spdx": "Zlib OR Apache-2.0 OR MIT",
+    "repository": "https://github.com/madsmtm/objc2",
+    "source_commit": "7b1abfd750a2cacaea71d6a56ecfb83cb7de560b",
+    "files": [
+      "objc2-core-foundation-0.3.2-LICENSE.md.txt"
+    ],
+    "authors": []
+  },
+  {
+    "name": "objc2-core-graphics",
+    "version": "0.3.2",
+    "spdx": "Zlib OR Apache-2.0 OR MIT",
+    "repository": "https://github.com/madsmtm/objc2",
+    "source_commit": "7b1abfd750a2cacaea71d6a56ecfb83cb7de560b",
+    "files": [
+      "objc2-core-graphics-0.3.2-LICENSE.md.txt"
+    ],
+    "authors": []
+  },
+  {
+    "name": "objc2-core-image",
+    "version": "0.2.2",
+    "spdx": "MIT",
+    "repository": "https://github.com/madsmtm/objc2",
+    "source_commit": "e282618be4c3a3b9542957e0c8540e9588472ce8",
+    "files": [
+      "objc2-core-image-0.2.2-LICENSE.txt.txt"
+    ],
+    "authors": []
+  },
+  {
+    "name": "objc2-core-location",
+    "version": "0.2.2",
+    "spdx": "MIT",
+    "repository": "https://github.com/madsmtm/objc2",
+    "source_commit": "e282618be4c3a3b9542957e0c8540e9588472ce8",
+    "files": [
+      "objc2-core-location-0.2.2-LICENSE.txt.txt"
+    ],
+    "authors": []
+  },
+  {
+    "name": "objc2-encode",
+    "version": "4.1.0",
+    "spdx": "MIT",
+    "repository": "https://github.com/madsmtm/objc2",
+    "source_commit": "8d214f5477365ffcbcbb7de058c86ed9a518efb7",
+    "files": [
+      "objc2-encode-4.1.0-LICENSE.md.txt"
+    ],
+    "authors": [
+      "Mads Marquart <mads@marquart.dk>"
+    ]
+  },
+  {
+    "name": "objc2-io-surface",
+    "version": "0.3.2",
+    "spdx": "Zlib OR Apache-2.0 OR MIT",
+    "repository": "https://github.com/madsmtm/objc2",
+    "source_commit": "7b1abfd750a2cacaea71d6a56ecfb83cb7de560b",
+    "files": [
+      "objc2-io-surface-0.3.2-LICENSE.md.txt"
+    ],
+    "authors": []
+  },
+  {
+    "name": "objc2-link-presentation",
+    "version": "0.2.2",
+    "spdx": "MIT",
+    "repository": "https://github.com/madsmtm/objc2",
+    "source_commit": "e282618be4c3a3b9542957e0c8540e9588472ce8",
+    "files": [
+      "objc2-link-presentation-0.2.2-LICENSE.txt.txt"
+    ],
+    "authors": []
+  },
+  {
+    "name": "objc2-metal",
+    "version": "0.2.2",
+    "spdx": "MIT",
+    "repository": "https://github.com/madsmtm/objc2",
+    "source_commit": "e282618be4c3a3b9542957e0c8540e9588472ce8",
+    "files": [
+      "objc2-metal-0.2.2-LICENSE.txt.txt"
+    ],
+    "authors": []
+  },
+  {
+    "name": "objc2-quartz-core",
+    "version": "0.2.2",
+    "spdx": "MIT",
+    "repository": "https://github.com/madsmtm/objc2",
+    "source_commit": "e282618be4c3a3b9542957e0c8540e9588472ce8",
+    "files": [
+      "objc2-quartz-core-0.2.2-LICENSE.txt.txt"
+    ],
+    "authors": []
+  },
+  {
+    "name": "objc2-quartz-core",
+    "version": "0.3.2",
+    "spdx": "Zlib OR Apache-2.0 OR MIT",
+    "repository": "https://github.com/madsmtm/objc2",
+    "source_commit": "7b1abfd750a2cacaea71d6a56ecfb83cb7de560b",
+    "files": [
+      "objc2-quartz-core-0.3.2-LICENSE.md.txt"
+    ],
+    "authors": []
+  },
+  {
+    "name": "objc2-symbols",
+    "version": "0.2.2",
+    "spdx": "MIT",
+    "repository": "https://github.com/madsmtm/objc2",
+    "source_commit": "e282618be4c3a3b9542957e0c8540e9588472ce8",
+    "files": [
+      "objc2-symbols-0.2.2-LICENSE.txt.txt"
+    ],
+    "authors": []
+  },
+  {
+    "name": "objc2-ui-kit",
+    "version": "0.2.2",
+    "spdx": "MIT",
+    "repository": "https://github.com/madsmtm/objc2",
+    "source_commit": "e282618be4c3a3b9542957e0c8540e9588472ce8",
+    "files": [
+      "objc2-ui-kit-0.2.2-LICENSE.txt.txt"
+    ],
+    "authors": []
+  },
+  {
+    "name": "objc2-uniform-type-identifiers",
+    "version": "0.2.2",
+    "spdx": "MIT",
+    "repository": "https://github.com/madsmtm/objc2",
+    "source_commit": "e282618be4c3a3b9542957e0c8540e9588472ce8",
+    "files": [
+      "objc2-uniform-type-identifiers-0.2.2-LICENSE.txt.txt"
+    ],
+    "authors": []
+  },
+  {
+    "name": "objc2-user-notifications",
+    "version": "0.2.2",
+    "spdx": "MIT",
+    "repository": "https://github.com/madsmtm/objc2",
+    "source_commit": "e282618be4c3a3b9542957e0c8540e9588472ce8",
+    "files": [
+      "objc2-user-notifications-0.2.2-LICENSE.txt.txt"
+    ],
+    "authors": []
+  },
+  {
+    "name": "dispatch",
+    "version": "0.2.0",
+    "spdx": "MIT",
+    "repository": "http://github.com/SSheldon/rust-dispatch",
+    "authors": [
+      "Steven Sheldon"
+    ],
+    "files": [
+      "standard-MIT.txt"
+    ],
+    "source": "Exact unmodified .crate in matching rust-sources release asset"
+  },
+  {
+    "name": "gdextension-api",
+    "version": "0.5.1",
+    "spdx": "MPL-2.0",
+    "repository": "https://github.com/godot-rust/gdext",
+    "authors": [],
+    "files": [
+      "standard-MPL-2.0.txt"
+    ],
+    "source": "Exact unmodified .crate in matching rust-sources release asset"
+  },
+  {
+    "name": "godot",
+    "version": "0.5.5",
+    "spdx": "MPL-2.0",
+    "repository": "https://github.com/godot-rust/gdext",
+    "authors": [
+      "Bromeon",
+      "godot-rust contributors"
+    ],
+    "files": [
+      "standard-MPL-2.0.txt"
+    ],
+    "source": "Exact unmodified .crate in matching rust-sources release asset"
+  },
+  {
+    "name": "godot-bindings",
+    "version": "0.5.5",
+    "spdx": "MPL-2.0",
+    "repository": "https://github.com/godot-rust/gdext",
+    "authors": [],
+    "files": [
+      "standard-MPL-2.0.txt"
+    ],
+    "source": "Exact unmodified .crate in matching rust-sources release asset"
+  },
+  {
+    "name": "godot-cell",
+    "version": "0.5.5",
+    "spdx": "MPL-2.0",
+    "repository": "https://github.com/godot-rust/gdext",
+    "authors": [],
+    "files": [
+      "standard-MPL-2.0.txt"
+    ],
+    "source": "Exact unmodified .crate in matching rust-sources release asset"
+  },
+  {
+    "name": "godot-codegen",
+    "version": "0.5.5",
+    "spdx": "MPL-2.0",
+    "repository": "https://github.com/godot-rust/gdext",
+    "authors": [],
+    "files": [
+      "standard-MPL-2.0.txt"
+    ],
+    "source": "Exact unmodified .crate in matching rust-sources release asset"
+  },
+  {
+    "name": "godot-core",
+    "version": "0.5.5",
+    "spdx": "MPL-2.0",
+    "repository": "https://github.com/godot-rust/gdext",
+    "authors": [],
+    "files": [
+      "standard-MPL-2.0.txt"
+    ],
+    "source": "Exact unmodified .crate in matching rust-sources release asset"
+  },
+  {
+    "name": "godot-ffi",
+    "version": "0.5.5",
+    "spdx": "MPL-2.0",
+    "repository": "https://github.com/godot-rust/gdext",
+    "authors": [],
+    "files": [
+      "standard-MPL-2.0.txt"
+    ],
+    "source": "Exact unmodified .crate in matching rust-sources release asset"
+  },
+  {
+    "name": "godot-macros",
+    "version": "0.5.5",
+    "spdx": "MPL-2.0",
+    "repository": "https://github.com/godot-rust/gdext",
+    "authors": [],
+    "files": [
+      "standard-MPL-2.0.txt"
+    ],
+    "source": "Exact unmodified .crate in matching rust-sources release asset"
+  },
+  {
+    "name": "nanoserde-derive",
+    "version": "0.2.1",
+    "spdx": "MIT",
+    "repository": null,
+    "authors": [
+      "Makepad <info@makepad.nl>",
+      "Fedor <not.fl3@gmail.com>"
+    ],
+    "files": [
+      "standard-MIT.txt"
+    ],
+    "source": "Exact unmodified .crate in matching rust-sources release asset"
+  },
+  {
+    "name": "oboe",
+    "version": "0.6.1",
+    "spdx": "Apache-2.0",
+    "repository": "https://github.com/katyo/oboe-rs",
+    "authors": [
+      "K. <kayo@illumium.org>"
+    ],
+    "files": [
+      "standard-Apache-2.0.txt"
+    ],
+    "source": "Exact unmodified .crate in matching rust-sources release asset"
+  },
+  {
+    "name": "oboe-sys",
+    "version": "0.6.1",
+    "spdx": "Apache-2.0",
+    "repository": "https://github.com/katyo/oboe-rs",
+    "authors": [
+      "K. <kayo@illumium.org>"
+    ],
+    "files": [
+      "standard-Apache-2.0.txt"
+    ],
+    "source": "Exact unmodified .crate in matching rust-sources release asset"
+  },
+  {
+    "name": "r-efi",
+    "version": "5.3.0",
+    "spdx": "MIT OR Apache-2.0 OR LGPL-2.1-or-later",
+    "repository": "https://github.com/r-efi/r-efi",
+    "authors": [],
+    "files": [
+      "r-efi-5.3.0-AUTHORS.txt"
+    ],
+    "source": "Exact unmodified .crate in matching rust-sources release asset"
+  },
+  {
+    "name": "r-efi",
+    "version": "6.0.0",
+    "spdx": "MIT OR Apache-2.0 OR LGPL-2.1-or-later",
+    "repository": "https://github.com/r-efi/r-efi",
+    "authors": [],
+    "files": [
+      "r-efi-6.0.0-AUTHORS.txt"
+    ],
+    "source": "Exact unmodified .crate in matching rust-sources release asset"
+  }
+]
