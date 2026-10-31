@@ -75,6 +75,29 @@ pub struct NativePlatform {}
 #[godot_api]
 impl NativePlatform {
     #[func]
+    fn cloud_credential(operation: GString, account: GString, token: GString) -> VarDictionary {
+        let result = match operation.to_string().as_str() {
+            "store" => sc2k_platform::credentials::store(&account.to_string(), &token.to_string()).map(|()| String::new()),
+            "load" => sc2k_platform::credentials::load(&account.to_string()),
+            "delete" => sc2k_platform::credentials::delete(&account.to_string()).map(|()| String::new()),
+            _ => Err("Invalid credential operation".into()),
+        };
+        let mut output = VarDictionary::new();
+        output.set("ok", result.is_ok());
+        match result {
+            Ok(value) => {
+                output.set("token", value.as_str());
+                output.set("error", "");
+            }
+            Err(error) => {
+                output.set("token", "");
+                output.set("error", error.as_str());
+            }
+        }
+        output
+    }
+
+    #[func]
     fn attach_pointer_source(window: i64) -> bool {
         sc2k_platform::pointer_source::attach(window as usize)
     }

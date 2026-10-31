@@ -111,6 +111,9 @@ var classic_cheats := ApplicationClassicCheats.new(self)
 var updates := ApplicationUpdates.new(preferences)
 var activity: SingleplayerActivity
 var autosave: ApplicationAutosave = ApplicationAutosave.new(self)
+var cloud: CloudSync
+var cloud_ui: CloudWindow
+var cloud_saves := ApplicationCloudSaves.new(self)
 # the JavaScript runtime of mods and developer scripts
 var scripting: ApplicationScripting = ApplicationScripting.new(self)
 
@@ -139,6 +142,7 @@ func _ready() -> void:
 		asset_state.reference_root = DataPack.default_folder()
 
 	settings.load_app_settings()
+	cloud_saves.initialize()
 	scripting.mods.load_all(preferences.mods_folder if not preferences.mods_folder.is_empty() else ModCatalog.default_folder(), preferences.settings_path)
 	get_window().size_changed.connect(_on_window_size_changed)
 	assets.build_reference_import_dialogs()
@@ -202,6 +206,7 @@ func _exit_tree() -> void:
 	static_render.stop_render_job()
 	city_png_export.close()
 	autosave.close()
+	cloud_saves.close()
 	scripting.close()
 
 
@@ -212,6 +217,7 @@ func _process(delta: float) -> void:
 	frame.process(delta)
 	regions.process()
 	autosave.process(delta)
+	cloud_saves.process(delta)
 	scripting.process(delta)
 
 

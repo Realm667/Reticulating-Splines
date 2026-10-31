@@ -40241,3 +40241,348 @@ msgstr "Amministrazione annua dopo l’acquisto: %s\nFondi dopo l’acquisto: %s
 #: src/regions/application_regions.gd
 msgid "Projected annual balance: %s"
 msgstr "Bilancio annuale previsto: %s"
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Account & Cloud"
+msgstr "Account e cloud"
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Account"
+msgstr "Account"
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Cloud saves"
+msgstr "Salvataggi cloud"
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Devices"
+msgstr "Dispositivi"
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Private saves across your devices. Each save stays local unless you enable Cloud."
+msgstr "Salvataggi privati sui tuoi dispositivi. Ogni salvataggio resta locale finché non attivi il cloud."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Sign in"
+msgstr "Accedi"
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Register"
+msgstr "Registrati"
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Verify email"
+msgstr "Verifica email"
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Reset password"
+msgstr "Reimposta password"
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Email"
+msgstr "Email"
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Email code"
+msgstr "Codice email"
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Enter the code from your email here. After verification or a password reset, sign in with your password."
+msgstr "Inserisci qui il codice ricevuto via email. Dopo la verifica o la reimpostazione, accedi con la tua password."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Stay signed in on this device"
+msgstr "Resta connesso su questo dispositivo"
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Your password is never saved. Remembered access uses your operating system's protected credential storage."
+msgstr "La password non viene mai salvata. L'accesso persistente usa l'archivio protetto delle credenziali del sistema operativo."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Continue"
+msgstr "Continua"
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Send reset code"
+msgstr "Invia codice di reimpostazione"
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Sign out"
+msgstr "Esci dall'account"
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Keep this save in Cloud"
+msgstr "Conserva questo salvataggio nel cloud"
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Local deletion does not delete Cloud copies. Regions are stored together. Only the host can save a multiplayer game."
+msgstr "L'eliminazione locale non rimuove le copie cloud. Le regioni vengono salvate insieme. Solo l'host può salvare una partita multigiocatore."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Refresh"
+msgstr "Aggiorna"
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Trash"
+msgstr "Cestino"
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Select a save."
+msgstr "Seleziona un salvataggio."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Restore version"
+msgstr "Ripristina versione"
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Move to trash"
+msgstr "Sposta nel cestino"
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Restore from trash"
+msgstr "Ripristina dal cestino"
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Revoking a device signs it out. Its local saves remain on that device."
+msgstr "Revocare un dispositivo lo disconnette. I suoi salvataggi locali restano sul dispositivo."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Revoke device"
+msgstr "Revoca dispositivo"
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Signed in as %s"
+msgstr "Accesso come %s"
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Not signed in"
+msgstr "Non connesso"
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Working…"
+msgstr "Elaborazione…"
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Cloud storage: %s / %s · Pending uploads: %d"
+msgstr "Spazio cloud: %s / %s · Caricamenti in attesa: %d"
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Save locally first, then enable Cloud."
+msgstr "Salva prima in locale, poi attiva il cloud."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "This device"
+msgstr "Questo dispositivo"
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Year: %s · Population: %s\nUpdated: %s · Device: %s"
+msgstr "Anno: %s · Popolazione: %s\nAggiornato: %s · Dispositivo: %s"
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Restore this version as the current Cloud save? Your local file stays unchanged."
+msgstr "Ripristinare questa versione come salvataggio cloud attuale? Il file locale resta invariato."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Move this Cloud save to trash? Local files stay unchanged."
+msgstr "Spostare questo salvataggio cloud nel cestino? I file locali restano invariati."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Revoke this device's account access?"
+msgstr "Revocare l'accesso di questo dispositivo all'account?"
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Conflicting versions: %s"
+msgstr "Versioni in conflitto: %s"
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Both versions are preserved until you choose. Cities and regions are never merged automatically."
+msgstr "Entrambe le versioni restano conservate fino alla tua scelta. Città e regioni non vengono mai unite automaticamente."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Use Cloud version"
+msgstr "Usa versione cloud"
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Use local version"
+msgstr "Usa versione locale"
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Keep both copies"
+msgstr "Mantieni entrambe le copie"
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Apply this conflict resolution? Keep both copies if you want to continue both versions separately."
+msgstr "Applicare questa soluzione? Mantieni entrambe le copie per continuare le due versioni separatamente."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Cloud is unavailable. Your local saves remain available."
+msgstr "Il cloud non è disponibile. I salvataggi locali restano accessibili."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Sign in again to access Cloud saves."
+msgstr "Accedi di nuovo per usare i salvataggi cloud."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Choose how to resolve the conflicting save versions."
+msgstr "Scegli come risolvere le versioni in conflitto."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "This save could not be verified. Your existing files are unchanged."
+msgstr "Impossibile verificare questo salvataggio. I file esistenti sono invariati."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "This save requires a different game or gameplay mod version."
+msgstr "Questo salvataggio richiede una versione diversa del gioco o di una mod di gioco."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Cloud storage could not be updated. Try again."
+msgstr "Impossibile aggiornare lo spazio cloud. Riprova."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Your Cloud storage is full."
+msgstr "Il tuo spazio cloud è pieno."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Email or password is incorrect."
+msgstr "Email o password non corretta."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "The email code is invalid or expired."
+msgstr "Il codice email non è valido o è scaduto."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Too many attempts. Please try again later."
+msgstr "Troppi tentativi. Riprova più tardi."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Verify your email before signing in."
+msgstr "Verifica la tua email prima di accedere."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Secure credential storage is unavailable"
+msgstr "L'archivio sicuro delle credenziali non è disponibile"
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Only the host can save a multiplayer game."
+msgstr "Solo l'host può salvare una partita multigiocatore."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Choose a new file name. Existing files are not overwritten."
+msgstr "Scegli un nuovo nome. I file esistenti non vengono sovrascritti."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "The Cloud request failed. Please try again."
+msgstr "La richiesta al cloud non è riuscita. Riprova."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Cloud synchronization"
+msgstr "Sincronizzazione cloud"
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Use at least 12 characters for a new password."
+msgstr "Usa almeno 12 caratteri per una nuova password."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Cloud keeps five versions per save. Trash is removed after 30 days. Versions and trash count toward your quota."
+msgstr "Il cloud conserva cinque versioni per salvataggio. Il cestino viene eliminato dopo 30 giorni. Versioni e cestino occupano la tua quota."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Cloud version selected. Download it to a new local file to continue. Your previous local file is preserved."
+msgstr "Versione cloud selezionata. Scaricala in un nuovo file locale per continuare. Il file locale precedente viene conservato."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Enter a valid email address."
+msgstr "Inserisci un indirizzo email valido."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "The email could not be sent. Please try again later."
+msgstr "Impossibile inviare l'email. Riprova più tardi."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "This Cloud version is no longer available. Refresh the list."
+msgstr "Questa versione cloud non è più disponibile. Aggiorna l'elenco."
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Conflicting versions"
+msgstr "Versioni in conflitto"
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Waiting to upload"
+msgstr "In attesa di caricamento"
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Cloud copy available"
+msgstr "Copia cloud disponibile"
+
+#. Reticulating Splines regions and multiplayer; supplementary AI-assisted translation.
+#: src/regions/application_regions.gd
+msgid "Uploads are pending. Quit now? They remain queued and resume when you sign in again."
+msgstr "Ci sono caricamenti in attesa. Uscire ora? Restano in coda e riprendono al prossimo accesso."

@@ -1,5 +1,29 @@
 [
   {
+    "id": "cloud_application_test",
+    "script": "tests/cloud_application_test.gd",
+    "domain": "ui",
+    "lane": "product"
+  },
+  {
+    "id": "cloud_credentials_test",
+    "script": "tests/cloud_credentials_test.gd",
+    "domain": "ui",
+    "lane": "product"
+  },
+  {
+    "id": "cloud_sync_test",
+    "script": "tests/cloud_sync_test.gd",
+    "domain": "ui",
+    "lane": "product"
+  },
+  {
+    "id": "cloud_ui_test",
+    "script": "tests/cloud_ui_test.gd",
+    "domain": "ui",
+    "lane": "product"
+  },
+  {
     "id": "map_navigation_test",
     "script": "tests/map_navigation_test.gd",
     "domain": "ui",
@@ -11,7 +35,9 @@
     "domain": "rendering",
     "lane": "native",
     "driver": "scene-batch",
-    "requires": ["ext/graphics/pack.json"]
+    "requires": [
+      "ext/graphics/pack.json"
+    ]
   },
   {
     "id": "native_artwork_filter_test",
@@ -34,7 +60,9 @@
     "script": "tests/building_variants_test.gd",
     "domain": "rendering",
     "lane": "product",
-    "requires": ["ext/graphics/pack.json"]
+    "requires": [
+      "ext/graphics/pack.json"
+    ]
   },
   {
     "id": "sun_glow_gpu_test",
@@ -86,7 +114,10 @@
     "script": "tests/city_preview_test.gd",
     "domain": "ui",
     "lane": "product",
-    "requires": ["ext/graphics/pack.json", "game/tests/fixtures/cities/generated-128.SC2"]
+    "requires": [
+      "ext/graphics/pack.json",
+      "game/tests/fixtures/cities/generated-128.SC2"
+    ]
   },
   {
     "id": "ocean_neighbor_load_test",
@@ -105,7 +136,10 @@
     "script": "tests/startup_loading_test.gd",
     "domain": "ui",
     "lane": "product",
-    "requires": ["ext/graphics/pack.json", "ext/data/pack.json"]
+    "requires": [
+      "ext/graphics/pack.json",
+      "ext/data/pack.json"
+    ]
   },
   {
     "id": "toolbar_flyout_test",
@@ -305,14 +339,20 @@
     "script": "tests/underground_cache_transition_test.gd",
     "domain": "rendering",
     "lane": "product",
-    "requires": ["ext/graphics/pack.json", "ext/data/pack.json"]
+    "requires": [
+      "ext/graphics/pack.json",
+      "ext/data/pack.json"
+    ]
   },
   {
     "id": "rotation_cache_test",
     "script": "tests/rotation_cache_test.gd",
     "domain": "rendering",
     "lane": "product",
-    "requires": ["ext/graphics/pack.json", "ext/data/pack.json"]
+    "requires": [
+      "ext/graphics/pack.json",
+      "ext/data/pack.json"
+    ]
   },
   {
     "id": "visual_preparation_test",
@@ -2374,7 +2414,10 @@
     "script": "tests/multiplayer_lan_test.gd",
     "domain": "ui",
     "lane": "product",
-    "requires": ["ext/graphics/pack.json", "ext/data/pack.json"]
+    "requires": [
+      "ext/graphics/pack.json",
+      "ext/data/pack.json"
+    ]
   },
   {
     "id": "forest_growth_test",

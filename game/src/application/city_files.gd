@@ -24,6 +24,7 @@ var load_in_progress := false
 var load_task_id := -1
 var load_serial := 0
 var loading_preview: Image
+var pending_cloud_choice := -1
 
 
 func _init(application: CityApplication) -> void:
@@ -236,6 +237,10 @@ func open_save_dialog() -> void:
 		app.city_dialogs.city_save_dialog.filters = PackedStringArray([sc2_filter, sc2kfix_filter])
 
 	app.city_dialogs.city_save_dialog.current_file = save_name + (".sc2x" if document.is_extended() or sc2kfix else ".SC2")
+	var cloud_dialog := app.city_dialogs.city_save_dialog
+	cloud_dialog.option_count = 0
+	var cloud_path: String = app.coop.multiplayer_save_path if app.coop.active() else document_state.current_save_path
+	cloud_dialog.add_option(tr("Cloud synchronization"), PackedStringArray(), int(app.cloud.is_enabled(cloud_path)))
 	app.city_dialogs.city_save_dialog.popup_centered_ratio(0.8)
 
 
@@ -284,9 +289,13 @@ func _perform_city_exit(action: String, path := "") -> void:
 		"load_city":
 			_load_city_in_background(path)
 		"quit":
-			if app.activity != null:
-				await app.activity.shutdown()
-			app.get_tree().quit()
+			app.cloud_ui.confirm_exit(_quit_after_cloud_notice)
+
+
+func _quit_after_cloud_notice() -> void:
+	if app.activity != null:
+		await app.activity.shutdown()
+	app.get_tree().quit()
 
 
 func save_pending_city_exit() -> void:
@@ -469,6 +478,8 @@ func on_save_path_selected(path: String) -> void:
 	if document_state.current_document != null and not document_state.current_document.sc2x_converted_from.is_empty() and path.simplify_path().to_lower() == document_state.current_document.sc2x_converted_from.simplify_path().to_lower():
 		app.interface.show_error(tr("Choose a new filename; the multiplayer save stays unchanged."))
 		return
+	var cloud_options := app.city_dialogs.city_save_dialog.get_selected_options()
+	pending_cloud_choice = int(bool(cloud_options.get(tr("Cloud synchronization"), false)))
 	if app.coop.active():
 		app.coop.save_to(path)
 		return
@@ -476,6 +487,7 @@ func on_save_path_selected(path: String) -> void:
 
 
 func on_save_dialog_canceled() -> void:
+	pending_cloud_choice = -1
 	if pending_city_exit_waiting_for_save:
 		cancel_pending_city_exit()
 
@@ -549,11 +561,13 @@ func _finish_save(document: Sc2File, prepared: CityFiles.PreparedSave, result: F
 		app.main_overlays.busy_overlay.hide()
 
 	if not result.ok:
+		pending_cloud_choice = -1
 		app.interface.show_error(result.error)
 
 		return false
 
 	# Presentation belongs to the saved snapshot; it never participates in dirty state.
+	apply_cloud_choice(result.path)
 	if prepared.entries != null:
 		document.sc2x_extra_entries.erase(CityPreviewStore.ENTRY)
 		if prepared.entries.members.has(CityPreviewStore.ENTRY):
@@ -573,11 +587,18 @@ func _finish_save(document: Sc2File, prepared: CityFiles.PreparedSave, result: F
 		app.status_label.text = tr("Saved city: %s") % result.path
 		sync_upgrade_city_option()
 		app.scripting.emit("city.saved", {"path": result.path})
+		app.cloud_saves.saved(result.path)
 
 	if on_saved.is_valid():
 		on_saved.call()
 
 	return true
+
+
+func apply_cloud_choice(path: String) -> void:
+	if pending_cloud_choice >= 0:
+		app.cloud_saves.choose(path, pending_cloud_choice == 1)
+		pending_cloud_choice = -1
 
 
 func request_main_menu() -> void:

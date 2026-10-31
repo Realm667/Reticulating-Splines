@@ -1,5 +1,6 @@
 {
   "paths": [
+    "game/src/ui/cloud/*.gd",
     "game/src/regions/*.gd",
     "game/src/multiplayer/*.gd",
     "game/src/ui/settings/visual*.gd",

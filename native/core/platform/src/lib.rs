@@ -3,6 +3,7 @@
 
 pub mod config;
 pub mod console;
+pub mod credentials;
 pub mod dirs;
 pub mod mods;
 pub mod paths;

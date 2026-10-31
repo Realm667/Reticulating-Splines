@@ -78,6 +78,9 @@ func open_mods_folder() -> void:
 
 
 func open_settings_dialog() -> void:
+	var cloud_action := Callable(self, "open_cloud_settings")
+	if not app.main_overlays.settings_dialog.cloud_requested.is_connected(cloud_action):
+		app.main_overlays.settings_dialog.cloud_requested.connect(cloud_action)
 	show_mods()
 	app.main_overlays.settings_dialog.loading_values = true
 	var visual_values := preferences.visual_enhancements.duplicate(true)
@@ -137,6 +140,13 @@ func open_settings_dialog() -> void:
 			control.tooltip_text = tr(VisualEnhancementsTab.HINTS[key])
 
 	_refresh_settings_pack_names()
+
+
+func open_cloud_settings() -> void:
+	if app.cloud_ui != null:
+		app.main_overlays.settings_dialog.hide()
+		app.cloud_ui.set_current_path(app.document_state.current_save_path)
+		app.cloud_ui.open()
 
 
 func _refresh_settings_pack_names() -> void:

@@ -145,9 +145,10 @@ func setup() -> void:
 	leave_dialog.dialog_text = "Leave the session? Unsaved changes on the host will be lost.\nAs host, you will disconnect all other players."
 	leave_dialog.confirmed.connect(func() -> void:
 		var quitting := exit_action == "quit"
-		leave()
 		if quitting:
-			finish_quit())
+			finish_quit()
+		else:
+			leave())
 	leave_dialog.canceled.connect(func() -> void: exit_action = "")
 	app.add_child(leave_dialog)
 	windows = MultiplayerWindows.new(self)
@@ -635,8 +636,9 @@ func save_to(path: String) -> void:
 		app.interface.show_error(MultiplayerText.message(error))
 	if error.is_empty():
 		multiplayer_save_path = path
+		app.city_files.apply_cloud_choice(path)
+		app.cloud_saves.saved(path)
 		if exit_action == "quit":
-			session.stop()
 			finish_quit()
 	show_message(error if not error.is_empty() else tr("Multiplayer game saved: %s") % path)
 
@@ -788,7 +790,6 @@ func request_exit(action: String) -> void:
 		save())
 	dialog.custom_action.connect(func(value: StringName) -> void:
 		if value == &"discard":
-			session.stop()
 			finish_quit())
 	dialog.canceled.connect(func() -> void:
 		exit_action = ""
@@ -831,6 +832,10 @@ static func remote_gain(point: Vector2, view: Rect2) -> float:
 
 
 func finish_quit() -> void:
+	app.cloud_ui.confirm_exit(_finish_quit_after_cloud_notice)
+
+
+func _finish_quit_after_cloud_notice() -> void:
 	# Keep processing until the final ordered leave is acknowledged or times out.
 	session.stop()
 	while not session.retiring_channels.is_empty():

@@ -7,6 +7,7 @@ extends AcceptDialog
 
 signal import_original_requested(categories: PackedStringArray)
 signal update_check_requested
+signal cloud_requested
 signal button_clicked
 # the player changed a setting. read the new values with selected_values()
 signal settings_changed
@@ -201,6 +202,7 @@ func _ready() -> void:
 	# Keep the script mod implementation available for later; omit its settings tab for now.
 	tabs.set_tab_hidden(tabs.get_tab_idx_from_control(mods_scroll), true)
 	_watch_clicks(mods_panel)
+	_build_cloud_entry()
 	controls_list.bindings_changed.connect(_notify_change)
 	# closing the dialog applies a text field that still has focus
 	visibility_changed.connect(func() -> void:
@@ -219,6 +221,25 @@ func _ready() -> void:
 		get_parent().get_viewport().size_changed.connect(_fit_to_viewport)
 	theme_changed.connect(func() -> void: call_deferred("_fit_to_viewport"))
 	_fit_to_viewport()
+
+
+func _build_cloud_entry() -> void:
+	var scroll := ScrollContainer.new()
+	scroll.name = "Account & Cloud"
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	var content := VBoxContainer.new()
+	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(content)
+	var explanation := Label.new()
+	explanation.text = "Private saves across your devices. Each save stays local unless you enable Cloud."
+	explanation.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	content.add_child(explanation)
+	var open_cloud := Button.new()
+	open_cloud.text = "Account & Cloud"
+	open_cloud.custom_minimum_size.y = 40
+	open_cloud.pressed.connect(cloud_requested.emit)
+	content.add_child(open_cloud)
+	tabs.add_child(scroll)
 
 
 # Use Defaults sits in its own row below the tab panel, and only the Controls
