@@ -42,7 +42,7 @@ def build(args):
             shutil.copytree(ROOT / f'game/bin/opensc2k_{module}' / platform,
                             project / f'bin/opensc2k_{module}' / platform, dirs_exist_ok=True)
     bundle = project / 'android-packs.zip'
-    with zipfile.ZipFile(bundle, 'w', zipfile.ZIP_DEFLATED, compresslevel=3) as archive:
+    with zipfile.ZipFile(bundle, 'w', zipfile.ZIP_DEFLATED, compresslevel=3, strict_timestamps=False) as archive:
         files = subprocess.check_output(['git', '-C', str(ROOT), 'ls-files', '-z', 'packs', 'game/assets/licenses'], text=True).split('\0')
         for relative in filter(None, files):
             destination = rs_release_assets.destination(relative)
