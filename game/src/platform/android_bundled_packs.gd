@@ -9,6 +9,8 @@ static func install(user_root: String, archive := "res://android-packs.zip") -> 
 	var digest := FileAccess.get_file_as_string(archive + ".sha256").strip_edges() if FileAccess.file_exists(archive + ".sha256") else FileAccess.get_sha256(archive)
 	if digest.is_empty():
 		return ERR_FILE_NOT_FOUND
+	if digest.length() != 64 or not digest.is_valid_hex_number(false):
+		return ERR_FILE_CORRUPT
 	var destination := user_root.path_join("bundled").path_join(digest)
 	if FileAccess.file_exists(destination.path_join("complete")):
 		installed_root = destination
@@ -39,8 +41,26 @@ static func install(user_root: String, archive := "res://android-packs.zip") -> 
 		return error
 	if FileAccess.get_sha256(local_archive) != digest:
 		return ERR_FILE_CORRUPT
+	error = AndroidBundleArchive.extract(local_archive, destination) if OS.has_feature("android") else _extract(local_archive, destination)
+	if error != OK:
+		return error
+	DirAccess.remove_absolute(local_archive)
+	var marker := FileAccess.open(destination.path_join("complete"), FileAccess.WRITE)
+	if marker == null:
+		return FileAccess.get_open_error()
+	marker.store_string(digest)
+	marker.flush()
+	error = marker.get_error()
+	marker.close()
+	if error != OK:
+		return error
+	installed_root = destination
+	return OK
+
+
+static func _extract(local_archive: String, destination: String) -> Error:
 	var reader := ZIPReader.new()
-	error = reader.open(local_archive)
+	var error := reader.open(local_archive)
 	if error != OK:
 		return error
 	var total := 0
@@ -49,7 +69,7 @@ static func install(user_root: String, archive := "res://android-packs.zip") -> 
 		reader.close()
 		return ERR_FILE_CORRUPT
 	for name: String in files:
-		if name.is_absolute_path() or name.contains("\\") or ":" in name or ".." in name.split("/"):
+		if not AndroidBundleArchive.valid_name(name):
 			reader.close()
 			return ERR_FILE_CORRUPT
 		if name.ends_with("/"):
@@ -76,11 +96,4 @@ static func install(user_root: String, archive := "res://android-packs.zip") -> 
 			reader.close()
 			return error
 	reader.close()
-	DirAccess.remove_absolute(local_archive)
-	var marker := FileAccess.open(destination.path_join("complete"), FileAccess.WRITE)
-	if marker == null:
-		return FileAccess.get_open_error()
-	marker.store_string(digest)
-	marker.close()
-	installed_root = destination
 	return OK

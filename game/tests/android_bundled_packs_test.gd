@@ -4,6 +4,9 @@ var failures := 0
 
 
 func _initialize() -> void:
+	for name in ["", "../outside", "a/../outside", "/absolute", "C:/outside", "a\\outside"]:
+		check(not AndroidBundleArchive.valid_name(name), "rejects unsafe archive path: " + name)
+	check(AndroidBundleArchive.valid_name("graphic/reticulating-splines/pack.json"), "accepts relative bundle paths")
 	var root := "user://android-bundle-test"
 	DirAccess.make_dir_recursive_absolute(root)
 	var archive := root.path_join("packs.zip")
@@ -25,6 +28,14 @@ func _initialize() -> void:
 	check(AndroidBundledPacks.install(root, archive) == ERR_FILE_CORRUPT, "rejects path traversal")
 	check(not FileAccess.file_exists(root.path_join("outside.txt")), "writes no path outside bundle root")
 	check(FileAccess.file_exists(original.path_join("complete")), "failed update preserves previous bundle")
+	var sidecar := FileAccess.open(archive + ".sha256", FileAccess.WRITE)
+	sidecar.store_string("0".repeat(64))
+	sidecar.close()
+	check(AndroidBundledPacks.install(root, archive) == ERR_FILE_CORRUPT, "rejects bundle hash mismatch before extraction")
+	sidecar = FileAccess.open(archive + ".sha256", FileAccess.WRITE)
+	sidecar.store_string("../outside")
+	sidecar.close()
+	check(AndroidBundledPacks.install(root, archive) == ERR_FILE_CORRUPT, "rejects malformed digest before selecting a destination")
 	check(AndroidBundledPacks.install(root, root.path_join("missing.zip")) == ERR_FILE_NOT_FOUND, "missing archive is reported")
 	print("Android bundle: %d failure(s)" % failures)
 	quit(1 if failures else 0)

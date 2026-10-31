@@ -213,7 +213,7 @@ func display_text() -> String:
 	var label := code
 
 	# show the letter that this layout prints on the physical key
-	if _is_letter_or_digit(code) and DisplayServer.get_name() != "headless":
+	if _is_letter_or_digit(code) and _has_layout_labels():
 		var layout_key := DisplayServer.keyboard_get_label_from_physical(code as Key)
 
 		if layout_key != KEY_NONE:
@@ -252,7 +252,7 @@ static func full_key_name(keycode: int) -> String:
 	if FULL_KEY_NAMES.has(keycode):
 		return TranslationServer.translate(FULL_KEY_NAMES[keycode])
 
-	if _is_letter_or_digit(keycode) and DisplayServer.get_name() != "headless":
+	if _is_letter_or_digit(keycode) and _has_layout_labels():
 		var layout_key := DisplayServer.keyboard_get_label_from_physical(keycode as Key)
 
 		if layout_key != KEY_NONE:
@@ -264,6 +264,10 @@ static func full_key_name(keycode: int) -> String:
 		return TranslationServer.translate("Keypad %s") % name.substr(3)
 
 	return name
+
+
+static func _has_layout_labels() -> bool:
+	return DisplayServer.get_name() != "headless" and not OS.has_feature("android") and not OS.has_feature("ios")
 
 
 # macOS menus show modifier symbols. Other systems show names joined with "+"

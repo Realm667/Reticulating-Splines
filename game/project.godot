@@ -36,6 +36,10 @@ window/size/window_height_override=800
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 
+[input_devices]
+
+pointing/android/disable_scroll_deadzone=true
+
 [rendering]
 
 renderer/rendering_method="gl_compatibility"
