@@ -91,6 +91,7 @@ func campaign_summary(actor: String) -> Dictionary:
 			if owner.is_empty():
 				continue
 			var entry := {"cell": [x, y], "owner": owner.sha256_text() if not owner.is_empty() else "", "own": owner == actor,
+				"seat_active": campaign.active_cells.get(owner, "") == id,
 				"available": owner.is_empty() and campaign.adjacent(actor, position)}
 			if campaign.documents.has(id):
 				entry["name"] = campaign.documents[id].city_name()

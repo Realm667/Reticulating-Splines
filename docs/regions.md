@@ -6,11 +6,27 @@ starts at a random position. Open **Windows → Region overview** to select a ci
 or preview an unowned area next to your territory. Diagonal contact is not enough.
 
 The overview and its small sidebar version use the same isometric projection
-as Neighbors, including the active city's compass rotation. Owned areas have a
-green outline. The active area also has a translucent green fill and a thicker
+including the active city's compass rotation. Owned areas have a green outline
+in single-player and their owner's color in Competitive Region. The viewed area
+also has a translucent fill and a thicker
 outline; hovering strengthens an area's outline. Click an owned area in the
 sidebar to switch directly. Only existing positions within the fixed grid can
 be purchased.
+
+**Region overview** now also contains the previous **Neighbors** information:
+the viewed city's population (including arcologies), national population, and
+the four neighboring names and populations. Direction arrows follow the map's
+rotation. Existing Neighbors key bindings open this same overview. A single
+city uses a five-area diagram and offers **Create a region** explicitly; opening
+the overview does not convert a save.
+
+Competitive Region uses the same grid in the overview and sidebar, including
+older games without region expansion. Those games show occupied starting slots
+only, not purchasable city areas. Select a player city for its name, population,
+player and connection status. **Visit city** opens that player's currently active
+city read-only; inactive rival areas remain informational. **Return to your city**
+restores the local player's view. The thick outline follows the city being
+viewed. Visits do not expose the owner's dialogs or private archived documents.
 
 Region cells activate on release. Dragging, leaving the control or losing focus
 cancels the pending click. Enter/Space can activate the keyboard selection.

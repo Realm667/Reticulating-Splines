@@ -18,6 +18,10 @@ var _snapshot_command := -1
 var _snapshot_started_msec := 0
 var _switch_command := -1
 var heading: Label
+var context_hint: Label
+var neighbor_details: Label
+var create_button: Button
+var return_button: Button
 var details: Label
 var preview: TextureRect
 var buy_button: Button
@@ -35,7 +39,9 @@ func _init(application: CityApplication) -> void:
 
 
 func active() -> bool:
-	return campaign != null or (app.coop.active() and not app.coop.session.latest.get("region_campaign", {}).is_empty())
+	if app.coop.active():
+		return not app.coop.session.latest.get("region_campaign", {}).is_empty()
+	return campaign != null
 
 
 func tip_context() -> Dictionary:
@@ -123,14 +129,12 @@ func prepare_save() -> String:
 
 
 func open_overview() -> void:
-	if not active():
-		open_conversion()
+	if app.document_state.city == null:
 		return
 	if window == null:
 		_build_window()
 	selected = Vector2i(-1, -1)
 	quote.clear()
-	details.text = tr("Select a city area.")
 	preview.texture = null
 	details.text = tr("Select a city area.")
 	refresh()
@@ -159,7 +163,8 @@ func _build_window() -> void:
 	window.column = content
 	heading = window.label("")
 	heading.custom_minimum_size.x = 0
-	window.label(RegionBoundary.ERROR).custom_minimum_size.x = 0
+	context_hint = window.label("")
+	context_hint.custom_minimum_size.x = 0
 	grid = RegionGridView.new()
 	grid.custom_minimum_size.y = 230
 	grid.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -173,10 +178,17 @@ func _build_window() -> void:
 	window.column.add_child(preview)
 	details = window.label("Select a city area.")
 	details.custom_minimum_size.x = 0
+	window.column.add_child(HSeparator.new())
+	neighbor_details = window.label("")
+	neighbor_details.custom_minimum_size.x = 0
 	var actions := HFlowContainer.new()
 	frame.add_child(actions)
 	buy_button = window.button(actions, "Buy city area", _confirm_purchase)
 	open_button = window.button(actions, "Open city", _open_selected)
+	return_button = window.button(actions, "Return to your city", func() -> void:
+		app.coop.session.request({"kind": "view_city", "seat": app.coop.session.token.sha256_text()})
+		window.hide())
+	create_button = window.button(actions, "Create a region", open_conversion)
 	window.button(actions, "Close", window.hide)
 	window.column = frame
 	confirmation = ConfirmationDialog.new()
@@ -191,9 +203,11 @@ func _build_window() -> void:
 
 func summary() -> Dictionary:
 	if app.coop.active():
-		return app.coop.session.latest.get("region_campaign", {})
+		if app.coop.session.latest.get("mode") == "region":
+			return RegionOverviewModel.multiplayer(app.coop.session.latest, app.coop.session.token.sha256_text())
+		return RegionOverviewModel.neighbors(app.document_state.city)
 	if campaign == null:
-		return {}
+		return RegionOverviewModel.neighbors(app.document_state.city)
 	var cells := []
 	for id: String in campaign.documents:
 		var position := RegionRules.cell(id)
@@ -211,13 +225,52 @@ func refresh() -> void:
 		window.hide()
 		return
 	grid.configure(state, app.document_state.city.compass_rotation(), selected)
+	heading.visible = active()
 	heading.text = tr("Own funds: %s · Debt: %s · Administration: %s/year") % [
 		BudgetReport.currency(int(state.get("funds", 0))), BudgetReport.currency(int(state.get("debt", 0))),
 		BudgetReport.currency(int(state.get("administration", 0)))]
 	var item := _cell_summary(selected, state)
-	open_button.disabled = item.is_empty() or not item.get("own", false)
-	buy_button.disabled = quote.is_empty() or not item.is_empty()
+	context_hint.text = tr("Select a city to visit. Other cities are read-only; their dialogs remain private.") if state.get("competitive", false) else ""
+	if active():
+		context_hint.text += ("\n" if not context_hint.text.is_empty() else "") + tr(RegionBoundary.ERROR)
+	context_hint.visible = not context_hint.text.is_empty()
+	_refresh_neighbors()
+	open_button.visible = active() or state.get("competitive", false)
+	open_button.text = tr("Visit city") if not item.get("own", false) else tr("Open city")
+	var visiting: bool = app.coop.active() and app.coop.session.latest.get("visiting", false)
+	open_button.disabled = not (active() and item.get("own", false) and not visiting or RegionOverviewModel.can_visit(item))
+	return_button.visible = visiting
+	buy_button.visible = active()
+	buy_button.disabled = visiting or quote.is_empty() or not item.is_empty()
+	create_button.visible = not active() and not app.coop.active() and app.simulation_state.simulation_engine.scenario == null
 	preview.visible = preview.texture != null and (not quote.is_empty() or bool(item.get("own", false)))
+	if not item.is_empty() and (not active() or not item.get("own", false)):
+		_show_city(item)
+
+
+func _show_city(item: Dictionary) -> void:
+	details.text = str(item.get("name", "")) + "\n" + tr("Population: %d") % int(item.get("population", 0))
+	if item.has("region"):
+		details.text = tr("Region %d") % int(item.region) + " · " + details.text
+	if item.has("player"):
+		details.text += "\n" + str(item.player) + " · " + MultiplayerSeatWindow.status(item.status)
+
+
+func _refresh_neighbors() -> void:
+	var city := app.document_state.city
+	var data := SimNationWindowControl.snapshot(city)
+	if not data.ok:
+		neighbor_details.text = ""
+		return
+	# Keep the original national and city population (including arcologies), and
+	# the four named neighbors of the currently viewed city, even while visiting.
+	var lines: Array[String] = [data.city_name + " · " + tr("Population: %d") % data.display_population,
+		tr(SimNationWindowControl.NATIONAL_POPULATION) % data.national_population, tr("Neighbors")]
+	var order := SimNationWindowControl.display_neighbor_indices(city.compass_rotation())
+	for index in order.size():
+		var neighbor: SimNationWindowControl.Neighbor = data.neighbors[order[index]]
+		lines.append(["↖", "↗", "↘", "↙"][index] + " " + CityNeighbors.city_name(city, neighbor.index) + " · " + tr("Population: %d") % neighbor.population)
+	neighbor_details.text = "\n".join(lines)
 
 
 func _sync_navigation() -> void:
@@ -239,21 +292,35 @@ func _sync_navigation() -> void:
 		mini.add_child(mini_grid)
 		app.city_workspace.attach_region_preview(mini)
 		_navigation_signature.clear()
-	mini.visible = active() and not app.tool_state.landscape_editor
+	mini.visible = not app.tool_state.landscape_editor
 	var city := app.document_state.city
 	var signature := [city.get_instance_id(), city.compass_rotation(), city.age_in_days(),
-		app.coop.session.latest.get("revision", -1) if app.coop.active() else campaign.revision if campaign != null else -1]
+		app.coop.session.latest.get("revision", -1) if app.coop.active() else campaign.revision if campaign != null else -1,
+		hash(app.coop.session.latest.get("roster", [])) if app.coop.active() else 0,
+		app.coop.session.latest.get("view_owner", "") if app.coop.active() else ""]
 	if signature == _navigation_signature:
 		return
 	_navigation_signature = signature
 	var state := summary()
 	mini_grid.configure(state, city.compass_rotation())
 	if window != null and window.visible and not state.is_empty():
-		grid.configure(state, city.compass_rotation(), selected)
+		refresh()
 
 
 func open_cell(position: Vector2i) -> void:
 	var state := summary()
+	var item := _cell_summary(position, state)
+	if state.get("competitive", false) and (not active() or not item.get("own", false) or app.coop.session.latest.get("visiting", false)):
+		if RegionOverviewModel.can_visit(item):
+			app.coop.session.request({"kind": "view_city", "seat": item.owner})
+		else:
+			open_overview()
+			_select(position)
+		return
+	if not active():
+		open_overview()
+		_select(position)
+		return
 	if switching or app.map_view.region_backdrop.busy() or not _cell_summary(position, state).get("own", false) or state.get("active") == [position.x, position.y]:
 		return
 	var backdrop := app.map_view.region_backdrop
@@ -304,8 +371,10 @@ func _sync_backdrop() -> void:
 		var state := summary()
 		backdrop.requested = open_cell
 		backdrop.live_ready = func() -> bool: return app.visual_preparation.ready
-		backdrop.configure(state, campaign.documents if campaign != null and not app.coop.active() else {},
-			app.asset_state, city.compass_rotation())
+		var documents: Dictionary[String, Sc2File] = {}
+		if campaign != null and not app.coop.active():
+			documents = campaign.documents
+		backdrop.configure(state, documents, app.asset_state, city.compass_rotation())
 		_snapshot_queue.clear()
 		_release_snapshot_request()
 		if app.coop.active():
@@ -350,8 +419,8 @@ func _select(position: Vector2i) -> void:
 	var state := summary()
 	var item := _cell_summary(position, state)
 	if not item.is_empty():
-		details.text = str(item.get("name", "")) + "\n" + tr("Population: %d") % int(item.get("population", 0))
-		if item.get("own", false):
+		_show_city(item)
+		if active() and item.get("own", false):
 			if app.coop.active():
 				app.coop.session.request({"kind": "region_offer", "cell": [position.x, position.y]})
 			else:
@@ -361,6 +430,10 @@ func _select(position: Vector2i) -> void:
 				var administration := RegionCampaign.administration_report(document)
 				preview.texture = ImageTexture.create_from_image(terrain_preview(document))
 				_show_owned_city(item, budget.estimated_cash - int(administration.estimated))
+		refresh()
+		return
+	if not active():
+		details.text = tr("Select a city area.")
 		refresh()
 		return
 	if app.coop.active():
@@ -407,7 +480,7 @@ func _show_quote() -> void:
 
 
 func _show_owned_city(item: Dictionary, annual_balance: int) -> void:
-	details.text = str(item.get("name", "")) + "\n" + tr("Population: %d") % int(item.get("population", 0))
+	_show_city(_cell_summary(selected, summary()).merged(item, true))
 	details.text += "\n" + tr("Projected annual balance: %s") % BudgetReport.currency(annual_balance)
 
 

@@ -227,6 +227,7 @@ func run() -> void:
 	main.coop.leave()
 	await process_frame
 	await readonly_city(main)
+	await readonly_city(main, true)
 	await client_rights_and_end(main)
 	main.queue_free()
 	await process_frame
@@ -373,8 +374,9 @@ func cloud_front_cases(main: CityApplication) -> void:
 		if layer != null:
 			layer.queue_free()
 
-func readonly_city(main: CityApplication) -> void:
+func readonly_city(main: CityApplication, expansion := false) -> void:
 	main.coop.mode_picker.select(2)
+	main.coop.launch.region_expansion.button_pressed = expansion
 	main.coop.port.value = 0
 	main.coop.host_document(Sc2xDocument.create_empty(32, "Own city").document)
 	var guest := CoopSession.new()
@@ -389,6 +391,16 @@ func readonly_city(main: CityApplication) -> void:
 		guest.queue_free()
 		main.coop.leave()
 		return
+	if expansion:
+		var deadline := Time.get_ticks_msec() + 5000
+		while int(guest.latest.get("lobby", {}).get("generation", -1)) != main.coop.session.lobby_generation and Time.get_ticks_msec() < deadline:
+			await create_timer(0.01).timeout
+		main.coop.session.request({"kind": "lobby_ready", "ready": true})
+		guest.request({"kind": "lobby_ready", "ready": true})
+		while not main.coop.session.can_start_lobby() and Time.get_ticks_msec() < deadline:
+			await create_timer(0.01).timeout
+		main.coop.session.request({"kind": "lobby_start"})
+		check(main.coop.session.world.campaign != null, "real lobby creates expanded region before UI review")
 	var other: CoopWorld = main.coop.session.world.municipalities[guest.token]
 	other.city.document.set_city_name("Visited city")
 	other.city.set_funds(12345)
@@ -397,7 +409,19 @@ func readonly_city(main: CityApplication) -> void:
 	main.coop.session.waiting_for_start = false
 	main.coop.session.publish()
 	main.reports.on_windows_menu(0)
-	main.coop.session.request({"kind": "view_city", "seat": guest.token.sha256_text()})
+	main.reports.on_windows_menu(5)
+	var regions := main.regions
+	check(regions.window.visible and not main.city_dialogs.simnation_window.visible, "Neighbors opens the common overview")
+	regions._sync_navigation()
+	check(regions.mini.visible and regions.mini_grid.state.cells.size() == 2, "Competitive Region uses sidebar grid even without expansion")
+	var rival_cell := Vector2i(-1, -1)
+	for entry: Dictionary in regions.summary().cells:
+		if entry.owner == guest.token.sha256_text():
+			rival_cell = Vector2i(entry.cell[0], entry.cell[1])
+	check(rival_cell.x >= 0, "rival is present in shared region map")
+	regions._select(rival_cell)
+	check(not regions.open_button.disabled and regions.buy_button.visible == expansion, "rival can be visited; land purchasing is available only in expanded regions")
+	regions.open_button.pressed.emit()
 	await process_frame
 	main.coop.windows.tick()
 	check(main.document_state.city.city_name() == "Visited city" and main.document_state.city.funds() == 12345, "visited city data drives local reports")
@@ -405,6 +429,10 @@ func readonly_city(main: CityApplication) -> void:
 	main.reports.on_windows_menu(0)
 	check(not main.city_dialogs.budget_dialog.visible and main.city_menu_bar.debug_menu.disabled, "visitor administrative UI is disabled")
 	check(main.coop.windows.goal_hud.home.visible and main.coop.windows.goal_hud.visit_frame.visible, "visit frame and return button shown even without a goal")
+	main.coop.windows.competition.open_regions()
+	check(regions.return_button.visible and regions.neighbor_details.text.contains("Visited city"), "overview follows visited city and exposes return action")
+	check(regions.grid.state.active == [rival_cell.x, rival_cell.y], "viewed region is highlighted")
+	regions.window.hide()
 	other.city.document.sc2x_metadata.extensions["multiplayer_military"] = 2
 	other.revision += 1
 	main.coop.session.world.revision += 1
@@ -413,7 +441,8 @@ func readonly_city(main: CityApplication) -> void:
 	check(not main.city_dialogs.military_dialog.visible and main.coop.windows.state.pending == "", "owner decision is never mirrored to spectators")
 	main.coop.session.request({"kind": "debug", "action": "add_funds", "value": 1000})
 	check(other.city.funds() == 12345, "even host visit is read-only")
-	main.coop.session.request({"kind": "view_city", "seat": main.coop.session.token.sha256_text()})
+	regions.return_button.pressed.emit()
+	check(not main.coop.session.latest.get("visiting", false), "overview returns to own authoritative city")
 	main.reports.on_windows_menu(0)
 	main.coop.session.request({"kind": "speed", "speed": 5})
 	var day := main.coop.session.world.city.age_in_days()

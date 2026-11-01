@@ -61,7 +61,7 @@ const DATA_VIEW_IDS: Array[String] = [
 const WINDOW_ACTIONS: Array[Array] = [
 	["window_budget", "Budget", 0, ["key:Command+B"]], ["window_ordinances", "Ordinances", 1, []],
 	["window_population", "Population", 2, []], ["window_industry", "Industry", 3, []],
-	["window_graphs", "Graphs", 4, ["key:G"]], ["window_neighbors", "Neighbors", 5, []],
+	["window_graphs", "Graphs", 4, ["key:G"]], ["window_neighbors", "Region overview", 5, []],
 	["window_map", "Map", 6, ["key:M"]], ["window_scenario_goals", "Scenario goals", 8, []],
 	["window_debug", "Debug window", 7, ["key:F12"]],
 ]

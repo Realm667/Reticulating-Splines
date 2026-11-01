@@ -62,6 +62,8 @@ func pick(point: Vector2) -> Vector2i:
 	for y in int(state.get("edge", 0)):
 		for x in int(state.get("edge", 0)):
 			var cell := Vector2i(x, y)
+			if state.get("occupied_only", false) and item(cell).is_empty():
+				continue
 			if Geometry2D.is_point_in_polygon(point, polygon(cell)):
 				return cell
 	return Vector2i(-1, -1)
@@ -76,7 +78,15 @@ func item(cell: Vector2i) -> Dictionary:
 
 func _get_tooltip(at_position: Vector2) -> String:
 	var cell := pick(at_position)
-	return str(item(cell).get("name", tr("Unowned city area"))) if cell.x >= 0 else ""
+	if cell.x < 0:
+		return ""
+	var entry := item(cell)
+	var text := str(entry.get("name", tr("Unowned city area")))
+	if entry.has("population"):
+		text += "\n" + tr("Population: %d") % int(entry.population)
+	if entry.has("player"):
+		text += "\n" + str(entry.player) + " · " + MultiplayerSeatWindow.status(entry.status)
+	return text
 
 
 func _gui_input(event: InputEvent) -> void:
@@ -112,14 +122,25 @@ func _gui_input(event: InputEvent) -> void:
 			KEY_UP: delta = Vector2i(0, -1)
 			KEY_DOWN: delta = Vector2i(0, 1)
 			KEY_ENTER, KEY_SPACE:
-				if selected.x >= 0:
+				if selected.x >= 0 and (not state.get("occupied_only", false) or not item(selected).is_empty()):
 					cell_selected.emit(selected)
 			_:
 				return
 		if delta != Vector2i.ZERO:
 			var origin := selected if selected.x >= 0 else Vector2i.ZERO
 			var turned := Vector2i(RegionProjection.rotate(Vector2(delta), -compass))
-			selected = (origin + turned).clamp(Vector2i.ZERO, Vector2i.ONE * (int(state.edge) - 1))
+			if state.get("occupied_only", false):
+				var closest := INF
+				var has_origin := not item(selected).is_empty()
+				for entry: Dictionary in state.get("cells", []):
+					var candidate := Vector2i(entry.cell[0], entry.cell[1])
+					var offset := candidate - origin
+					if not has_origin or Vector2(offset).dot(Vector2(turned)) > 0:
+						if offset.length_squared() < closest:
+							closest = offset.length_squared()
+							selected = candidate
+			else:
+				selected = (origin + turned).clamp(Vector2i.ZERO, Vector2i.ONE * (int(state.edge) - 1))
 			queue_redraw()
 		accept_event()
 
@@ -131,13 +152,16 @@ func _draw() -> void:
 		for x in int(state.get("edge", 0)):
 			var cell := Vector2i(x, y)
 			var entry := item(cell)
+			if state.get("occupied_only", false) and entry.is_empty():
+				continue
 			var own := bool(entry.get("own", false))
+			var color := Color.from_string(str(entry.get("color", "")), green if own else Color(ink, 0.5))
 			var active: bool = state.get("active", []) == [x, y]
 			var shape := polygon(cell)
-			draw_colored_polygon(shape, Color(green, 0.28) if active else Color(ink, 0.07 if entry.is_empty() else 0.14))
+			draw_colored_polygon(shape, Color(color, 0.28) if active else Color(ink, 0.07 if entry.is_empty() else 0.14))
 			var outline := shape.duplicate()
 			outline.append(shape[0])
-			draw_polyline(outline, green if own else Color(ink, 0.5), 4.0 if active or hovered == cell else 1.5, true)
+			draw_polyline(outline, color, 4.0 if active or hovered == cell else 1.5, true)
 			if selected == cell and not compact:
 				draw_circle(cell_center(cell), 3, ink)
 			if not compact and half_size().x > 45:

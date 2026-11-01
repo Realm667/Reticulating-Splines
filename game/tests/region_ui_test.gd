@@ -20,6 +20,7 @@ func _initialize() -> void:
 func _run() -> void:
 	root.gui_embed_subwindows = true
 	await _region_navigation()
+	_overview_models()
 	await _backdrop_picking()
 	await _region_fades()
 	_snapshot_recovery()
@@ -92,10 +93,46 @@ func _region_navigation() -> void:
 	var popup := menu.windows_menu.get_popup()
 	var map_index := popup.get_item_index(6)
 	assert(popup.get_item_id(map_index + 1) == CityMenuBar.MENU_REGION)
-	assert(popup.get_item_index(5) > map_index)
+	assert(popup.get_item_index(5) == -1, "Neighbors has one shared region entry point")
+	assert(menu.ACTION_ITEMS.window_neighbors[1] == CityMenuBar.MENU_REGION)
+	view.configure({"edge": 4, "occupied_only": true, "cells": [{"cell": [0, 0]}, {"cell": [3, 3]}]}, 0)
+	view.selected = Vector2i.ZERO
+	key.keycode = KEY_RIGHT
+	view._gui_input(key)
+	assert(view.selected == Vector2i(3, 3), "Keyboard navigation skips empty slots in older multiplayer regions")
+	assert(view.pick(view.cell_center(Vector2i(1, 1))).x < 0, "Missing slots are not clickable territory")
 	view.queue_free()
 	menu.queue_free()
 	await process_frame
+
+
+func _overview_models() -> void:
+	var document: Sc2File = Sc2xDocument.create_empty(32, "Local").document
+	document.set_misc_u32(Sc2MiscLayout.NORMAL_POPULATION, 1234)
+	document.set_misc_u32(Sc2MiscLayout.ARCOLOGY_POPULATION, 5000)
+	document.set_misc_u32(Sc2MiscLayout.NEIGHBORS, 1)
+	document.set_misc_u32(Sc2MiscLayout.NEIGHBORS + 4, 4321)
+	document.set_misc_u32(Sc2MiscLayout.NEIGHBORS + CityNeighbors.STRIDE, 0)
+	var nearby := RegionOverviewModel.neighbors(CityState.from_document(document))
+	assert(nearby.cells.size() == 5 and nearby.cells[0].population == 6234)
+	assert(nearby.cells[1].cell == [2, 1] and nearby.cells[1].name == "Oak Creek" and nearby.cells[1].population == 4321)
+	assert(nearby.cells[2].name == "Ocean", "Classic ocean and named neighbor records remain visible")
+	var state := {"view_owner": "rival", "roster": [
+		{"id": "me", "city": "Mine", "name": "Owner", "color": "00ff00", "population": 42},
+		{"id": "rival", "city": "Other", "name": "Visitor", "color": "0000ff", "population": 200, "seat_status": "connected"}],
+		"starts": {"me": {"slot": 0}, "rival": {"slot": 15}}}
+	var model := RegionOverviewModel.multiplayer(state, "me")
+	assert(model.edge == 4 and model.active == [3, 3] and model.cells.size() == 2)
+	assert(model.cells[0].own and not model.cells[1].own and model.cells[1].color == "0000ff")
+	assert(RegionOverviewModel.can_visit(model.cells[1]), "Legacy Region still visits every player's live city")
+	state.region_campaign = {"edge": 3, "active": [0, 0], "cells": [
+		{"cell": [0, 0], "owner": "me", "own": true, "name": "Mine", "seat_active": true},
+		{"cell": [2, 2], "owner": "rival", "own": false, "name": "Other", "seat_active": true},
+		{"cell": [2, 1], "owner": "rival", "own": false, "name": "Other archive"}]}
+	model = RegionOverviewModel.multiplayer(state, "me")
+	assert(model.active == [2, 2] and model.expansion and model.cells[1].player == "Visitor")
+	assert(not RegionOverviewModel.can_visit(model.cells[2]), "Inactive rival cells cannot pretend to open another city")
+	assert(state.region_campaign.active == [0, 0] and not state.region_campaign.cells[1].has("color"), "Display enrichment never mutates authoritative state")
 
 
 func _backdrop_picking() -> void:

@@ -170,7 +170,7 @@ func start_disaster_at(id: int, point: Vector2i) -> DisasterReportResult:
 
 
 func on_windows_menu(id: int) -> void:
-	if id == CityMenuBar.MENU_REGION:
+	if id in [CityMenuBar.MENU_REGION, 5]:
 		app.regions.open_overview()
 		return
 	if app.coop.active() and id in [7, CityMenuBarView.MENU_CONSOLE] and (not app.coop.session.hosting or app.coop.session.latest.get("visiting", false)):
@@ -255,13 +255,7 @@ func on_industry_tax_rates_changed() -> void:
 
 
 func _open_simnation_window() -> void:
-	if app.coop.active() and app.coop.session.latest.get("mode") == "region":
-		app.coop.windows.competition.open_regions()
-		return
-	if app.document_state.city == null or app.city_dialogs.simnation_window == null:
-		return
-
-	app.city_dialogs.simnation_window.show_city(app.document_state.city)
+	app.regions.open_overview()
 
 
 func refresh_newspaper_menu() -> void:

@@ -5,8 +5,6 @@ var owner_ref: WeakRef
 var windows: MultiplayerWindows:
 	get:
 		return owner_ref.get_ref()
-var regions: Window
-var region_rows: VBoxContainer
 var ending: Window
 var end_rows: VBoxContainer
 var end_scores := MultiplayerScoreboard.new()
@@ -16,7 +14,6 @@ var rematch_button: Button
 var won_key := ""
 var firework_started := 0
 var firework_point := Vector2i.ZERO
-var region_signature := ""
 var fireworks_audio: AudioStreamPlayer
 var last_burst := -1
 var previous_music := -1
@@ -27,8 +24,6 @@ func _init(owner: MultiplayerWindows) -> void:
 	fireworks_audio.max_polyphony = 4
 	fireworks_audio.stream = firework_sound()
 	windows.coop.app.add_child(fireworks_audio)
-	regions = windows.make_window("SimNation")
-	region_rows = windows.content(regions)
 	ending = windows.make_window("Victory")
 	ending.size = Vector2i(1000, 400)
 	end_rows = windows.content(ending)
@@ -51,46 +46,9 @@ func _init(owner: MultiplayerWindows) -> void:
 		windows.coop.session.request({"kind": "rematch"}))
 
 func open_regions() -> void:
-	if windows.state.get("mode") != "region":
-		windows.coop.show_message(tr("Neighbouring cities are available in Region mode."))
-		return
-	refresh_regions()
-	regions.popup_centered()
-
-func refresh_regions() -> void:
-	var visible_players: Array = []
-	for player: Dictionary in windows.players:
-		visible_players.append([player.id, player.name, player.city, player.get("color"), player.get("population"), player.get("seat_status")])
-	var signature := JSON.stringify([visible_players, windows.state.get("starts", {}), windows.state.get("view_owner", ""), TranslationServer.get_locale()])
-	if signature == region_signature:
-		return
-	region_signature = signature
-	for child in region_rows.get_children():
-		region_rows.remove_child(child)
-		child.queue_free()
-	var hint := ApplicationMultiplayer.label(region_rows, "Select a city to visit. Other cities are read-only; their dialogs remain private.")
-	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	var grid := GridContainer.new()
-	grid.columns = 2
-	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	region_rows.add_child(grid)
-	for player: Dictionary in windows.players:
-		var card := MultiplayerRegionCard.new()
-		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		card.custom_minimum_size = Vector2(200, 112)
-		card.player = player
-		card.region = int(windows.state.get("starts", {}).get(player.id, {}).get("slot", 0)) + 1
-		grid.add_child(card)
-		var own := str(player.id) == windows.coop.session.token.sha256_text()
-		card.tooltip_text = tr("Return to your city") if own else tr("Visit city")
-		card.pressed.connect(func() -> void:
-			windows.coop.session.request({"kind": "view_city", "seat": player.id})
-			regions.hide())
-	windows.fit_content.call_deferred(regions, region_rows, 680)
+	windows.coop.app.regions.open_overview()
 
 func update(state: Dictionary) -> void:
-	if regions.visible:
-		refresh_regions()
 	var goal: Dictionary = state.get("goal", {})
 	var winners: Array = goal.get("winners", [])
 	if winners.is_empty() or goal.get("unscored", false):
@@ -171,7 +129,9 @@ func restore_music() -> void:
 
 func close() -> void:
 	restore_music()
-	regions.hide()
+	if windows.coop.app.regions.window != null:
+		windows.coop.app.regions.window.hide()
+		windows.coop.app.regions.confirmation.hide()
 	ending.hide()
 	won_key = ""
 	firework_started = 0

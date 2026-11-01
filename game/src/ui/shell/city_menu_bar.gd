@@ -86,7 +86,7 @@ const ACTION_ITEMS: Dictionary[String, Array] = {
 	"view_show_vehicles": ["view", MENU_VIEW_VEHICLES], "view_show_subways": ["view", MENU_VIEW_SUBWAYS],
 	"view_show_tunnels": ["view", MENU_VIEW_TUNNELS],
 	"window_budget": ["windows", 0], "window_ordinances": ["windows", 1], "window_population": ["windows", 2],
-	"window_industry": ["windows", 3], "window_graphs": ["windows", 4], "window_neighbors": ["windows", 5],
+	"window_industry": ["windows", 3], "window_graphs": ["windows", 4], "window_neighbors": ["windows", MENU_REGION],
 	"window_map": ["windows", 6], "window_debug": ["windows", 7], "window_scenario_goals": ["windows", MENU_SCENARIO_GOALS],
 	"window_console": ["windows", MENU_CONSOLE],
 }
@@ -400,7 +400,7 @@ func set_scenario_available(available: bool) -> void:
 
 	for item in [
 		["Budget", 0], ["Ordinances", 1], ["Population", 2],
-		["Industry", 3], ["Graphs", 4], ["Map", 6], ["Region overview", MENU_REGION], ["Neighbors", 5],
+		["Industry", 3], ["Graphs", 4], ["Map", 6], ["Region overview", MENU_REGION],
 	]:
 		popup.add_item(item[0], item[1])
 

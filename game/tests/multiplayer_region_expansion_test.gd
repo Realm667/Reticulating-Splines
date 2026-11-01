@@ -85,6 +85,11 @@ func run() -> void:
 	campaign.documents[original_id].set_misc_i32(Sc2MiscLayout.FUNDS, 1200)
 	campaign.documents[purchased_id].set_misc_i32(Sc2MiscLayout.FUNDS, 0)
 	check(world.region_command(a, {"kind": "region_switch", "cell": [target.x, target.y]}, 0).ok, "switch own new city")
+	var overview := world.campaign_summary(b)
+	for cell: Dictionary in overview.cells:
+		if cell.owner == a.sha256_text():
+			check(cell.seat_active == (cell.cell == [target.x, target.y]), "public overview marks only the currently visitable city")
+			check(not cell.has("document") and not cell.has("budget"), "overview does not publish private archives or budgets")
 	check(world.municipalities[a].city.funds() == 1200, "own aggregate funds available after switch")
 	check(not world.command(a, {"kind": "city_option", "option": "sound", "enabled": false,
 		"revision": world.revision, "policy": world.municipalities[a].policy_revision,
