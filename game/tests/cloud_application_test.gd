@@ -13,6 +13,8 @@ func _run() -> void:
 	root.add_child(app)
 	while not started.ready:
 		await process_frame
+	assert(app.coop.city_file is CityOpenDialog and (app.coop.city_file as CityOpenDialog).cloud_panel.sync == app.cloud,
+		"Multiplayer continuation uses the same separate Local and Cloud libraries")
 	app.set_process(false)
 	app.cloud.account = {"id": "application-test"}
 	app.cloud.queue = CloudQueue.new()

@@ -32297,21 +32297,32 @@ msgstr "Salvar também na nuvem"
 msgid "The local copy is saved first. Cloud uploads continue in the background, including after an offline session."
 msgstr "A cópia local é salva primeiro. Os envios para a nuvem continuam em segundo plano, inclusive após uma sessão offline."
 
+#. Region navigation and connections / Cloud city library.
+msgid "Local saves"
+msgstr "Jogos locais"
+
+#. Region navigation and connections / Cloud city library.
+msgid "Connection from %s: %s"
+msgstr "Conexão de %s: %s"
+
 
 #. Music box playback mode.
 #: src/ui/settings/music_box_dialog.gd
 msgid "In order"
 msgstr "Em sequência"
 
+
 #. Music box playback mode.
 #: src/ui/settings/music_box_dialog.gd
 msgid "Shuffle"
 msgstr "Aleatório"
 
+
 #. Music box playback mode.
 #: src/ui/settings/music_box_dialog.gd
 msgid "Switch between sequential and shuffled playback for the selected collection or favorites."
 msgstr "Alternar entre reprodução sequencial e aleatória para a coleção selecionada ou os favoritos."
+
 
 #. Music box playback mode.
 #: src/ui/settings/music_box_dialog.gd

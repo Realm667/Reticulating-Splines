@@ -18,7 +18,7 @@ var ui_theme := "dark"
 var ui_language := AppLocalization.DEFAULT
 var ui_scale := AppUiScale.DEFAULT
 var translucent_menus := true
-var dark_underground := false
+var dark_underground := true
 # the sc2kfix corrections of the original sprites (Sc2kfixSpriteFixes)
 var sprite_corrections := false
 # the art of a loaded HD graphics pack shows

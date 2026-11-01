@@ -11,6 +11,9 @@ func _run() -> void:
 	var dialog := preload("res://src/ui/startup/new_city_terrain_dialog.tscn").instantiate() as NewCityTerrainDialog
 	root.add_child(dialog)
 	await process_frame
+	assert(dialog.size_input.get_selected_id() == 128)
+	for index in dialog.size_input.item_count:
+		assert(dialog.size_input.get_item_id(index) >= 128, "New cities start at 128 tiles; old small saves remain loadable")
 	dialog.preview_requested.connect(func() -> void: preview_requests += 1)
 	dialog.size_input.select(dialog.size_input.get_item_index(256))
 	dialog.reset_fields("Test Mayor")

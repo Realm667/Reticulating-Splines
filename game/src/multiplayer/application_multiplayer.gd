@@ -117,13 +117,15 @@ func setup() -> void:
 	launch = MultiplayerLaunchMenu.new(self)
 	launch.setup(body)
 	MultiplayerDialogFit.bind(panel, body, 700)
-	city_file = FileDialog.new()
+	city_file = FileDialogFactory.city_open()
 	city_file.access = FileDialog.ACCESS_FILESYSTEM
 	city_file.file_mode = FileDialog.FILE_MODE_OPEN_FILE
 	city_file.filters = PackedStringArray(["*.sc2x, *.sc2, *.SC2, *.sc2mp ; " + tr("Cities")])
 	city_file.current_dir = AppPaths.path("cities")
 	city_file.file_selected.connect(host_saved_city)
 	app.add_child(city_file)
+	(city_file as CityOpenDialog).assets = app.asset_state
+	(city_file as CityOpenDialog).bind_cloud(app.cloud)
 	status = label(body, "")
 	status.hide()
 	body.add_child(MultiplayerConnectivity.new(session))

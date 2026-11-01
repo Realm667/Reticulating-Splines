@@ -10502,21 +10502,32 @@ msgstr "클라우드에도 저장"
 msgid "The local copy is saved first. Cloud uploads continue in the background, including after an offline session."
 msgstr "먼저 로컬 사본을 저장합니다. 오프라인 세션 후에도 클라우드 업로드는 백그라운드에서 계속됩니다."
 
+#. Region navigation and connections / Cloud city library.
+msgid "Local saves"
+msgstr "로컬 저장"
+
+#. Region navigation and connections / Cloud city library.
+msgid "Connection from %s: %s"
+msgstr "%s에서 오는 연결: %s"
+
 
 #. Music box playback mode.
 #: src/ui/settings/music_box_dialog.gd
 msgid "In order"
 msgstr "순서대로"
 
+
 #. Music box playback mode.
 #: src/ui/settings/music_box_dialog.gd
 msgid "Shuffle"
 msgstr "무작위"
 
+
 #. Music box playback mode.
 #: src/ui/settings/music_box_dialog.gd
 msgid "Switch between sequential and shuffled playback for the selected collection or favorites."
 msgstr "선택한 모음 또는 즐겨찾기를 순서대로 또는 무작위로 재생합니다."
+
 
 #. Music box playback mode.
 #: src/ui/settings/music_box_dialog.gd

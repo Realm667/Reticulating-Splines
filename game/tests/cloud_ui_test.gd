@@ -182,6 +182,7 @@ func _file_dialogs(service: FakeCloud) -> void:
 	await picker.cloud_panel._choose_download()
 	assert(loaded.size() == 1 and not picker.visible, "Cloud load returns a verified local path through the normal city loader")
 	assert(Sc2File.load_path(loaded[0]).is_valid())
+	assert(str(loaded[0]).begins_with(AppPaths.path("cloud") + "/"), "Cloud downloads stay outside the local city library")
 	assert(not picker.cloud_panel.file_dialog.visible, "Load requires no second save-file dialog")
 	picker.queue_free()
 	var save := FileDialogFactory.city_save() as CitySaveDialog

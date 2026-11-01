@@ -13,6 +13,7 @@ func _run() -> void:
 	config.set_value("graphics", "folder", "/example/custom-pack")
 	assert(config.save(path) == OK)
 	var values := AppSettingsStore.load_values(path)
+	assert(values.dark_underground, "Missing preferences enable the dark underground view")
 	assert(not values.use_classic_zoom_graphics)
 	var preferences := AppPreferences.new()
 	assert(preferences.effective_zoom_graphics() == [2, 2, 2, 2, 2, 2] and preferences.effective_overview_graphics() == 2)
@@ -22,6 +23,7 @@ func _run() -> void:
 	assert(values.graphics_source == "folder")
 	assert(values.graphics_folder == "/example/custom-pack")
 	var graphics_options := AppSettingsStore.SaveOptions.new()
+	graphics_options.dark_underground = false
 	graphics_options.graphics_source = "folder"
 	graphics_options.graphics_folder = values.graphics_folder
 	graphics_options.city_renderer = "gpu"
@@ -37,6 +39,7 @@ func _run() -> void:
 	city_options.overview_graphics = 2
 	assert(AppSettingsStore.save_values(0.5, 0.5, false, path, city_options) == OK)
 	var updated := AppSettingsStore.load_values(path)
+	assert(not updated.dark_underground, "An explicit saved preference survives unrelated settings changes")
 	assert(updated.default_mayor_name == "Alex")
 	assert(updated.use_classic_zoom_graphics, "Unrelated saves preserve the graphics choice")
 	assert(updated.overview_graphics == 2)

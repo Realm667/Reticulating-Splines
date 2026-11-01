@@ -15,7 +15,8 @@ current process. An unavailable secure store does not fall back to plaintext.
 
 ## Saving and loading
 
-Select **Also save in Cloud** in the Save dialog. The dialog shows the account
+Select **Cloud synchronization** in the Save dialog's Save/Cancel row. On narrow
+screens its caption shortens to **Cloud** and retains the full tooltip. The dialog shows the account
 and connection status and provides **Account & Cloud** for in-game sign-in and
 management. The choice applies only after the local save succeeds. You can also
 enable **Keep this save in Cloud** for an existing local file. Local save validation happens
@@ -25,7 +26,8 @@ periodic Cloud checkpoint. Failed/offline uploads can resume after restarting
 and signing in. Disabling Cloud stops this file's future synchronization; it
 does not delete existing remote copies.
 
-The Open City dialog has **Local** and **Cloud** sources. The Cloud source embeds
+The Open City dialog has separate **Local saves** and **Cloud saves** sources,
+including the multiplayer continuation picker. The Cloud source embeds
 the same account, versions, trash and conflict controls as Settings. It shows
 the save name, preview when available, game year, population, update time and
 originating device. Version selection updates its preview and metadata. Select
@@ -35,7 +37,9 @@ offers **Download** with a new local filename. Existing local files are never
 silently overwritten. The client validates size, checksum, format and required
 game/gameplay-mod compatibility before publishing the local copy. A downloaded
 copy keeps its Cloud identity and predecessor, so subsequent edits synchronize
-with the selected branch.
+with the selected branch. These managed downloads live in the private Cloud
+cache, outside the local cities library. Use **Save city as** to create a local
+copy, or enable Cloud synchronization for a local save whenever desired.
 
 Regions are uploaded as one consistent SC2X archive, including all their cities
 and shared state. Multiplayer session archives are saved only by their host;

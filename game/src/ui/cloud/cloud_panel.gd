@@ -511,7 +511,7 @@ func _choose_download() -> void:
 		return
 	pending_download = {"id": selected_save, "revision": _revision()}
 	if load_directly:
-		var folder := AppPaths.path("cities").path_join("cloud")
+		var folder := AppPaths.path("cloud").path_join("downloads")
 		if DirAccess.make_dir_recursive_absolute(folder) != OK:
 			notice.text = tr(error_message("storage_error"))
 			notice.show()

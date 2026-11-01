@@ -23,9 +23,12 @@ func _ready() -> void:
 	var group := VBoxContainer.new()
 	get_vbox().add_child(group)
 	cloud_enabled = CheckBox.new()
-	cloud_enabled.text = "Also save in Cloud"
+	cloud_enabled.text = "Cloud synchronization"
+	cloud_enabled.tooltip_text = "Cloud synchronization"
 	cloud_enabled.custom_minimum_size.y = 40
-	group.add_child(cloud_enabled)
+	var footer := get_ok_button().get_parent_control()
+	footer.add_child(cloud_enabled)
+	footer.move_child(cloud_enabled, 0)
 	cloud_status = Label.new()
 	cloud_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	group.add_child(cloud_status)
@@ -74,6 +77,7 @@ func _fit_content() -> void:
 	# The embedded render viewport can still have its initial size before its
 	# first draw (and throughout a headless test). Use the window's layout size.
 	var layout_size := Vector2(size) / maxf(content_scale_factor, 0.001)
+	cloud_enabled.text = "Cloud" if layout_size.x < 600 else "Cloud synchronization"
 	body.size = (layout_size - margin - end_margin).max(Vector2.ONE)
 
 

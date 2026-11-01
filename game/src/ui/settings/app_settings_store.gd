@@ -43,7 +43,7 @@ static func load_values(
 	result.visual_enhancements = VisualEnhancementOptions.normalize(config.get_value("visual_enhancements", "options", {}))
 	result.building_mix = BuildingVariants.normalize(config.get_value("graphics", "building_mix", {}))
 
-	result.dark_underground = bool(config.get_value("display", "dark_underground", false))
+	result.dark_underground = bool(config.get_value("display", "dark_underground", true))
 	result.sprite_corrections = bool(config.get_value("graphics", "sc2kfix_sprite_corrections", false))
 	result.hd_graphics = bool(config.get_value("graphics", "hd_graphics", true))
 	result.recent_autosaves = bool(config.get_value("general", "recent_autosaves", true))
@@ -422,7 +422,7 @@ class Values extends RefCounted:
 	var ui_language := AppLocalization.DEFAULT
 	var ui_scale := AppUiScale.DEFAULT
 	var translucent_menus := true
-	var dark_underground := false
+	var dark_underground := true
 	var sprite_corrections := false
 	var hd_graphics := true
 	var recent_autosaves := true

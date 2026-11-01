@@ -31,6 +31,7 @@ func _ready() -> void:
 			navigation = child
 			break
 	if navigation == null:
+		_build_sources()
 		return
 	var index := navigation.get_index()
 	_body = BoxContainer.new()
@@ -92,8 +93,11 @@ func _build_sources() -> void:
 		if child is Control:
 			_local_controls.append(child)
 	sources = TabBar.new()
-	sources.add_tab("Local")
-	sources.add_tab("Cloud")
+	sources.add_tab("Local saves")
+	sources.add_tab("Cloud saves")
+	sources.custom_minimum_size.y = 44
+	sources.tab_alignment = TabBar.ALIGNMENT_CENTER
+	sources.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	sources.tab_changed.connect(select_source)
 	get_vbox().add_child(sources)
 	get_vbox().move_child(sources, 0)
