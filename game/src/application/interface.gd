@@ -18,7 +18,7 @@ func _init(application: CityApplication) -> void:
 func build_interface(original_assets: OriginalGameAssets) -> void:
 	app.theme = AppUiTheme.current()
 	app.city_workspace = CityWorkspaceView.instantiate() as CityWorkspace
-	app.city_workspace.toolbar_art = original_assets.toolbar_art
+	app.city_workspace.toolbar_art = app.asset_state.data_pack.toolbar_artwork()
 	app.add_child(app.city_workspace)
 
 	app.city_menu_bar = app.city_workspace.menu_bar

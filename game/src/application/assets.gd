@@ -346,7 +346,7 @@ func apply_graphics_source(selected: GameAssetSource) -> void:
 	app.static_render.invalidate_rendered_city()
 	app.static_render.update_palette_cycle_texture()
 	app.visual_environment.reload_brightmaps()
-	app.city_toolbar.replace_artwork(assets.toolbar_art)
+	app.city_toolbar.replace_artwork(app.asset_state.data_pack.toolbar_artwork())
 	app.camera_input.refresh_child_tool_icons()
 	app.main_overlays.about_dialog.set_assets(assets)
 	app.city_dialogs.new_city_dialog.set_control_graphics(assets.city_ui_graphics)
@@ -521,6 +521,8 @@ func data_pack_folder() -> String:
 func apply_data_pack(pack: DataPack) -> void:
 	app.asset_state.data_pack = pack
 	app.asset_state.reference_root = pack.root if pack.is_loaded() else DataPack.default_folder()
+	if app.city_toolbar != null:
+		app.city_toolbar.replace_artwork(pack.toolbar_artwork())
 
 	if app.asset_state.asset_source != null and app.asset_state.asset_source.assets != null:
 		pack.apply_to(app.asset_state.asset_source.assets)

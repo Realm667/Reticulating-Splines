@@ -15,6 +15,8 @@ var pack_name := ""
 var root := ""
 var import_revision := ImportedPackRevision.NOT_IMPORTED
 var text := OriginalGameAssets.new()
+var _toolbar: Image
+var _toolbar_checked := false
 
 
 static func default_folder() -> String:
@@ -102,3 +104,19 @@ func apply_to(assets: OriginalGameAssets) -> void:
 	assets.newspaper_data = text.newspaper_data if is_loaded() else null
 	assets.library_texts = library_texts
 	assets.original_credits = text.original_credits if is_loaded() else ""
+
+
+# UI icons follow game data, independently of the selected city graphics. Imports
+# store the original UI strip in the graphics sibling of this very data pack.
+func toolbar_artwork() -> Image:
+	if not is_loaded():
+		return null
+	if not _toolbar_checked:
+		_toolbar_checked = true
+		var candidates := [root.get_base_dir().path_join("graphics"),
+			root.get_base_dir().get_base_dir().path_join("graphic").path_join(root.get_file())]
+		for folder: String in candidates:
+			_toolbar = GraphicsPack.load_toolbar(folder)
+			if _toolbar != null:
+				break
+	return _toolbar

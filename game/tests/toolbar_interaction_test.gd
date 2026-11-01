@@ -267,6 +267,7 @@ func _run() -> void:
 
 	paper.hide()
 	await _test_network_drag_price(main, map, city)
+	await _check_data_pack_icons(main)
 	main.queue_free()
 	await process_frame
 	print(("PASS: toolbar interactions, placement validity, rail transitions, dispatch recall, "
@@ -341,3 +342,31 @@ func _test_brush_and_drag_input(map: CityMapControl, shift: InputEventKey) -> vo
 	map._input(shift)
 	assert(map.selection_path.size() == 6)
 	map.selection._clear_selection()
+
+
+func _check_data_pack_icons(main: CityApplication) -> void:
+	var toolbar := main.city_toolbar
+	var original_data := main.asset_state.data_pack
+	var original_graphics := main.asset_state.asset_source
+	var strip := GraphicsPack.load_toolbar(ProjectSettings.globalize_path("res://../ext/graphics"))
+	assert(strip != null and original_data.toolbar_artwork().get_data() == strip.get_data())
+	assert(toolbar.toolbar_art.get_data() == strip.get_data(), "Initial city ignored data-pack icons")
+	var rs := GameAssetSource.load_source("", "folder", ProjectSettings.globalize_path("res://../packs/standalone-graphics/graphics"))
+	assert(rs.error.is_empty(), rs.error)
+	main.assets.apply_graphics_source(rs)
+	assert(main.city_session.activate_document(EmptyCityTemplate.create()))
+	assert(toolbar.toolbar_art.get_data() == strip.get_data(), "RS city graphics replaced original data-pack UI")
+	for group in toolbar.toolbar_buttons.size():
+		assert(PixelArtTexture.unwrap(toolbar.toolbar_buttons[group].icon).get_image().get_data() == PixelArtTexture.unwrap(toolbar._toolbar_icon(CityToolbar.GROUP_ICON_REGIONS[group])).get_image().get_data())
+	assert(toolbar.zoom_in_button.icon is PixelArtTexture)
+	main.assets.apply_data_pack(DataPack.new())
+	assert(toolbar.toolbar_art == null)
+	assert(toolbar.toolbar_buttons[0].icon == CityToolbar.ToolbarIcons.CATEGORIES[0])
+	assert(toolbar.zoom_in_button.icon == CityToolbar.ToolbarIcons.NAVIGATION[486])
+	main.assets.apply_graphics_source(original_graphics)
+	assert(toolbar.toolbar_art == null, "City graphics must not select UI icons")
+	main.assets.apply_data_pack(original_data)
+	assert(toolbar.toolbar_art.get_data() == strip.get_data(), "Data pack switching did not restore icons")
+	assert(main.city_session.activate_document(EmptyCityTemplate.create()))
+	assert(toolbar.toolbar_art.get_data() == strip.get_data(), "New city reset original UI icons")
+	print("PASS: sidebar categories/navigation follow data pack at startup, graphics switch, data switch and new city")
