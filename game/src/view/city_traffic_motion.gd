@@ -3,6 +3,9 @@ extends RefCounted
 ## Interpolate completed moving-object positions. Never predict or write a route.
 
 const STEP_SECONDS := GameSpeedController.BASE_TICK_MSEC / 1000.0
+# Whole-tile train steps are particularly visible. Keep half a tick of
+# presentation slack for asynchronous publications, without predicting a route.
+const TRAIN_BLEND_SECONDS := STEP_SECONDS * 1.5
 const OPTION_BY_TYPE := {1: "traffic_vehicles_enabled", 2: "traffic_vehicles_enabled", 3: "traffic_vehicles_enabled", 9: "traffic_vehicles_enabled",
 	10: "traffic_vehicles_enabled", 11: "traffic_vehicles_enabled", 15: "disaster_motion"}
 
@@ -86,8 +89,9 @@ func advance(delta: float) -> bool:
 	for track: Track in tracks.values():
 		if track.current == track.target:
 			continue
-		track.elapsed = minf(STEP_SECONDS, track.elapsed + maxf(delta, 0.0))
-		var weight := track.elapsed / STEP_SECONDS
+		var duration := TRAIN_BLEND_SECONDS if track.type in [10, 11] else STEP_SECONDS
+		track.elapsed = minf(duration, track.elapsed + maxf(delta, 0.0))
+		var weight := track.elapsed / duration
 		track.current = track.start.lerp(track.target, weight)
 		track.tile = track.start_tile.lerp(track.target_tile, weight)
 		changed = true

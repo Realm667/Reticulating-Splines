@@ -377,7 +377,7 @@ void fragment() {
 		} else if (fullbright_draw < 0.5 && !indexed_power_warning) {
 			sediment_slope = map_edge_slope(natural_mask.b, terrain_elevation);
 			if (sediment_slope) { natural_mask.b = 0.4; }
-			COLOR.a *= map_edge_coverage(natural_mask.b);
+			COLOR.a *= map_edge_coverage(natural_mask.b, terrain_elevation);
 			vec4 edge_color = map_edge_color(COLOR.rgb, natural_mask.b);
 			COLOR.rgb = edge_color.rgb;
 			natural_mask.b = edge_color.a;
@@ -472,7 +472,7 @@ void fragment() {
 			vec4 natural_mask = environment_has_seasons ? environment_season_sample(center * pixel_size) : vec4(0.0);
 			sediment_slope = map_edge_slope(natural_mask.b, terrain_elevation);
 			if (sediment_slope) { natural_mask.b = 0.4; }
-			COLOR.a *= map_edge_coverage(natural_mask.b);
+			COLOR.a *= map_edge_coverage(natural_mask.b, terrain_elevation);
 			vec4 edge_color = map_edge_color(COLOR.rgb, natural_mask.b);
 			COLOR.rgb = edge_color.rgb;
 			natural_mask.b = edge_color.a;

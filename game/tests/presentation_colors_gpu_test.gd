@@ -15,8 +15,54 @@ func _run() -> void:
 		await _check_strata_bottom(spec[0], spec[1], spec[2])
 	for hd in [false, true]:
 		await _check_strata_slopes(hd)
+		await _check_strata_caps(hd)
 	print("PASS: artwork preserves effects and emission, depth water, terrain-following strata and disabled fallbacks in SDR/HDR")
 	quit()
+
+
+func _check_strata_caps(hd: bool) -> void:
+	# The stacked wall sprite contains a solid top diamond. At the highest
+	# level it must not paint strata over a border parcel or its building.
+	var pack := FixtureGraphics.pack()
+	CitySeasonColors.prepare(pack.large_sprites, pack.palette)
+	var entry := pack.large_sprites.find_sprite(1269)
+	var viewport := SubViewport.new()
+	viewport.size = Vector2i(32, 40)
+	viewport.transparent_bg = true
+	viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	root.add_child(viewport)
+	var background := ColorRect.new()
+	background.color = Color(0.8, 0.1, 0.3)
+	background.size = Vector2(32, 40)
+	viewport.add_child(background)
+	var sprite := Sprite2D.new()
+	sprite.centered = false
+	sprite.texture = ImageTexture.create_from_image(entry.create_image(pack.palette).image)
+	if hd:
+		sprite.modulate = Color8(2, 0, 0, 255)
+	var material := ShaderMaterial.new()
+	material.shader = load("res://src/view/map/palette_cycle.gdshader")
+	material.set_shader_parameter("map_edge_size", 16.0)
+	material.set_shader_parameter("map_strata_enabled", true)
+	material.set_shader_parameter("environment_has_seasons", true)
+	material.set_shader_parameter("environment_season_mask", ImageTexture.create_from_image(pack.large_sprites.visual_seasons[1269]))
+	material.set_shader_parameter("edge_canvas_to_grid", Basis(
+		Vector3(1.0 / 32, -1.0 / 32, 0), Vector3(1.0 / 16, 1.0 / 16, 0),
+		Vector3(15.0625 - entry.height / 16.0, 16.0625 - entry.height / 16.0, 1)))
+	var profile := Image.create(16, 2, false, Image.FORMAT_RGBAF)
+	profile.fill(Color(1.0 / 31, 0, 0, 1.0 / 31))
+	material.set_shader_parameter("map_edge_profile", ImageTexture.create_from_image(profile))
+	sprite.material = material
+	viewport.add_child(sprite)
+	await process_frame
+	await RenderingServer.frame_post_draw
+	var result := viewport.get_texture().get_image()
+	assert(result.get_pixel(16, 8).is_equal_approx(result.get_pixel(0, 39)),
+		"The wall's hidden top cap must not cover a border building")
+	assert(not result.get_pixel(16, 24).is_equal_approx(result.get_pixel(0, 39)),
+		"The exposed sediment wall below the parcel must remain visible")
+	viewport.queue_free()
+	await process_frame
 
 
 func _check_artwork(hdr: bool) -> void:

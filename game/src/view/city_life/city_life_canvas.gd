@@ -326,19 +326,37 @@ func _candidates(app: CityApplication, tile: Vector2i, enter: int = 0) -> Array:
 		command_tile = Vector2i(int(command.depth_order / city.map_size) - command_tile.x, command_tile.x)
 		var own := own_structure and (command_tile == tile or (id >= BuildingTileIds.HIGHWAY_SLOPE_1 \
 			and command.sprite_id % 500 == id and CityLifePaths.section_origin(city, command_tile) == section))
+		var bridge_id := posmod(command.sprite_id, 500)
+		var tower := bridge_id == BuildingTileIds.RAISING_BRIDGE_TOWER
+		var axis := 1 if command.flip else 0
+		# A tower also covers figures on the neighboring deck segment. Tile
+		# painter order alone cannot describe that tall, overhanging silhouette;
+		# the adjoining road surfaces, however, stay beneath those figures.
+		var bridge_lane := bridge_id >= BuildingTileIds.SUSPENSION_BRIDGE_1 and bridge_id <= BuildingTileIds.RAISING_BRIDGE_CLOSED \
+			and enter % 2 == axis \
+			and (command_tile.y == tile.y if command.flip else command_tile.x == tile.x) \
+			and is_equal_approx(CityLifePaths.edge_height(city, command_tile, axis), CityLifePaths.edge_height(city, tile, enter))
 		# A diagonal highway is an open deck on pillars. Its multi-tile sprite
 		# can sort after the car's supporting tile, but remains beneath it.
 		if own and CityLifePaths.diagonal(city, tile):
 			continue
-		if command.depth_order <= depth and not own:
+		if command.depth_order <= depth and not own and not bridge_lane:
 			continue
 		var resource := app.moving_sprites.dynamic_sprite_resource(archive, command.sprite_id, command.flip, divisor, 1, true)
 		if resource != null:
 			var origin := Vector2i(command.position) * divisor
 			var mask: Image = resource.image
-			if own:
-				if lower_crossing:
+			if own or bridge_lane:
+				if lower_crossing and own:
 					mask = app.moving_sprites._dynamic_train_foreground_image(archive, command, divisor, mask)
+				elif tower:
+					# The tower's front pier extends below the road plane. A height
+					# cutoff removes that wall and lets figures paint across it.
+					# Subtract only the matching deck, with the same bottom anchor.
+					var deck_id := command.sprite_id - BuildingTileIds.RAISING_BRIDGE_TOWER + BuildingTileIds.ROAD_BRIDGE
+					var deck := app.moving_sprites.dynamic_sprite_resource(archive, deck_id, command.flip, divisor, 1, true)
+					if deck != null:
+						mask = CityIsometricRenderer.foreground_difference_mask(mask, deck.image)
 				elif not tunnel:
 					# The deck is beneath the car; its towers and rails remain foreground.
 					var forward := Vector2(CityLifePaths.DIRECTIONS[enter])

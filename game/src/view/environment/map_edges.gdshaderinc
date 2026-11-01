@@ -36,14 +36,24 @@ float edge_surface(float along, float face) {
 	return 31.0 * (b + 0.5 * t * (c - a + t * (2.0 * a - 5.0 * b + 4.0 * c - d + t * (3.0 * (b - c) + d - a))));
 }
 
-float map_edge_coverage(float mask) {
+float map_edge_coverage(float mask, float elevation) {
 	if (!map_strata_enabled || mask <= 0.35 || mask >= 0.45) { return 1.0; }
 	// Trim the authored jagged bottom one logical pixel inside the common
 	// altitude-zero boundary. Coverage is one screen pixel wide at any zoom;
 	// the existing projection joins both faces without per-tile seams.
 	float rise = map_edge_size - 0.5 - max(edge_grid.x, edge_grid.y);
 	float width = max(fwidth(rise), 0.00001);
-	return clamp((rise - 1.0 / 16.0) / width + 0.5, 0.0, 1.0);
+	float coverage = clamp((rise - 1.0 / 16.0) / width + 0.5, 0.0, 1.0);
+	if (elevation < 0.0) {
+		// Stacked wall sprites include a top cap. Above the actual terrain
+		// surface that cap is inside the map, not an exposed sediment face.
+		// In particular it must never cover a building on a border parcel.
+		float along = min(edge_grid.x, edge_grid.y) + rise + 0.5;
+		float face = edge_grid.x >= edge_grid.y ? 0.25 : 0.75;
+		float land = round(texture(map_edge_profile, vec2(along / map_edge_size, face)).r * 31.0);
+		coverage *= clamp((land * 0.75 - rise) / width + 0.5, 0.0, 1.0);
+	}
+	return coverage;
 }
 
 vec4 map_edge_color(vec3 original, float mask) {

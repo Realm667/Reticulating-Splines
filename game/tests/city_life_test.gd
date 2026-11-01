@@ -13,6 +13,8 @@ func _run() -> void:
 	_check_network_sections()
 	_check_density(city)
 	_check_occlusion()
+	_check_bridge_tower()
+	_check_bridge_tower(GraphicsPack.load_root("res://../packs/standalone-graphics/graphics"))
 	_check_sloped_atlas()
 	_check_spacing()
 	_check_vehicle_mix()
@@ -62,13 +64,65 @@ func _run() -> void:
 	quit()
 
 
+func _check_bridge_tower(graphics: GraphicsPack = null) -> void:
+	if graphics == null:
+		graphics = FixtureGraphics.pack()
+	assert(graphics.error.is_empty(), graphics.error)
+	var app := CityApplication.new()
+	app.map_view = CityMapControl.new()
+	app.map_view.zoom_factor = 2.0
+	app.asset_state.large_sprites = graphics.large_sprites
+	app.asset_state.palette = graphics.palette
+	app.asset_state.palette_index_encoding = Sc2Palette.index_encoding()
+	var city := CityState.from_document(EmptyCityTemplate.create(128))
+	app.document_state.city = city
+	var tile := Vector2i(64, 64)
+	city.set_building_id(tile.x, tile.y, BuildingTileIds.RAISING_BRIDGE_TOWER)
+	city.set_land_altitude(tile.x, tile.y, 0)
+	city.set_water_altitude(tile.x, tile.y, 3)
+	city.set_tile_flag(tile.x, tile.y, Sc2TileFlags.WATER, true)
+	for flipped in [false, true]:
+		var step := Vector2i.RIGHT if flipped else Vector2i.DOWN
+		for offset in [-1, 1]:
+			var neighbor: Vector2i = tile + step * offset
+			city.set_building_id(neighbor.x, neighbor.y, BuildingTileIds.ROAD_BRIDGE)
+			city.set_land_altitude(neighbor.x, neighbor.y, 0)
+			city.set_water_altitude(neighbor.x, neighbor.y, 3)
+			city.set_tile_flag(neighbor.x, neighbor.y, Sc2TileFlags.WATER, true)
+			city.set_tile_flag(neighbor.x, neighbor.y, Sc2TileFlags.FLIPPED, flipped)
+		city.set_tile_flag(tile.x, tile.y, Sc2TileFlags.FLIPPED, flipped)
+		var context := CityGpuBuildContext.new()
+		assert(context.prepare(city, Sc2Palette.index_encoding(), graphics.large_sprites,
+			CityIsometricRenderer.VIEW_LARGE, CityViewMode.Mode.CITY, true, true, true, 0, false).is_empty())
+		var records := context.draw_records(Rect2i(1900, 1400, 400, 300))
+		var commands := CityGpuBuildContext.foreground_commands(records.records)
+		app.moving_sprites.set_static_occlusion_commands(commands, CityIsometricRenderer.VIEW_LARGE)
+		var tower: CityStaticCommand
+		for command in commands:
+			if command.sprite_id == 1086:
+				tower = command
+		assert(tower != null)
+		var canvas := CityLifeCanvas.new()
+		var front := Vector2i(11 if flipped else 20, 24) + tower.position
+		var opening := Vector2i(24 if flipped else 7, 23) + tower.position
+		for offset in [-1, 0, 1]:
+			var masks := canvas._candidates(app, tile + step * offset, 1 if flipped else 0)
+			assert(CityLifeCanvas.hidden_at(front, masks), "The front pier must hide cars and pedestrians on its own and neighboring decks")
+			assert(not CityLifeCanvas.hidden_at(opening, masks), "Figures must remain visible in the tower's road opening")
+		canvas.free()
+	app.map_view.free()
+	app.free()
+
+
 func _check_application() -> void:
 	var graphics_override := OS.get_environment("OPENSC2K_GRAPHICS_PACK")
-	OS.set_environment("OPENSC2K_GRAPHICS_PACK", ProjectSettings.globalize_path("res://../ext/graphics"))
+	var data_override := OS.get_environment("OPENSC2K_DATA_PACK")
 	var app := (load("res://main.tscn") as PackedScene).instantiate() as CityApplication
+	preload("res://tests/support/app_fixture.gd").configure(app, true)
 	root.add_child(app)
 	await process_frame
 	OS.set_environment("OPENSC2K_GRAPHICS_PACK", graphics_override)
+	OS.set_environment("OPENSC2K_DATA_PACK", data_override)
 	app.set_process(false)
 	app.main_menu.city_background.set_process(false)
 	assert(app.city_session.activate_document(fixture().document))

@@ -12,6 +12,7 @@ func _initialize() -> void:
 func _run() -> void:
 	_check_motion()
 	_check_trains()
+	_check_train_publication_jitter()
 	_check_train_pixels()
 	_check_aircraft_pixels()
 	_check_subpixels()
@@ -187,7 +188,7 @@ func _check_application() -> void:
 	app.moving_sprites.refresh_moving_things()
 	assert(app.map_view.dynamic_sprites[0].position == train_position)
 	before = DocumentState.capture(city.document)
-	app.moving_sprites.process(0.0125)
+	app.moving_sprites.process(0.01875)
 	assert(app.map_view.dynamic_sprites[0].position.is_equal_approx(train_position + Vector2(1, 0.5)))
 	app.preferences.visual_enhancements.traffic_vehicles_enabled = false
 	app.moving_sprites.refresh_moving_things()
@@ -317,10 +318,10 @@ static func _check_trains() -> void:
 			motion.observe(city, options)
 			assert(motion.tracks[1].current == old, "Both engine and car must retain their displayed position on publication")
 			var before := DocumentState.capture(city.document)
-			motion.advance(0.0125)
+			motion.advance(0.01875)
 			var moved := motion.tracks[1].current - old
 			assert(is_equal_approx(absf(moved.x), 1.0) and is_equal_approx(absf(moved.y), 0.5), "Trains must advance through individual source pixels")
-			motion.advance(0.1875)
+			motion.advance(0.28125)
 			assert(motion.tracks[1].current == motion.tracks[1].target)
 			assert(DocumentState.capture(city.document) == before)
 			options.traffic_vehicles_enabled = false
@@ -341,6 +342,33 @@ static func _check_trains() -> void:
 	write_thing(city, 1, {"type": 12})
 	motion.observe(city, options)
 	assert(motion.tracks.is_empty(), "Entering the subway must remove the surface train immediately")
+
+
+static func _check_train_publication_jitter() -> void:
+	for type in [10, 11]:
+		var city := fixture(type)
+		for x in range(64, 76):
+			city.set_building_id(x, 64, BuildingTileIds.RAIL_STRAIGHT_2)
+		var motion := CityTrafficMotion.new()
+		var options := VisualEnhancementOptions.normalize({})
+		motion.observe(city, options)
+		for step in 8:
+			city.set_text_overlay_id(64 + step, 64, 0)
+			write_thing(city, 1, {"x": 65 + step})
+			motion.observe(city, options)
+			var target := motion.tracks[1].target
+			# Worker publication varies by several frames, although the
+			# simulation still advances one completed 200-ms tick at a time.
+			for frame in (15 if step % 2 == 0 else 12):
+				var previous := motion.tracks[1].current
+				assert(motion.advance(1.0 / 60), "A train stalled between completed worker snapshots")
+				assert(motion.tracks[1].current.x > previous.x)
+				assert(motion.tracks[1].current.x <= target.x, "Interpolation must never invent a future route")
+		var before := DocumentState.capture(city.document)
+		motion.advance(1.0)
+		assert(motion.tracks[1].current == motion.tracks[1].target)
+		assert(not motion.advance(0.1), "A stopped train must settle at its actual last position")
+		assert(DocumentState.capture(city.document) == before)
 
 
 static func _check_train_pixels() -> void:
