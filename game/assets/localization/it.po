@@ -40606,3 +40606,24 @@ msgstr "Salva anche nel cloud"
 #. Supplementary Reticulating Splines Cloud save-dialog text.
 msgid "The local copy is saved first. Cloud uploads continue in the background, including after an offline session."
 msgstr "Viene salvata prima la copia locale. I caricamenti nel cloud continuano in background, anche dopo una sessione offline."
+
+
+#. Music box playback mode.
+#: src/ui/settings/music_box_dialog.gd
+msgid "In order"
+msgstr "In ordine"
+
+#. Music box playback mode.
+#: src/ui/settings/music_box_dialog.gd
+msgid "Shuffle"
+msgstr "Casuale"
+
+#. Music box playback mode.
+#: src/ui/settings/music_box_dialog.gd
+msgid "Switch between sequential and shuffled playback for the selected collection or favorites."
+msgstr "Alterna la riproduzione in ordine e casuale per la raccolta selezionata o i preferiti."
+
+#. Music box playback mode.
+#: src/ui/settings/music_box_dialog.gd
+msgid "Stop manual playback and let the game choose the music again."
+msgstr "Interrompi la riproduzione manuale e lascia che il gioco scelga di nuovo la musica."

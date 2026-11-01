@@ -49,6 +49,7 @@ func _initialize() -> void:
 
 
 func _run() -> void:
+	_playback_order()
 	_picker()
 	_id3_titles()
 	_album_folders()
@@ -112,6 +113,7 @@ func _run() -> void:
 	audio.music_activity_changed.connect(func(value: bool) -> void: activity.append(value))
 	var box := qol.music_box
 	_shuffle_in_music_box(box)
+	await _shuffle_collection(box)
 	box.track_tabs.current_tab = 1
 	box.favorites.assign([10002, 10003])
 	box.play_track(10002, true)
@@ -564,19 +566,19 @@ func _shuffle_in_music_box(box: MusicBoxDialog) -> void:
 	var stored := ConfigFile.new()
 	var original := app.preferences.shuffle_music
 	for enabled in [true, false]:
-		box.shuffle_music_check.button_pressed = enabled
+		box.playback_mode.button_pressed = enabled
 		assert(app.preferences.shuffle_music == enabled and app.audio_controller.shuffle_music == enabled)
 		assert(stored.load(app.preferences.settings_path) == OK)
 		assert(stored.get_value("audio", "shuffle_music") == enabled)
 		box.hide()
 		box.open()
-		assert(box.shuffle_music_check.button_pressed == enabled)
+		assert(box.playback_mode.button_pressed == enabled)
 		app.settings.open_settings_dialog()
 		app.settings.apply_settings()
 		assert(app.preferences.shuffle_music == enabled and app.audio_controller.shuffle_music == enabled, "Other settings must preserve shuffle")
 		assert(stored.load(app.preferences.settings_path) == OK)
 		assert(stored.get_value("audio", "shuffle_music") == enabled)
-	box.shuffle_music_check.button_pressed = original
+	box.playback_mode.button_pressed = original
 	box.hide()
 	assert(MusicTrackTitle.resolve("10018.MID", 10018, true) == "Key of Success")
 	assert(MusicTrackTitle.resolve("plain-file.mp3") == "plain-file")
@@ -601,3 +603,51 @@ func _automatic_titles(first: String, second: String) -> void:
 	assert(player.current_track_name == "The SIM Magic for (ENIAC)")
 	player.queue_free()
 	await process_frame
+
+
+func _playback_order() -> void:
+	var order := MusicBoxOrder.new()
+	order.random.seed = 842
+	var ids: Array = [10002, "custom/song.mp3", "pack:10004", 10005]
+	var current: Variant = ids[0]
+	var heard := [current]
+	for i in ids.size() - 1:
+		current = order.next_track(ids, current, 1)
+		assert(current in ids and current not in heard)
+		heard.append(current)
+	var last: Variant = current
+	var previous: Variant = order.next_track(ids, current, -1)
+	assert(previous == heard[-2])
+	assert(order.next_track(ids, previous, 1) == last)
+	heard.clear()
+	for i in ids.size():
+		var next: Variant = order.next_track(ids, current, 1)
+		assert(not is_same(next, current) and next not in heard)
+		heard.append(next)
+		current = next
+	assert(order.next_track(["only.mp3"], current, 1) == "only.mp3")
+	assert(order.next_track([], current, 1) == null)
+	assert(order.next_track([10007, 10008], current, 1) in [10007, 10008])
+
+
+func _shuffle_collection(box: MusicBoxDialog) -> void:
+	box.playback_mode.button_pressed = true
+	box.track_tabs.current_tab = 1
+	box.favorites.assign([10002, 10003, 10004])
+	box.playback_order.random.seed = 719
+	box.play_track(10002, true)
+	await create_timer(0.5).timeout
+	var heard: Array = [box.playback.track_key()]
+	for i in 2:
+		box.step(1)
+		await create_timer(0.4).timeout
+		assert(box.playback.track_key() in box.favorites and box.playback.track_key() not in heard)
+		heard.append(box.playback.track_key())
+	box.step(-1)
+	await create_timer(0.4).timeout
+	assert(box.playback.track_key() == heard[-2])
+	box.step(1)
+	await create_timer(0.4).timeout
+	assert(box.playback.track_key() == heard[-1])
+	box.automatic()
+	box.playback_mode.button_pressed = false

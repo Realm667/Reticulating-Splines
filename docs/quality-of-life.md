@@ -99,10 +99,13 @@ An empty Favorites collection never falls through to all tracks. Previous, Play 
 Next also work through the configured media keys while the music box is active.
 Automatic music returns to the original game selection. Closing the window keeps
 the current playback. Disabling Music in Options stops custom playback.
-Shuffle all music is in the Music box beside the automatic playback controls.
-It keeps the saved audio preference and the existing automatic cycle through
-all 19 tracks, including menu and special cues. Manual collections and Favorites
-retain their order. Other settings do not reset this preference.
+The toggle left of Add to favorites switches between In order and Shuffle.
+It applies to the selected collection or Favorites and retains the saved shuffle
+preference. Shuffle plays every available track once per cycle, avoids immediate
+repeats across cycles, and Previous retraces the actual playback history.
+Missing tracks are skipped; changing collections resets the random cycle.
+Automatic music returns selection to the game, whose existing 19-track shuffle
+cycle uses the same preference. Other settings do not reset it.
 
 The lower toolbar uses the same song-title resolver as the Music box. Track
 changes and pause/resume notices use the audible player's ID3 title or known

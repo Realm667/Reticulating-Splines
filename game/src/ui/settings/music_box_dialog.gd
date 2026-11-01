@@ -18,7 +18,8 @@ var progress: ProgressBar
 var elapsed: Label
 var track_tabs: TabContainer
 var music_library := MusicBoxLibrary.new()
-var shuffle_music_check: CheckBox
+var playback_mode: Button
+var playback_order := MusicBoxOrder.new()
 var custom_music := CustomMusicLibrary.new()
 var favorites: Array = []
 var favorite_index := -1
@@ -78,6 +79,11 @@ func _init(application: CityApplication) -> void:
 		play_track(favorites[index], true))
 	track_tabs.add_child(favorites_list)
 	var edit := row()
+	playback_mode = Button.new()
+	playback_mode.toggle_mode = true
+	playback_mode.toggled.connect(_set_shuffle_music)
+	edit.add_child(playback_mode)
+	_refresh_playback_mode()
 	button(edit, "Add to favorites", _add_selected)
 	button(edit, "Remove", _remove_selected)
 	button(edit, "Move up", _move_up)
@@ -121,13 +127,8 @@ func _init(application: CityApplication) -> void:
 		_effects_dirty = true
 		_effects_save_delay = 0.5)
 	levels.add_child(effects)
-	button(row(), "Automatic music", automatic)
-	shuffle_music_check = CheckBox.new()
-	shuffle_music_check.text = "Shuffle all music"
-	shuffle_music_check.tooltip_text = "Play all 19 tracks, including menu and special music, once per shuffle cycle."
-	shuffle_music_check.set_pressed_no_signal(app.preferences.shuffle_music)
-	shuffle_music_check.toggled.connect(_set_shuffle_music)
-	column.add_child(shuffle_music_check)
+	var automatic_button := button(row(), "Automatic music", automatic)
+	automatic_button.tooltip_text = "Stop manual playback and let the game choose the music again."
 	var folders := row()
 	button(folders, "Open music folder", _open_music_folder)
 	button(folders, "Rescan", rescan)
@@ -268,7 +269,7 @@ func _refresh_favorites() -> void:
 
 
 func open() -> void:
-	shuffle_music_check.set_pressed_no_signal(app.preferences.shuffle_music)
+	_refresh_playback_mode()
 	rescan()
 	_refresh_favorites()
 	popup_centered(Vector2i(760, 620))
@@ -375,6 +376,15 @@ func step(direction: int, finished_track: Variant = null) -> void:
 		if use_favorites:
 			status.text = tr("Add tracks to your favorites to play them.")
 		return
+	if app.preferences.shuffle_music:
+		var available := ids.filter(_available)
+		var next: Variant = playback_order.next_track(available, finished_track if finished_track != null else playback.track_key(), direction)
+		if next != null:
+			play_track(next, use_favorites)
+		else:
+			automatic()
+			status.text = tr("This music track is not available.")
+		return
 	var index := ids.find(finished_track if finished_track != null else playback.track_key())
 	if index < 0:
 		index = favorite_index if use_favorites and active else (-1 if direction > 0 else 0)
@@ -476,17 +486,25 @@ func _process(delta: float) -> void:
 	now_playing.tooltip_text = now_playing.text
 
 
+func _refresh_playback_mode() -> void:
+	playback_mode.set_pressed_no_signal(app.preferences.shuffle_music)
+	playback_mode.text = "Shuffle" if app.preferences.shuffle_music else "In order"
+	playback_mode.tooltip_text = "Switch between sequential and shuffled playback for the selected collection or favorites."
+
+
 func _set_shuffle_music(enabled: bool) -> void:
 	var options := AppSettingsStore.SaveOptions.new()
 	options.shuffle_music = enabled
 	var error := AppSettingsStore.save_values(app.preferences.music_volume, app.preferences.effects_volume,
 		app.preferences.fullscreen, app.preferences.settings_path, options)
 	if error != OK:
-		shuffle_music_check.set_pressed_no_signal(app.preferences.shuffle_music)
+		_refresh_playback_mode()
 		status.text = tr("Cannot save music preferences: %s") % error_string(error)
 		return
 	app.preferences.shuffle_music = enabled
 	app.audio_controller.set_shuffle_music(enabled)
+	playback_order.reset()
+	_refresh_playback_mode()
 
 
 func _save() -> void:
