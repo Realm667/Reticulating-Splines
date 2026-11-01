@@ -1,10 +1,9 @@
 Reticulating Splines — Classic Native
 
-Complete standalone replacement set; consolidated revision 25 October 2026.
+Complete standalone replacement set; shared-effects revision 1 November 2026.
 499 city masters at the exact original logical pixel dimensions; 998 smaller
 views are derived by the existing renderer. Includes all 144 buildings/facilities,
-terrain, networks, transport, disasters, 1442 environment/city-life variants and
-166 interface slots. The pack needs no imported SC2000 files.
+terrain, networks, transport, disasters and 166 interface slots. The pack needs no imported SC2000 files.
 
 Independent architecture and pixel construction, per-reference palette balance,
 2:1 ground projection, small window/door proportions, type-colored parcel edges,
@@ -40,3 +39,8 @@ winter city captures, animation strips and standalone startup. The consolidated 
 previous Style A (2x) bundled pack in the same installation slot. All original
 imports and personal data remain separate. This consolidation authorizes no
 publication. Individual prior versions remain in the private review archive.
+
+Visual Enhancements share the existing project artwork with SC2000: clouds,
+vehicles, pedestrians, woodland and ground effects. Do not add separate RS
+replacement artwork for these effects. The standalone pack supplies only the
+base game replacements; shared effects also work without imported SC2000 data.

@@ -10,8 +10,7 @@ func _initialize() -> void:
 	assert(pack.error.is_empty(), pack.error)
 	assert(pack.large_sprites.entries.size() == 499)
 	assert(pack.small_medium_sprites.entries.size() == 998)
-	assert(pack.visual_artwork.frames.size() == 1442)
-	assert(pack.visual_artwork.city_life_scale == 1)
+	assert(pack.visual_artwork == null, "RS must use the shared Visual Enhancements artwork")
 	var manifest: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(folder.path_join("pack.json")))
 	var animated := 0
 	for record: Dictionary in manifest.master_sprites:
@@ -40,7 +39,29 @@ func _initialize() -> void:
 		assert(pack.large_sprites.visual_seasons.has(id), "Missing seasonal material mask: %d" % id)
 	assert(pack.large_sprites.find_sprite(1029).decode_indices().pixels.has(161), "Road lacks traffic placement material")
 	var assets := OriginalGameAssets.new()
+	assets.visual_artwork = VisualArtwork.new() # A previous custom pack must not leak into RS.
 	assert(pack.apply_to(assets))
 	assert(assets.large_sprites == pack.large_sprites and assets.visual_artwork == pack.visual_artwork)
-	print("PASS: complete native standalone pack; 499 masters, 998 derived views, 1442 variants, 118 animations, native pixels/masks, brush instructions, road/season materials. Load ms: ", Time.get_ticks_msec() - started)
+	var app := CityApplication.new()
+	app.asset_state.asset_source = GameAssetSource.new()
+	app.asset_state.asset_source.assets = assets
+	var clouds := CityVisualClouds.new(app)
+	for index in 6:
+		assert(clouds.artwork_atlas(index) == CityCloudSituations.ATLASES[1 if index == 5 else index], "RS cloud differs from shared atlas")
+	var sprites := CityLifeSprites.new()
+	sprites.set_artwork(assets.visual_artwork)
+	var shared := CityLifeSprites.new()
+	for direction in 8:
+		for variant in CityLifeSprites.VARIANTS:
+			for kind in 3:
+				assert(sprites.sprite(false, variant, direction, 0, kind).get_data() == shared.sprite(false, variant, direction, 0, kind).get_data())
+		for variant in CityLifeSprites.COLORS.size():
+			for phase in 2:
+				assert(sprites.sprite(true, variant, direction, phase).get_data() == shared.sprite(true, variant, direction, phase).get_data())
+	CityNatureArtwork.prepare(pack.large_sprites, pack.palette, assets.visual_artwork)
+	assert(not pack.large_sprites.visual_nature.is_empty())
+	for id: int in pack.large_sprites.visual_nature:
+		assert(not pack.large_sprites.high_resolution.has(id), "RS contains a separate nature-effect replacement")
+	app.free()
+	print("PASS: complete native standalone pack; 499 masters, 998 derived views, shared Visual Enhancements, 118 animations, native pixels/masks, brush instructions, road/season materials. Load ms: ", Time.get_ticks_msec() - started)
 	quit()
