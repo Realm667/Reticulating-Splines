@@ -18,14 +18,24 @@ var _contacts: Dictionary[int, Vector2] = {}
 var _outside: Dictionary[int, Dictionary] = {}
 var _multiple := false
 var _serial := 0
+var _windows: Array[Window] = []
 
 
 func attach(window: Window) -> void:
 	root = window
 	root.window_input.connect(observe)
 	get_tree().node_added.connect(_node_added)
-	for child in root.find_children("*", "Window", true, false):
+	get_tree().node_removed.connect(func(node: Node) -> void:
+		if node is Window:
+			_windows.erase(node))
+	_scan_windows(root)
+
+
+func _scan_windows(node: Node) -> void:
+	# FileDialog owns internal overwrite/error prompts as well as normal children.
+	for child in node.get_children(true):
 		_node_added(child)
+		_scan_windows(child)
 
 
 func _notification(what: int) -> void:
@@ -37,6 +47,9 @@ func _notification(what: int) -> void:
 
 func _node_added(node: Node) -> void:
 	if node is Window and node != root:
+		if _windows.has(node):
+			return
+		_windows.append(node)
 		if node.has_node("TouchDismissInput"):
 			return
 		var guard := InputGuard.new()
@@ -98,7 +111,7 @@ func _finish(index: int, contact: Dictionary, tap: bool) -> void:
 func _top_window() -> Window:
 	var focused: Window
 	var candidate: Window
-	for window: Window in root.find_children("*", "Window", true, false):
+	for window in _windows:
 		if not window.visible or window.mouse_passthrough or not window.is_embedded():
 			continue
 		# Let menus and dropdowns perform their existing outside cancellation.

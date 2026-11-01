@@ -109,6 +109,23 @@ func _touch_dismissal() -> void:
 	await process_frame
 	assert(not parent.visible and clicks.is_empty(), "Modeless dialogs also consume the dismissal tap")
 	parent.queue_free()
+	var files := FileDialog.new()
+	root.add_child(files)
+	files.popup_centered(Vector2i(600, 400))
+	var internal_prompt: ConfirmationDialog
+	for child in files.get_children(true):
+		if child is ConfirmationDialog:
+			internal_prompt = child
+			break
+	assert(internal_prompt != null)
+	internal_prompt.exclusive = true
+	internal_prompt.popup_centered(Vector2i(260, 160))
+	await process_frame
+	_touch(0, Vector2(2, 2), true)
+	_touch(0, Vector2(2, 2), false)
+	await process_frame
+	assert(not internal_prompt.visible and files.visible, "FileDialog's internal prompts cancel before their parent picker")
+	files.queue_free()
 	backdrop.queue_free()
 	router.queue_free()
 	await process_frame
