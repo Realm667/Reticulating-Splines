@@ -125,7 +125,8 @@ func refresh_moving_things(view_size := -1) -> void:
 		var warm_cloud := cloud_style == 2
 		var light_allowed := VisualEnhancementOptions.detail_lights_visible(app.preferences.visual_enhancements, app.map_view.zoom_factor) \
 			or not (command.record >= 0 and _is_vehicle(int(command.record)))
-		var visual_cache_key := var_to_str([view_size, factor, sprite_archive.visual_revision, transparent_shadow, toxic_cloud, warm_cloud, light_allowed, position, command.value_signature()])
+		var surface_altitude := traffic_motion.aircraft_altitude(command.record, app.document_state.city) if not command.shadow else -1.0
+		var visual_cache_key := var_to_str([view_size, factor, sprite_archive.visual_revision, transparent_shadow, toxic_cloud, warm_cloud, light_allowed, position, command.value_signature(), floori(surface_altitude + 0.00001)])
 		# Include fully hidden shadows: a static change can make them visible.
 		caches.dynamic_active_keys[visual_cache_key] = true
 
@@ -157,10 +158,14 @@ func refresh_moving_things(view_size := -1) -> void:
 		var occluder_mask: Image
 
 		if bool(command.static_occlusion):
+			var supports := command.train_support_orders
+			if command.train and supports.is_empty():
+				supports = PackedInt32Array([command.depth_order])
 			occluder_mask = _dynamic_occluder_image(
 				sprite_archive, divisor, position, resource.native_size,
 				int(command.depth_order), bool(command.train), factor,
-				resource if command.floating_altitude >= 0 else null, int(command.floating_altitude), command.train_support_orders, aircraft_shadow, command.overlay >= 0
+				resource if command.floating_altitude >= 0 else null, int(command.floating_altitude), supports, aircraft_shadow, command.overlay >= 0,
+				surface_altitude
 			)
 
 		var samples_static: bool = bool(command.shadow) and not transparent_shadow
@@ -310,7 +315,8 @@ func _dynamic_occluder_image(
 	draw_order: int,
 	is_train := false, texture_factor := 1,
 	floating: CitySpriteResource = null, floating_altitude := -1,
-	train_support_orders := PackedInt32Array(), aircraft_shadow := false, preserve_dispatch := false
+	train_support_orders := PackedInt32Array(), aircraft_shadow := false, preserve_dispatch := false,
+	surface_altitude := -1.0
 ) -> Image:
 	if draw_order < 0 or (caches.static_occlusion_commands.is_empty() and caches.region_cache == null):
 		return null
@@ -329,6 +335,9 @@ func _dynamic_occluder_image(
 	]
 	cache_key += ":shadow" if aircraft_shadow else ""
 	cache_key += ":dispatch" if preserve_dispatch else ""
+	# Surface heights are integral. Reuse a silhouette throughout the same
+	# height interval instead of rebuilding it for every fractional flight step.
+	cache_key += ":surface:%d" % floori(surface_altitude + 0.00001)
 	if not train_support_orders.is_empty():
 		cache_key += ":" + str(train_support_orders)
 	if caches.dynamic_occluder_cache.has(cache_key):
@@ -352,6 +361,8 @@ func _dynamic_occluder_image(
 	# Bounding boxes include transparent pixels. Combine all later silhouettes
 	# to find the foreground that actually covers the sprite.
 	var train_height := _train_support_height(train_support_orders) if is_train else -1
+	var height := float(train_height) if train_height >= 0 else surface_altitude
+	var surfaces := CitySurfaceOcclusion.train_supports(app.document_state.city, train_support_orders) if train_height >= 0 else train_support_orders
 	for command in static_occlusion_candidates(bounds):
 		if aircraft_shadow and _shadow_receiver(command):
 			continue
@@ -359,7 +370,7 @@ func _dynamic_occluder_image(
 			continue
 		if is_train and train_support_orders.has(command.depth_order) and _train_support_surface(command.sprite_id):
 			continue
-		if train_height >= 0 and _ground_below_train(command, train_height):
+		if CitySurfaceOcclusion.below(app.document_state.city, command, height, surfaces):
 			continue
 
 		# Raised emergency markers are UI symbols. Effects must not paint over
@@ -396,7 +407,9 @@ func _dynamic_occluder_image(
 
 		var occluder_image: Image = resource.image
 
-		if train_foreground:
+		var surface_reference := command.train_foreground_reference_sprite_id > 0 and command.train_deck_thickness == 0 \
+			and CitySurfaceOcclusion.at_or_below(app.document_state.city, command, height, surfaces)
+		if train_foreground or surface_reference:
 			occluder_image = _dynamic_train_foreground_image(
 				sprite_archive, command, divisor, resource.image, texture_factor
 			)
@@ -433,21 +446,14 @@ func _train_support_height(orders: PackedInt32Array) -> int:
 	var height := 32
 	for order in orders:
 		var tile := IsometricFloatingOcclusion.depth_tile(order, city.map_size)
-		height = mini(height, city.land_altitude(tile.x, tile.y))
+		var id := city.building_id(tile.x, tile.y)
+		var altitude := city.land_altitude(tile.x, tile.y)
+		if id in [BuildingTileIds.RAIL_BRIDGE, BuildingTileIds.RAIL_BRIDGE_PYLON]:
+			altitude = city.water_altitude(tile.x, tile.y) + 1
+		elif city.terrain_id(tile.x, tile.y) == TerrainTileIds.RAISED:
+			altitude += 1
+		height = mini(height, altitude)
 	return height
-
-
-func _ground_below_train(command: CityStaticCommand, height: int) -> bool:
-	var id := posmod(command.sprite_id, 500)
-	if not _train_support_surface(command.sprite_id):
-		return false
-	var city := app.document_state.city
-	var tile := IsometricFloatingOcclusion.depth_tile(command.depth_order, city.map_size)
-	# Flat terrain at rail level cannot cover the train, even when its bitmap
-	# extends into an adjacent tile. Higher ground and cliff faces still can.
-	var flat := id == 256 or (id < 256 and city.terrain_id(tile.x, tile.y) == TerrainTileIds.FLAT)
-	var top := city.land_altitude(tile.x, tile.y) + (0 if flat else 1)
-	return top <= height
 
 
 func _shadow_receiver(command: CityStaticCommand) -> bool:

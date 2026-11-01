@@ -152,6 +152,18 @@ func display_offset(source: CityDynamicCommand, divisor: int) -> Vector2:
 	return offset + track.subtile - snapped
 
 
+func aircraft_altitude(record: int, city: CityState) -> float:
+	var thing := city.thing(record) if record >= 0 else null
+	if thing == null or thing.type not in [1, 2]:
+		return -1.0
+	var track: Track = tracks.get(record)
+	if track == null:
+		return city.object_altitude(thing.x, thing.y) + thing.z * (8.0 / 12.0)
+	# Recover absolute height from the same interpolated ground/flight anchor
+	# used to place the picture, including a climb across a terrain boundary.
+	return ((track.tile.x + track.tile.y) * 8.0 - track.current.y + track.current.z) / 12.0
+
+
 class Track extends RefCounted:
 	var type := 0
 	var current := Vector3.ZERO

@@ -15,6 +15,8 @@ func _run() -> void:
 	_check_occlusion()
 	_check_bridge_tower()
 	_check_bridge_tower(GraphicsPack.load_root("res://../packs/standalone-graphics/graphics"))
+	preload("res://tests/support/moving_surface_checks.gd").check_life(FixtureGraphics.pack())
+	preload("res://tests/support/moving_surface_checks.gd").check_life(GraphicsPack.load_root("res://../packs/standalone-graphics/graphics"))
 	_check_sloped_atlas()
 	_check_spacing()
 	_check_vehicle_mix()

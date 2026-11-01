@@ -309,6 +309,13 @@ func _candidates(app: CityApplication, tile: Vector2i, enter: int = 0) -> Array:
 	var archive := app.static_render.sprite_archive_for_view(view)
 	var divisor := IsometricGeometry.view_configuration(view).divisor
 	var depth := (tile.x + tile.y) * city.map_size + tile.y
+	var altitude := minf(CityLifePaths.edge_height(city, tile, enter), CityLifePaths.edge_height(city, tile, (enter + 2) % 4))
+	var supports := PackedInt32Array([depth])
+	for direction in 4:
+		if CityLifePaths.connected(city, tile, direction):
+			var neighbor: Vector2i = tile + CityLifePaths.DIRECTIONS[direction]
+			supports.append((neighbor.x + neighbor.y) * city.map_size + neighbor.y)
+	supports = CitySurfaceOcclusion.with_ground_neighbors(city, supports)
 	var id := city.building_id(tile.x, tile.y)
 	var tunnel := id in [BuildingTileIds.TUNNEL_ENTRANCE_1, BuildingTileIds.TUNNEL_ENTRANCE_2]
 	var own_structure := tunnel or (id >= BuildingTileIds.SUSPENSION_BRIDGE_1 and id <= BuildingTileIds.RAISING_BRIDGE_CLOSED) \
@@ -322,6 +329,8 @@ func _candidates(app: CityApplication, tile: Vector2i, enter: int = 0) -> Array:
 	if app.render_caches.region_cache != null and (include_cached_regions or app.render_caches.region_cache.resident):
 		commands = app.render_caches.region_cache.occlusion_candidates(bounds, true)
 	for command in commands:
+		if CitySurfaceOcclusion.below(city, command, altitude, supports):
+			continue
 		var command_tile := Vector2i(command.depth_order % city.map_size, 0)
 		command_tile = Vector2i(int(command.depth_order / city.map_size) - command_tile.x, command_tile.x)
 		var own := own_structure and (command_tile == tile or (id >= BuildingTileIds.HIGHWAY_SLOPE_1 \
@@ -346,7 +355,11 @@ func _candidates(app: CityApplication, tile: Vector2i, enter: int = 0) -> Array:
 		if resource != null:
 			var origin := Vector2i(command.position) * divisor
 			var mask: Image = resource.image
-			if own or bridge_lane:
+			var surface_reference := command.train_foreground_reference_sprite_id > 0 and command.train_deck_thickness == 0 \
+				and CitySurfaceOcclusion.at_or_below(city, command, altitude, supports)
+			if surface_reference:
+				mask = app.moving_sprites._dynamic_train_foreground_image(archive, command, divisor, mask)
+			elif own or bridge_lane:
 				if lower_crossing and own:
 					mask = app.moving_sprites._dynamic_train_foreground_image(archive, command, divisor, mask)
 				elif not tunnel:

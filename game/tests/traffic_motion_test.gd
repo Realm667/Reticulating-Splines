@@ -15,6 +15,8 @@ func _run() -> void:
 	_check_train_publication_jitter()
 	_check_train_pixels()
 	_check_aircraft_pixels()
+	preload("res://tests/support/moving_surface_checks.gd").check_traffic(FixtureGraphics.pack())
+	preload("res://tests/support/moving_surface_checks.gd").check_traffic(GraphicsPack.load_root("res://../packs/standalone-graphics/graphics"))
 	_check_subpixels()
 	_check_lifecycle()
 	_check_shadow()
