@@ -28,6 +28,10 @@ var _pinch_log := 0.0
 var _last_pinch_msec := -GESTURE_IDLE_MSEC
 var _next_pinch_msec := 0
 var _last_navigation_msec := -GESTURE_IDLE_MSEC
+var _placement_tile := Vector2i(-1, -1)
+var _placement_tool := -1
+var _placement_ready := false
+var _confirm_placement := false
 
 
 func _init(control: CityMapControl) -> void:
@@ -63,6 +67,8 @@ func is_panning() -> bool:
 
 
 func reset() -> void:
+	cancel_placement()
+	map.camera.cancel_zoom_animation()
 	if _tool_held:
 		_cancel_tool()
 	_tool_held = false
@@ -119,6 +125,8 @@ func classify_scroll(event: InputEvent) -> void:
 
 
 func process() -> void:
+	if _placement_tile.x >= 0 and (not available() or not _uses_placement() or _placement_tool != map.touch_placement_tool):
+		cancel_placement()
 	if not active() and _screen_touches.is_empty() and not _touch_dirty:
 		return
 	if not available():
@@ -130,7 +138,7 @@ func process() -> void:
 	# a parallel two-finger swipe does not momentarily look like a pinch.
 	if _touch_dirty:
 		_flush_touch()
-	if not _multiple and _touches.size() == 1 and not _tool_held and Time.get_ticks_msec() - _touch_started_msec >= TOOL_HOLD_MSEC:
+	if not _uses_placement() and not _multiple and _touches.size() == 1 and not _tool_held and Time.get_ticks_msec() - _touch_started_msec >= TOOL_HOLD_MSEC:
 		_start_touch_tool()
 
 
@@ -238,12 +246,16 @@ func _touch(event: InputEventScreenTouch) -> void:
 			_touch_moved = false
 			_multiple = false
 			_touch_started_msec = Time.get_ticks_msec()
-			_cancel_tool()
+			_confirm_placement = _uses_placement() and _placement_ready and _placement_tool == map.touch_placement_tool
+			if not _uses_placement():
+				_cancel_tool()
 		_touches[event.index] = event.position
 		_multiple = _multiple or _touches.size() > 1 or _screen_touches.size() > 1
 		if _multiple:
 			_cancel_touch_tool()
 			_begin_navigation()
+		elif _uses_placement() and not _confirm_placement:
+			_move_placement(event.position)
 		_rebase_touch()
 		return
 	if not _touches.has(event.index):
@@ -257,12 +269,20 @@ func _touch(event: InputEventScreenTouch) -> void:
 	_touch_dirty = true
 	_flush_touch()
 	if not _multiple and _touches.size() == 1 and Rect2(Vector2.ZERO, map.size).has_point(event.position):
-		if not _tool_held:
-			_start_touch_tool()
-		if _tool_held:
-			_touch_button(event.position, false)
+		if _uses_placement():
+			if _confirm_placement and not _touch_moved and _placement_ready:
+				_confirm_building()
+			else:
+				_placement_ready = _placement_tile.x >= 0
+		else:
+			if not _tool_held:
+				_start_touch_tool()
+			if _tool_held:
+				_touch_button(event.position, false)
 	elif _tool_held:
 		_cancel_touch_tool()
+	elif _uses_placement() and not _multiple:
+		cancel_placement()
 	_tool_held = false
 	_touches.erase(event.index)
 	_rebase_touch()
@@ -278,13 +298,14 @@ func _touch_button(point: Vector2, pressed: bool) -> void:
 
 
 func _start_touch_tool() -> void:
-	if _multiple or _touches.size() != 1 or not available():
+	if _uses_placement() or _multiple or _touches.size() != 1 or not available():
 		return
 	_tool_held = true
 	_touch_button(_touch_start, true)
 
 
 func _cancel_touch_tool() -> void:
+	cancel_placement()
 	if _tool_held:
 		_cancel_tool()
 	_tool_held = false
@@ -338,6 +359,12 @@ func _flush_touch() -> void:
 			_magnify(span / _span, center)
 		_last_navigation_msec = Time.get_ticks_msec()
 	elif not _multiple and _touch_moved:
+		if _uses_placement():
+			_confirm_placement = false
+			_move_placement(center)
+			_center = center
+			_span = span
+			return
 		if not _tool_held:
 			_start_touch_tool()
 		if _tool_held:
@@ -348,3 +375,49 @@ func _flush_touch() -> void:
 			map.interaction._handle_mouse_motion(motion)
 	_center = center
 	_span = span
+
+
+func _uses_placement() -> bool:
+	return map.touch_placement_tool >= 0 and map.edit_enabled and not map.photo_mode_active
+
+
+func placement_tile() -> Vector2i:
+	return _placement_tile if _placement_tool == map.touch_placement_tool and _uses_placement() else Vector2i(-1, -1)
+
+
+func cancel_placement() -> bool:
+	var had_placement := _placement_tile.x >= 0
+	_placement_tile = Vector2i(-1, -1)
+	_placement_tool = -1
+	_placement_ready = false
+	_confirm_placement = false
+	if had_placement:
+		map.selection.clear_selection_price()
+		map.hover_tile = Vector2i(-1, -1)
+		map.queue_redraw()
+	return had_placement
+
+
+func _move_placement(point: Vector2) -> void:
+	var tile := map.camera._tile_at(point)
+	if tile.x < 0:
+		return
+	_placement_tile = tile
+	_placement_tool = map.touch_placement_tool
+	map.hover_tile = tile
+	map.selection_changed.emit(tile, tile, [tile] as Array[Vector2i], false)
+	map.queue_redraw()
+
+
+func _confirm_building() -> void:
+	var tile := placement_tile()
+	if tile.x < 0:
+		return
+	if map.placement_validator.is_valid() and not map.placement_validator.call(tile):
+		var polygon := CityIsometricRenderer.tile_polygon(map.city, tile.x, tile.y)
+		var scale := map.camera._view_scale()
+		map.selection._show_placement_error((polygon[0] + polygon[2]) * 0.5 * scale + map.camera._draw_offset(scale))
+		return
+	cancel_placement()
+	map.selection_completed.emit(tile, tile, [tile] as Array[Vector2i], false)
+	map.selection_finished.emit()

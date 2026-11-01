@@ -124,8 +124,12 @@ func point_preview_tiles(point: Vector2i) -> Array[Vector2i]:
 
 
 func cancel_active_selection() -> bool:
+	var touch_placement := map.navigation.cancel_placement()
 	if map.selection_start.x < 0:
-		return false
+		if touch_placement:
+			map.selection_canceled.emit()
+			map.selection_finished.emit()
+		return touch_placement
 
 	_clear_selection()
 	map.queue_redraw()
@@ -156,7 +160,8 @@ func _selection_preview_tiles() -> Array[Vector2i]:
 	elif map.brush_box_selection:
 		tiles = map.selection_path.duplicate()
 	elif map.selection_mode == "point":
-		var preview_point := map.selection_end if map.selection_end.x >= 0 else map.hover_tile
+		var pending := map.navigation.placement_tile()
+		var preview_point := pending if pending.x >= 0 else map.selection_end if map.selection_end.x >= 0 else map.hover_tile
 		tiles = point_preview_tiles(preview_point)
 	elif map.selection_start.x >= 0 and map.selection_end.x >= 0:
 		tiles = map.selection_path

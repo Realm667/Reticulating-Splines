@@ -41262,3 +41262,8 @@ msgstr "Afficher les zones urbaines environnantes"
 #: game/src/ui/settings/app_settings_dialog.tscn
 msgid "Show frozen, gray views of owned city areas around the active city. The region overview remains available when hidden."
 msgstr "Affiche des vues figées en gris des zones urbaines possédées autour de la ville active. La vue régionale reste accessible lorsque ces vues sont masquées."
+
+#. Supplementary RS interface translation, AI-assisted.
+#: game/src/ui/settings/controls_binding_list.gd
+msgid "On a touchscreen, drag to position a building's transparent preview, lift your finger, then tap again to build. Drag again to reposition it."
+msgstr "Sur écran tactile, faites glisser l’aperçu transparent du bâtiment pour le positionner, levez le doigt, puis touchez à nouveau pour construire. Faites-le glisser à nouveau pour le déplacer."

@@ -4,6 +4,13 @@ extends CityMapConstants
 var map: CityMapControl
 var _next_wheel_zoom_msec := 0
 var _last_wheel_zoom_msec := 0
+const ZOOM_TRANSITION_SECONDS := 0.16
+var _zoom_elapsed := -1.0
+var _zoom_from := 1.0
+var _zoom_to := 1.0
+var _zoom_display := 1.0
+var _zoom_anchor := Vector2.ZERO
+var _zoom_source_fraction := Vector2.ZERO
 
 
 func _init(control: CityMapControl) -> void:
@@ -91,8 +98,11 @@ func pan_screen(displacement: Vector2) -> void:
 	if displacement.is_zero_approx():
 		return
 
+	var previous_center := map.source_center
 	map.source_center += displacement / _view_scale()
 	_clamp_source_center()
+	if _zoom_elapsed >= 0.0 and map.city_source != null:
+		_zoom_source_fraction += (map.source_center - previous_center) / Vector2(map.city_source.size)
 	map.selection._hide_placement_error()
 	var pointer := map.get_local_mouse_position()
 	map.hover_tile = _tile_at(pointer) if Rect2(Vector2.ZERO, map.size).has_point(pointer) else Vector2i(-1, -1)
@@ -115,6 +125,7 @@ func center_on_tile(point: Vector2i) -> bool:
 func center_on_tiles(first: Vector2i, last: Vector2i) -> bool:
 	if map.city == null or map.city.index_of(first.x, first.y) < 0 or map.city.index_of(last.x, last.y) < 0:
 		return false
+	cancel_zoom_animation()
 
 	var center := Vector2.ZERO
 
@@ -216,8 +227,11 @@ func set_scroll_value(axis: int, value: float) -> bool:
 	var offset: Vector2 = state.value
 	offset[axis] = value
 	var page: Vector2 = state.page
+	var previous_center := map.source_center
 	map.source_center = _camera_source_bounds().position + offset + page * 0.5
 	_clamp_source_center()
+	if _zoom_elapsed >= 0.0:
+		_zoom_source_fraction += (map.source_center - previous_center) / Vector2(map.city_source.size)
 	map.layers._sync_base_layer()
 	map.queue_redraw()
 	map.viewport_changed.emit()
@@ -251,7 +265,15 @@ func _change_zoom(direction: int, local_point: Vector2) -> bool:
 	if old_scale > 0.0:
 		source_point = (anchor - _draw_offset(old_scale)) / old_scale
 
+	var visible_zoom := _zoom_display if _zoom_elapsed >= 0.0 else map.zoom_factor
+	var source_fraction := source_point / Vector2(map.city_source.size) if map.city_source != null else Vector2.ZERO
 	map.zoom_factor = levels[new_index]
+	_zoom_from = visible_zoom
+	_zoom_to = map.zoom_factor
+	_zoom_display = visible_zoom
+	_zoom_anchor = anchor
+	_zoom_source_fraction = source_fraction
+	_zoom_elapsed = 0.0
 	map.signs._invalidate_sign_entries()
 	var new_scale := _view_scale()
 	map.source_center = source_point + (_camera_rect().get_center() - anchor) / new_scale
@@ -283,7 +305,30 @@ func _zoom_index(levels := zoom_levels()) -> int:
 
 
 func _view_scale() -> float:
-	return map.zoom_factor * map.map_pixel_ratio
+	return (_zoom_display if _zoom_elapsed >= 0.0 else map.zoom_factor) * map.map_pixel_ratio
+
+
+func cancel_zoom_animation() -> void:
+	_zoom_elapsed = -1.0
+
+
+func advance_zoom(delta: float) -> void:
+	if _zoom_elapsed < 0.0:
+		return
+	if map.city_source == null or not is_equal_approx(map.zoom_factor, _zoom_to):
+		cancel_zoom_animation()
+		return
+	_zoom_elapsed = minf(ZOOM_TRANSITION_SECONDS, _zoom_elapsed + maxf(0.0, delta))
+	var fraction := _zoom_elapsed / ZOOM_TRANSITION_SECONDS
+	var eased := 1.0 - pow(1.0 - fraction, 3.0)
+	_zoom_display = exp(lerpf(log(_zoom_from), log(_zoom_to), eased))
+	map.source_center = _zoom_source_fraction * Vector2(map.city_source.size) + (_camera_rect().get_center() - _zoom_anchor) / _view_scale()
+	_clamp_source_center()
+	if _zoom_elapsed >= ZOOM_TRANSITION_SECONDS:
+		cancel_zoom_animation()
+	map.layers._sync_base_layer()
+	map.queue_redraw()
+	map.viewport_changed.emit()
 
 
 func _camera_rect() -> Rect2:

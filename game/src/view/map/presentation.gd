@@ -64,13 +64,15 @@ func _draw_overlay() -> void:
 	var canvas := map.layers.overlay_layer
 	var scale := map.camera._view_scale()
 	var offset := map.camera._draw_offset(scale)
+	var pending := map.navigation.placement_tile()
+	var ghost_tile := pending if pending.x >= 0 else map.hover_tile
 	var valid := (map.selection.query_preview_active() or not map.placement_validator.is_valid()
-		or bool(map.placement_validator.call(map.selection_end if map.selection_end.x >= 0 else map.hover_tile)))
+		or bool(map.placement_validator.call(pending if pending.x >= 0 else map.selection_end if map.selection_end.x >= 0 else map.hover_tile)))
 
 	map.selection._draw_selection_preview(canvas, scale, offset, valid)
 
-	if map.placement_ghost_provider.is_valid() and map.edit_enabled and map.hover_tile.x >= 0:
-		var ghost: CityDynamicVisual = map.placement_ghost_provider.call(map.hover_tile)
+	if map.placement_ghost_provider.is_valid() and map.edit_enabled and ghost_tile.x >= 0:
+		var ghost: CityDynamicVisual = map.placement_ghost_provider.call(ghost_tile)
 
 		if ghost != null:
 			canvas.draw_texture_rect(ghost.texture, Rect2(offset + ghost.position * scale, ghost.size * scale), false, GHOST_COLOR)

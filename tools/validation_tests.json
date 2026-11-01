@@ -1,5 +1,11 @@
 [
   {
+    "id": "touch_building_placement_test",
+    "script": "tests/touch_building_placement_test.gd",
+    "domain": "ui",
+    "lane": "product"
+  },
+  {
     "id": "region_snapshot_gpu_test",
     "script": "tests/region_snapshot_gpu_test.gd",
     "domain": "rendering",

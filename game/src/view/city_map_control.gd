@@ -88,7 +88,11 @@ var control_bindings := ControlBindings.defaults()
 var context_menu: ContextMenu
 var desktop_cursor_app := "city"
 var desktop_cursor_role := 0
-var zoom_factor: float = ZOOM_LEVELS[DEFAULT_ZOOM_INDEX]
+var zoom_factor: float = ZOOM_LEVELS[DEFAULT_ZOOM_INDEX]:
+	set(value):
+		zoom_factor = value
+		if camera != null:
+			camera.cancel_zoom_animation()
 # interface pixels for each source pixel at 100% zoom, so that the map keeps
 # whole screen pixels at every interface scale
 var map_pixel_ratio := 1.0
@@ -135,6 +139,7 @@ var demolish_brush := false
 var bulldozer_visual_provider := Callable()
 # a translucent preview of the object that a click at a tile places
 var placement_ghost_provider := Callable()
+var touch_placement_tool := -1
 var bulldozer_direction := 0
 var brush_box_selection := false
 var brush_size := 1
@@ -212,6 +217,7 @@ func advance_artwork_animation(delta: float) -> void:
 
 
 func _process(delta: float) -> void:
+	camera.advance_zoom(delta)
 	interaction._process(delta)
 	region_backdrop.advance(delta)
 	# Appearance transitions finish in real time, including a simulation pause.

@@ -75,6 +75,10 @@ func rebuild() -> void:
 	navigation_help.text = "Swipe on a trackpad to move the map and pinch to zoom. On a touchscreen, drag with one finger to use the selected tool; drag with two fingers to move the map. Tap outside a dialog to close it."
 	navigation_help.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	add_child(navigation_help)
+	var placement_help := Label.new()
+	placement_help.text = "On a touchscreen, drag to position a building's transparent preview, lift your finger, then tap again to build. Drag again to reposition it."
+	placement_help.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	add_child(placement_help)
 
 	for category in ControlActions.CATEGORIES:
 		if get_child_count() > 0:

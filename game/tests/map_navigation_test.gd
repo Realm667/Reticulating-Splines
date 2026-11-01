@@ -24,6 +24,7 @@ func _run() -> void:
 	map.selection_changed.connect(func(_a: Vector2i, _b: Vector2i, _p: Array[Vector2i], _d: bool) -> void:
 		dabs.append(true))
 	_reset()
+	_test_zoom_transition()
 	_test_trackpad()
 	_test_pinch()
 	_test_scroll_fallback()
@@ -31,6 +32,7 @@ func _run() -> void:
 	NativePlatform.detach_pointer_source(0)
 	assert(not NativePlatform.take_touchpad_scroll(0, 1, 1.0))
 	_test_touch()
+	_test_building_touch()
 	await _test_routing()
 	map.queue_free()
 	await process_frame
@@ -44,11 +46,45 @@ func _reset() -> void:
 	map.zoom_factor = 1.0
 	map.source_center = Vector2(2000, 1500)
 	map.set_edit_enabled(false)
+	map.touch_placement_tool = -1
+	map.repeat_placement = false
+	map.placement_validator = Callable()
 	map.photo_mode_active = false
 	map.map_pixel_ratio = 1.0
 	map.screen_pixel_scale = 0.0
 	completed.clear()
 	dabs.clear()
+
+
+func _test_zoom_transition() -> void:
+	var point := Vector2(550, 220)
+	var source := (point - map.camera._draw_offset(1.0))
+	assert(map.zoom_in(point) and map.zoom_factor == 2.0)
+	assert(map.camera._view_scale() == 1.0, "A discrete step starts from the visible scale")
+	map.camera.advance_zoom(CityMapCamera.ZOOM_TRANSITION_SECONDS * 0.5)
+	var scale := map.camera._view_scale()
+	assert(scale > 1.0 and scale < 2.0)
+	var anchored := (point - map.camera._draw_offset(scale)) / scale
+	assert(anchored.distance_to(source) < 1.0, "The cursor anchor stays fixed throughout the transition")
+	map.pan_screen(Vector2(24, 0))
+	var panned := map.source_center
+	map.camera.advance_zoom(0.0)
+	assert(map.source_center.is_equal_approx(panned), "Panning remains continuous during a zoom")
+	var scroll := map.camera.scroll_state()
+	map.camera.set_scroll_value(0, scroll.value.x + 20.0)
+	panned = map.source_center
+	map.camera.advance_zoom(0.0)
+	assert(map.source_center.is_equal_approx(panned), "Scrollbars do not fight the zoom anchor")
+	assert(map.zoom_in(point) and map.zoom_factor == 3.0)
+	assert(is_equal_approx(map.camera._view_scale(), scale), "Fast consecutive steps retarget without jumping")
+	map.camera.advance_zoom(CityMapCamera.ZOOM_TRANSITION_SECONDS)
+	assert(map.camera._view_scale() == 3.0)
+	assert(map.zoom_out(point) and map.zoom_factor == 2.0)
+	map.camera.advance_zoom(CityMapCamera.ZOOM_TRANSITION_SECONDS)
+	assert(map.camera._view_scale() == 2.0)
+	map.zoom_factor = 1.0
+	assert(map.camera._view_scale() == 1.0, "Loaded and explicit zoom values cancel a pending animation")
+	_reset()
 
 
 func _test_trackpad() -> void:
@@ -259,6 +295,63 @@ func _test_touch() -> void:
 		_drag(1, point + Vector2(80, 0))
 		_contact(1, point + Vector2(80, 0), false)
 		assert(completed.is_empty() and not map.is_left_drag_active())
+
+
+func _test_building_touch() -> void:
+	_reset()
+	map.set_edit_enabled(true, "point", 3)
+	map.touch_placement_tool = 157
+	map.repeat_placement = true
+	map.center_on_tile(Vector2i(64, 64))
+	var point := Vector2(400, 300)
+	_contact(7, point, true)
+	_drag(7, point + Vector2(60, 20))
+	_contact(7, point + Vector2(60, 20), false)
+	var selected := map.navigation.placement_tile()
+	assert(selected.x >= 0 and completed.is_empty() and map.selection_start.x < 0,
+		"First touch and drag only position a fixed building, including repeat-placement tools")
+	_contact(7, point, true)
+	assert(completed.is_empty(), "Confirmation waits for release, so a second finger can still cancel")
+	_contact(7, point, false)
+	assert(completed.size() == 1 and completed[0][0] == selected and completed[0][1] == selected,
+		"Second tap builds exactly once at the retained preview, not at the confirmation finger")
+	assert(map.navigation.placement_tile().x < 0)
+	completed.clear()
+	_contact(7, point, true)
+	_contact(7, point, false)
+	_contact(7, point, true)
+	_drag(7, point + Vector2(-60, 20))
+	_contact(7, point + Vector2(-60, 20), false)
+	assert(completed.is_empty() and map.navigation.placement_tile().x >= 0, "Dragging again repositions without confirming")
+	_contact(7, point, true)
+	_contact(8, point + Vector2(60, 0), true)
+	_contact(7, point, false)
+	_contact(8, point + Vector2(60, 0), false)
+	assert(completed.is_empty() and map.navigation.placement_tile().x < 0, "Two fingers cancel a pending building")
+	_contact(7, point, true)
+	_contact(7, point, false)
+	_contact(7, point, true)
+	map.interaction._input(_touch(42, Vector2(5, 5), true))
+	_contact(7, point, false)
+	assert(completed.is_empty() and map.navigation.placement_tile().x < 0, "A second finger over UI also cancels building confirmation")
+	map.navigation.reset()
+	_contact(7, point, true)
+	_contact(7, point, false)
+	assert(map.cancel_active_selection() and map.navigation.placement_tile().x < 0)
+	_contact(7, point, true)
+	_contact(7, point, false)
+	map.touch_placement_tool += 1
+	map.navigation.process()
+	assert(map.navigation.placement_tile().x < 0, "Changing tools invalidates the confirmation")
+	_contact(7, point, true)
+	_contact(7, point, false)
+	map.placement_validator = func(_tile: Vector2i) -> bool: return false
+	_contact(7, point, true)
+	_contact(7, point, false)
+	assert(completed.is_empty() and map.navigation.placement_tile().x >= 0, "An invalid building cannot be confirmed")
+	map.notification(MainLoop.NOTIFICATION_APPLICATION_FOCUS_OUT)
+	assert(map.navigation.placement_tile().x < 0)
+	_reset()
 
 
 func _test_routing() -> void:

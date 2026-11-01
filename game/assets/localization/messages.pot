@@ -10935,3 +10935,8 @@ msgstr ""
 #: game/src/ui/settings/app_settings_dialog.tscn
 msgid "Show frozen, gray views of owned city areas around the active city. The region overview remains available when hidden."
 msgstr ""
+
+#. Supplementary RS interface translation, AI-assisted.
+#: game/src/ui/settings/controls_binding_list.gd
+msgid "On a touchscreen, drag to position a building's transparent preview, lift your finger, then tap again to build. Drag again to reposition it."
+msgstr ""

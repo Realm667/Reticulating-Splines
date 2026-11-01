@@ -17,6 +17,8 @@ const LEVEL_BRUSH_SIZE := 1
 const EDITOR_LEVEL_BRUSH_SIZE := 5
 
 var app: CityApplication
+var _ghost_signature: Array = []
+var _ghost_textures: Dictionary = {}
 
 
 func _init(application: CityApplication) -> void:
@@ -307,6 +309,12 @@ func update_edit_state() -> void:
 	app.map_view.placement_ghost_provider = (app.scurk_workspace.place_ghost
 		if app.scurk_place_print != null and app.scurk_place_print.visible and app.scurk_place_print.is_object_mode()
 		else Callable())
+	app.map_view.touch_placement_tool = -1
+	if (BuildingSites.supports_tool(app.tool_state.selected_group, app.tool_state.selected_subtool) and not app.tool_state.landscape_editor
+			and (app.scurk_place_print == null or not app.scurk_place_print.visible)):
+		app.map_view.touch_placement_tool = app.tool_state.selected_group * Tools.MAX_SLOTS_PER_GROUP + app.tool_state.selected_subtool
+		if not app.map_view.placement_ghost_provider.is_valid():
+			app.map_view.placement_ghost_provider = _building_ghost
 	app.city_toolbar.brush_controls.visible = app.tool_state.landscape_editor and app.map_view.landscape_brush and not level_brush
 
 	if level_brush:
@@ -365,6 +373,10 @@ func update_edit_state() -> void:
 		app.map_view.placement_error_provider = Callable()
 		app.city_toolbar.hold_menu.hide()
 	app.map_view.query_city = app.document_state.city
+	if str(state.selection) != "point" or not bool(state.enabled):
+		app.map_view.touch_placement_tool = -1
+	if app.map_view.navigation.placement_tile().x < 0:
+		app.map_view.navigation.cancel_placement()
 	app.map_view.set_edit_enabled(
 		bool(state.enabled),
 		str(state.selection),
@@ -380,6 +392,44 @@ func update_edit_state() -> void:
 	app.status_label.text = str(state.status_text)
 	app.status_label.set_meta("status_tooltip_text", str(state.status_detail))
 	app.city_status_bar.refresh_message_tooltip()
+
+
+func _building_ghost(point: Vector2i) -> CityDynamicVisual:
+	var city := app.document_state.city
+	var sprites := app.asset_state.large_sprites
+	if city == null or sprites == null or app.map_view.navigation.placement_tile() != point:
+		return null
+	var tile := BuildingSites.tile_for_tool(app.tool_state.selected_group, app.tool_state.selected_subtool)
+	var id := 1000 + tile
+	var entry := sprites.find_sprite(id)
+	if entry == null:
+		return null
+	var site := BuildingSites.footprint(point, app.map_view.point_footprint_area)
+	var left := Vector2i(site.position.x, site.end.y - 1)
+	if city.index_of(left.x, left.y) < 0:
+		return null
+	var signature := [sprites, sprites.visual_revision, app.asset_state.palette]
+	if signature != _ghost_signature:
+		_ghost_signature = signature
+		_ghost_textures.clear()
+	var flip := city.compass_rotation() % 2 == 1
+	var key := Vector2i(id, int(flip))
+	var art: HdSprite = sprites.high_resolution.get(id)
+	var size := Vector2(entry.width, art.height if art != null else entry.height)
+	if not _ghost_textures.has(key):
+		var image: Image = art.image.duplicate() if art != null else entry.create_image(app.asset_state.palette).image
+		if image == null:
+			return null
+		if flip:
+			image.flip_x()
+		_ghost_textures[key] = ImageTexture.create_from_image(image)
+	var registration: Vector3i = sprites.visual_registration.get(id, Vector3i(entry.width, 0, 0))
+	var inset := size.x - registration.x - registration.y if flip else float(registration.y)
+	var baseline := IsometricConstants.TOP_MARGIN + (left.x + left.y) * IsometricConstants.HALF_HEIGHT + IsometricConstants.TILE_HEIGHT \
+		- city.object_altitude(left.x, left.y) * IsometricConstants.ALTITUDE_STEP + registration.x * 0.25 - IsometricConstants.HALF_HEIGHT
+	var position := Vector2(IsometricConstants.SIDE_MARGIN + (city.map_size + left.x - left.y) * IsometricConstants.HALF_WIDTH - inset,
+		baseline + registration.z - size.y)
+	return CityDynamicVisual.new(_ghost_textures[key], position, size)
 
 
 func _placement_preview_valid(point: Vector2i) -> bool:
