@@ -31506,8 +31506,8 @@ msgid "%d%% / %d%%"
 msgstr "%d%% / %d%%"
 
 #. Map navigation; AI-assisted supplementary translation.
-msgid "Swipe to move the map and pinch to zoom. On a touchscreen, tap to use the selected tool; drag to move the map."
-msgstr "Deslize para mover o mapa e faça o gesto de pinça para ajustar o zoom. Na tela sensível ao toque, toque para usar a ferramenta selecionada e arraste para mover o mapa."
+msgid "Swipe on a trackpad to move the map and pinch to zoom. On a touchscreen, drag with one finger to use the selected tool; drag with two fingers to move the map. Tap outside a dialog to close it."
+msgstr "Deslize no trackpad para mover o mapa e faça o gesto de pinça para ajustar o zoom. Na tela sensível ao toque, arraste com um dedo para usar a ferramenta selecionada e com dois dedos para mover o mapa. Toque fora de uma janela de diálogo para fechá-la."
 
 #. Optional public single-player activity; supplementary translation.
 msgid "Share single-player activity online"

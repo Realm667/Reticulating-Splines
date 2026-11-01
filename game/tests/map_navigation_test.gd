@@ -1,5 +1,5 @@
 extends SceneTree
-## Gestures share the existing camera, and touch never builds during a drag.
+## One-finger tools and two-finger navigation share the normal input guards.
 
 var map: CityMapControl
 var completed: Array = []
@@ -197,9 +197,24 @@ func _test_touch() -> void:
 	_contact(7, point, true)
 	var before := map.source_center
 	_drag(7, point + Vector2(60, 20))
+	assert(map.is_left_drag_active() and not map.is_panning(), "One finger holds the tool, not the camera")
 	_contact(7, point + Vector2(60, 20), false)
-	assert(map.source_center.is_equal_approx(before - Vector2(60, 20)))
-	assert(completed.is_empty() and dabs.is_empty(), "One-finger navigation cannot start a stroke")
+	assert(map.source_center == before)
+	assert(completed.size() == 1 and completed[0][3], "One-finger drag completes the normal tool selection")
+	assert(completed[0][0] != completed[0][1])
+	completed.clear()
+	dabs.clear()
+	# A held contact starts a mouse-down even before movement.
+	_contact(7, point, true)
+	map.navigation._touch_started_msec -= CityMapNavigation.TOOL_HOLD_MSEC
+	map.navigation.process()
+	assert(map.is_left_drag_active())
+	_contact(42, point + Vector2(60, 0), true)
+	assert(not map.is_left_drag_active(), "Adding a finger cancels the pending tool selection")
+	_contact(7, point, false)
+	_contact(42, point + Vector2(60, 0), false)
+	assert(completed.is_empty())
+	dabs.clear()
 	_contact(7, point - Vector2(60, 0), true)
 	_contact(42, point + Vector2(60, 0), true)
 	before = map.source_center
@@ -235,6 +250,15 @@ func _test_touch() -> void:
 	map.navigation.reset()
 	_contact(9, point, false)
 	assert(completed.is_empty(), "Context resets discard pending taps")
+	# Read-only and photo views never acquire a touch tool stroke.
+	for photo in [false, true]:
+		_reset()
+		map.photo_mode_active = photo
+		map.set_edit_enabled(photo)
+		_contact(1, point, true)
+		_drag(1, point + Vector2(80, 0))
+		_contact(1, point + Vector2(80, 0), false)
+		assert(completed.is_empty() and not map.is_left_drag_active())
 
 
 func _test_routing() -> void:

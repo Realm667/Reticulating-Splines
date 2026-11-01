@@ -131,6 +131,9 @@ func _ready() -> void:
 	hover_focus = HoverFocusRouter.new()
 	add_child(hover_focus)
 	hover_focus.attach(get_window())
+	var touch_dialogs := TouchDialogDismiss.new()
+	add_child(touch_dialogs)
+	touch_dialogs.attach(get_window())
 	get_tree().auto_accept_quit = false
 	console_window = ConsoleWindow.new()
 	console_window.toggle_shortcut = controls.is_console_shortcut

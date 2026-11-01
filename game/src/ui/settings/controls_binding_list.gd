@@ -72,7 +72,7 @@ func rebuild() -> void:
 
 	_rows.clear()
 	var navigation_help := Label.new()
-	navigation_help.text = "Swipe to move the map and pinch to zoom. On a touchscreen, tap to use the selected tool; drag to move the map."
+	navigation_help.text = "Swipe on a trackpad to move the map and pinch to zoom. On a touchscreen, drag with one finger to use the selected tool; drag with two fingers to move the map. Tap outside a dialog to close it."
 	navigation_help.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	add_child(navigation_help)
 

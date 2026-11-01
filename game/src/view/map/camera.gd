@@ -102,7 +102,7 @@ func pan_screen(displacement: Vector2) -> void:
 
 
 func is_panning() -> bool:
-	return map.interaction.panning or map.navigation.active()
+	return map.interaction.panning or map.navigation.is_panning()
 
 
 func center_on_tile(point: Vector2i) -> bool:

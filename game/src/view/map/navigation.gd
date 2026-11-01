@@ -1,13 +1,14 @@
 class_name CityMapNavigation
 extends RefCounted
-## Local camera gestures. Touch taps use the tool only after release; a drag
-## or any multi-touch sequence is navigation and never starts a tool stroke.
+## One finger uses the current tool; two fingers pan and pinch the camera.
+## Delay a stationary press briefly so a second contact can start navigation.
 
 const PAN_STEP := 48.0
 const PINCH_STEP := 1.18
 const PINCH_INTERVAL_MSEC := 140
 const GESTURE_IDLE_MSEC := 250
 const TAP_SLOP := 12.0
+const TOOL_HOLD_MSEC := 180
 const TOUCHPAD_DEVICE := 0x5253
 
 var map: CityMapControl
@@ -17,6 +18,8 @@ var _touches: Dictionary[int, Vector2] = {}
 var _screen_touches: Dictionary[int, bool] = {}
 var _touch_start := Vector2.ZERO
 var _touch_moved := false
+var _tool_held := false
+var _touch_started_msec := 0
 var _multiple := false
 var _touch_dirty := false
 var _center := Vector2.ZERO
@@ -54,7 +57,15 @@ func active() -> bool:
 		or Time.get_ticks_msec() - _last_navigation_msec < GESTURE_IDLE_MSEC)
 
 
+func is_panning() -> bool:
+	return (_multiple and not _touches.is_empty()
+		or Time.get_ticks_msec() - _last_navigation_msec < GESTURE_IDLE_MSEC)
+
+
 func reset() -> void:
+	if _tool_held:
+		_cancel_tool()
+	_tool_held = false
 	_touches.clear()
 	_screen_touches.clear()
 	_touch_dirty = false
@@ -76,6 +87,7 @@ func observe(event: InputEvent) -> void:
 			_screen_touches[event.index] = true
 			if not _touches.is_empty() and _screen_touches.size() > 1:
 				_multiple = true
+				_cancel_touch_tool()
 		else:
 			_screen_touches.erase(event.index)
 
@@ -118,6 +130,8 @@ func process() -> void:
 	# a parallel two-finger swipe does not momentarily look like a pinch.
 	if _touch_dirty:
 		_flush_touch()
+	if not _multiple and _touches.size() == 1 and not _tool_held and Time.get_ticks_msec() - _touch_started_msec >= TOOL_HOLD_MSEC:
+		_start_touch_tool()
 
 
 func handle(event: InputEvent) -> bool:
@@ -222,9 +236,13 @@ func _touch(event: InputEventScreenTouch) -> void:
 			_touch_start = event.position
 			_touch_moved = false
 			_multiple = false
-		_begin_navigation()
+			_touch_started_msec = Time.get_ticks_msec()
+			_cancel_tool()
 		_touches[event.index] = event.position
 		_multiple = _multiple or _touches.size() > 1 or _screen_touches.size() > 1
+		if _multiple:
+			_cancel_touch_tool()
+			_begin_navigation()
 		_rebase_touch()
 		return
 	if not _touches.has(event.index):
@@ -237,18 +255,38 @@ func _touch(event: InputEventScreenTouch) -> void:
 	_touches[event.index] = event.position
 	_touch_dirty = true
 	_flush_touch()
-	var tap := not _multiple and not _touch_moved and _touches.size() == 1
+	if not _multiple and _touches.size() == 1 and Rect2(Vector2.ZERO, map.size).has_point(event.position):
+		if not _tool_held:
+			_start_touch_tool()
+		if _tool_held:
+			_touch_button(event.position, false)
+	elif _tool_held:
+		_cancel_touch_tool()
+	_tool_held = false
 	_touches.erase(event.index)
 	_rebase_touch()
-	if tap and Rect2(Vector2.ZERO, map.size).has_point(event.position):
-		# Dispatch locally, with a real-device ID, without changing Input's
-		# global mouse state or bypassing the tool's edit/photo/read-only guards.
-		for pressed in [true, false]:
-			var button := InputEventMouseButton.new()
-			button.position = event.position
-			button.button_index = MOUSE_BUTTON_LEFT
-			button.pressed = pressed
-			map.interaction._handle_mouse_button(button)
+
+
+func _touch_button(point: Vector2, pressed: bool) -> void:
+	var button := InputEventMouseButton.new()
+	button.position = point
+	button.button_index = MOUSE_BUTTON_LEFT
+	button.button_mask = MOUSE_BUTTON_MASK_LEFT if pressed else 0
+	button.pressed = pressed
+	map.interaction._handle_mouse_button(button)
+
+
+func _start_touch_tool() -> void:
+	if _multiple or _touches.size() != 1 or not available():
+		return
+	_tool_held = true
+	_touch_button(_touch_start, true)
+
+
+func _cancel_touch_tool() -> void:
+	if _tool_held:
+		_cancel_tool()
+	_tool_held = false
 
 
 func _drag(event: InputEventScreenDrag) -> void:
@@ -293,10 +331,19 @@ func _flush_touch() -> void:
 	var pixels := maxf(map.screen_pixel_scale, 1.0)
 	if center.distance_to(_touch_start) * pixels > TAP_SLOP:
 		_touch_moved = true
-	if _multiple or _touch_moved:
+	if _multiple and _touches.size() >= 2:
 		map.camera.pan_screen(_center - center)
 		if _touches.size() == 2 and _span > TAP_SLOP and span > TAP_SLOP:
 			_magnify(span / _span, center)
 		_last_navigation_msec = Time.get_ticks_msec()
+	elif not _multiple and _touch_moved:
+		if not _tool_held:
+			_start_touch_tool()
+		if _tool_held:
+			var motion := InputEventMouseMotion.new()
+			motion.position = center
+			motion.relative = center - _center
+			motion.button_mask = MOUSE_BUTTON_MASK_LEFT
+			map.interaction._handle_mouse_motion(motion)
 	_center = center
 	_span = span
