@@ -81,16 +81,21 @@ uniform sampler2D nature_ground : filter_linear, repeat_enable;
 uniform mat3 nature_canvas_to_grid = mat3(1.0);
 varying vec2 nature_grid;
 
-varying flat float emission_draw;
-varying flat float indexed_emission_draw;
-varying flat float transparent_shadow_draw;
-varying flat float fullbright_draw;
-varying flat float toxic_draw;
-varying flat float warm_cloud_draw;
+// Keep space for the renderer's canvas varyings on mobile GPUs. Independent
+// flat flags share vectors without changing their values or interpolation.
+varying flat vec4 light_draw_flags;
+#define emission_draw light_draw_flags.x
+#define indexed_emission_draw light_draw_flags.y
+#define transparent_shadow_draw light_draw_flags.z
+#define fullbright_draw light_draw_flags.w
+varying flat vec2 effect_color_flags;
+#define toxic_draw effect_color_flags.x
+#define warm_cloud_draw effect_color_flags.y
 varying vec2 cloud_ground_grid;
-varying flat float hazard_draw;
-varying flat float hazard_phase;
-varying flat float hazard_opacity;
+varying flat vec3 hazard_style;
+#define hazard_draw hazard_style.x
+#define hazard_phase hazard_style.y
+#define hazard_opacity hazard_style.z
 
 void vertex() {
 	nature_grid = (nature_canvas_to_grid * vec3((MODEL_MATRIX * vec4(VERTEX, 0.0, 1.0)).xy, 1.0)).xy;
@@ -205,6 +210,22 @@ int palette_index(vec4 encoded) {
 vec4 filtered(vec4 a, vec4 b, vec4 c, vec4 d, vec2 weight) {
 	vec4 result = mix(mix(a, b, weight.x), mix(c, d, weight.x), weight.y);
 	return result.a > 0.0 ? vec4(result.rgb / result.a, result.a) : vec4(0.0);
+}
+
+vec3 ground_patch(vec2 grid) {
+	// Reconstruct the broad field explicitly. Mobile drivers can resolve the
+	// shared coarse/grain sampler as nearest, producing large hard rectangles.
+	// Four taps in this tiny texture keep the intended repeat and smooth blend.
+	vec2 size = vec2(textureSize(nature_ground, 0));
+	vec2 point = grid / 160.0 * size - vec2(0.5);
+	vec2 cell = floor(point);
+	ivec2 low = ivec2(mod(cell, size));
+	ivec2 high = ivec2(mod(cell + vec2(1.0), size));
+	vec2 weight = fract(point);
+	return mix(mix(texelFetch(nature_ground, low, 0).rgb,
+		texelFetch(nature_ground, ivec2(high.x, low.y), 0).rgb, weight.x),
+		mix(texelFetch(nature_ground, ivec2(low.x, high.y), 0).rgb,
+		texelFetch(nature_ground, high, 0).rgb, weight.x), weight.y);
 }
 
 // The water of a watered underground pipe (the water colors 200 to 207), premultiplied.
@@ -328,7 +349,7 @@ void fragment() {
 		if (nature_terrain_enabled && nature_terrain_strength > 0.0 && natural_mask.g > 0.5 && !dark_underground) {
 			// Broad related meadow/dry-soil patches, with narrow pixel-dither
 			// boundaries and sparse detail. World-fixed: no per-frame randomness.
-			vec3 patch = texture(nature_ground, nature_grid / 160.0).rgb;
+			vec3 patch = ground_patch(nature_grid);
 			vec3 grain = texture(nature_ground, (floor(nature_grid * 16.0) + 0.5) / 32.0).rgb;
 			float field = patch.r + (grain.r - 0.5) * 0.035;
 			float dry = smoothstep(0.56, 0.70, field);

@@ -3,6 +3,17 @@
 The Android port is under integration. A compiled APK alone does not establish
 device compatibility. The initial device is an AYN Odin 2 Portal on Android 13.
 
+Android uses the Mobile renderer (Vulkan). Keep the desktop Compatibility
+selection independent. On the Odin's Adreno 740, Compatibility can overwrite
+custom canvas samplers with engine-reserved normal/specular textures. The
+first figure draw then becomes a blue opaque rectangle; later draw calls can
+hide the problem. Check cold draws as well as warm scenes on the actual device.
+Desktop OpenGL success does not establish Android GLES compatibility. The
+engine's OpenGL fallback is not a verified substitute for Vulkan on this device.
+The terrain shader reconstructs the broad ground field from four texels so a
+nearest-filtered mobile sampler cannot turn it into hard rectangular patches.
+Packed flat flags keep the canvas shader within the device's varying limit.
+
 ## Native build
 
 Use the Android NDK r28b (`28.1.13356709`), a Rust toolchain selected by
@@ -70,6 +81,8 @@ city/region saving and loading, touch/keyboard/controller focus, audio, lifecycl
 pause/resume, offline/cloud conflicts and secure credential round trips. Retain
 actual device/log evidence; do not substitute desktop or emulator results for
 physical hardware tests.
+Check script and shader errors even when a scene prints `PASS`: an assertion
+inside an awaited helper can return to its caller without failing that caller.
 
 Future GitHub asset name: `ReticulatingSplines-VERSION-android-arm64.apk`.
 The website already recognizes this name. Do not publish a test APK merely to

@@ -44,7 +44,7 @@ pointing/android/disable_scroll_deadzone=true
 
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.macos="gl_compatibility"
-renderer/rendering_method.mobile="gl_compatibility"
+renderer/rendering_method.mobile="mobile"
 rendering_device/driver.macos="metal"
 rendering_device/fallback_to_opengl3=true
 textures/vram_compression/import_etc2_astc=true

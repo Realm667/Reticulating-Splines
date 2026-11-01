@@ -6,6 +6,7 @@ func _initialize() -> void:
 
 
 func _run() -> void:
+	await _check_tiled_ground()
 	var viewport := SubViewport.new()
 	viewport.size = Vector2i(256, 128)
 	viewport.transparent_bg = true
@@ -202,3 +203,52 @@ func _check_tree_shadow() -> void:
 	viewport.queue_free()
 	await process_frame
 	print("PASS: projected tree-shadow shading, night attenuation, clear canopy edges and emission exclusion")
+
+
+func _check_tiled_ground() -> void:
+	# Neighboring render regions must sample the same world-space ground. Draw
+	# independent materials so a stale per-draw sampler binding cannot hide.
+	var viewport := SubViewport.new()
+	viewport.size = Vector2i(256, 128)
+	viewport.transparent_bg = true
+	viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	root.add_child(viewport)
+	var image := Image.create(256, 128, false, Image.FORMAT_RGBA8)
+	image.fill(Color(0.55, 0.48, 0.30))
+	var mask := image.duplicate() as Image
+	mask.fill(Color(0, 1, 0, 1))
+	var material := ShaderMaterial.new()
+	material.shader = preload("res://src/view/map/palette_cycle.gdshader")
+	material.set_shader_parameter("environment_has_seasons", true)
+	material.set_shader_parameter("environment_season_mask", ImageTexture.create_from_image(mask))
+	material.set_shader_parameter("nature_ground", CityNatureArtwork.ground_texture())
+	material.set_shader_parameter("nature_terrain_enabled", true)
+	material.set_shader_parameter("nature_terrain_strength", 1.0)
+	material.set_shader_parameter("nature_canvas_to_grid", Basis(Vector3(0.0625, 0, 0), Vector3(0, 0.0625, 0), Vector3(0, 0, 1)))
+	var whole := Sprite2D.new()
+	whole.centered = false
+	whole.texture = ImageTexture.create_from_image(image)
+	whole.material = material
+	viewport.add_child(whole)
+	var tiles := Node2D.new()
+	tiles.hide()
+	viewport.add_child(tiles)
+	for y in 2:
+		for x in 2:
+			var tile := Sprite2D.new()
+			tile.centered = false
+			tile.position = Vector2(x * 128, y * 64)
+			tile.texture = ImageTexture.create_from_image(image.get_region(Rect2i(0, 0, 128, 64)))
+			tile.material = material.duplicate()
+			tiles.add_child(tile)
+	await process_frame
+	await RenderingServer.frame_post_draw
+	var expected := viewport.get_texture().get_image()
+	whole.hide()
+	tiles.show()
+	for frame in 2:
+		await RenderingServer.frame_post_draw
+		assert(viewport.get_texture().get_image().get_data() == expected.get_data(),
+			"Independent ground regions must not introduce rectangular brightness boundaries")
+	viewport.queue_free()
+	await process_frame

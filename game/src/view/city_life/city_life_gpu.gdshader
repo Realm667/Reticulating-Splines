@@ -13,7 +13,6 @@ uniform bool smooth_movement = true;
 uniform float artwork_scale = 1.0;
 uniform bool emission_only = false;
 uniform bool vehicle_has_emission = false;
-varying flat float slot;
 varying flat float mask_layer;
 varying vec2 sprite_pixel;
 varying flat vec4 source_rect;
@@ -23,7 +22,7 @@ varying flat vec2 mask_origin;
 varying flat float opacity;
 varying flat float road_shear;
 void vertex() {
-	slot = float(INSTANCE_ID);
+	float slot = float(INSTANCE_ID);
 	vec4 rect = texelFetch(parameters, ivec2(int(slot), 0), 0);
 	vec4 world = texelFetch(parameters, ivec2(int(slot), 1), 0);
 	vec4 mask = texelFetch(parameters, ivec2(int(slot), 2), 0);
@@ -54,7 +53,13 @@ float mask_coverage(vec2 uv) {
 }
 void fragment() {
 	// Match image-rectangle sampling at exact half-resolution texel boundaries.
+#if CURRENT_RENDERER == RENDERER_COMPATIBILITY
 	vec2 pixel = floor(sprite_pixel * artwork_scale - vec2(0.0001));
+#else
+	// Vulkan nearest sampling resolves an exact half-size boundary toward
+	// the next texel. Stabilize interpolated integers on that same side.
+	vec2 pixel = floor(sprite_pixel * artwork_scale + vec2(0.0001));
+#endif
 	if (any(lessThan(pixel, vec2(0.0))) || any(greaterThanEqual(pixel, source_rect.zw))) discard;
 	vec2 source_uv = (source_rect.xy + pixel + vec2(0.5)) / vec2(textureSize(artwork, 0));
 	vec4 color = texture(artwork, source_uv);
