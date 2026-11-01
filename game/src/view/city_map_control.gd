@@ -159,7 +159,7 @@ var region_backdrop := CityRegionBackdrop.new(self)
 
 
 func _ready() -> void:
-	tree_exiting.connect(region_backdrop.clear)
+	tree_exiting.connect(region_backdrop.close)
 	navigation.attach_window()
 	theme_changed.connect(queue_redraw)
 	mouse_filter = Control.MOUSE_FILTER_STOP
@@ -213,6 +213,7 @@ func advance_artwork_animation(delta: float) -> void:
 
 func _process(delta: float) -> void:
 	interaction._process(delta)
+	region_backdrop.advance(delta)
 	# Appearance transitions finish in real time, including a simulation pause.
 	layers.tree_fade.advance(delta)
 

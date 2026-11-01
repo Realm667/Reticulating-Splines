@@ -9,6 +9,9 @@ var compass := 0
 var compact := false
 var selected := Vector2i(-1, -1)
 var hovered := Vector2i(-1, -1)
+var _pressed := Vector2i(-1, -1)
+var _press_position := Vector2.ZERO
+var _dragged := false
 
 
 func _init() -> void:
@@ -17,16 +20,24 @@ func _init() -> void:
 	focus_mode = Control.FOCUS_ALL
 	mouse_exited.connect(func() -> void:
 		hovered = Vector2i(-1, -1)
+		_pressed = Vector2i(-1, -1)
 		queue_redraw())
 	resized.connect(queue_redraw)
 	theme_changed.connect(queue_redraw)
 
 
 func configure(value: Dictionary, rotation: int, selection := Vector2i(-1, -1)) -> void:
+	if compass != (rotation & 3) or state.get("active") != value.get("active") or state.get("edge") != value.get("edge"):
+		_pressed = Vector2i(-1, -1)
 	state = value
 	compass = rotation & 3
 	selected = selection
 	queue_redraw()
+
+
+func _notification(what: int) -> void:
+	if what in [NOTIFICATION_FOCUS_EXIT, NOTIFICATION_APPLICATION_FOCUS_OUT] or (what == NOTIFICATION_VISIBILITY_CHANGED and not is_visible_in_tree()):
+		_pressed = Vector2i(-1, -1)
 
 
 func half_size() -> Vector2:
@@ -69,17 +80,30 @@ func _get_tooltip(at_position: Vector2) -> String:
 
 
 func _gui_input(event: InputEvent) -> void:
+	if state.is_empty():
+		return
 	if event is InputEventMouseMotion:
+		if _pressed.x >= 0 and event.position.distance_to(_press_position) > 12:
+			_dragged = true
 		hovered = pick(event.position)
 		queue_redraw()
-	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		var cell := pick(event.position)
-		if cell.x >= 0:
+		if event.pressed and cell.x >= 0:
+			_pressed = cell
+			_press_position = event.position
+			_dragged = false
 			selected = cell
 			grab_focus()
-			cell_selected.emit(cell)
 			queue_redraw()
 			accept_event()
+		elif not event.pressed:
+			var pressed := _pressed
+			_pressed = Vector2i(-1, -1)
+			if pressed.x >= 0:
+				if cell == pressed and not _dragged and event.position.distance_to(_press_position) <= 12:
+					cell_selected.emit(cell)
+				accept_event()
 	elif event is InputEventKey and event.pressed:
 		var delta := Vector2i.ZERO
 		match event.keycode:
@@ -90,6 +114,8 @@ func _gui_input(event: InputEvent) -> void:
 			KEY_ENTER, KEY_SPACE:
 				if selected.x >= 0:
 					cell_selected.emit(selected)
+			_:
+				return
 		if delta != Vector2i.ZERO:
 			var origin := selected if selected.x >= 0 else Vector2i.ZERO
 			var turned := Vector2i(RegionProjection.rotate(Vector2(delta), -compass))

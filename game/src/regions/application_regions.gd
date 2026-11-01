@@ -14,6 +14,9 @@ var _navigation_signature: Array = []
 var _backdrop_signature: Array = []
 var _snapshot_queue: Array[Vector2i] = []
 var _snapshot_request := Vector2i(-1, -1)
+var _snapshot_command := -1
+var _snapshot_started_msec := 0
+var _switch_command := -1
 var heading: Label
 var details: Label
 var preview: TextureRect
@@ -24,6 +27,7 @@ var quote := {}
 var confirmation: ConfirmationDialog
 var last_revision := -1
 const LOCAL_OWNER := "local"
+const SNAPSHOT_TIMEOUT_MSEC := 15000
 
 
 func _init(application: CityApplication) -> void:
@@ -250,12 +254,28 @@ func _sync_navigation() -> void:
 
 func open_cell(position: Vector2i) -> void:
 	var state := summary()
-	if switching or not _cell_summary(position, state).get("own", false) or state.get("active") == [position.x, position.y]:
+	if switching or app.map_view.region_backdrop.busy() or not _cell_summary(position, state).get("own", false) or state.get("active") == [position.x, position.y]:
+		return
+	var backdrop := app.map_view.region_backdrop
+	var target: Sc2File = backdrop.documents.get(RegionRules.key(position))
+	var compass := int(target.misc_u32(Sc2MiscLayout.COMPASS) & 3) if target != null else app.document_state.city.compass_rotation()
+	if backdrop.begin_switch(position, app.document_state.current_document, compass, _perform_open_cell):
+		return
+	_perform_open_cell(position)
+
+
+func _perform_open_cell(position: Vector2i) -> void:
+	if not is_instance_valid(app):
+		return
+	if not _cell_summary(position, summary()).get("own", false):
+		app.map_view.region_backdrop.cancel_switch()
 		return
 	if app.coop.active():
+		_switch_command = app.coop.session.next_command
 		app.coop.session.request({"kind": "region_switch", "cell": [position.x, position.y]})
 	else:
-		_switch_local(RegionRules.key(position))
+		if not _switch_local(RegionRules.key(position)):
+			app.map_view.region_backdrop.cancel_switch()
 
 
 func _sync_backdrop() -> void:
@@ -266,6 +286,8 @@ func _sync_backdrop() -> void:
 		if not backdrop.state.is_empty():
 			backdrop.clear()
 		_backdrop_signature.clear()
+		_snapshot_queue.clear()
+		_release_snapshot_request()
 		return
 	var city := app.document_state.city
 	# Inspect only small identities here. Reconstructing every inactive CityState
@@ -281,20 +303,37 @@ func _sync_backdrop() -> void:
 		_backdrop_signature = signature
 		var state := summary()
 		backdrop.requested = open_cell
+		backdrop.live_ready = func() -> bool: return app.visual_preparation.ready
 		backdrop.configure(state, campaign.documents if campaign != null and not app.coop.active() else {},
 			app.asset_state, city.compass_rotation())
 		_snapshot_queue.clear()
-		_snapshot_request = Vector2i(-1, -1)
+		_release_snapshot_request()
 		if app.coop.active():
 			if not app.coop.session.command_resolved.is_connected(_command_resolved):
 				app.coop.session.command_resolved.connect(_command_resolved)
 			for entry: Dictionary in state.get("cells", []):
 				if entry.get("own", false) and entry.cell != state.get("active"):
 					_snapshot_queue.append(Vector2i(entry.cell[0], entry.cell[1]))
-	if app.coop.active() and _snapshot_request.x < 0 and not _snapshot_queue.is_empty():
+			var active_cell: Array = state.get("active", [0, 0])
+			CityRegionBackdrop.prioritize(_snapshot_queue, Vector2i(active_cell[0], active_cell[1]))
+	_expire_snapshot_request(Time.get_ticks_msec())
+	if app.coop.active() and app.coop.session.connected and _snapshot_request.x < 0 and not _snapshot_queue.is_empty():
 		_snapshot_request = _snapshot_queue.pop_front()
+		_snapshot_command = app.coop.session.next_command
+		_snapshot_started_msec = Time.get_ticks_msec()
 		app.coop.session.request({"kind": "region_snapshot", "cell": [_snapshot_request.x, _snapshot_request.y]})
 	backdrop.poll()
+
+
+func _release_snapshot_request() -> void:
+	_snapshot_request = Vector2i(-1, -1)
+	_snapshot_command = -1
+	_snapshot_started_msec = 0
+
+
+func _expire_snapshot_request(now_msec: int) -> void:
+	if _snapshot_command >= 0 and now_msec - _snapshot_started_msec >= SNAPSHOT_TIMEOUT_MSEC:
+		_release_snapshot_request()
 
 
 static func _cell_summary(position: Vector2i, state: Dictionary) -> Dictionary:
@@ -412,11 +451,7 @@ func _purchase() -> void:
 
 
 func _open_selected() -> void:
-	if app.coop.active():
-		app.coop.session.request({"kind": "region_switch", "cell": [selected.x, selected.y]})
-	else:
-		if not _switch_local(RegionRules.key(selected)):
-			return
+	open_cell(selected)
 	window.hide()
 
 
@@ -492,16 +527,28 @@ func _activate_staged(staged: RegionCampaign, id: String, path: String, write: b
 	return true
 
 
-func _command_resolved(_id: int, result: Dictionary) -> void:
-	if result.get("region_snapshot") is Dictionary:
+func _command_resolved(command_id: int, result: Dictionary) -> void:
+	if command_id == _switch_command and _switch_command >= 0:
+		_switch_command = -1
+		if not result.get("ok", false):
+			app.map_view.region_backdrop.cancel_switch()
+		return
+	if command_id == _snapshot_command and _snapshot_command >= 0:
+		var position := _snapshot_request
+		_release_snapshot_request()
+		# Rejection or malformed replies must release the queue as well. A late
+		# result from a previous view cannot replace a newer city's snapshot.
+		if not result.get("ok", false) or not result.get("region_snapshot") is Dictionary:
+			return
 		var snapshot: Dictionary = result.region_snapshot
-		var position := Vector2i(int(snapshot.cell[0]), int(snapshot.cell[1]))
-		if position == _snapshot_request:
-			_snapshot_request = Vector2i(-1, -1)
-			if _cell_summary(position, summary()).get("own", false):
-				var document := Sc2File.new()
-				if document.parse(Marshalls.base64_to_raw(str(snapshot.get("document", "")))) and document.is_sc2x():
-					app.map_view.region_backdrop.add_document(position, document)
+		if snapshot.get("cell") != [position.x, position.y] or not app.coop.active():
+			return
+		if _cell_summary(position, summary()).get("own", false):
+			var document := Sc2File.new()
+			if document.parse(Marshalls.base64_to_raw(str(snapshot.get("document", "")))) and document.is_sc2x():
+				app.map_view.region_backdrop.add_document(position, document)
+		return
+	if result.has("region_snapshot"):
 		return
 	if window == null or not window.visible:
 		return

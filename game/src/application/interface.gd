@@ -2,7 +2,6 @@ class_name ApplicationInterface
 extends RefCounted
 
 const DisplayNumbers = preload("res://src/ui/shared/display_number_format.gd")
-const CityWorkspaceView = preload("res://src/ui/shell/city_workspace.tscn")
 const CityDialogsView = preload("res://src/ui/shell/city_dialog_registry.gd")
 const MainOverlaysView = preload("res://src/ui/shell/main_overlay_registry.gd")
 const RciAftermath = preload("res://src/simulation/growth/rci_aftermath_phase.gd")
@@ -17,7 +16,10 @@ func _init(application: CityApplication) -> void:
 
 func build_interface(original_assets: OriginalGameAssets) -> void:
 	app.theme = AppUiTheme.current()
-	app.city_workspace = CityWorkspaceView.instantiate() as CityWorkspace
+	# Load after the mutually typed application/view scripts are initialized;
+	# an early preload can cache an empty scene during a cold script load.
+	var workspace_scene := load("res://src/ui/shell/city_workspace.tscn") as PackedScene
+	app.city_workspace = workspace_scene.instantiate() as CityWorkspace
 	app.city_workspace.toolbar_art = app.asset_state.data_pack.toolbar_artwork()
 	app.add_child(app.city_workspace)
 

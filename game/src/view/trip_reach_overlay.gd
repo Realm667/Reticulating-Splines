@@ -117,6 +117,8 @@ func key_rect(canvas: Control) -> Rect2:
 	var available := Rect2(Vector2.ZERO, canvas.size)
 	# the workspace can extend the map behind the sidebar and menu
 	var workspace := canvas.get_parent()
+	while workspace != null and not workspace.has_node("Page/Content/MapSpace"):
+		workspace = workspace.get_parent()
 	if workspace != null:
 		var map_space := workspace.get_node_or_null("Page/Content/MapSpace") as Control
 		if map_space != null:

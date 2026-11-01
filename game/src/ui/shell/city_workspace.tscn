@@ -25,12 +25,11 @@ grow_vertical = 2
 mouse_filter = 2
 color = Color(0.09411765, 0.14117648, 0.17254902, 1)
 
-[node name="MapView" type="Control" parent="."]
+[node name="LiveCity" type="CanvasGroup" parent="."]
+
+[node name="MapView" type="Control" parent="LiveCity"]
 unique_name_in_owner = true
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
+layout_mode = 0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("4")

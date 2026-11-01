@@ -12,11 +12,26 @@ outline; hovering strengthens an area's outline. Click an owned area in the
 sidebar to switch directly. Only existing positions within the fixed grid can
 be purchased.
 
-Other owned areas appear around the live map as grayscale, 50%-opacity static
-views. Click a view to open that city. These bounded background renders do not
+Region cells activate on release. Dragging, leaving the control or losing focus
+cancels the pending click. Enter/Space can activate the keyboard selection.
+
+Other owned areas appear around the live map as lightly blurred grayscale static
+views at 33% opacity. Hovering raises opacity to 66% over one real-time second;
+leaving fades back to 33%. Click a view to open that city. Once its live graphics
+are ready, it fades into the real city over one second while the city being left
+fades to a gray, softened 33% view. These bounded background renders do not
 run another city's simulation or animations. They refresh when you change city
 or map orientation. Multiplayer retrieves these snapshots only for the requesting
 player's own areas; they are not broadcast with per-frame public summaries.
+Nearby areas are prepared before distant ones. Switching cancels obsolete work
+without waiting for it on the UI thread; finished canceled results are discarded.
+Only one preview worker runs at a time. A rejected or unanswered multiplayer
+preview request does not block the remaining queue; late replies cannot publish
+into a newer request. The preview timeout does not cancel a gameplay command.
+Switch previews use isolated copies of both cities, including their saved view
+orientations. Only frozen views use the blur/grayscale shader; the active city
+and sidebar outlines retain their original graphics. Transitions use real time
+even when the game is paused, and tools cannot place tiles during a city switch.
 
 The preview is the landscape you buy. Reopening a preview does not reroll it.
 New areas use the first city's map dimensions, difficulty, and start year, and

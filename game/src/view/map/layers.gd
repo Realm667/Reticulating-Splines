@@ -244,6 +244,8 @@ func _draw_scale_labels(canvas: Control, font: Font, baseline: Vector2, low: Str
 func data_key_origin() -> Vector2:
 	# match trip query: anchor inside the map area, clear of the sidebar
 	var workspace := map.get_parent()
+	while workspace != null and not workspace.has_node("Page/Content/MapSpace"):
+		workspace = workspace.get_parent()
 	if workspace != null:
 		var map_space := workspace.get_node_or_null("Page/Content/MapSpace") as Control
 		if map_space != null:

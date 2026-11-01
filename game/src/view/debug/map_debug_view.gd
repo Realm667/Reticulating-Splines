@@ -92,6 +92,8 @@ func _sync_inspector(scale: float, offset: Vector2) -> void:
 # the map area beside the tool and status panels, in map coordinates
 func map_space() -> Rect2:
 	var workspace := map.get_parent()
+	while workspace != null and not workspace.has_node("Page/Content/MapSpace"):
+		workspace = workspace.get_parent()
 	var space := workspace.get_node_or_null("Page/Content/MapSpace") as Control if workspace != null else null
 
 	if space == null:

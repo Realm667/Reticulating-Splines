@@ -1,5 +1,12 @@
 [
   {
+    "id": "region_snapshot_gpu_test",
+    "script": "tests/region_snapshot_gpu_test.gd",
+    "domain": "rendering",
+    "lane": "native",
+    "driver": "scene-batch"
+  },
+  {
     "id": "cloud_application_test",
     "script": "tests/cloud_application_test.gd",
     "domain": "ui",

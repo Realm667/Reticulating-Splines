@@ -30,6 +30,9 @@ func _ready() -> void:
 	menu_bar = %MenuBar
 	toolbar = %Toolbar
 	map_view = %MapView
+	RenderingServer.canvas_item_set_canvas_group_mode($LiveCity.get_canvas_item(), RenderingServer.CANVAS_GROUP_MODE_DISABLED)
+	_sync_map_rect()
+	resized.connect(_sync_map_rect)
 	status_bar = %StatusBar
 	_rci_parent = status_bar.rci_graph.get_parent()
 	_rci_index = status_bar.rci_graph.get_index()
@@ -61,6 +64,11 @@ func set_editor_controls_visible(value: bool) -> void:
 	$Page.visible = value
 	_palette_scroll.visible = value and _classic_layout
 	_sync_dos_scrolls()
+
+
+func _sync_map_rect() -> void:
+	map_view.position = Vector2.ZERO
+	map_view.size = size
 
 
 func _sync_camera_rect() -> void:

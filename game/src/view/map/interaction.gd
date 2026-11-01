@@ -110,6 +110,9 @@ func _process(delta: float) -> void:
 
 
 func _handle_mouse_button(event: InputEventMouseButton) -> void:
+	if map.region_backdrop.busy():
+		map.accept_event()
+		return
 	if map.region_backdrop.handle_button(event):
 		map.accept_event()
 		return

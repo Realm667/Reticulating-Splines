@@ -1,6 +1,17 @@
 extends SceneTree
 ## UI entry points and accounting through the existing monthly budget settlement.
 
+class HeldPreview extends CityPreviewJob:
+	var done := false
+	var joined := false
+
+	func finished() -> bool:
+		return done
+
+	func join() -> void:
+		assert(done, "A map switch must never wait on unfinished preview work")
+		joined = true
+
 
 func _initialize() -> void:
 	_run.call_deferred()
@@ -10,6 +21,8 @@ func _run() -> void:
 	root.gui_embed_subwindows = true
 	await _region_navigation()
 	await _backdrop_picking()
+	await _region_fades()
+	_snapshot_recovery()
 	await _new_city_fields()
 	await _administration_budget()
 	_staged_conversion_and_switch()
@@ -36,6 +49,43 @@ func _region_navigation() -> void:
 				== RegionProjection.project(Vector2(RegionRules.DIRECTIONS[index]), Vector2(64, 32)),
 				"Region and Neighbors must share compass placement")
 	var menu := CityMenuBar.new()
+	var chosen: Array[Vector2i] = []
+	view.cell_selected.connect(func(cell: Vector2i) -> void: chosen.append(cell))
+	var target := Vector2i(1, 1)
+	var press := InputEventMouseButton.new()
+	press.button_index = MOUSE_BUTTON_LEFT
+	press.position = view.cell_center(target)
+	press.pressed = true
+	view._gui_input(press)
+	assert(chosen.is_empty(), "A touch or mouse down cannot switch cities")
+	var updated := state.duplicate(true)
+	updated["funds"] = 123
+	view.configure(updated, 3)
+	press.pressed = false
+	view._gui_input(press)
+	assert(chosen == [target], "A click survives an ordinary summary refresh")
+	press.pressed = true
+	view._gui_input(press)
+	var motion := InputEventMouseMotion.new()
+	motion.position = press.position + Vector2(30, 0)
+	view._gui_input(motion)
+	motion.position = press.position
+	view._gui_input(motion)
+	press.pressed = false
+	view._gui_input(press)
+	assert(chosen.size() == 1, "Dragging out and back never activates a region cell")
+	press.pressed = true
+	view._gui_input(press)
+	view.notification(Control.NOTIFICATION_APPLICATION_FOCUS_OUT)
+	press.pressed = false
+	view._gui_input(press)
+	assert(chosen.size() == 1, "Focus loss cancels a pending region click")
+	view.selected = target
+	var key := InputEventKey.new()
+	key.pressed = true
+	key.keycode = KEY_ENTER
+	view._gui_input(key)
+	assert(chosen.size() == 2 and chosen.back() == target, "Keyboard activation remains available")
 	root.add_child(menu)
 	await process_frame
 	menu.set_scenario_available(false)
@@ -89,8 +139,92 @@ func _backdrop_picking() -> void:
 		map.selection_start = Vector2i(3, 3)
 		assert(not backdrop.handle_button(press), "A tool drag cannot trigger a city switch")
 		map.selection_start = Vector2i(-1, -1)
+	var delayed := HeldPreview.new()
+	delayed.image = image
+	backdrop.job = delayed
+	backdrop.clear()
+	assert(delayed.cancelled() and not delayed.joined, "Switching retires unfinished work without joining")
+	backdrop.poll()
+	assert(backdrop.textures.is_empty(), "Canceled previews cannot reappear in another city")
+	delayed.done = true
+	backdrop.poll()
+	assert(delayed.joined and backdrop.textures.is_empty(), "Finished canceled work is reaped without publication")
+	var cells: Array[Vector2i] = [Vector2i(3, 3), Vector2i(1, 0), Vector2i(2, 2), Vector2i(0, 1)]
+	CityRegionBackdrop.prioritize(cells, Vector2i.ZERO)
+	assert(cells[0].length_squared() == 1 and cells[1].length_squared() == 1)
+	assert(cells.back() == Vector2i(3, 3), "Nearby city previews precede distant ones")
 	map.queue_free()
 	await process_frame
+
+
+func _region_fades() -> void:
+	var map := CityMapControl.new()
+	root.add_child(map)
+	map.size = Vector2(1000, 800)
+	map.zoom_factor = 0.25
+	var document: Sc2File = Sc2xDocument.create_empty(32, "Fade fixture").document
+	map.set_city_view(CityState.from_document(document), CityMapSource.new(CityIsometricRenderer.output_size_for_view(CityIsometricRenderer.VIEW_LARGE, 32)))
+	var backdrop := map.region_backdrop
+	var state := {"edge": 2, "active": [0, 0], "cells": [{"cell": [0, 0], "own": true}, {"cell": [1, 0], "own": true}]}
+	backdrop.configure(state, {}, null, 0)
+	var image := Image.create(8, 4, false, Image.FORMAT_RGBA8)
+	image.fill(Color.RED)
+	var texture := ImageTexture.create_from_image(image)
+	var target := Vector2i(1, 0)
+	backdrop.textures[target] = texture
+	var polygon := backdrop.polygon(target)
+	var point := (polygon[0] + polygon[2]) * 0.5 * map.camera._view_scale() + map.camera._draw_offset(map.camera._view_scale())
+	backdrop.advance(0.5, point)
+	assert(is_equal_approx(backdrop.opacity[target], 0.495), "Hover takes a full second to rise from 33 to 66 percent")
+	backdrop.advance(0.5, point)
+	assert(is_equal_approx(backdrop.opacity[target], 0.66))
+	backdrop.advance(1.0, Vector2(-100, -100))
+	assert(is_equal_approx(backdrop.opacity[target], 0.33), "Leaving returns smoothly to 33 percent")
+	backdrop._switch_source = Vector2i.ZERO
+	backdrop._switch_target = target
+	backdrop._switch_compass = 0
+	backdrop._prepared = {Vector2i.ZERO: texture, target: texture}
+	backdrop._activation_expected = true
+	var switched := state.duplicate(true)
+	switched.active = [1, 0]
+	var ready := [false]
+	backdrop.live_ready = func() -> bool: return ready[0]
+	backdrop.configure(switched, {}, null, 0)
+	backdrop.advance(0.5, Vector2(-100, -100))
+	assert(map.modulate.a == 0.0 and backdrop._fade_time == 0.0, "Keep the incoming frozen view until live graphics are ready")
+	ready[0] = true
+	backdrop.advance(0.5, Vector2(-100, -100))
+	assert(is_equal_approx(map.modulate.a, 0.5) and backdrop._incoming != null)
+	backdrop.advance(0.5, Vector2(-100, -100))
+	assert(map.modulate.a == 1.0 and backdrop._incoming == null and not backdrop.busy())
+	assert(backdrop.textures.has(Vector2i.ZERO), "The city being left remains a frozen neighbor after the crossfade")
+	map.queue_free()
+	await process_frame
+
+
+func _snapshot_recovery() -> void:
+	var regions := ApplicationRegions.new(null)
+	regions._snapshot_queue = [Vector2i(2, 1)]
+	regions._snapshot_request = Vector2i(1, 1)
+	regions._snapshot_command = 12
+	regions._command_resolved(11, {"ok": false})
+	assert(regions._snapshot_request == Vector2i(1, 1), "An unrelated rejection cannot cancel a preview")
+	regions._command_resolved(12, {"ok": false})
+	assert(regions._snapshot_request.x < 0 and regions._snapshot_queue == [Vector2i(2, 1)],
+		"Rejected previews release the queue and retain remaining cities")
+	regions._snapshot_request = Vector2i(1, 1)
+	regions._snapshot_command = 14
+	regions._snapshot_started_msec = 100
+	regions._expire_snapshot_request(100 + ApplicationRegions.SNAPSHOT_TIMEOUT_MSEC - 1)
+	assert(regions._snapshot_command == 14)
+	regions._expire_snapshot_request(100 + ApplicationRegions.SNAPSHOT_TIMEOUT_MSEC)
+	assert(regions._snapshot_request.x < 0, "An absent response cannot stall the queue indefinitely")
+	regions._snapshot_request = Vector2i(2, 1)
+	regions._snapshot_command = 15
+	regions._command_resolved(14, {"ok": true, "region_snapshot": {"cell": [1, 1]}})
+	assert(regions._snapshot_request == Vector2i(2, 1), "A late reply cannot replace the next preview")
+	regions._command_resolved(15, {"ok": true, "region_snapshot": {"cell": [9, 9]}})
+	assert(regions._snapshot_request.x < 0, "Malformed coordinates release the queue without publishing")
 
 
 func _new_city_fields() -> void:
