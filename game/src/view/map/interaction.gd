@@ -110,6 +110,9 @@ func _process(delta: float) -> void:
 
 
 func _handle_mouse_button(event: InputEventMouseButton) -> void:
+	if map.region_backdrop.handle_button(event):
+		map.accept_event()
+		return
 	if event.button_index == MOUSE_BUTTON_RIGHT and event.pressed and map.selection.cancel_active_selection():
 		panning = false
 		_click_button = MOUSE_BUTTON_NONE

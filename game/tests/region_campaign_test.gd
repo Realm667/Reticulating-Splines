@@ -343,6 +343,20 @@ func _test_real_connections() -> void:
 			check(RegionCampaign.connection_counts(neighbor) == expected, "matching network types count east-side bonuses: " + str(spec))
 			var west: Dictionary = JSON.parse_string(first.sc2x_extra_entries[RegionCampaign.NEIGHBORS_ENTRY].get_string_from_utf8())
 			var east: Dictionary = JSON.parse_string(neighbor.sc2x_extra_entries[RegionCampaign.NEIGHBORS_ENTRY].get_string_from_utf8())
+			var expected_point := Vector2i(0, 18)
+			for rotation in int(neighbor.misc_u32(Sc2MiscLayout.COMPASS) & 3):
+				expected_point = CityRotationCommand.rotate_point(expected_point, neighbor.map_size, true)
+			var found := false
+			for entry: Dictionary in RegionCampaign.incoming_connections(neighbor):
+				if entry.point == expected_point:
+					found = entry.network == 1 and entry.name == "West city"
+			check(found, "unmatched incoming road has a rotated opposite-edge hint")
+			if spec[0] == spec[1]:
+				var joined := Vector2i(0, 12)
+				for rotation in int(neighbor.misc_u32(Sc2MiscLayout.COMPASS) & 3):
+					joined = CityRotationCommand.rotate_point(joined, neighbor.map_size, true)
+				check(not RegionCampaign.incoming_connections(neighbor).any(func(entry: Dictionary) -> bool:
+					return entry.point == joined), "joined connections remove the incoming hint")
 			check(west.names[0] == "East city" and east.names[2] == "West city", "neighbor names use real world-side cities")
 			if turn == 0:
 				names_before = [west.names, east.names]

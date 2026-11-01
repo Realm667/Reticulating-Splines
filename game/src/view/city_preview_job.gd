@@ -12,6 +12,10 @@ var graphics_key := ""
 var task_id := -1
 var image: Image
 var saved_preview := false
+var background := Color("18242c")
+var desired_compass := -1
+var maximum_map_size := 512
+var grayscale := false
 var _mutex := Mutex.new()
 var _cancelled := false
 var _fraction := 0.0
@@ -155,10 +159,20 @@ func run() -> void:
 	if cancelled() or document == null or not document.is_valid() or palette == null or sprites == null:
 		return
 	var city := CityState.from_document(document)
-	if not city.is_valid() or city.map_size > 512:
+	if not city.is_valid() or city.map_size > maximum_map_size:
 		return
+	if desired_compass >= 0:
+		while city.compass_rotation() != desired_compass:
+			if not CityRotationCommand.apply(city, true).ok:
+				return
 	prepare_graphics_key()
 	image = render(city)
+	if image != null and grayscale:
+		for y in image.get_height():
+			for x in image.get_width():
+				var color := image.get_pixel(x, y)
+				var gray := color.r * 0.2126 + color.g * 0.7152 + color.b * 0.0722
+				image.set_pixel(x, y, Color(gray, gray, gray, color.a))
 	if not path.is_empty():
 		if cancelled() or FileAccess.get_sha256(path) != digest:
 			image = null
@@ -181,12 +195,13 @@ func _set_details(value: Dictionary) -> void:
 
 func render(city: CityState) -> Image:
 	var context := CityGpuBuildContext.new()
+	var view := CityIsometricRenderer.VIEW_LARGE if city.map_size <= 512 else CityIsometricRenderer.VIEW_SMALL
 	var artwork := not sprites.high_resolution.is_empty()
-	var error := context.prepare(city, palette, sprites, CityIsometricRenderer.VIEW_LARGE,
+	var error := context.prepare(city, palette, sprites, view,
 		CityViewMode.Mode.CITY, true, true, true, 0, false, true, 0, true, artwork, 0)
 	if not error.is_empty() or cancelled():
 		return null
-	var extent := CityIsometricRenderer.output_size_for_view(CityIsometricRenderer.VIEW_LARGE, city.map_size)
+	var extent := CityIsometricRenderer.output_size_for_view(view, city.map_size)
 	var reduction := IsometricImageRender.reduction_to_fit(extent, CityPreviewStore.MAX_SIZE)
 	var output_size := Vector2i(ceili(float(extent.x) / reduction), ceili(float(extent.y) / reduction))
 	var output := Image.create(output_size.x, output_size.y, false, Image.FORMAT_RGBA8)
@@ -196,7 +211,7 @@ func render(city: CityState) -> Image:
 		if cancelled():
 			return null
 		var bounds := Rect2i(0, top, extent.x, mini(band_height, extent.y - top))
-		var painted := context.raster_artwork(bounds, Color("18242c"), 1) if artwork else context.raster(bounds, Color("18242c"))
+		var painted := context.raster_artwork(bounds, background, 1) if artwork else context.raster(bounds, background)
 		if painted.has("error"):
 			return null
 		var band: Image = painted.image

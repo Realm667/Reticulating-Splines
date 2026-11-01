@@ -66,7 +66,7 @@ func _draw() -> void:
 		for position_index in settlement_neighbors.size():
 			var neighbor: Neighbor = data.neighbors[settlement_neighbors[position_index]]
 			_draw_settlement(
-				SPRITE_POSITIONS[position_index + 1],
+				SPRITE_POSITIONS[0] + RegionProjection.project(Vector2(RegionRules.DIRECTIONS[position_index]), Vector2(64, 32)),
 				int(neighbor.population),
 				int(neighbor.name_index) == 0,
 				layout_scale,
@@ -163,14 +163,7 @@ static func snapshot(value_city: CityState) -> Snapshot:
 
 
 static func display_neighbor_indices(compass: int) -> PackedInt32Array:
-	var compass_rotation := compass & 3
-
-	return PackedInt32Array([
-		(compass_rotation + 2) & 3,
-		(compass_rotation - 1) & 3,
-		compass_rotation,
-		(compass_rotation + 1) & 3,
-	])
+	return RegionProjection.neighbor_indices(compass)
 
 
 static func sprite_index(population: int, ocean: bool) -> int:

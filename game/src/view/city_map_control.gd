@@ -155,9 +155,11 @@ var selection: CityMapSelection = CityMapSelection.new(self)
 var interaction: CityMapInteraction = CityMapInteraction.new(self)
 var navigation: CityMapNavigation = CityMapNavigation.new(self)
 var debug_view: CityMapDebugView = CityMapDebugView.new(self)
+var region_backdrop := CityRegionBackdrop.new(self)
 
 
 func _ready() -> void:
+	tree_exiting.connect(region_backdrop.clear)
 	navigation.attach_window()
 	theme_changed.connect(queue_redraw)
 	mouse_filter = Control.MOUSE_FILTER_STOP

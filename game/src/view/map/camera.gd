@@ -303,10 +303,11 @@ func _draw_offset(scale: float) -> Vector2:
 func _camera_source_bounds() -> Rect2:
 	# match the existing top margin without enlarging render textures or atlases
 	var side_padding := float(Renderer.TOP_MARGIN - Renderer.SIDE_MARGIN)
-	return Rect2(
+	var result := Rect2(
 		Vector2(-side_padding, 0),
 		Vector2(map.city_source.size) + Vector2(side_padding * 2.0, 0)
 	)
+	return result.merge(map.region_backdrop.source_bounds()) if not map.region_backdrop.textures.is_empty() else result
 
 
 func _clamp_source_center() -> void:

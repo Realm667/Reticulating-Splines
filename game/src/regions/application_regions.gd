@@ -7,7 +7,13 @@ var campaign: RegionCampaign
 var pending_edge := 0
 var switching := false
 var window: QolDialog
-var grid: GridContainer
+var grid: RegionGridView
+var mini: VBoxContainer
+var mini_grid: RegionGridView
+var _navigation_signature: Array = []
+var _backdrop_signature: Array = []
+var _snapshot_queue: Array[Vector2i] = []
+var _snapshot_request := Vector2i(-1, -1)
 var heading: Label
 var details: Label
 var preview: TextureRect
@@ -83,6 +89,8 @@ func found_region() -> bool:
 
 
 func process() -> void:
+	_sync_navigation()
+	_sync_backdrop()
 	if app.coop.active():
 		if window != null and window.visible:
 			var revision: int = int(app.coop.session.latest.get("revision", -1))
@@ -148,8 +156,10 @@ func _build_window() -> void:
 	heading = window.label("")
 	heading.custom_minimum_size.x = 0
 	window.label(RegionBoundary.ERROR).custom_minimum_size.x = 0
-	grid = GridContainer.new()
+	grid = RegionGridView.new()
+	grid.custom_minimum_size.y = 230
 	grid.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	grid.cell_selected.connect(_select)
 	window.column.add_child(grid)
 	preview = TextureRect.new()
 	preview.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
@@ -171,7 +181,8 @@ func _build_window() -> void:
 	confirmation.get_label().custom_minimum_size = Vector2(240, 0)
 	app.add_child(confirmation)
 	confirmation.confirmed.connect(_purchase)
-	app.coop.session.command_resolved.connect(_command_resolved)
+	if not app.coop.session.command_resolved.is_connected(_command_resolved):
+		app.coop.session.command_resolved.connect(_command_resolved)
 
 
 func summary() -> Dictionary:
@@ -195,33 +206,95 @@ func refresh() -> void:
 	if state.is_empty():
 		window.hide()
 		return
-	for child in grid.get_children():
-		grid.remove_child(child)
-		child.queue_free()
-	grid.columns = int(state.edge)
+	grid.configure(state, app.document_state.city.compass_rotation(), selected)
 	heading.text = tr("Own funds: %s · Debt: %s · Administration: %s/year") % [
 		BudgetReport.currency(int(state.get("funds", 0))), BudgetReport.currency(int(state.get("debt", 0))),
 		BudgetReport.currency(int(state.get("administration", 0)))]
-	for y in grid.columns:
-		for x in grid.columns:
-			var position := Vector2i(x, y)
-			var item := _cell_summary(position, state)
-			var title: String = item.get("name", tr("Unowned city area"))
-			var button := Button.new()
-			button.text = "%d,%d\n%s" % [x + 1, y + 1, title]
-			button.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-			button.clip_text = true
-			button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			button.size_flags_vertical = Control.SIZE_EXPAND_FILL
-			button.toggle_mode = true
-			button.button_pressed = selected == position
-			button.tooltip_text = title
-			button.pressed.connect(_select.bind(position))
-			grid.add_child(button)
 	var item := _cell_summary(selected, state)
 	open_button.disabled = item.is_empty() or not item.get("own", false)
 	buy_button.disabled = quote.is_empty() or not item.is_empty()
 	preview.visible = preview.texture != null and (not quote.is_empty() or bool(item.get("own", false)))
+
+
+func _sync_navigation() -> void:
+	if app.city_workspace == null or app.document_state.city == null:
+		return
+	if not is_instance_valid(mini):
+		mini = VBoxContainer.new()
+		var button := Button.new()
+		button.text = "Region"
+		button.tooltip_text = "Region overview"
+		button.clip_text = true
+		button.custom_minimum_size.y = 36
+		button.pressed.connect(open_overview)
+		mini.add_child(button)
+		mini_grid = RegionGridView.new()
+		mini_grid.compact = true
+		mini_grid.custom_minimum_size.y = 110
+		mini_grid.cell_selected.connect(open_cell)
+		mini.add_child(mini_grid)
+		app.city_workspace.attach_region_preview(mini)
+		_navigation_signature.clear()
+	mini.visible = active() and not app.tool_state.landscape_editor
+	var city := app.document_state.city
+	var signature := [city.get_instance_id(), city.compass_rotation(), city.age_in_days(),
+		app.coop.session.latest.get("revision", -1) if app.coop.active() else campaign.revision if campaign != null else -1]
+	if signature == _navigation_signature:
+		return
+	_navigation_signature = signature
+	var state := summary()
+	mini_grid.configure(state, city.compass_rotation())
+	if window != null and window.visible and not state.is_empty():
+		grid.configure(state, city.compass_rotation(), selected)
+
+
+func open_cell(position: Vector2i) -> void:
+	var state := summary()
+	if switching or not _cell_summary(position, state).get("own", false) or state.get("active") == [position.x, position.y]:
+		return
+	if app.coop.active():
+		app.coop.session.request({"kind": "region_switch", "cell": [position.x, position.y]})
+	else:
+		_switch_local(RegionRules.key(position))
+
+
+func _sync_backdrop() -> void:
+	if app.map_view == null:
+		return
+	var backdrop := app.map_view.region_backdrop
+	if not active() or app.document_state.city == null or app.tool_state.landscape_editor or app.coop.session.latest.get("visiting", false):
+		if not backdrop.state.is_empty():
+			backdrop.clear()
+		_backdrop_signature.clear()
+		return
+	var city := app.document_state.city
+	# Inspect only small identities here. Reconstructing every inactive CityState
+	# each render frame would scale with the entire region's terrain size.
+	var region: Dictionary = app.coop.session.latest.get("region_campaign", {})
+	var identity: Variant = [app.coop.session.token, region.get("active", []),
+		region.get("cells", []).map(func(entry: Dictionary) -> Array: return [entry.cell, entry.get("own", false)])] if app.coop.active() else [
+		campaign.get_instance_id(), campaign.active_cells.get(LOCAL_OWNER, ""), campaign.documents.keys()]
+	var signature := [identity, city.compass_rotation(),
+		app.asset_state.large_sprites.get_instance_id() if app.asset_state.large_sprites != null else 0,
+		app.asset_state.large_sprites.visual_revision if app.asset_state.large_sprites != null else 0]
+	if signature != _backdrop_signature:
+		_backdrop_signature = signature
+		var state := summary()
+		backdrop.requested = open_cell
+		backdrop.configure(state, campaign.documents if campaign != null and not app.coop.active() else {},
+			app.asset_state, city.compass_rotation())
+		_snapshot_queue.clear()
+		_snapshot_request = Vector2i(-1, -1)
+		if app.coop.active():
+			if not app.coop.session.command_resolved.is_connected(_command_resolved):
+				app.coop.session.command_resolved.connect(_command_resolved)
+			for entry: Dictionary in state.get("cells", []):
+				if entry.get("own", false) and entry.cell != state.get("active"):
+					_snapshot_queue.append(Vector2i(entry.cell[0], entry.cell[1]))
+	if app.coop.active() and _snapshot_request.x < 0 and not _snapshot_queue.is_empty():
+		_snapshot_request = _snapshot_queue.pop_front()
+		app.coop.session.request({"kind": "region_snapshot", "cell": [_snapshot_request.x, _snapshot_request.y]})
+	backdrop.poll()
 
 
 static func _cell_summary(position: Vector2i, state: Dictionary) -> Dictionary:
@@ -420,6 +493,16 @@ func _activate_staged(staged: RegionCampaign, id: String, path: String, write: b
 
 
 func _command_resolved(_id: int, result: Dictionary) -> void:
+	if result.get("region_snapshot") is Dictionary:
+		var snapshot: Dictionary = result.region_snapshot
+		var position := Vector2i(int(snapshot.cell[0]), int(snapshot.cell[1]))
+		if position == _snapshot_request:
+			_snapshot_request = Vector2i(-1, -1)
+			if _cell_summary(position, summary()).get("own", false):
+				var document := Sc2File.new()
+				if document.parse(Marshalls.base64_to_raw(str(snapshot.get("document", "")))) and document.is_sc2x():
+					app.map_view.region_backdrop.add_document(position, document)
+		return
 	if window == null or not window.visible:
 		return
 	if result.has("region_city"):

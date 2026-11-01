@@ -22,6 +22,7 @@ func _draw() -> void:
 
 	var scale := map.camera._view_scale()
 	var offset := map.camera._draw_offset(scale)
+	map.region_backdrop.draw_on(map, scale, offset)
 
 	if map.layers.price_layer != null:
 		map.layers.price_layer.queue_redraw()

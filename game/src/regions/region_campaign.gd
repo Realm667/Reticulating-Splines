@@ -439,6 +439,7 @@ func synchronize_neighbors() -> void:
 		var document := documents[id]
 		var names := ["", "", "", ""]
 		var counts := PackedInt64Array([0, 0])
+		var incoming := []
 		for side in 4:
 			var neighbor: Sc2File = documents.get(RegionRules.key(RegionRules.cell(id) + RegionRules.DIRECTIONS[side]))
 			var slot := (side + 2) % 4
@@ -454,15 +455,46 @@ func synchronize_neighbors() -> void:
 				population = neighbor.misc_u32(Sc2MiscLayout.NORMAL_POPULATION) + neighbor.misc_u32(Sc2MiscLayout.ARCOLOGY_POPULATION)
 				value = neighbor.misc_u32(Sc2MiscLayout.CITY_VALUE)
 				for along in document.map_size:
-					var shared := _edge_network(document, side, along) & _edge_network(neighbor, (side + 2) % 4, along)
+					var local_network := _edge_network(document, side, along)
+					var remote_network := _edge_network(neighbor, (side + 2) % 4, along)
+					var shared := local_network & remote_network
 					counts[0] += int((shared & 1) != 0)
 					counts[1] += int((shared & 6) != 0)
+					if (remote_network & ~local_network) != 0:
+						incoming.append({"side": side, "along": along, "network": remote_network & ~local_network,
+							"name": neighbor.city_name()})
 			# These fields describe actual cities; SimNation does not invent growth.
 			for pair in [[0, 0 if shore * 2 >= document.map_size else 1], [4, population], [8, value], [12, 0]]:
 				if document.misc_u32(base + pair[0]) != pair[1]:
 					document.set_misc_u32(base + pair[0], pair[1])
 		document.sc2x_extra_entries[NEIGHBORS_ENTRY] = JSON.stringify({"names": names,
-			"connections": [counts[0], counts[1]]}).to_utf8_buffer()
+			"connections": [counts[0], counts[1]], "incoming": incoming}).to_utf8_buffer()
+
+
+static func incoming_connections(document: Sc2File) -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	var bytes: PackedByteArray = document.sc2x_extra_entries.get(NEIGHBORS_ENTRY, PackedByteArray())
+	if bytes.is_empty():
+		return result
+	var parser := JSON.new()
+	if parser.parse(bytes.get_string_from_utf8()) != OK:
+		return result
+	var data: Variant = parser.data
+	if not data is Dictionary or not data.get("incoming") is Array:
+		return result
+	for entry: Variant in data.incoming:
+		if not entry is Dictionary:
+			continue
+		var side := int(entry.get("side", -1))
+		var along := int(entry.get("along", -1))
+		var network := int(entry.get("network", 0)) & 7
+		if side < 0 or side > 3 or along < 0 or along >= document.map_size or network == 0:
+			continue
+		var point := RegionTerrain._edge_point(side, along, 0, document.map_size)
+		for turn in int(document.misc_u32(Sc2MiscLayout.COMPASS) & 3):
+			point = CityRotationCommand.rotate_point(point, document.map_size, true)
+		result.append({"point": point, "network": network, "name": str(entry.get("name", ""))})
+	return result
 
 
 static func connection_counts(document: Sc2File) -> PackedInt64Array:

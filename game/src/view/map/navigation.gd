@@ -166,6 +166,7 @@ func handle(event: InputEvent) -> bool:
 
 
 func _cancel_tool() -> void:
+	map.region_backdrop.press_cell = Vector2i(-1, -1)
 	map.selection.cancel_active_selection()
 	map.interaction.panning = false
 	map.interaction._pan_button = MOUSE_BUTTON_NONE

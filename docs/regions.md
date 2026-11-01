@@ -5,6 +5,19 @@ A region contains 2×2, 3×3, or 4×4 city areas. Its size is fixed. The first c
 starts at a random position. Open **Windows → Region overview** to select a city
 or preview an unowned area next to your territory. Diagonal contact is not enough.
 
+The overview and its small sidebar version use the same isometric projection
+as Neighbors, including the active city's compass rotation. Owned areas have a
+green outline. The active area also has a translucent green fill and a thicker
+outline; hovering strengthens an area's outline. Click an owned area in the
+sidebar to switch directly. Only existing positions within the fixed grid can
+be purchased.
+
+Other owned areas appear around the live map as grayscale, 50%-opacity static
+views. Click a view to open that city. These bounded background renders do not
+run another city's simulation or animations. They refresh when you change city
+or map orientation. Multiplayer retrieves these snapshots only for the requesting
+player's own areas; they are not broadcast with per-frame public summaries.
+
 The preview is the landscape you buy. Reopening a preview does not reroll it.
 New areas use the first city's map dimensions, difficulty, and start year, and
 begin at the current region date. The generator varies the interior while
@@ -12,6 +25,14 @@ matching existing land heights, slopes, rivers, and sea boundaries. The outer
 two tile rows preserve these transitions; tools that would change their terrain
 or water are rejected without charging money. Trees and construction that keep
 the border geometry intact remain possible.
+
+New areas use the normal generator's layouts, compatible feature combinations,
+hill/water/tree controls and independent random streams. Generation is stable
+for a given regional cell. Water continues through actual basins and channels
+below the connected water level; variable coast reach avoids a fixed-width water
+strip. Existing city edges and saved offers are preserved. Legacy surface water
+at height zero cannot receive a lower bed because the format has no negative
+land heights; those existing border tiles are retained.
 
 ## Purchase and administration
 
@@ -44,6 +65,11 @@ bonuses require matching connections of the same network type at corresponding
 positions on both sides. Unsettled areas and the outer region boundary provide
 no invented city connection bonus. Power and water trading, commuters, and a
 regional goods simulation are not included.
+
+An unmatched road, rail or highway endpoint adds a sign at the corresponding
+position in the other city, naming the source and network type. Connecting the
+matching network removes that pending-connection hint. Hints do not place roads,
+charge money or grant a connection bonus themselves.
 
 Regions save as SC2X archives containing their cities, fixed offers, terrain
 reference, ownership, calendar, and administration state. A manual save keeps

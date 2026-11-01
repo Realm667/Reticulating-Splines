@@ -8,11 +8,89 @@ func _initialize() -> void:
 
 func _run() -> void:
 	root.gui_embed_subwindows = true
+	await _region_navigation()
+	await _backdrop_picking()
 	await _new_city_fields()
 	await _administration_budget()
 	_staged_conversion_and_switch()
 	print("PASS region UI: game type, compatibility, grid sizes, administration settlement, reload and budget visibility")
 	quit()
+
+
+func _region_navigation() -> void:
+	var view := RegionGridView.new()
+	root.add_child(view)
+	view.size = Vector2(320, 200)
+	var state := {"edge": 4, "active": [0, 1], "cells": [{"cell": [0, 1], "own": true, "name": "First"}]}
+	for rotation in 4:
+		view.configure(state, rotation)
+		for x in 4:
+			for y in 4:
+				var cell := Vector2i(x, y)
+				assert(view.pick(view.cell_center(cell)) == cell, "Every rotated diamond selects its own grid cell")
+		assert(view.pick(Vector2(-10, -10)).x < 0)
+		for index in 4:
+			var side := RegionProjection.neighbor_indices(rotation)[index]
+			var world_direction: Vector2i = RegionRules.DIRECTIONS[(side + 2) & 3]
+			assert(RegionProjection.project(Vector2(world_direction), Vector2(64, 32), rotation)
+				== RegionProjection.project(Vector2(RegionRules.DIRECTIONS[index]), Vector2(64, 32)),
+				"Region and Neighbors must share compass placement")
+	var menu := CityMenuBar.new()
+	root.add_child(menu)
+	await process_frame
+	menu.set_scenario_available(false)
+	var popup := menu.windows_menu.get_popup()
+	var map_index := popup.get_item_index(6)
+	assert(popup.get_item_id(map_index + 1) == CityMenuBar.MENU_REGION)
+	assert(popup.get_item_index(5) > map_index)
+	view.queue_free()
+	menu.queue_free()
+	await process_frame
+
+
+func _backdrop_picking() -> void:
+	var map := CityMapControl.new()
+	root.add_child(map)
+	map.size = Vector2(1000, 800)
+	var document: Sc2File = Sc2xDocument.create_empty(32, "Active").document
+	var city := CityState.from_document(document)
+	map.set_city_view(city, CityMapSource.new(CityIsometricRenderer.output_size_for_view(CityIsometricRenderer.VIEW_LARGE, 32)))
+	var image := Image.create(8, 4, false, Image.FORMAT_RGBA8)
+	image.fill(Color.GRAY)
+	var backdrop := map.region_backdrop
+	var state := {"edge": 2, "active": [0, 0], "cells": [{"cell": [1, 0], "own": true}]}
+	var chosen: Array[Vector2i] = []
+	backdrop.requested = func(cell: Vector2i) -> void: chosen.append(cell)
+	for rotation in 4:
+		backdrop.configure(state, {}, null, rotation)
+		backdrop.textures[Vector2i(1, 0)] = ImageTexture.create_from_image(image)
+		var shape := backdrop.polygon(Vector2i(1, 0))
+		var center := (shape[0] + shape[2]) * 0.5
+		var scale := map.camera._view_scale()
+		var screen := center * scale + map.camera._draw_offset(scale)
+		assert(backdrop.pick(screen) == Vector2i(1, 0), "Frozen city picking follows all compass rotations")
+		var press := InputEventMouseButton.new()
+		press.button_index = MOUSE_BUTTON_LEFT
+		press.position = screen
+		press.pressed = true
+		assert(backdrop.handle_button(press))
+		press.pressed = false
+		assert(backdrop.handle_button(press))
+		await process_frame
+		assert(chosen.back() == Vector2i(1, 0))
+		var count := chosen.size()
+		press.pressed = true
+		backdrop.handle_button(press)
+		press.pressed = false
+		press.position += Vector2(30, 0)
+		backdrop.handle_button(press)
+		await process_frame
+		assert(chosen.size() == count, "Dragging over a frozen city cannot switch maps")
+		map.selection_start = Vector2i(3, 3)
+		assert(not backdrop.handle_button(press), "A tool drag cannot trigger a city switch")
+		map.selection_start = Vector2i(-1, -1)
+	map.queue_free()
+	await process_frame
 
 
 func _new_city_fields() -> void:

@@ -64,6 +64,15 @@ func _ensure_sign_entries() -> void:
 		return
 
 	var sign_texts := map.city.sign_texts()
+	for incoming: Dictionary in RegionCampaign.incoming_connections(map.city.document):
+		var point: Vector2i = incoming.point
+		var kinds: PackedStringArray = []
+		for pair in [[1, "Road"], [2, "Rail"], [4, "Highway"]]:
+			if int(incoming.network) & int(pair[0]):
+				kinds.append(tr(pair[1]))
+		var index := map.city.index_of(point.x, point.y)
+		if not sign_texts.has(index):
+			sign_texts[index] = tr("Connection from %s: %s") % [incoming.name, "/".join(kinds)]
 
 	# the original paints a sign at each connection marker; no record holds it
 	sign_texts.merge(CityNeighbors.connection_sign_texts(map.city))

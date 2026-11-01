@@ -86,6 +86,25 @@ func _run() -> void:
 	assert(job.image.get_width() <= 768 and job.image.get_height() <= 512)
 	assert(job.image.get_used_rect().size.x > 0)
 	assert(job.document.serialize().data == before, "Rendering must not alter city/RNG bytes")
+	var frozen := CityPreviewJob.for_assets(assets)
+	frozen.document = EmptyCityTemplate.create(32)
+	var original_compass := frozen.document.misc_u32(Sc2MiscLayout.COMPASS)
+	frozen.document = frozen.document.duplicate_document(true)
+	frozen.background = Color.TRANSPARENT
+	frozen.desired_compass = (int(original_compass) + 1) & 3
+	frozen.grayscale = true
+	frozen.start()
+	while not frozen.finished():
+		await process_frame
+	frozen.join()
+	assert(frozen.image != null and frozen.image.get_pixel(0, 0).a == 0, "Frozen city views preserve transparent space")
+	var colored := false
+	for y in frozen.image.get_height():
+		for x in frozen.image.get_width():
+			var color := frozen.image.get_pixel(x, y)
+			assert(is_equal_approx(color.r, color.g) and is_equal_approx(color.g, color.b))
+			colored = colored or color.a > 0
+	assert(colored and frozen.document.misc_u32(Sc2MiscLayout.COMPASS) == frozen.desired_compass)
 	var same := CityPreviewJob.for_assets(assets)
 	same.prepare_graphics_key()
 	assert(same.graphics_key == job.graphics_key)

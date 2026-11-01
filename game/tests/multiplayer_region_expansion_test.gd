@@ -65,6 +65,13 @@ func run() -> void:
 	check(campaign.own_funds(a) == 1200 and campaign.own_funds(b) == rival_cash, "private treasury debited exactly once")
 	check(not world.region_command(b, request, 0).ok, "cannot double-buy area")
 	check(not world.region_command(b, {"kind": "region_switch", "cell": [target.x, target.y]}, 0).ok, "cannot switch to rival city")
+	check(not world.region_command(b, {"kind": "region_snapshot", "cell": [target.x, target.y]}, 0).ok, "frozen city snapshots require ownership")
+	var frozen := world.region_command(a, {"kind": "region_snapshot", "cell": [target.x, target.y]}, 0)
+	check(frozen.ok and frozen.has("region_snapshot"), "owner can retrieve a static city snapshot")
+	if frozen.has("region_snapshot"):
+		var snapshot_doc := Sc2File.new()
+		check(snapshot_doc.parse(Marshalls.base64_to_raw(frozen.region_snapshot.document)), "frozen snapshot decodes")
+		check(not snapshot_doc.sc2x_extra_entries.has(RegionCampaign.ENTRY), "snapshot omits the full private campaign")
 	var original_id: String = campaign.active_cells[a]
 	var purchased_id := RegionRules.key(target)
 	campaign.documents[original_id].set_misc_i32(Sc2MiscLayout.FUNDS, 2147483647)

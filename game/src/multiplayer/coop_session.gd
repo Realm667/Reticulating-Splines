@@ -698,13 +698,13 @@ func execute_ordered(actor: String, message: Dictionary) -> Dictionary:
 		goal.unscored = true
 		apply_speed()
 		return CoopWorld.accepted("The game continues without scoring.")
-	if world is RegionWorld and viewed_cities.get(actor, actor) != actor and message.get("kind") not in ["speed", "region_switch", "region_offer"]:
+	if world is RegionWorld and viewed_cities.get(actor, actor) != actor and message.get("kind") not in ["speed", "region_switch", "region_offer", "region_snapshot"]:
 		return CoopWorld.rejected("This city view is read-only. Return to your own city to make changes.")
 	if message.get("kind") == "debug":
 		return MultiplayerDebug.execute(self, actor, message)
 	if goal.blocked() and message.get("kind") != "speed":
 		return CoopWorld.rejected("The victory target was reached. The host can continue without scoring.")
-	if world is RegionWorld and message.get("kind") in ["region_offer", "region_buy", "region_switch"]:
+	if world is RegionWorld and message.get("kind") in ["region_offer", "region_buy", "region_switch", "region_snapshot"]:
 		result = world.region_command(actor, message, loans.debt(actor))
 		if result.get("ok", false) and message.get("kind") == "region_switch":
 			viewed_cities[actor] = actor
@@ -900,6 +900,8 @@ func receive_client(message: Dictionary, decoded := false) -> void:
 func resolve_command(id: int, result: Dictionary) -> void:
 	if result.get("region_offer") is Dictionary:
 		normalize_region_cell(result.region_offer, "cell")
+	if result.get("region_snapshot") is Dictionary:
+		normalize_region_cell(result.region_snapshot, "cell")
 	if result.get("region_city") is Dictionary:
 		normalize_region_cell(result.region_city, "cell")
 	if command_started.has(id):

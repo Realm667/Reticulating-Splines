@@ -118,6 +118,16 @@ func region_command(actor: String, request: Dictionary, player_debt: int) -> Dic
 	var position := Vector2i(int(value[0]), int(value[1]))
 	var id := RegionRules.key(position)
 	match request.get("kind"):
+		"region_snapshot":
+			if campaign.owners.get(id, "") != actor or not campaign.documents.has(id):
+				return rejected("This city area does not belong to you.")
+			var document := RegionCampaign.clean_copy(campaign.documents[id])
+			var encoded := Sc2xDocument.encode(document)
+			if not encoded.ok:
+				return rejected(encoded.error)
+			var result := accepted("")
+			result["region_snapshot"] = {"cell": value, "document": Marshalls.raw_to_base64(encoded.data)}
+			return result
 		"region_offer":
 			if campaign.owners.has(id):
 				if campaign.owners[id] != actor:

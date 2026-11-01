@@ -8,6 +8,8 @@ var map_view: CityMapControl
 var status_bar: CityStatusBar
 var _palette_scroll: ScrollContainer
 var _dock_scroll: ScrollContainer
+var _sidebar: VBoxContainer
+var _region_preview: Control
 var _rci_parent: Node
 var _rci_index := 0
 var _classic_layout := false
@@ -39,8 +41,10 @@ func _ready() -> void:
 	_dock_scroll = ScrollContainer.new()
 	_dock_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	_dock_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	$Page/Content.add_child(_dock_scroll)
-	$Page/Content.move_child(_dock_scroll, 0)
+	_sidebar = VBoxContainer.new()
+	$Page/Content.add_child(_sidebar)
+	$Page/Content.move_child(_sidebar, 0)
+	_sidebar.add_child(_dock_scroll)
 	theme_changed.connect(_sync_classic_layout.call_deferred)
 	resized.connect(_fit_palette.call_deferred)
 	toolbar.minimum_size_changed.connect(_fit_palette.call_deferred)
@@ -90,7 +94,9 @@ func _sync_classic_layout() -> void:
 		$Page.move_child(scroll, 0 if index == 0 else $Page.get_child_count() - 1)
 	$Page/Content/MapSpace.custom_minimum_size = Vector2.ZERO
 	toolbar.reparent(_palette_scroll if _classic_layout else _dock_scroll)
-	_dock_scroll.visible = not _classic_layout
+	_sidebar.visible = not _classic_layout
+	if is_instance_valid(_region_preview):
+		_region_preview.reparent(toolbar.get_node("Margin/Column") if _classic_layout else _sidebar)
 	if not _classic_layout:
 		status_bar.rci_graph.reparent(_rci_parent)
 		_rci_parent.move_child(status_bar.rci_graph, _rci_index)
@@ -100,6 +106,15 @@ func _sync_classic_layout() -> void:
 	_palette_scroll.visible = _classic_layout and $Page.visible
 	_fit_palette.call_deferred()
 	_sync_camera_rect.call_deferred()
+
+
+func attach_region_preview(control: Control) -> void:
+	_region_preview = control
+	var target: Node = toolbar.get_node("Margin/Column") if _classic_layout else _sidebar
+	target.add_child(control)
+	control.minimum_size_changed.connect(_fit_palette.call_deferred)
+	control.visibility_changed.connect(_fit_palette.call_deferred)
+	_fit_palette.call_deferred()
 
 
 func _fit_palette() -> void:

@@ -400,7 +400,7 @@ func set_scenario_available(available: bool) -> void:
 
 	for item in [
 		["Budget", 0], ["Ordinances", 1], ["Population", 2],
-		["Industry", 3], ["Graphs", 4], ["Neighbors", 5], ["Map", 6],
+		["Industry", 3], ["Graphs", 4], ["Map", 6], ["Region overview", MENU_REGION], ["Neighbors", 5],
 	]:
 		popup.add_item(item[0], item[1])
 
@@ -409,7 +409,6 @@ func set_scenario_available(available: bool) -> void:
 
 	popup.add_separator()
 	popup.add_item("Console", MENU_CONSOLE)
-	popup.add_item("Region overview", MENU_REGION)
 	popup.add_item("Debug", 7)
 	refresh_shortcut_hints(bindings)
 

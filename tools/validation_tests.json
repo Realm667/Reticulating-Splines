@@ -2332,6 +2332,12 @@
     "lane": "product"
   },
   {
+    "id": "region_terrain_test",
+    "script": "tests/region_terrain_test.gd",
+    "domain": "simulation",
+    "lane": "product"
+  },
+  {
     "id": "region_ui_test",
     "script": "tests/region_ui_test.gd",
     "domain": "ui",
