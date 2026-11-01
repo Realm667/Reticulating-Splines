@@ -18,6 +18,7 @@
     "game/src/ui/startup/startup_loading.gd",
     "game/src/ui/settings/controls_binding_list.gd",
     "game/src/ui/shared/city_open_dialog.gd",
+    "game/src/ui/shared/city_save_dialog.gd",
     "game/src/ui/shared/busy_overlay.gd",
     "game/src/formats/city_save_backup.gd",
     "game/src/application/classic_cheats.gd",
@@ -28,6 +29,7 @@
     "game/src/assets/building_variants.gd"
   ],
   "non_display_literals": {
+    "AcceptDialog": "Godot theme class used to measure the file dialog's content margins.",
     "FloatingPanel": "Internal Godot theme variation.",
     "Page": "Internal workspace node path.",
     "Authorization: Bearer ": "Internal HTTP authorization header; never display or translate.",

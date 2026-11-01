@@ -40586,3 +40586,23 @@ msgstr "Copia cloud disponibile"
 #: src/regions/application_regions.gd
 msgid "Uploads are pending. Quit now? They remain queued and resume when you sign in again."
 msgstr "Ci sono caricamenti in attesa. Uscire ora? Restano in coda e riprendono al prossimo accesso."
+
+#. Supplementary Reticulating Splines Cloud save-dialog text.
+msgid "Local"
+msgstr "Locale"
+
+#. Supplementary Reticulating Splines Cloud save-dialog text.
+msgid "Cloud"
+msgstr "Cloud"
+
+#. Supplementary Reticulating Splines Cloud save-dialog text.
+msgid "Load city"
+msgstr "Carica città"
+
+#. Supplementary Reticulating Splines Cloud save-dialog text.
+msgid "Also save in Cloud"
+msgstr "Salva anche nel cloud"
+
+#. Supplementary Reticulating Splines Cloud save-dialog text.
+msgid "The local copy is saved first. Cloud uploads continue in the background, including after an offline session."
+msgstr "Viene salvata prima la copia locale. I caricamenti nel cloud continuano in background, anche dopo una sessione offline."

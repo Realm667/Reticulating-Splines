@@ -15,17 +15,23 @@ current process. An unavailable secure store does not fall back to plaintext.
 
 ## Saving and loading
 
-Save locally first, then enable **Keep this save in Cloud** for that file, or
-select Cloud synchronization in the Save dialog. Local save validation happens
+Select **Also save in Cloud** in the Save dialog. The dialog shows the account
+and connection status and provides **Account & Cloud** for in-game sign-in and
+management. The choice applies only after the local save succeeds. You can also
+enable **Keep this save in Cloud** for an existing local file. Local save validation happens
 before a separate immutable copy enters the persistent upload queue. Uploads do
 not block ordinary local play. Changes are queued after manual saves and at the
 periodic Cloud checkpoint. Failed/offline uploads can resume after restarting
 and signing in. Disabling Cloud stops this file's future synchronization; it
 does not delete existing remote copies.
 
-The Cloud browser shows the save name, preview when available, game year,
-population, update time and originating device. Select a version and choose
-**Download**, then choose a new local filename. Existing local files are never
+The Open City dialog has **Local** and **Cloud** sources. The Cloud source embeds
+the same account, versions, trash and conflict controls as Settings. It shows
+the save name, preview when available, game year, population, update time and
+originating device. Version selection updates its preview and metadata. Select
+a version and choose **Load city** to download to a unique local file and enter
+the normal loading and unsaved-change checks. The standalone Cloud browser also
+offers **Download** with a new local filename. Existing local files are never
 silently overwritten. The client validates size, checksum, format and required
 game/gameplay-mod compatibility before publishing the local copy. A downloaded
 copy keeps its Cloud identity and predecessor, so subsequent edits synchronize
@@ -64,7 +70,9 @@ access while preserving its local files.
 ## Implementation and validation
 
 `CloudSync` exposes account state, quota, queue, conflicts, save metadata and
-devices through `snapshot()` and `changed`. `CloudWindow` never receives bearer
+devices through `snapshot()` and `changed`. `CloudPanel` supplies the shared
+controls for the standalone `CloudWindow` and the embedded Open City source.
+The UI never receives bearer
 credentials or reads the protected credential store. It emits `downloaded(path)`
 only after a verified explicit download, and `opt_in_changed(path, enabled)`
 after a successful per-file preference change. The application owns save/open

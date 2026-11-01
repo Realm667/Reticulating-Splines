@@ -49,16 +49,29 @@ class FakeCloud extends Node:
 	func refresh() -> Dictionary:
 		return {"ok": true}
 
+	func download(id: String, revision: String, path: String) -> Dictionary:
+		calls.append(["download", id, revision, path])
+		var bytes := Sc2xDocument.create_empty(16, "Cloud dialog test").document.serialize().data
+		var file := FileAccess.open(path, FileAccess.WRITE)
+		assert(file != null)
+		file.store_buffer(bytes)
+		file.close()
+		return {"ok": true, "path": path}
+
 
 func _initialize() -> void:
 	call_deferred("_run")
 
 
 func _run() -> void:
+	root.gui_embed_subwindows = true
+	root.content_scale_mode = Window.CONTENT_SCALE_MODE_DISABLED
+	root.content_scale_size = Vector2i.ZERO
 	var service := FakeCloud.new()
 	root.add_child(service)
-	var window := WindowScript.new()
-	root.add_child(window)
+	var shell := WindowScript.new()
+	root.add_child(shell)
+	var window := shell.content
 	window.bind(service)
 	assert(window.account_form.visible and not window.account_info.visible)
 	assert(window.cloud_enabled.disabled)
@@ -68,6 +81,7 @@ func _run() -> void:
 	await window._authenticate()
 	assert(service.calls[-1] == ["login", "test@example.invalid", "private-example", true])
 	assert(window.password.text.is_empty())
+	await _file_dialogs(service)
 	window.auth_mode.select(1)
 	window.password.text = "register-example"
 	await window._authenticate()
@@ -122,14 +136,80 @@ func _run() -> void:
 	window.confirm.confirmed.emit()
 	assert(exited[0])
 	root.size = Vector2i(420, 600)
-	window.open()
+	shell.open()
 	await process_frame
-	assert(window.size.x <= 396 and window.size.y <= 552)
+	assert(shell.size.x <= 396 and shell.size.y <= 552)
+	var first_size := shell.size
+	shell.open()
+	assert(shell.size == first_size, "Reopening the standalone Cloud window cannot shrink it")
 	window.password.text = "clear-on-hide"
-	window.hide()
+	shell.hide()
 	assert(window.password.text.is_empty())
-	window.queue_free()
+	shell.queue_free()
 	service.queue_free()
 	await process_frame
 	print("PASS cloud account, selection, privacy, confirmation and bounded layout")
 	quit()
+
+
+func _file_dialogs(service: FakeCloud) -> void:
+	AppPaths._root = OS.get_temp_dir().path_join("cloud-dialog-test-" + Crypto.new().generate_random_bytes(8).hex_encode())
+	service.data.saves = [{"id": "a", "head": "r1", "name": "City A", "deleted_at": null, "metadata": {"year": 1950, "population": 1200}}]
+	service.data.account = {"email": "test@example.invalid"}
+	root.size = Vector2i(420, 600)
+	var picker := FileDialogFactory.city_open() as CityOpenDialog
+	root.add_child(picker)
+	picker.bind_cloud(service)
+	picker.popup_centered(Vector2i(390, 520))
+	await process_frame
+	var local_path := picker.current_path
+	picker.select_source(1)
+	await process_frame
+	assert(picker.cloud_panel.visible and not picker.get_ok_button().visible)
+	assert(not picker._body.visible and picker.cloud_panel.saves.item_count == 1)
+	assert(picker.cloud_panel.actions.download.get_parent() == picker.cloud_panel.browser_footer,
+		"Load and version selection stay outside the scrollable library")
+	assert(picker.cloud_panel.get_combined_minimum_size().x <= 396, "Embedded Cloud controls fit a narrow touchscreen")
+	picker.cloud_panel.password.text = "clear-on-source-switch"
+	picker.select_source(0)
+	assert(picker.cloud_panel.password.text.is_empty())
+	assert(picker.current_path == local_path and picker.get_ok_button().visible and picker._body.visible)
+	picker.select_source(1)
+	var loaded: Array = []
+	picker.file_selected.connect(func(path: String) -> void: loaded.append(path))
+	picker.cloud_panel.saves.select(0)
+	await picker.cloud_panel._select_save(0)
+	await picker.cloud_panel._choose_download()
+	assert(loaded.size() == 1 and not picker.visible, "Cloud load returns a verified local path through the normal city loader")
+	assert(Sc2File.load_path(loaded[0]).is_valid())
+	assert(not picker.cloud_panel.file_dialog.visible, "Load requires no second save-file dialog")
+	picker.queue_free()
+	var save := FileDialogFactory.city_save() as CitySaveDialog
+	root.add_child(save)
+	save.bind_cloud(service)
+	save.popup_centered(Vector2i(396, 520))
+	# Headless popup placement clamps to its dummy 200x70 screen. Resize the
+	# embedded window explicitly to exercise the real narrow-content layout.
+	save.size = Vector2i(396, 520)
+	for frame in 6:
+		await process_frame
+	assert(save.size.x <= 396 and save.size.y <= 552, "Wrapped Cloud help cannot inflate the save dialog")
+	var layout_height := save.size.y / save.content_scale_factor
+	assert(save.cloud_enabled.get_global_rect().end.y < layout_height,
+		"Cloud controls must fit: %s / %s; body=%s; root=%s; max=%s; embedded=%s; native=%s" % [save.cloud_enabled.get_global_rect(), save.size, save.get_vbox().size, root.size, save.max_size, save.is_embedded(), save.force_native])
+	assert(save.get_line_edit().get_global_rect().end.y < layout_height,
+		"The filename and Cloud controls remain inside the actual save viewport")
+	save.prepare_cloud("user://existing.sc2x")
+	save.cloud_enabled.button_pressed = true
+	assert(save.wants_cloud())
+	assert(save.cloud_status.text.contains("test@example.invalid"))
+	save.prepare_cloud("user://existing.sc2x", false)
+	assert(not save.wants_cloud() and save.cloud_enabled.disabled, "Clients cannot enable host-only full multiplayer saves")
+	save.prepare_cloud("user://existing.sc2x")
+	service.data.account = {}
+	service.changed.emit()
+	assert(not save.cloud_status.text.is_empty())
+	save.cloud_enabled.button_pressed = true
+	assert(save.wants_cloud(), "Signed-out users can choose Cloud before the subsequent sign-in")
+	save.queue_free()
+	await process_frame

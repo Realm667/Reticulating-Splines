@@ -18,6 +18,7 @@ static func city_save() -> FileDialog:
 	return _create(
 		FileDialog.FILE_MODE_SAVE_FILE,
 		[["*.sc2, *.SC2", "SimCity 2000 cities"], ["*.sc2x", "Experimental large cities"]],
+		CitySaveDialog.new(),
 	)
 
 

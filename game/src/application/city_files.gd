@@ -237,10 +237,9 @@ func open_save_dialog() -> void:
 		app.city_dialogs.city_save_dialog.filters = PackedStringArray([sc2_filter, sc2kfix_filter])
 
 	app.city_dialogs.city_save_dialog.current_file = save_name + (".sc2x" if document.is_extended() or sc2kfix else ".SC2")
-	var cloud_dialog := app.city_dialogs.city_save_dialog
-	cloud_dialog.option_count = 0
+	var cloud_dialog := app.city_dialogs.city_save_dialog as CitySaveDialog
 	var cloud_path: String = app.coop.multiplayer_save_path if app.coop.active() else document_state.current_save_path
-	cloud_dialog.add_option(tr("Cloud synchronization"), PackedStringArray(), int(app.cloud.is_enabled(cloud_path)))
+	cloud_dialog.prepare_cloud(cloud_path, not app.coop.active() or app.coop.session.hosting)
 	app.city_dialogs.city_save_dialog.popup_centered_ratio(0.8)
 
 
@@ -478,8 +477,7 @@ func on_save_path_selected(path: String) -> void:
 	if document_state.current_document != null and not document_state.current_document.sc2x_converted_from.is_empty() and path.simplify_path().to_lower() == document_state.current_document.sc2x_converted_from.simplify_path().to_lower():
 		app.interface.show_error(tr("Choose a new filename; the multiplayer save stays unchanged."))
 		return
-	var cloud_options := app.city_dialogs.city_save_dialog.get_selected_options()
-	pending_cloud_choice = int(bool(cloud_options.get(tr("Cloud synchronization"), false)))
+	pending_cloud_choice = int((app.city_dialogs.city_save_dialog as CitySaveDialog).wants_cloud())
 	if app.coop.active():
 		app.coop.save_to(path)
 		return

@@ -10481,3 +10481,23 @@ msgstr "클라우드 사본 사용 가능"
 #: src/regions/application_regions.gd
 msgid "Uploads are pending. Quit now? They remain queued and resume when you sign in again."
 msgstr "대기 중인 업로드가 있습니다. 지금 종료할까요? 대기열에 유지되며 다시 로그인하면 재개됩니다."
+
+#. Supplementary Reticulating Splines Cloud save-dialog text.
+msgid "Local"
+msgstr "로컬"
+
+#. Supplementary Reticulating Splines Cloud save-dialog text.
+msgid "Cloud"
+msgstr "클라우드"
+
+#. Supplementary Reticulating Splines Cloud save-dialog text.
+msgid "Load city"
+msgstr "도시 불러오기"
+
+#. Supplementary Reticulating Splines Cloud save-dialog text.
+msgid "Also save in Cloud"
+msgstr "클라우드에도 저장"
+
+#. Supplementary Reticulating Splines Cloud save-dialog text.
+msgid "The local copy is saved first. Cloud uploads continue in the background, including after an offline session."
+msgstr "먼저 로컬 사본을 저장합니다. 오프라인 세션 후에도 클라우드 업로드는 백그라운드에서 계속됩니다."

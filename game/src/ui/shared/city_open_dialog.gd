@@ -16,6 +16,9 @@ var job: CityPreviewJob
 var _job_path := ""
 var _requested_msec := 0
 var _body: BoxContainer
+var sources: TabBar
+var cloud_panel: CloudPanel
+var _local_controls: Array[Control] = []
 
 
 func _ready() -> void:
@@ -81,6 +84,46 @@ func _ready() -> void:
 	rows.add_child(preview_status)
 	visibility_changed.connect(_visibility_changed)
 	get_parent().get_viewport().size_changed.connect(_layout_preview)
+	_build_sources()
+
+
+func _build_sources() -> void:
+	for child in get_vbox().get_children():
+		if child is Control:
+			_local_controls.append(child)
+	sources = TabBar.new()
+	sources.add_tab("Local")
+	sources.add_tab("Cloud")
+	sources.tab_changed.connect(select_source)
+	get_vbox().add_child(sources)
+	get_vbox().move_child(sources, 0)
+	cloud_panel = CloudPanel.new()
+	cloud_panel.configure_browser()
+	get_vbox().add_child(cloud_panel)
+	cloud_panel.close_requested.connect(hide)
+	cloud_panel.downloaded.connect(func(path: String) -> void:
+		hide()
+		file_selected.emit(path))
+	select_source(0)
+
+
+func bind_cloud(service: Node) -> void:
+	cloud_panel.bind(service)
+
+
+func select_source(index: int) -> void:
+	if sources == null:
+		return
+	sources.set_current_tab(index)
+	for control in _local_controls:
+		control.visible = index == 0
+	cloud_panel.visible = index == 1
+	get_ok_button().visible = index == 0
+	get_cancel_button().text = "Cancel" if index == 0 else "Close"
+	if index == 1 and cloud_panel.sync != null:
+		if job != null:
+			job.cancel()
+		cloud_panel.open()
 
 
 func _layout_preview() -> void:
@@ -100,6 +143,8 @@ func _visibility_changed() -> void:
 	selected_path = ""
 	if not visible and job != null:
 		job.cancel()
+	if not visible and cloud_panel != null:
+		cloud_panel.clear_secrets()
 	if visible:
 		_layout_preview()
 
@@ -123,6 +168,8 @@ func _process(_delta: float) -> void:
 			preview_status.text = ("Saved city preview" if job.saved_preview else "City overview") if job.image != null else "Preview unavailable. You can still open this city."
 		job = null
 	if not visible:
+		return
+	if cloud_panel != null and cloud_panel.visible:
 		return
 	var path := current_path
 	if path != selected_path:
