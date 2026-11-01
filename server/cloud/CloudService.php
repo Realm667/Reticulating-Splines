@@ -25,7 +25,7 @@ final class CloudService
 
     public function __construct(array $config)
     {
-        $this->config = $config + ['quota' => 524288000, 'versions' => 5, 'trash_days' => 30,
+        $this->config = $config + ['quota' => 20000000, 'versions' => 5, 'trash_days' => 30,
             'upload_hours' => 48, 'session_days' => 90, 'base_path' => '/api/cloud/v1',
             'garbage_interval' => 0];
         if (!isset($config['storage'], $config['secret']) || !is_string($config['secret']) ||

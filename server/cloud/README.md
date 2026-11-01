@@ -56,7 +56,7 @@ return [
     'storage' => __DIR__ . '/data',
     'secret' => 'GENERATE-64-RANDOM-HEX-CHARACTERS-ONCE',
     'base_path' => '/cloud-saves/api/cloud/v1',
-    'quota' => 500 * 1024 * 1024,
+    'quota' => 20_000_000,
     'versions' => 5,
     'trash_days' => 30,
     'upload_hours' => 48,
@@ -110,7 +110,10 @@ The CLI collector remains available independently, including for hosting schedul
 Configure
 host disk monitoring and backups before enabling public registrations.
 
-500 MiB is the default **per account** quota. All five retained versions and trash count.
+20 MB (20,000,000 bytes) is the default **per account** quota. All five retained versions and trash count.
+Changing this configuration applies to existing accounts as well as new accounts; no account
+migration is needed. Lowering the quota does not delete existing saves. Accounts already over
+the limit keep read access, while operations requiring additional storage are rejected.
 Incomplete uploads reserve their entire declared size atomically; delete/cancel them to
 release the reservation. An upload needs enough headroom while its previous five versions
 still exist. During assembly, staging plus final bytes can temporarily require roughly twice

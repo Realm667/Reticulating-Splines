@@ -62,7 +62,10 @@ creates a new current Cloud version with a predecessor check; it does not edit
 the currently loaded local file.
 
 The initial service policy keeps five versions per save and retains trash for
-30 days. Versions and trash consume the account quota shown in the game. Moving
+30 days. Each account has 20 MB (20,000,000 bytes), including versions, trash and
+reserved uploads. The game reads the current quota from the service. Lowering
+the limit does not delete existing saves; accounts above it can still download
+their data but cannot add storage beyond the limit. Moving
 a Cloud save to trash and restoring it are explicit actions. Local deletion
 does not delete the Cloud copy. Device revocation removes that device's account
 access while preserving its local files.

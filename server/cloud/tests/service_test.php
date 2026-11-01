@@ -71,6 +71,18 @@ try {
     check($repeat['id'] === $save, 'idempotent create');
     $bobSave = createSave($b, 'save-idempotent');
     check($bobSave !== $save, 'client ids account scoped');
+    $customService = $service;
+    $defaults = $config;
+    unset($defaults['quota']);
+    $service = new CloudService($defaults);
+    check(request('GET', '/me', [], $a)['quota'] === 20000000, 'default quota is exactly twenty decimal MB for existing accounts');
+    $full = request('POST', "/saves/$save/uploads", ['base_revision' => null, 'size' => 20000000, 'sha256' => str_repeat('a', 64)], $a, 201);
+    request('POST', "/saves/$save/uploads", ['base_revision' => null, 'size' => 1, 'sha256' => str_repeat('b', 64)], $a, 413);
+    $bobFull = request('POST', "/saves/$bobSave/uploads", ['base_revision' => null, 'size' => 20000000, 'sha256' => str_repeat('a', 64)], $b, 201);
+    request('DELETE', "/saves/$save/uploads/{$full['id']}", [], $a);
+    request('DELETE', "/saves/$bobSave/uploads/{$bobFull['id']}", [], $b);
+    request('POST', "/saves/$save/uploads", ['base_revision' => null, 'size' => 20000001, 'sha256' => str_repeat('a', 64)], $a, 400);
+    $service = $customService;
     request('GET', "/saves/$save", [], $b, 404);
     request('DELETE', "/saves/$save", [], $b, 404);
     request('POST', '/saves', ['name' => 'Bad metadata', 'kind' => 'city', 'metadata' => ['path' => 'C:/personal']], $a, 400);
@@ -153,6 +165,16 @@ try {
     $versions = request('GET', "/saves/$save/versions", [], $a)['versions'];
     check(count($versions) === 5 && $versions[0]['revision'] === $head, 'five newest versions retained');
     check(request('GET', '/me', [], $a)['usage'] === 40, 'quota includes all retained versions');
+    $lowered = $config;
+    $lowered['quota'] = 20;
+    $service = new CloudService($lowered);
+    $overLimit = request('GET', '/me', [], $a);
+    check($overLimit['quota'] === 20 && $overLimit['usage'] === 40, 'lowering quota preserves existing stored versions');
+    $download = request('GET', "/saves/$save/versions/$head/content", [], $a);
+    check(stream_get_contents($download['stream']) !== '', 'downloads remain available above a lowered quota');
+    fclose($download['stream']);
+    request('POST', "/saves/$save/uploads", ['base_revision' => $head, 'size' => 1, 'sha256' => str_repeat('a', 64)], $a, 413);
+    $service = $customService;
     request('POST', "/saves/$save/uploads", ['base_revision' => $head, 'size' => $config['quota'], 'sha256' => str_repeat('a', 64)], $a, 413);
     request('DELETE', "/saves/$save", [], $a);
     check(count(request('GET', '/saves?trash=1', [], $a)['saves']) === 1, 'trash visible separately');
@@ -193,7 +215,7 @@ try {
     request('GET', '/me', [], $a, 401);
     echo "Cloud service: $checks checks passed\n";
 } finally {
-    unset($service, $db);
+    unset($service, $customService, $db);
     gc_collect_cycles();
     removeTree($root);
 }

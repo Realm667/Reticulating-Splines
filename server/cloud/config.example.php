@@ -5,7 +5,7 @@ declare(strict_types=1);
 return [
     'storage' => '/srv/private/reticulating-splines-cloud',
     'secret' => 'REPLACE-WITH-64-RANDOM-HEX-CHARACTERS',
-    'quota' => 500 * 1024 * 1024,
+    'quota' => 20_000_000, // 20 MB per account, including versions, trash and upload reservations.
     'versions' => 5,
     'trash_days' => 30,
     'upload_hours' => 48,
