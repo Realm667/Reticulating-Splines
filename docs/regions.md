@@ -37,7 +37,11 @@ leaving fades back to 33%. Click a view to open that city. Once its live graphic
 are ready, it fades into the real city over one second while the city being left
 fades to a gray, softened 33% view. These bounded background renders do not
 run another city's simulation or animations. They refresh when you change city
-or map orientation. Multiplayer retrieves these snapshots only for the requesting
+or map orientation, and when visual settings change. Stills retain the active
+lighting, seasons, environment and water effects. The incoming still gains its
+full color before the prepared live city is revealed; transparent margins keep
+the normal map background during the transition.
+Multiplayer retrieves these snapshots only for the requesting
 player's own areas; they are not broadcast with per-frame public summaries.
 Nearby areas are prepared before distant ones. Switching cancels obsolete work
 without waiting for it on the UI thread; finished canceled results are discarded.
@@ -63,7 +67,11 @@ for a given regional cell. Water continues through actual basins and channels
 below the connected water level; variable coast reach avoids a fixed-width water
 strip. Existing city edges and saved offers are preserved. Legacy surface water
 at height zero cannot receive a lower bed because the format has no negative
-land heights; those existing border tiles are retained.
+land heights; those existing border tiles are retained. During generation, an
+inland lake opened into a lower body of water drains to that body's level,
+exposing ground above it. Closed lakes retain their own levels. This prevents
+cracks between different surface heights in one connected body; existing city
+edges and archived terrain are not rewritten.
 
 ## Purchase and administration
 

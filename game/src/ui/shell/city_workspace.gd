@@ -30,7 +30,6 @@ func _ready() -> void:
 	menu_bar = %MenuBar
 	toolbar = %Toolbar
 	map_view = %MapView
-	RenderingServer.canvas_item_set_canvas_group_mode($LiveCity.get_canvas_item(), RenderingServer.CANVAS_GROUP_MODE_DISABLED)
 	_sync_map_rect()
 	resized.connect(_sync_map_rect)
 	status_bar = %StatusBar

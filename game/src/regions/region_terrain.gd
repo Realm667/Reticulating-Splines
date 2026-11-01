@@ -4,7 +4,7 @@ extends RefCounted
 
 @warning_ignore_start("integer_division")
 
-const GENERATOR_VERSION := 2
+const GENERATOR_VERSION := 3
 const CHUNKS := ["ALTM", "XTER", "XBLD", "XZON", "XBIT", "XTXT", "MISC"]
 const RIVER_LAYOUTS := ["classic", "meander", "delta", "crossing", "branch", "rejoin", "valley"]
 const OCEAN_LAYOUTS := ["delta", "peninsula", "bay", "island", "islands", "cliffs"]
@@ -211,6 +211,7 @@ static func _water_relief(document: Sc2File, boundaries: PackedInt32Array,
 				if water[neighbor] < 0:
 					pending.append(neighbor * 2 + (entry & 1))
 		seeds[level] = PackedInt32Array()
+	_drain_open_basins(water, heights, fixed, salt, edge)
 	var counts := PackedInt32Array()
 	counts.resize(256)
 	var inland_water := false
@@ -260,6 +261,43 @@ static func _water_relief(document: Sc2File, boundaries: PackedInt32Array,
 		document.set_misc_u32(Sc2MiscLayout.TILE_COUNTS + tile * 4, counts[tile])
 	document.set_misc_u32(Sc2MiscLayout.HAS_OCEAN, int(ocean_water))
 	document.set_misc_u32(Sc2MiscLayout.HAS_RIVER, int(inland_water))
+
+
+static func _drain_open_basins(water: PackedInt32Array, heights: PackedInt32Array,
+		fixed: PackedInt32Array, salt: PackedByteArray, edge: int) -> void:
+	# An inland lake can meet the lower sea after border carving. Keeping both
+	# flood levels creates vertical cracks across a connected water surface.
+	# Drain only newly generated interior cells; immutable neighbor edges win.
+	var seen := PackedByteArray()
+	seen.resize(water.size())
+	for first in water.size():
+		if seen[first] or water[first] < 0:
+			continue
+		var cells := PackedInt32Array([first])
+		seen[first] = 1
+		var lowest := water[first]
+		var highest := lowest
+		var saline := int(salt[first])
+		var cursor := 0
+		while cursor < cells.size():
+			var index := cells[cursor]
+			cursor += 1
+			if water[index] < lowest:
+				lowest = water[index]
+				saline = salt[index]
+			elif water[index] == lowest:
+				saline |= salt[index]
+			highest = maxi(highest, water[index])
+			for near in _cardinal(index, edge):
+				if not seen[near] and water[near] >= 0:
+					seen[near] = 1
+					cells.append(near)
+		if lowest <= 0 or lowest == highest:
+			continue
+		for index in cells:
+			if fixed[index] < 0 and water[index] > lowest:
+				water[index] = lowest if heights[index] < lowest else -1
+				salt[index] = saline
 
 
 static func _cardinal(index: int, edge: int) -> PackedInt32Array:

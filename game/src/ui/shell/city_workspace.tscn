@@ -25,7 +25,7 @@ grow_vertical = 2
 mouse_filter = 2
 color = Color(0.09411765, 0.14117648, 0.17254902, 1)
 
-[node name="LiveCity" type="CanvasGroup" parent="."]
+[node name="LiveCity" type="Node2D" parent="."]
 
 [node name="MapView" type="Control" parent="LiveCity"]
 unique_name_in_owner = true

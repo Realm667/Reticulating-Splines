@@ -31,7 +31,7 @@ func _run() -> void:
 			rect.position.x = index * 20
 			rect.modulate = styles[index]
 			viewport.add_child(rect)
-		var group := CanvasGroup.new()
+		var group := Node2D.new()
 		group.position.y = 24
 		viewport.add_child(group)
 		var map := CityMapControl.new()
@@ -59,14 +59,88 @@ func _run() -> void:
 		assert(rendered.get_pixel(68, 10).r > rendered.get_pixel(88, 10).r + 0.1,
 			"Light snapshot blur softens the pixel pattern")
 		assert(rendered.get_pixel(18, 4).a == 0.0, "Snapshot blur cannot fill transparent surrounding space")
-		assert(absf(rendered.get_pixel(4, 28).a - 0.5) < 0.02,
-			"The real city fades even when its indexed shaders replace vertex alpha")
+		assert(rendered.get_pixel(4, 28).a == 0.0 and not map.visible,
+			"Preparation and the still-image fade must hide live screen-reading passes completely")
 		map.region_backdrop._set_live_opacity(1.0)
 		for frame in 3:
 			await RenderingServer.frame_post_draw
 		assert(viewport.get_texture().get_image().get_pixel(4, 28).a > 0.99,
-			"Disabling the temporary grouping pass restores the original full-opacity city")
+			"Completing the still-image fade reveals the original full-opacity city")
 		viewport.queue_free()
 		await process_frame
-	print("PASS region snapshot grayscale, 33/66 opacity, soft blur and real-color endpoints in SDR/HDR")
+	await _effect_still(FixtureGraphics.pack())
+	await _effect_still(GraphicsPack.load_root("res://../packs/standalone-graphics/graphics"))
+	print("PASS region snapshot effects, grayscale, 33/66 opacity, soft blur and real-color endpoints in SDR/HDR")
 	quit()
+
+
+func _effect_still(graphics: GraphicsPack) -> void:
+	var assets := LoadedAssetState.new()
+	assets.palette = graphics.palette
+	assets.large_sprites = MainMenuPresentation.copy_graphics(graphics.large_sprites)
+	CityBrightmaps.load_archive(assets.large_sprites, "", "large")
+	CitySeasonColors.prepare(assets.large_sprites, assets.palette)
+	assets.large_sprites.water_reflections = true
+	assets.large_sprites.water_indices = CityWaterLayer.blue_indices(assets.palette)
+	var document: Sc2File = Sc2xDocument.create_empty(32, "Effect still").document
+	var city := CityState.from_document(document)
+	for x in 32:
+		for y in 32:
+			city.set_land_altitude(x, y, 3)
+			if x >= 10 and x < 22 and y >= 10 and y < 22:
+				city.set_land_altitude(x, y, 0)
+				city.set_water_altitude(x, y, 3)
+				city.set_tile_flag(x, y, Sc2TileFlags.WATER, true)
+				city.set_terrain_id(x, y, TerrainTileIds.DEEP_WATER_FLAT)
+	city.set_building_id(6, 6, BuildingTileIds.POLICE_STATION)
+	city.set_building_corners(6, 6, 0x80)
+	var before := preload("res://tests/support/document_state.gd").capture(document)
+	var job := CityRegionPreviewJob.create(assets)
+	job.document = document
+	job.background = Color.TRANSPARENT
+	job.run()
+	assert(job.image != null, "A regional still must produce its artwork")
+	assert(job.water != null, "A regional still must produce enhanced water masks")
+	var options := VisualEnhancementOptions.normalize({"day_enabled": false, "weather_enabled": false,
+		"cloud_enabled": false, "season_enabled": true, "season_mode": 2, "season_fixed": 3, "tilt_shift_enabled": true})
+	var snapshot := CityRegionSnapshot.new()
+	snapshot.begin(root, job, options, {})
+	assert(not snapshot.presentation.map.layers.water_layer.nodes.is_empty(), "The still must use the normal water pass")
+	var image: Image
+	for frame in 3:
+		await RenderingServer.frame_post_draw
+		image = snapshot.poll()
+	assert(image != null and image.get_size() == job.image.get_size())
+	var changed := 0
+	var water_changed := 0
+	for y in image.get_height():
+		for x in image.get_width():
+			var source := job.image.get_pixel(x, y)
+			var actual := image.get_pixel(x, y)
+			if source.a == 0.0:
+				assert(actual.a == 0.0, "Postprocessing must never replace transparent city margins")
+			elif actual.a > 0.9:
+				changed += int(Vector3(source.r, source.g, source.b).distance_to(Vector3(actual.r, actual.g, actual.b)) > 0.1)
+				if job.water.surface.get_pixel(x + 3, y + 3).a > 0.5:
+					water_changed += int(Vector3(source.r, source.g, source.b).distance_to(Vector3(actual.r, actual.g, actual.b)) > 0.05)
+	assert(changed > 1000 and water_changed > 100, "Frozen neighbors retain seasonal terrain and enhanced water instead of raw palette art")
+	snapshot.close()
+	await process_frame
+	options.day_enabled = true
+	options.day_mode = 1
+	options.day_hour = 0.0
+	var night := CityRegionSnapshot.new()
+	night.begin(root, job, options, {})
+	var dark: Image
+	for frame in 3:
+		await RenderingServer.frame_post_draw
+		dark = night.poll()
+	var darker := 0
+	for y in dark.get_height():
+		for x in dark.get_width():
+			if image.get_pixel(x, y).a > 0.9:
+				darker += int(dark.get_pixel(x, y).v < image.get_pixel(x, y).v - 0.1)
+	assert(darker > 1000, "Night lighting must remain visible in frozen neighbors")
+	night.close()
+	assert(preload("res://tests/support/document_state.gd").capture(document) == before, "Baking a still must not change the city or saved random state")
+	await process_frame

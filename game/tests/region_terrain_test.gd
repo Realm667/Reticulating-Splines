@@ -17,6 +17,7 @@ func check(value: bool, label: String) -> void:
 func run() -> void:
 	_test_randomizers()
 	_test_coast_relief()
+	_test_spilling_lake()
 	_test_neighbors()
 	print("region_terrain_test: %d failures" % failures)
 	quit(1 if failures else 0)
@@ -95,6 +96,41 @@ func _test_coast_relief() -> void:
 	check(carved > 100, "water continuation lowers actual terrain")
 	check(depths.size() >= 3, "coast reach varies instead of a parallel fixed-width strip")
 	_validate(document, boundaries)
+
+
+func _test_spilling_lake() -> void:
+	var water := PackedInt32Array()
+	var heights := PackedInt32Array()
+	var fixed := PackedInt32Array()
+	var salt := PackedByteArray()
+	for values in [water, heights, fixed, salt]:
+		values.resize(32 * 32)
+	water.fill(-1)
+	heights.fill(8)
+	fixed.fill(-1)
+	for x in range(8, 24):
+		for y in range(8, 24):
+			var index := x * 32 + y
+			heights[index] = 3 if y < 20 else 4
+			water[index] = 4 if x < 16 else 6
+			salt[index] = int(x < 16)
+	var shoreline := 8 * 32 + 8
+	fixed[shoreline] = 0
+	# A separate enclosed lake must not be lowered to the ocean level.
+	water[3 * 32 + 3] = 6
+	heights[3 * 32 + 3] = 4
+	var before := heights.duplicate()
+	RegionTerrain._drain_open_basins(water, heights, fixed, salt, 32)
+	for x in range(16, 24):
+		for y in range(8, 24):
+			var index := x * 32 + y
+			check(water[index] == (4 if y < 20 else -1), "an open lake drains to the connected lower body, exposing land at that level")
+			check(salt[index] == 1, "drained lake joins the ocean salinity")
+	check(water[shoreline] == 4 and fixed[shoreline] == 0, "fixed neighboring shoreline is unchanged")
+	check(water[3 * 32 + 3] == 6 and heights == before, "closed inland lakes and all terrain heights are preserved")
+	var drained := water.duplicate()
+	RegionTerrain._drain_open_basins(water, heights, fixed, salt, 32)
+	check(water == drained, "drainage is idempotent")
 
 
 func _test_neighbors() -> void:

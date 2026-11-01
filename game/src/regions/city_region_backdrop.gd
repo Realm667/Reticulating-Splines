@@ -19,6 +19,8 @@ var layer: Control
 var opacity: Dictionary[Vector2i, float] = {}
 var hovered := Vector2i(-1, -1)
 var live_ready := Callable()
+var presentation_state := Callable()
+var _snapshot: CityRegionSnapshot
 var _capture_queue: Array[Dictionary] = []
 var _capture_job := false
 var _prepared: Dictionary[Vector2i, Texture2D] = {}
@@ -42,24 +44,21 @@ func _init(control: CityMapControl) -> void:
 
 
 func live_opacity() -> float:
-	var group := map.get_parent() as CanvasGroup
-	return group.self_modulate.a if group != null else map.modulate.a
+	return map.modulate.a
 
 
 func _set_live_opacity(value: float) -> void:
-	var group := map.get_parent() as CanvasGroup
-	if group == null:
-		map.modulate.a = value
-		return
-	group.self_modulate.a = value
-	# Indexed city shaders intentionally replace vertex color. Fade their
-	# combined output, and disable this extra grouping pass outside transitions.
-	RenderingServer.canvas_item_set_canvas_group_mode(group.get_canvas_item(),
-		RenderingServer.CANVAS_GROUP_MODE_TRANSPARENT if value < 1.0 else RenderingServer.CANVAS_GROUP_MODE_DISABLED,
-		group.clear_margin, true, group.fit_margin, group.use_mipmaps)
+	# Fade the frozen picture, then reveal the fully prepared live view. A
+	# CanvasGroup cannot safely contain screen-reading fog/tilt-shift passes:
+	# their backbuffer copies can replace transparent space with raw pixels.
+	map.modulate.a = value
+	map.visible = value >= 1.0
 
 
 func clear() -> void:
+	if _snapshot != null:
+		_snapshot.close()
+		_snapshot = null
 	if job != null:
 		job.cancel()
 		_retired.append(job)
@@ -78,6 +77,9 @@ func clear() -> void:
 
 
 func cancel_switch() -> void:
+	if _snapshot != null:
+		_snapshot.close()
+		_snapshot = null
 	_capture_queue.clear()
 	_prepared.clear()
 	_switch_target = Vector2i(-1, -1)
@@ -157,8 +159,8 @@ func configure(value: Dictionary, source: Dictionary[String, Sc2File], artwork: 
 func _ensure_layer() -> void:
 	if is_instance_valid(layer) or map.get_parent() == null:
 		return
-	# A sibling keeps the frozen views independent of the live city's fade and
-	# indexed palette material. Sidebar controls remain above both canvases.
+	# Draw above the live city and below the interface. The incoming still
+	# remains visible while the actual city is hidden during preparation.
 	layer = Control.new()
 	layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	layer.clip_contents = true
@@ -167,9 +169,9 @@ func _ensure_layer() -> void:
 	material.shader = SNAPSHOT_SHADER
 	layer.material = material
 	layer.draw.connect(_draw_layer)
-	var live_canvas: CanvasItem = map.get_parent() if map.get_parent() is CanvasGroup else map
+	var live_canvas: CanvasItem = map.get_parent() if map.get_parent() is Node2D else map
 	live_canvas.get_parent().add_child(layer)
-	live_canvas.get_parent().move_child(layer, live_canvas.get_index())
+	live_canvas.get_parent().move_child(layer, live_canvas.get_index() + 1)
 
 
 func begin_switch(target: Vector2i, current: Sc2File, target_compass: int, callback: Callable) -> bool:
@@ -196,15 +198,22 @@ func begin_switch(target: Vector2i, current: Sc2File, target_compass: int, callb
 
 func poll() -> void:
 	_reap_finished()
+	if _snapshot != null:
+		var image := _snapshot.poll()
+		if image == null:
+			return
+		_publish_image(image)
+		_snapshot.close()
+		_snapshot = null
 	if job != null and job.finished():
 		job.join()
 		if job.image != null and not job.cancelled():
-			var texture := ImageTexture.create_from_image(job.image)
-			if _capture_job:
-				_prepared[job_cell] = texture
+			if job is CityRegionPreviewJob:
+				var values: Dictionary = presentation_state.call() if presentation_state.is_valid() else {}
+				_snapshot = CityRegionSnapshot.new()
+				_snapshot.begin(map.get_tree().root, job, values.get("options", VisualEnhancementOptions.normalize({})), values.get("atmosphere", {}))
 			else:
-				textures[job_cell] = texture
-				opacity[job_cell] = REST_OPACITY
+				_publish_image(job.image)
 		elif _capture_job:
 			var callback := _switch_callback
 			var target := _switch_target
@@ -213,6 +222,8 @@ func poll() -> void:
 				callback.call_deferred(target)
 		job = null
 		map.queue_redraw()
+	if _snapshot != null:
+		return
 	if job == null and _switch_target.x >= 0 and _capture_queue.is_empty() and not _activation_expected:
 		_activation_expected = true
 		_switch_callback.call_deferred(_switch_target)
@@ -220,12 +231,22 @@ func poll() -> void:
 		_capture_job = not _capture_queue.is_empty()
 		var capture: Dictionary = _capture_queue.pop_front() if _capture_job else {}
 		job_cell = capture.cell if _capture_job else pending.pop_front()
-		job = CityPreviewJob.for_assets(assets)
+		job = CityRegionPreviewJob.create(assets)
 		job.document = capture.document if _capture_job else documents[RegionRules.key(job_cell)].duplicate_document(true)
 		job.background = Color.TRANSPARENT
 		job.desired_compass = _switch_compass if _capture_job else compass
 		job.maximum_map_size = 4096
 		job.start()
+
+
+func _publish_image(image: Image) -> void:
+	var texture := ImageTexture.create_from_image(image)
+	if _capture_job:
+		_prepared[job_cell] = texture
+	else:
+		textures[job_cell] = texture
+		opacity[job_cell] = REST_OPACITY
+	map.queue_redraw()
 
 
 func advance(delta: float, pointer_override := Vector2.INF) -> void:
@@ -294,7 +315,8 @@ func draw_on(_canvas: CanvasItem, _scale: float, _offset: Vector2) -> void:
 		return
 	layer.position = map.position
 	layer.size = map.size
-	layer.visible = map.is_visible_in_tree() and map.city != null and map.city_source != null and map.data_view_mode == CityViewMode.Mode.NONE
+	var parent := map.get_parent() as CanvasItem
+	layer.visible = (parent == null or parent.is_visible_in_tree()) and map.city != null and map.city_source != null and map.data_view_mode == CityViewMode.Mode.NONE
 	layer.queue_redraw()
 
 
@@ -310,8 +332,9 @@ func _draw_layer() -> void:
 		layer.draw_texture_rect(texture, Rect2(offset + displacement(cell) * scale,
 			Vector2(map.city_source.size) * scale), false, Color(fade, fade, 0, alpha))
 	if _incoming != null and _fade_time >= 0.0:
+		var fade := _fade_time / FADE_SECONDS
 		layer.draw_texture_rect(_incoming, Rect2(offset, Vector2(map.city_source.size) * scale), false,
-			Color(1, 1, 0, _incoming_opacity))
+			Color(1.0 - fade, 1.0 - fade, 0, lerpf(_incoming_opacity, 1.0, fade)))
 
 
 func pick(local_point: Vector2) -> Vector2i:
