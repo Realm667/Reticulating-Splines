@@ -99,6 +99,7 @@ func open_settings_dialog() -> void:
 	app.main_overlays.settings_dialog.theme_selector.select(AppUiTheme.IDS.find(preferences.ui_theme))
 	app.main_overlays.settings_dialog.language_selector.select(AppLocalization.codes().find(preferences.ui_language))
 	app.main_overlays.settings_dialog.translucent_menus_check.button_pressed = preferences.translucent_menus
+	app.main_overlays.settings_dialog.region_backdrops_check.button_pressed = preferences.region_backdrops
 	app.main_overlays.settings_dialog.ui_scale_selector.select(AppUiScale.option_index(preferences.ui_scale))
 	app.main_overlays.settings_dialog.exact_scale_check.button_pressed = preferences.exact_ui_scale
 	app.main_overlays.settings_dialog.resolution_selector.select(AppDisplayOptions.SIZES.find(preferences.window_resolution))
@@ -333,6 +334,7 @@ func apply_settings() -> void:
 		apply_ui_scale()
 
 	preferences.default_mayor_name = str(values.default_mayor_name)
+	preferences.region_backdrops = values.region_backdrops
 
 	if preferences.default_mayor_name.is_empty():
 		preferences.default_mayor_name = "Mayor"
@@ -531,6 +533,7 @@ func load_app_settings() -> void:
 	AppLocalization.select(preferences.ui_language)
 	preferences.ui_theme = str(values.ui_theme)
 	preferences.translucent_menus = bool(values.translucent_menus)
+	preferences.region_backdrops = values.region_backdrops
 	AppUiTheme.select(preferences.ui_theme, preferences.translucent_menus)
 	_apply_theme_filter()
 	preferences.ui_scale = values.ui_scale

@@ -29431,3 +29431,13 @@ msgstr "Direkt"
 #: src/ui/settings/music_box_dialog.gd src/audio/sound_font_catalog.gd
 msgid "A/B"
 msgstr "A/B"
+
+#. Supplementary RS interface translation, AI-assisted.
+#: game/src/ui/settings/app_settings_dialog.tscn
+msgid "Show surrounding city areas"
+msgstr "Umliegende Stadtgebiete anzeigen"
+
+#. Supplementary RS interface translation, AI-assisted.
+#: game/src/ui/settings/app_settings_dialog.tscn
+msgid "Show frozen, gray views of owned city areas around the active city. The region overview remains available when hidden."
+msgstr "Zeigt eingefrorene, graue Ansichten eigener Stadtgebiete um die aktive Stadt. Die Regionsübersicht bleibt auch bei ausgeblendeten Ansichten verfügbar."

@@ -51,6 +51,7 @@ static func load_values(
 	result.ui_theme = normalize_theme(config.get_value("general", "ui_theme", "dark"))
 	result.ui_language = AppLocalization.normalize(config.get_value("general", "ui_language", AppLocalization.DEFAULT))
 	result.translucent_menus = bool(config.get_value("general", "translucent_menus", true))
+	result.region_backdrops = bool(config.get_value("general", "region_backdrops", true))
 	result.ui_scale = AppUiScale.normalize(config.get_value("general", "ui_scale", AppUiScale.DEFAULT))
 	result.default_mayor_name = str(config.get_value("general", "default_mayor_name", "Mayor"))
 	result.use_classic_zoom_graphics = bool(config.get_value("graphics", "use_classic_zoom_graphics", false))
@@ -297,6 +298,8 @@ static func save_values(
 
 	if options.translucent_menus != null:
 		config.set_value("general", "translucent_menus", bool(options.translucent_menus))
+	if options.region_backdrops != null:
+		config.set_value("general", "region_backdrops", bool(options.region_backdrops))
 
 	if options.ui_scale != null:
 		config.set_value("general", "ui_scale", AppUiScale.normalize(options.ui_scale))
@@ -422,6 +425,7 @@ class Values extends RefCounted:
 	var ui_language := AppLocalization.DEFAULT
 	var ui_scale := AppUiScale.DEFAULT
 	var translucent_menus := true
+	var region_backdrops := true
 	var dark_underground := true
 	var sprite_corrections := false
 	var hd_graphics := true
@@ -494,6 +498,7 @@ class SaveOptions extends RefCounted:
 	var recent_autosaves: Variant = null
 	var share_singleplayer_activity: Variant = null
 	var translucent_menus: Variant = null
+	var region_backdrops: Variant = null
 	var check_for_updates: Variant = null
 	var cities_folder: Variant = null
 	var mods_folder: Variant = null

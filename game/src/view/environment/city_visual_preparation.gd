@@ -235,6 +235,10 @@ func _prepare_whole_city() -> bool:
 
 
 func _preparation_variants() -> Array[int]:
+	# A regional switch only needs the selected view before play can resume.
+	# Other zoom/traffic banks keep their normal on-demand preparation path.
+	if app.regions != null and app.regions.active():
+		return [_index(app.static_render.city_view_size())]
 	# Warm all zoom sizes on first entry. Once directions compete for memory,
 	# do not evict a visited direction to speculate on unvisited zoom sizes.
 	# Existing sizes remain resident and keep receiving local edits.

@@ -349,7 +349,7 @@ func _sync_backdrop() -> void:
 	if app.map_view == null:
 		return
 	var backdrop := app.map_view.region_backdrop
-	if not active() or app.document_state.city == null or app.tool_state.landscape_editor or app.coop.session.latest.get("visiting", false):
+	if not app.preferences.region_backdrops or not active() or app.document_state.city == null or app.tool_state.landscape_editor or app.coop.session.latest.get("visiting", false):
 		if not backdrop.state.is_empty():
 			backdrop.clear()
 		_backdrop_signature.clear()

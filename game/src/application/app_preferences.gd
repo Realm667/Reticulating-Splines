@@ -18,6 +18,7 @@ var ui_theme := "dark"
 var ui_language := AppLocalization.DEFAULT
 var ui_scale := AppUiScale.DEFAULT
 var translucent_menus := true
+var region_backdrops := true
 var dark_underground := true
 # the sc2kfix corrections of the original sprites (Sc2kfixSpriteFixes)
 var sprite_corrections := false
@@ -86,6 +87,7 @@ func save_options(include_ui_scale := true) -> SettingsStore.SaveOptions:
 	options.recent_autosaves = recent_autosaves
 	options.share_singleplayer_activity = share_singleplayer_activity
 	options.translucent_menus = translucent_menus
+	options.region_backdrops = region_backdrops
 	options.check_for_updates = check_for_updates
 	options.cities_folder = cities_folder
 	options.mods_folder = mods_folder

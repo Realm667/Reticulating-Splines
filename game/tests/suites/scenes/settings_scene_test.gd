@@ -15,6 +15,17 @@ func run() -> void:
 	first.effects_slider.value = 25
 	first.fullscreen_check.button_pressed = true
 	var values := first.selected_values()
+	assert(values.region_backdrops and second.selected_values().region_backdrops)
+	first.region_backdrops_check.button_pressed = false
+	assert(not first.selected_values().region_backdrops and second.selected_values().region_backdrops)
+	var path := "user://region-backdrop-settings.cfg"
+	var preferences := AppPreferences.new()
+	preferences.region_backdrops = false
+	assert(AppSettingsStore.save_values(0.8, 0.8, false, path, preferences.save_options()) == OK)
+	assert(not AppSettingsStore.load_values(path).region_backdrops)
+	assert(AppSettingsStore.save_values(0.3, 0.4, false, path) == OK)
+	assert(not AppSettingsStore.load_values(path).region_backdrops, "Partial saves preserve the backdrop preference")
+	DirAccess.remove_absolute(path)
 	assert(values.music_volume == 0.75 and values.effects_volume == 0.25 and values.fullscreen)
 	assert(second.default_mayor_edit.text.is_empty())
 	assert(second.music_slider.value == 0)

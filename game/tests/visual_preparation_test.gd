@@ -253,6 +253,19 @@ func _run() -> void:
 	assert(main.palette_clock.cycle_ticks > ticks, "Background preload froze the game frame")
 	prepare.reset()
 	assert(not prepare.busy and prepare.preparing_view == -1 and prepare.archives.is_empty())
+	var region := RegionCampaign.new()
+	var regional_document: Sc2File = Sc2xDocument.from_legacy(main.document_state.current_document).document
+	assert(region.initialize_at(regional_document, 2, 17, "local", Vector2i.ZERO).is_empty())
+	main.regions.campaign = region
+	prepare.process()
+	assert(prepare.stages == [prepare._index(main.static_render.city_view_size())], "Regional entry must not wait for unused zoom banks")
+	await _finish_preparation(main)
+	main.map_view.zoom_factor = 0.25
+	main.camera_input.on_city_zoom_changed(25)
+	prepare.process()
+	await _finish_preparation(main)
+	assert(prepare.banks[prepare._index(main.static_render.city_view_size())].prefetch_covered(), "A new regional zoom must prepare its own bank")
+	prepare.reset()
 	main.queue_free()
 	await process_frame
 	print("PASS: full-city visual preparation, all zoom variants, cloud order, edits and zoom during background loading, playable frames and cancellation")

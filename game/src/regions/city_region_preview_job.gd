@@ -39,8 +39,10 @@ func render(city: CityState) -> Image:
 	seasons = Image.create(base.get_width(), base.get_height(), false, Image.FORMAT_RGBA8)
 	emission = Image.create(base.get_width(), base.get_height(), false, Image.FORMAT_RGBA8)
 	var water_images := {}
-	var band_height := reduction * maxi(1, 64 / reduction)
-	var band_width := reduction * maxi(1, 512 / reduction)
+	# Larger bounded strips avoid hundreds of repeated native water/mask calls.
+	# Still bounded independently of map size (at most 1024 x 256 pixels).
+	var band_height := reduction * maxi(1, 256 / reduction)
+	var band_width := reduction * maxi(1, 1024 / reduction)
 	var masks := [[CityNatureArtwork.atlas_masks(sprites), seasons, false], [CityBrightmaps.atlas_masks(sprites), emission, true]]
 	for top in range(0, extent.y, band_height):
 		for left in range(0, extent.x, band_width):

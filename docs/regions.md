@@ -32,7 +32,10 @@ Region cells activate on release. Dragging, leaving the control or losing focus
 cancels the pending click. Enter/Space can activate the keyboard selection.
 
 Other owned areas appear around the live map as lightly blurred grayscale static
-views at 33% opacity. Hovering raises opacity to 66% over one real-time second;
+views with a 16-tile gap between adjacent city areas. Settings > UI > Show
+surrounding city areas hides or restores these views; the choice is saved and
+defaults to enabled. The overview and sidebar region map remain available.
+The surrounding views have 33% opacity. Hovering raises opacity to 66% over one real-time second;
 leaving fades back to 33%. Click a view to open that city. Once its live graphics
 are ready, it fades into the real city over one second while the city being left
 fades to a gray, softened 33% view. These bounded background renders do not
@@ -48,6 +51,8 @@ without waiting for it on the UI thread; finished canceled results are discarded
 Only one preview worker runs at a time. A rejected or unanswered multiplayer
 preview request does not block the remaining queue; late replies cannot publish
 into a newer request. The preview timeout does not cancel a gameplay command.
+Regional entry prepares the selected zoom/traffic view first. Other views use
+the existing on-demand preparation when selected, retaining completed banks.
 Switch previews use isolated copies of both cities, including their saved view
 orientations. Only frozen views use the blur/grayscale shader; the active city
 and sidebar outlines retain their original graphics. Transitions use real time

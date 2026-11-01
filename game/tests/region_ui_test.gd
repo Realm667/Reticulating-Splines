@@ -208,6 +208,9 @@ func _region_fades() -> void:
 	image.fill(Color.RED)
 	var texture := ImageTexture.create_from_image(image)
 	var target := Vector2i(1, 0)
+	var spacing := RegionProjection.project(Vector2(32 + 16, 0),
+		Vector2(CityIsometricRenderer.HALF_WIDTH, CityIsometricRenderer.HALF_HEIGHT), 0)
+	assert(backdrop.displacement(target) == spacing)
 	backdrop.textures[target] = texture
 	var polygon := backdrop.polygon(target)
 	var point := (polygon[0] + polygon[2]) * 0.5 * map.camera._view_scale() + map.camera._draw_offset(map.camera._view_scale())

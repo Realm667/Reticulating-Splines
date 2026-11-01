@@ -64,6 +64,7 @@ var theme_selector: OptionButton
 var language_selector: OptionButton
 var ui_scale_selector: OptionButton
 var translucent_menus_check: CheckBox
+var region_backdrops_check: CheckBox
 var default_mayor_edit: LineEdit
 var renderer_selector: OptionButton
 var background_audio_check: CheckBox
@@ -105,6 +106,7 @@ func _ready() -> void:
 	language_selector.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
 	ui_scale_selector = %UiScaleSelector
 	translucent_menus_check = %TranslucentMenusCheck
+	region_backdrops_check = %RegionBackdropsCheck
 	theme_selector.item_selected.connect(func(_index: int) -> void: _sync_theme_controls())
 	visibility_changed.connect(_sync_theme_controls)
 	effects_slider = %EffectsSlider
@@ -456,6 +458,7 @@ func selected_values() -> AppSettingsStore.Values:
 	result.ui_theme = AppUiTheme.IDS[maxi(0, theme_selector.selected)]
 	result.ui_language = AppLocalization.codes()[maxi(0, language_selector.selected)]
 	result.translucent_menus = translucent_menus_check.button_pressed
+	result.region_backdrops = region_backdrops_check.button_pressed
 	result.ui_scale = AppUiScale.OPTIONS[maxi(0, ui_scale_selector.selected)]
 	result.use_classic_zoom_graphics = classic_zoom_check.button_pressed
 	result.overview_graphics = overview_graphics_selector.selected

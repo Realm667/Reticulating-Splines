@@ -36,6 +36,7 @@ var _incoming_opacity := 0.66
 const REST_OPACITY := 0.33
 const HOVER_OPACITY := 0.66
 const FADE_SECONDS := 1.0
+const AREA_GAP := 16
 const SNAPSHOT_SHADER := preload("res://src/regions/region_snapshot.gdshader")
 
 
@@ -285,7 +286,7 @@ func add_document(cell: Vector2i, document: Sc2File) -> void:
 func displacement(cell: Vector2i) -> Vector2:
 	var active: Array = state.get("active", [0, 0])
 	var delta := Vector2(cell) - Vector2(active[0], active[1])
-	return RegionProjection.project(delta * (map.city.map_size + 8),
+	return RegionProjection.project(delta * (map.city.map_size + AREA_GAP),
 		Vector2(CityIsometricRenderer.HALF_WIDTH, CityIsometricRenderer.HALF_HEIGHT), compass)
 
 
