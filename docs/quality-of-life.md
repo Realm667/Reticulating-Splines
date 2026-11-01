@@ -214,3 +214,19 @@ leaving a city. Autosaves retain their existing separate retention policy;
 multiplayer keeps its existing session backup behavior. To recover a backup,
 copy it to a new filename with the original `.sc2`, `.scn`, or `.sc2x` extension
 and open that copy.
+
+
+### SoundFonts and track transitions
+The Music box includes a MIDI SoundFont selector and a short explanation of each
+sound set. A/B swaps the last two selections at the MIDI player's current
+position. Recorded MP3/OGG/FLAC music is unaffected. Browse selects a custom
+SF2/SF3/DLS. The Audio settings and Music box share the saved preference.
+FluidR3Mono, MuseScore General and GeneralUser GS are bundled on all platforms;
+the original notices and sample provenance are available in About > Licenses.
+Direct, 2 s and 4 s transitions use two independent manual music players.
+The old track continues until the next recording/synth is ready. When duration
+is known, the next collection/favorite track starts before the current one ends.
+Pause/focus and volume changes apply to both sides of the fade. Rapid changes
+cancel the older transition; selecting Automatic music fades back to the game's
+controller without changing its selection or simulation timing. Direct is the
+initial default; transition length is saved locally with the Music box settings.

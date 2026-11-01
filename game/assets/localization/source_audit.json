@@ -26,7 +26,8 @@
     "game/src/ui/knowledge/*.gd",
     "game/src/application/knowledge.gd",
     "game/src/ui/settings/building_mix_panel.gd",
-    "game/src/assets/building_variants.gd"
+    "game/src/assets/building_variants.gd",
+    "game/src/audio/sound_font_catalog.gd"
   ],
   "non_display_literals": {
     "AcceptDialog": "Godot theme class used to measure the file dialog's content margins.",
@@ -85,6 +86,14 @@
     "NewInternalPort": "UPnP SOAP protocol field, never displayed.",
     "NewPortMappingDescription": "UPnP SOAP protocol field, never displayed.",
     "General/Fields": "Existing scene node path; not displayed.",
-    "Center/NewCityDialog/Content/Body/Preview": "Existing scene node path; not displayed."
+    "Center/NewCityDialog/Content/Body/Preview": "Existing scene node path; not displayed.",
+    "FluidR3Mono_GM.sf3": "Internal SoundFont filename or environment variable; not display text.",
+    "MuseScore_General.sf3": "Internal SoundFont filename or environment variable; not display text.",
+    "GeneralUser-GS.sf2": "Internal SoundFont filename or environment variable; not display text.",
+    "System32/drivers/gm.dls": "Internal SoundFont filename or environment variable; not display text.",
+    "SystemRoot": "Internal SoundFont filename or environment variable; not display text.",
+    "FluidR3Mono": "SoundFont proper name, identical across languages.",
+    "MuseScore General": "SoundFont proper name, identical across languages.",
+    "GeneralUser GS": "SoundFont proper name, identical across languages."
   }
 }

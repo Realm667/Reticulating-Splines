@@ -81,8 +81,9 @@ func _build_licenses() -> void:
 		"gcem-NOTICE.txt", "Apache-2.0.txt",
 	]))
 
-	if OS.get_name() == "Linux":
-		_add_license("FluidR3 Mono SoundFont — MIT", _license_files("fluidr3mono", ["FluidR3Mono-License.txt"]))
+	_add_license("FluidR3 Mono SoundFont — MIT", _license_files("fluidr3mono", ["FluidR3Mono-License.txt"]))
+	_add_license("MuseScore General SoundFont — MIT", _license_files("musescore-general", ["LICENSE.txt", "Sample-Sources.txt"]))
+	_add_license("GeneralUser GS SoundFont — GeneralUser GS License 2.0", _license_files("generaluser-gs", ["LICENSE.txt"]))
 
 	_add_license("QuickJS-ng — MIT", "QuickJS-ng %s JavaScript engine of the script runtime\nhttps://github.com/quickjs-ng/quickjs\n\n%s"
 		% [ScriptRuntime.engine_version(), FileAccess.get_file_as_string("res://assets/licenses/quickjs/QuickJS-ng-LICENSE.txt").strip_edges()])

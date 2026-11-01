@@ -1,3 +1,19 @@
+# Bundled SoundFonts and MIDI output
+
+Reticulating Splines now bundles FluidR3Mono GM 2.312, MuseScore General 0.2,
+and GeneralUser GS 2.0.3 on every platform, with the original licenses and notices.
+GeneralUser GS inclusion was explicitly requested after its author's sample-origin
+qualification was explained. This does not remove that qualification. All bank
+URLs, byte sizes and SHA-256 hashes are pinned in assets/soundfonts/manifest.json.
+The bank files are committed and included as raw PCK resources by every export
+preset; exported applications verify and extract a selected bank to a hash-named
+soundfont-cache file in AppPaths. Development reads the verified source directly.
+System and Custom selections remain available; FluidR3Mono is the last fallback.
+The Music box and Settings > Audio share the same saved choice. A/B retains the
+previous selection and changes the live MIDI synth at its current position.
+The following pre-existing technical notes and 2026-10-01 review describe the
+historical upstream policy where they differ from this section.
+
 # FluidSynth music
 
 OpenSC2K plays the MIDI music with [FluidSynth](https://www.fluidsynth.org/) and a

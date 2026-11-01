@@ -10533,3 +10533,63 @@ msgstr "선택한 모음 또는 즐겨찾기를 순서대로 또는 무작위로
 #: src/ui/settings/music_box_dialog.gd
 msgid "Stop manual playback and let the game choose the music again."
 msgstr "수동 재생을 중지하고 게임이 다시 음악을 선택하도록 합니다."
+
+
+#. Music SoundFont and transition controls.
+#: src/ui/settings/music_box_dialog.gd src/audio/sound_font_catalog.gd
+msgid "FluidR3Mono: compact classic General MIDI wavetable sound. MIT license."
+msgstr "FluidR3Mono: 작고 고전적인 General MIDI 웨이브테이블 음색입니다. MIT 라이선스."
+
+
+#. Music SoundFont and transition controls.
+#: src/ui/settings/music_box_dialog.gd src/audio/sound_font_catalog.gd
+msgid "MuseScore General: fuller acoustic instruments, based on FluidR3Mono. MIT license."
+msgstr "MuseScore General: FluidR3Mono 기반의 풍부한 어쿠스틱 악기 음색입니다. MIT 라이선스."
+
+
+#. Music SoundFont and transition controls.
+#: src/ui/settings/music_box_dialog.gd src/audio/sound_font_catalog.gd
+msgid "GeneralUser GS: expressive GM/GS sound for retro games. Its own license permits software use; some sample origins are uncertain."
+msgstr "GeneralUser GS: 레트로 게임용 풍부한 GM/GS 음색입니다. 자체 라이선스로 소프트웨어 사용이 허용되지만 일부 샘플의 출처는 불확실합니다."
+
+
+#. Music SoundFont and transition controls.
+#: src/ui/settings/music_box_dialog.gd src/audio/sound_font_catalog.gd
+msgid "Custom SoundFont: uses your selected SF2, SF3 or DLS file."
+msgstr "사용자 SoundFont: 선택한 SF2, SF3 또는 DLS 파일을 사용합니다."
+
+
+#. Music SoundFont and transition controls.
+#: src/ui/settings/music_box_dialog.gd src/audio/sound_font_catalog.gd
+msgid "System SoundFont: uses the operating system sound set, with FluidR3Mono as fallback."
+msgstr "시스템 SoundFont: 운영체제 음색을 사용하며 없으면 FluidR3Mono를 사용합니다."
+
+
+#. Music SoundFont and transition controls.
+#: src/ui/settings/music_box_dialog.gd src/audio/sound_font_catalog.gd
+msgid "Compare the current MIDI with the previous SoundFont at the same playback position."
+msgstr "현재 MIDI의 같은 재생 위치에서 이전 SoundFont와 비교합니다."
+
+
+#. Music SoundFont and transition controls.
+#: src/ui/settings/music_box_dialog.gd src/audio/sound_font_catalog.gd
+msgid "SoundFonts affect MIDI only; recorded music keeps its original sound."
+msgstr "SoundFont는 MIDI에만 적용됩니다. 녹음된 음악의 음색은 유지됩니다."
+
+
+#. Music SoundFont and transition controls.
+#: src/ui/settings/music_box_dialog.gd src/audio/sound_font_catalog.gd
+msgid "Track transitions"
+msgstr "곡 전환"
+
+
+#. Music SoundFont and transition controls.
+#: src/ui/settings/music_box_dialog.gd src/audio/sound_font_catalog.gd
+msgid "Direct"
+msgstr "즉시"
+
+
+#. Music SoundFont and transition controls.
+#: src/ui/settings/music_box_dialog.gd src/audio/sound_font_catalog.gd
+msgid "A/B"
+msgstr "A/B"

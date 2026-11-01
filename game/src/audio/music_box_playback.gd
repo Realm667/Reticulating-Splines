@@ -73,3 +73,16 @@ func _on_music_track_finished(track_id: int) -> void:
 		var finished: Variant = track_key()
 		stop_music()
 		song_finished.emit(finished)
+
+
+func ready_to_fade() -> bool:
+	return (dummy_music_active or (recording_player.stream != null and recording_player.playing)
+		or (music_player.is_track_active() and not music_player.is_loading_soundfont()))
+
+
+func remaining_seconds() -> float:
+	if recording_player.stream != null:
+		return maxf(0.0, recording_player.stream.get_length() - recording_player.get_playback_position())
+	if music_player._current_sequence != null and music_player.is_track_active():
+		return maxf(0.0, music_player._current_sequence.duration_seconds - music_player.position_seconds())
+	return -1.0

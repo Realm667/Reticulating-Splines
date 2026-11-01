@@ -112,6 +112,7 @@ func _run() -> void:
 	var activity: Array[bool] = []
 	audio.music_activity_changed.connect(func(value: bool) -> void: activity.append(value))
 	var box := qol.music_box
+	await _soundfonts_and_fades(box)
 	_shuffle_in_music_box(box)
 	await _shuffle_collection(box)
 	box.track_tabs.current_tab = 1
@@ -651,3 +652,49 @@ func _shuffle_collection(box: MusicBoxDialog) -> void:
 	assert(box.playback.track_key() == heard[-1])
 	box.automatic()
 	box.playback_mode.button_pressed = false
+
+
+func _soundfonts_and_fades(box: MusicBoxDialog) -> void:
+	var app := box.app
+	var original_choice := app.preferences.music_soundfont
+	box._select_soundfont(SoundFontCatalog.FLUID)
+	box._select_soundfont(SoundFontCatalog.MUSESCORE)
+	box._compare_soundfont()
+	assert(app.preferences.music_soundfont == SoundFontCatalog.FLUID)
+	box._compare_soundfont()
+	assert(app.preferences.music_soundfont == SoundFontCatalog.MUSESCORE)
+	box._select_soundfont(original_choice)
+	box.crossfade_seconds = 2.0
+	box.play_track(10002)
+	await create_timer(2.15).timeout
+	var first := box.playback
+	box.play_track(10003)
+	assert(box.outgoing == first and box.outgoing.music_playback_is_active())
+	await create_timer(0.7).timeout
+	assert(box.playback.music_output_gain > 0.0 and box.playback.music_output_gain < 1.0)
+	assert(box.outgoing.music_output_gain > 0.0 and box.outgoing.music_output_gain < 1.0)
+	box.playback._set_music_paused(true)
+	await process_frame
+	var paused_gain := box.playback.music_output_gain
+	await create_timer(0.2).timeout
+	assert(is_equal_approx(box.playback.music_output_gain, paused_gain))
+	assert(box.outgoing.music_paused)
+	box.playback._set_music_paused(false)
+	await create_timer(1.6).timeout
+	assert(not box.outgoing.music_playback_is_active())
+	box.automatic()
+	box.volume.value = 39.0
+	assert(not box.playback.music_playback_is_active() and not box.outgoing.music_playback_is_active())
+	assert(is_equal_approx(box.app.audio_controller.music_output_gain, 0.39))
+	box.volume.value = 100.0
+	box.crossfade_seconds = 4.0
+	box._save()
+	var saved := ConfigFile.new()
+	assert(saved.load(box.storage_path) == OK and saved.get_value("player", "crossfade_seconds") == 4.0)
+	box.play_track(10004)
+	box.play_track(10005)
+	assert(box.playback.current_track_id == 10005)
+	box.automatic(true)
+	assert(not box.playback.music_playback_is_active() and not box.outgoing.music_playback_is_active())
+	box.crossfade_seconds = 0.0
+	box._save()

@@ -29371,3 +29371,63 @@ msgstr "Zwischen Wiedergabe in Reihenfolge und Zufallswiedergabe für die gewäh
 #: src/ui/settings/music_box_dialog.gd
 msgid "Stop manual playback and let the game choose the music again."
 msgstr "Manuelle Wiedergabe beenden und die Musikauswahl wieder dem Spiel überlassen."
+
+
+#. Music SoundFont and transition controls.
+#: src/ui/settings/music_box_dialog.gd src/audio/sound_font_catalog.gd
+msgid "FluidR3Mono: compact classic General MIDI wavetable sound. MIT license."
+msgstr "FluidR3Mono: kompakter klassischer General-MIDI-Wavetable-Klang. MIT-Lizenz."
+
+
+#. Music SoundFont and transition controls.
+#: src/ui/settings/music_box_dialog.gd src/audio/sound_font_catalog.gd
+msgid "MuseScore General: fuller acoustic instruments, based on FluidR3Mono. MIT license."
+msgstr "MuseScore General: vollere akustische Instrumente auf Basis von FluidR3Mono. MIT-Lizenz."
+
+
+#. Music SoundFont and transition controls.
+#: src/ui/settings/music_box_dialog.gd src/audio/sound_font_catalog.gd
+msgid "GeneralUser GS: expressive GM/GS sound for retro games. Its own license permits software use; some sample origins are uncertain."
+msgstr "GeneralUser GS: ausdrucksstarker GM/GS-Klang für Retrospiele. Die eigene Lizenz erlaubt Softwareverwendung; einige Sample-Ursprünge sind unklar."
+
+
+#. Music SoundFont and transition controls.
+#: src/ui/settings/music_box_dialog.gd src/audio/sound_font_catalog.gd
+msgid "Custom SoundFont: uses your selected SF2, SF3 or DLS file."
+msgstr "Eigener SoundFont: verwendet deine gewählte SF2-, SF3- oder DLS-Datei."
+
+
+#. Music SoundFont and transition controls.
+#: src/ui/settings/music_box_dialog.gd src/audio/sound_font_catalog.gd
+msgid "System SoundFont: uses the operating system sound set, with FluidR3Mono as fallback."
+msgstr "System-SoundFont: verwendet das Klangset des Betriebssystems, mit FluidR3Mono als Ersatz."
+
+
+#. Music SoundFont and transition controls.
+#: src/ui/settings/music_box_dialog.gd src/audio/sound_font_catalog.gd
+msgid "Compare the current MIDI with the previous SoundFont at the same playback position."
+msgstr "Das aktuelle MIDI an derselben Abspielposition mit dem vorherigen SoundFont vergleichen."
+
+
+#. Music SoundFont and transition controls.
+#: src/ui/settings/music_box_dialog.gd src/audio/sound_font_catalog.gd
+msgid "SoundFonts affect MIDI only; recorded music keeps its original sound."
+msgstr "SoundFonts wirken nur auf MIDI; aufgenommene Musik behält ihren Klang."
+
+
+#. Music SoundFont and transition controls.
+#: src/ui/settings/music_box_dialog.gd src/audio/sound_font_catalog.gd
+msgid "Track transitions"
+msgstr "Titelübergänge"
+
+
+#. Music SoundFont and transition controls.
+#: src/ui/settings/music_box_dialog.gd src/audio/sound_font_catalog.gd
+msgid "Direct"
+msgstr "Direkt"
+
+
+#. Music SoundFont and transition controls.
+#: src/ui/settings/music_box_dialog.gd src/audio/sound_font_catalog.gd
+msgid "A/B"
+msgstr "A/B"

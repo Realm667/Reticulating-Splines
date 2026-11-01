@@ -89,6 +89,7 @@ var _load_result: Dictionary = {}
 # a track that waits for its SoundFont: [sequence, track id, start seconds]
 var _waiting_track: Array = []
 var _current_sequence: StandardMidiFile
+var _sequence_start_seconds := 0.0
 
 
 func _ready() -> void:
@@ -128,7 +129,7 @@ func set_soundfont(choice: String, custom_path := "") -> void:
 	# restart the track with the new synthesizer, where it played
 	var sequence := _current_sequence
 	var track_id := current_track_id
-	var position := float(debug_metrics().position_seconds)
+	var position := position_seconds()
 	var paused := _paused
 	play_sequence(sequence, track_id, position)
 	set_paused(paused)
@@ -189,6 +190,7 @@ func _started(sequence: StandardMidiFile, track_id: int) -> PlaybackResult:
 
 func _start_playback(sequence: StandardMidiFile, track_id: int, start_seconds: float) -> String:
 	_generator.mix_rate = SAMPLE_RATE
+	_sequence_start_seconds = start_seconds
 	_audio_player.play()
 	# a pause during the SoundFont load holds the stream that starts after it
 	_audio_player.stream_paused = _paused
@@ -272,6 +274,15 @@ func debug_metrics() -> Dictionary:
 	_mutex.unlock()
 
 	return result
+
+
+## Audible cursor, excluding the synth's pre-rendered generator buffer.
+func position_seconds() -> float:
+	if not _waiting_track.is_empty():
+		return float(_waiting_track[2])
+	if _audio_player != null and _audio_player.playing:
+		return _sequence_start_seconds + _audio_player.get_playback_position()
+	return float(debug_metrics().position_seconds)
 
 
 ## True while a SoundFont loads. A track that waits for it plays afterward.
@@ -386,7 +397,7 @@ func _publish_status(errors: PackedStringArray) -> void:
 	synth_status = "No MIDI music"
 
 	if _engine != null:
-		synth_status = "FluidSynth %s: %s" % [FluidMidiSynth.library_version(), soundfont_path.get_file()]
+		synth_status = "FluidSynth %s: %s" % [FluidMidiSynth.library_version(), SoundFonts.display_name(soundfont_path)]
 
 	if not errors.is_empty():
 		synth_status += ". " + "; ".join(errors)

@@ -395,6 +395,7 @@ func _sync_theme_controls() -> void:
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_TRANSLATION_CHANGED and is_node_ready():
 		set_update_status(last_update_check, last_update_error)
+		_update_soundfont_row()
 
 
 # Show the result of the last update check, or nothing before the first check.
@@ -511,6 +512,7 @@ func _build_soundfont_controls() -> void:
 	for choice in SoundFontCatalog.choices():
 		soundfont_selector.add_item(SoundFontCatalog.label(choice))
 		soundfont_selector.set_item_metadata(soundfont_selector.item_count - 1, choice)
+		soundfont_selector.set_item_tooltip(soundfont_selector.item_count - 1, SoundFontCatalog.description(choice))
 
 	soundfont_selector.item_selected.connect(func(_index: int) -> void:
 		_update_soundfont_row())
@@ -551,6 +553,9 @@ func selected_soundfont() -> String:
 
 func _update_soundfont_row() -> void:
 	%SoundFontRow.visible = selected_soundfont() == SoundFontCatalog.CUSTOM
+	soundfont_selector.tooltip_text = SoundFontCatalog.description(selected_soundfont())
+	for index in soundfont_selector.item_count:
+		soundfont_selector.set_item_tooltip(index, SoundFontCatalog.description(str(soundfont_selector.get_item_metadata(index))))
 
 
 func _bind_pack_controls(kind: String, edit: LineEdit, label: Label, browse: Button) -> void:

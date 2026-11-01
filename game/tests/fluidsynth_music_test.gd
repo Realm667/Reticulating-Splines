@@ -30,7 +30,9 @@ func _run() -> void:
 	_test_rendering()
 	_test_fallback_order()
 	_test_preferences()
+	_test_bundled_soundfonts()
 	await _test_player()
+	await _test_bundled_switching()
 
 	for file in DirAccess.get_files_at(temporary_folder):
 		DirAccess.remove_absolute(temporary_folder.path_join(file))
@@ -132,11 +134,14 @@ func _test_fallback_order() -> void:
 	# a custom SoundFont falls back to the operating system sound set, where one exists
 	var system := SoundFonts.system_path()
 	var with_system := PackedStringArray() if system.is_empty() else PackedStringArray([system])
+	var bundled := SoundFonts.bundled_path(SoundFonts.FLUID)
+	if bundled not in with_system:
+		with_system.append(bundled)
 	var custom := SoundFonts.candidates(SoundFonts.CUSTOM, "/music/custom.sf2")
 	assert(custom == PackedStringArray(["/music/custom.sf2"]) + with_system)
 	assert(SoundFonts.candidates(SoundFonts.SYSTEM, "/music/custom.sf2") == with_system)
 	assert(SoundFonts.candidates(SoundFonts.CUSTOM, "") == with_system)
-	assert(SoundFonts.choices() == PackedStringArray([SoundFonts.SYSTEM, SoundFonts.CUSTOM]))
+	assert(SoundFonts.choices() == PackedStringArray([SoundFonts.SYSTEM, SoundFonts.FLUID, SoundFonts.MUSESCORE, SoundFonts.GENERALUSER, SoundFonts.CUSTOM]))
 
 	# the Linux package SoundFont comes after the distribution SoundFonts, and only on Linux
 	var linux := SoundFonts.sound_set_paths("Linux", "/opt/opensc2k")
@@ -146,7 +151,7 @@ func _test_fallback_order() -> void:
 	assert(SoundFonts.sound_set_paths("Windows", "C:/OpenSC2K").size() == 1)
 
 	# choices that earlier versions saved
-	for removed in ["default", "fluidr3mono", "builtin"]:
+	for removed in ["default", "builtin"]:
 		assert(SoundFonts.normalize(removed) == SoundFonts.SYSTEM)
 
 	if not system.is_empty():
@@ -313,3 +318,45 @@ func _write(path: String, bytes: PackedByteArray) -> void:
 	var file := FileAccess.open(path, FileAccess.WRITE)
 	file.store_buffer(bytes)
 	file.close()
+
+
+func _test_bundled_soundfonts() -> void:
+	for choice in SoundFonts.BUNDLED:
+		assert(SoundFonts.normalize(choice) == choice)
+		var path := SoundFonts.bundled_path(choice)
+		assert(not path.is_empty() and FileAccess.file_exists(path))
+		assert(SoundFonts.candidates(choice, "")[0] == path)
+		var engine := FluidMidiSynth.new()
+		assert(engine.load_soundfont(path).is_empty(), "Bundled bank must load without fallback: " + choice)
+		var player := MidiSynthPlayer.new()
+		for program in [0, 4, 32, 56, 65, 80]:
+			var pcm := player.render_offline(engine, _note_sequence(0, 60, program), 11025)
+			assert(_energy(pcm) > 1e-6, "Bundled GM instrument is silent: %s / %d" % [choice, program])
+		assert(_energy(player.render_offline(engine, _note_sequence(9, 36, 0), 11025)) > 1e-6)
+		player.free()
+		var options := AppSettingsStore.SaveOptions.new()
+		options.music_soundfont = choice
+		var settings := temporary_folder.path_join("bundled.cfg")
+		assert(AppSettingsStore.save_values(0.5, 0.5, false, settings, options) == OK)
+		assert(AppSettingsStore.load_values(settings, 0.5, 0.5, false).music_soundfont == choice)
+	print("PASS: all three bundled banks load, render six GM instruments and percussion, and persist")
+
+
+func _test_bundled_switching() -> void:
+	var player := MidiSynthPlayer.new()
+	root.add_child(player)
+	player.set_soundfont(SoundFonts.CUSTOM, _fixture())
+	assert(player.play_sequence(_note_sequence(0, 60, 0, 60.0), 10003, 1.25).ok)
+	player.set_paused(true)
+	await _wait_until(func() -> bool: return not player.is_loading_soundfont())
+	for choice in [SoundFonts.FLUID, SoundFonts.MUSESCORE, SoundFonts.GENERALUSER, SoundFonts.MUSESCORE]:
+		var cursor := player.position_seconds()
+		player.set_soundfont(choice)
+		await _wait_until(func() -> bool: return not player.is_loading_soundfont())
+		assert(player.current_track_id == 10003 and player._paused)
+		assert(absf(player.position_seconds() - cursor) < 0.05, "Switch must preserve the audible cursor, not skip the pre-rendered buffer")
+		assert(player.soundfont_path == SoundFonts.bundled_path(choice))
+		assert(player.synth_status.contains(SoundFonts.label(choice)))
+	player.queue_free()
+	await process_frame
+	print("PASS: bundled MIDI A/B switching preserves audible position and pause")

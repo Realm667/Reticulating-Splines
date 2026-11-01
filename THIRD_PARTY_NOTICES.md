@@ -76,16 +76,15 @@ license. The license texts are in `game/assets/licenses` (in packages:
 
 In packages, the license texts are in `licenses/rust`.
 
-## FluidR3Mono GM SoundFont (Linux packages only)
+## Legacy FluidR3Mono GM sidecar (Linux packages)
 
-- File: `FluidR3Mono_GM.sf3`, beside the executable. The Windows and macOS
-  packages include no SoundFont; they use the sound set of the operating system.
+- Legacy Linux sidecar: `FluidR3Mono_GM.sf3`, beside the executable. The same bank is also bundled inside the resource pack on every platform. System banks remain selectable in place.
 - Version 2.312, as MuseScore 2.3.2 includes it (`share/sound`), unchanged.
 - License: MIT. Copyright (c) 2000-2002, 2008 Frank Wen; mono version
   Copyright (c) 2014-16 Michael Cowgill; Temple Blocks by Ethan Winer;
   Drumline Percussion by Michael Schorsch.
 - License text: `game/assets/licenses/fluidr3mono/FluidR3Mono-License.txt`
-  (in Linux packages: `licenses/fluidr3mono`).
+  (public desktop packages: `licenses/fluidr3mono`; also included in the resource pack).
 
 ## Classic interface fonts
 
@@ -111,3 +110,14 @@ see `packs/standalone-audio/provenance.json` (in downloads:
 The locked dependency inventory, upstream license and attribution texts are in `licenses/rust/dependencies` (source: `game/assets/licenses/rust/dependencies`). This is a workspace superset; each platform uses a subset. It includes keyring and the Secret Service/DBus backend. Vendored DBus keeps its upstream license notices.
 
 Unmodified godot-rust bindings use MPL-2.0. Their exact source archives, and all other locked Rust dependency sources, are provided in `ReticulatingSplines-0.3.0-rs.8-rust-sources.zip` alongside this release. Each crate retains its own license and copyright notices; the game license does not replace them.
+
+
+## Bundled MIDI sound sets (all platforms)
+FluidR3Mono GM 2.312 and MuseScore General 0.2 are MIT licensed. GeneralUser GS
+2.0.3 uses GeneralUser GS License 2.0, which permits use in software; its author
+notes uncertainty about the origin of some samples. The original unmodified
+licenses, author notices and MuseScore sample-source list are in
+`game/assets/licenses/{fluidr3mono,musescore-general,generaluser-gs}` and About.
+Exact upstream URLs and SHA-256 hashes: `game/assets/soundfonts/manifest.json`.
+The banks are shipped in the game resource pack and extracted to a versioned
+local cache for FluidSynth. No Windows/macOS system sound banks are copied.

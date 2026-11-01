@@ -9,6 +9,16 @@ const ORIGINAL_TRACK_TITLES = MusicTrackTitle.ORIGINAL
 
 var app: CityApplication
 var playback: MusicBoxPlayback
+var outgoing: MusicBoxPlayback
+var soundfont_selector: OptionButton
+var soundfont_description: Label
+var transition_selector: OptionButton
+var crossfade_seconds := 0.0
+var _transition_waiting := false
+var _fade_held := false
+var _previous_soundfont := ""
+var _previous_custom_path := ""
+var _applied_soundfont := ""
 var config := ConfigFile.new()
 var storage_path := ""
 var library: ItemList
@@ -45,6 +55,9 @@ func _init(application: CityApplication) -> void:
 	storage_path = app.preferences.settings_path + ".music-box.cfg"
 	config.load(storage_path)
 	favorites = _saved_favorites(config)
+	crossfade_seconds = float(config.get_value("player", "crossfade_seconds", 0.0))
+	if crossfade_seconds not in [0.0, 2.0, 4.0]:
+		crossfade_seconds = 0.0
 	now_playing = label("", "SectionHeading")
 	now_playing.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
 	now_playing.autowrap_mode = TextServer.AUTOWRAP_OFF
@@ -127,6 +140,44 @@ func _init(application: CityApplication) -> void:
 		_effects_dirty = true
 		_effects_save_delay = 0.5)
 	levels.add_child(effects)
+	var soundfonts := row()
+	var soundfont_label := Label.new()
+	soundfont_label.text = "Music SoundFont"
+	soundfonts.add_child(soundfont_label)
+	soundfont_selector = OptionButton.new()
+	soundfont_selector.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	for choice in SoundFontCatalog.choices():
+		soundfont_selector.add_item(SoundFontCatalog.label(choice))
+		soundfont_selector.set_item_metadata(soundfont_selector.item_count - 1, choice)
+		soundfont_selector.set_item_tooltip(soundfont_selector.item_count - 1, SoundFontCatalog.description(choice))
+	soundfont_selector.item_selected.connect(func(index: int) -> void: _select_soundfont(str(soundfont_selector.get_item_metadata(index))))
+	soundfonts.add_child(soundfont_selector)
+	var picker := FileDialog.new()
+	picker.title = "Select a SoundFont"
+	picker.theme = AppUiTheme.file_dialog()
+	picker.file_mode = FileDialog.FILE_MODE_OPEN_FILE
+	picker.filters = PackedStringArray(["*.sf2, *.sf3, *.dls ; General MIDI SoundFont"])
+	picker.access = FileDialog.ACCESS_FILESYSTEM
+	add_child(picker)
+	picker.file_selected.connect(func(path: String) -> void: _select_soundfont(SoundFontCatalog.CUSTOM, path))
+	button(soundfonts, "Browse...", func() -> void: picker.popup_centered_ratio(0.8))
+	var compare := button(soundfonts, "A/B", _compare_soundfont)
+	compare.tooltip_text = "Compare the current MIDI with the previous SoundFont at the same playback position."
+	soundfont_description = label("", "HelpLabel")
+	soundfont_description.custom_minimum_size.x = 0
+	var transitions := row()
+	var transition_label := Label.new()
+	transition_label.text = "Track transitions"
+	transitions.add_child(transition_label)
+	transition_selector = OptionButton.new()
+	for seconds in [0, 2, 4]:
+		transition_selector.add_item("Direct" if seconds == 0 else "%d s" % seconds)
+		transition_selector.set_item_metadata(transition_selector.item_count - 1, seconds)
+	transition_selector.select([0.0, 2.0, 4.0].find(crossfade_seconds))
+	transition_selector.item_selected.connect(func(index: int) -> void:
+		crossfade_seconds = float(transition_selector.get_item_metadata(index))
+		_save())
+	transitions.add_child(transition_selector)
 	var automatic_button := button(row(), "Automatic music", automatic)
 	automatic_button.tooltip_text = "Stop manual playback and let the game choose the music again."
 	var folders := row()
@@ -137,20 +188,77 @@ func _init(application: CityApplication) -> void:
 
 
 func _ready() -> void:
-	playback = MusicBoxPlayback.new()
-	add_child(playback)
-	playback.setup(app.audio_controller.reference_root, app.preferences.music_volume, 0.0, app.audio_controller.original_media_enabled)
+	playback = _new_playback()
+	outgoing = _new_playback()
 	app.audio_controller.set_music_output_gain(volume.value / 100.0)
-	playback.song_finished.connect(func(id: Variant) -> void: step(1, id))
-	playback.custom_failed.connect(_custom_failed)
-	playback.music_notice.connect(func(message: String) -> void:
-		if active and app.city_status_bar != null:
-			app.city_status_bar.show_music_notice(message))
-	playback.music_activity_changed.connect(func(playing: bool) -> void:
-		if not playing and playback.current_track_id >= 0:
-			_recover_failed_playback.call_deferred())
+	_refresh_soundfont()
 	rescan()
 	_refresh_favorites()
+
+
+func _new_playback() -> MusicBoxPlayback:
+	var player := MusicBoxPlayback.new()
+	add_child(player)
+	player.setup(app.audio_controller.reference_root, app.preferences.music_volume, 0.0, app.audio_controller.original_media_enabled)
+	player.song_finished.connect(func(id: Variant) -> void:
+		if active and player == playback:
+			step(1, id))
+	player.custom_failed.connect(func() -> void:
+		if active and player == playback:
+			_custom_failed())
+	player.music_notice.connect(func(message: String) -> void:
+		if active and player == playback and app.city_status_bar != null:
+			app.city_status_bar.show_music_notice(message))
+	player.music_activity_changed.connect(func(playing: bool) -> void:
+		if not playing and player == playback and player.current_track_id >= 0:
+			_recover_failed_playback.call_deferred())
+	return player
+
+
+func _refresh_soundfont() -> void:
+	var choice := app.preferences.music_soundfont
+	for index in soundfont_selector.item_count:
+		var item_choice := str(soundfont_selector.get_item_metadata(index))
+		soundfont_selector.set_item_tooltip(index, SoundFontCatalog.description(item_choice))
+		if item_choice == choice:
+			soundfont_selector.select(index)
+	soundfont_description.text = SoundFontCatalog.description(choice) + " " + tr("SoundFonts affect MIDI only; recorded music keeps its original sound.")
+	soundfont_selector.tooltip_text = soundfont_description.text
+
+
+func _select_soundfont(choice: String, custom_path := "") -> void:
+	var options := AppSettingsStore.SaveOptions.new()
+	options.music_soundfont = choice
+	options.music_soundfont_path = app.preferences.music_soundfont_path if custom_path.is_empty() else custom_path
+	var error := AppSettingsStore.save_values(app.preferences.music_volume, app.preferences.effects_volume,
+		app.preferences.fullscreen, app.preferences.settings_path, options)
+	if error != OK:
+		_refresh_soundfont()
+		status.text = tr("Cannot save music preferences: %s") % error_string(error)
+		return
+	_previous_soundfont = app.preferences.music_soundfont
+	_previous_custom_path = app.preferences.music_soundfont_path
+	app.preferences.music_soundfont = choice
+	app.preferences.music_soundfont_path = str(options.music_soundfont_path)
+	_apply_soundfont()
+	_refresh_soundfont()
+	app.main_overlays.settings_dialog.show_soundfont(choice, app.preferences.music_soundfont_path, app.audio_controller.music_player.synth_status)
+
+
+func _apply_soundfont() -> void:
+	var key := app.preferences.music_soundfont + "|" + app.preferences.music_soundfont_path
+	if key == _applied_soundfont:
+		return
+	_applied_soundfont = key
+	for player in [app.audio_controller, playback, outgoing]:
+		player.set_music_soundfont(app.preferences.music_soundfont, app.preferences.music_soundfont_path)
+
+
+func _compare_soundfont() -> void:
+	if _previous_soundfont.is_empty():
+		_select_soundfont(SoundFontCatalog.FLUID if app.preferences.music_soundfont != SoundFontCatalog.FLUID else SoundFontCatalog.SYSTEM)
+	else:
+		_select_soundfont(_previous_soundfont, _previous_custom_path)
 
 
 static func _saved_favorites(saved: ConfigFile) -> Array:
@@ -269,6 +377,7 @@ func _refresh_favorites() -> void:
 
 
 func open() -> void:
+	_refresh_soundfont()
 	_refresh_playback_mode()
 	rescan()
 	_refresh_favorites()
@@ -331,37 +440,46 @@ func play_track(id: Variant, from_favorites := false) -> void:
 		status.text = tr("Enable Music in Options to play a track.")
 		return
 	_switch_serial += 1
-	var serial := _switch_serial
 	if _fade != null:
 		_fade.kill()
+		_fade_held = false
+	# Two independent players allow a real overlap, including MIDI synth tails.
+	outgoing.stop_music()
+	var previous := playback
+	playback = outgoing
+	outgoing = previous
+	if crossfade_seconds == 0.0:
+		outgoing.stop_music()
 	_sync_source()
 	active = true
 	app.audio_controller.music_notices_enabled = false
 	_playing_favorites = from_favorites
 	playback.music_paused = false
-	_fade = create_tween()
-	_fade.set_parallel(true)
-	_fade.tween_method(app.audio_controller.set_music_output_gain, app.audio_controller.music_output_gain, 0.0, 0.15)
-	_fade.tween_method(playback.set_music_output_gain, playback.music_output_gain, 0.0, 0.15)
-	await _fade.finished
-	if serial != _switch_serial:
-		return
-	if not _available(id):
-		automatic()
-		status.text = tr("This music track is not available.")
-		return
+	playback.set_music_output_gain(0.0 if crossfade_seconds > 0.0 else 1.0)
 	var started := playback.play_pack(id, music_library.tracks[id]) if music_library.tracks.has(id) else playback.play_custom(id, custom_music.resolve(id))
 	if not started:
-		if id is String and CustomMusicLibrary.valid_id(id):
-			_custom_failed()
-		else:
-			automatic()
-			status.text = tr("This music track is not available.")
+		_custom_failed()
 		return
 	favorite_index = favorites.find(id)
 	_refresh_favorites()
-	_fade = create_tween()
-	_fade.tween_method(playback.set_music_output_gain, 0.0, 1.0, 0.2)
+	_transition_waiting = true
+	if playback.ready_to_fade():
+		_begin_crossfade()
+
+
+func _begin_crossfade() -> void:
+	_transition_waiting = false
+	if crossfade_seconds <= 0.0:
+		app.audio_controller.set_music_output_gain(0.0)
+		outgoing.stop_music()
+		playback.set_music_output_gain(1.0)
+		return
+	_fade = create_tween().set_parallel(true)
+	_fade.tween_method(app.audio_controller.set_music_output_gain, app.audio_controller.music_output_gain, 0.0, crossfade_seconds)
+	_fade.tween_method(outgoing.set_music_output_gain, outgoing.music_output_gain, 0.0, crossfade_seconds)
+	_fade.tween_method(playback.set_music_output_gain, 0.0, 1.0, crossfade_seconds)
+	var fading := outgoing
+	_fade.finished.connect(func() -> void: fading.stop_music())
 
 
 func step(direction: int, finished_track: Variant = null) -> void:
@@ -414,18 +532,27 @@ func _toggle_pause() -> void:
 		playback._set_music_paused(not playback.music_paused)
 
 
-func automatic() -> void:
+func automatic(immediate := false) -> void:
 	status.text = ""
 	_switch_serial += 1
+	_transition_waiting = false
 	if _fade != null:
 		_fade.kill()
+		_fade_held = false
 	active = false
 	app.audio_controller.music_notices_enabled = true
-	playback.stop_music()
+	outgoing.stop_music()
+	var duration := 0.0 if immediate else crossfade_seconds
+	if duration <= 0.0:
+		playback.stop_music()
+		app.audio_controller.set_music_output_gain(volume.value / 100.0)
+	else:
+		_fade = create_tween().set_parallel(true)
+		_fade.tween_method(playback.set_music_output_gain, playback.music_output_gain, 0.0, duration)
+		_fade.tween_method(app.audio_controller.set_music_output_gain, app.audio_controller.music_output_gain, volume.value / 100.0, duration)
+		_fade.finished.connect(playback.stop_music)
 	if app.audio_controller.music_playback_is_active():
 		app.audio_controller.announce_music()
-	_fade = create_tween()
-	_fade.tween_method(app.audio_controller.set_music_output_gain, app.audio_controller.music_output_gain, volume.value / 100.0, 0.2)
 
 
 func _volume_changed(_value: float) -> void:
@@ -434,6 +561,10 @@ func _volume_changed(_value: float) -> void:
 		if not active:
 			if _fade != null:
 				_fade.kill()
+				_fade_held = false
+			playback.stop_music()
+			outgoing.stop_music()
+			_transition_waiting = false
 			app.audio_controller.set_music_output_gain(volume.value / 100.0)
 	_save()
 
@@ -453,7 +584,7 @@ func _process(delta: float) -> void:
 			_save_effects()
 	if active:
 		if app.document_state.city != null and not app.document_state.city.music_enabled():
-			automatic()
+			automatic(true)
 		else:
 			var target_volume := app.audio_controller.music_volume * volume.value / 100.0
 			if not is_equal_approx(playback.music_volume, target_volume):
@@ -462,6 +593,35 @@ func _process(delta: float) -> void:
 			playback.background_audio = app.audio_controller.background_audio
 			playback.focus_paused = app.audio_controller.focus_paused
 			playback._sync_music_pause()
+	_apply_soundfont()
+	if not active:
+		for player in [playback, outgoing]:
+			player.application_has_focus = app.audio_controller.application_has_focus
+			player.background_audio = app.audio_controller.background_audio
+			player.focus_paused = app.audio_controller.focus_paused
+			player.music_paused = app.audio_controller.music_paused
+			player._sync_music_pause()
+	if active:
+		outgoing.set_volumes(playback.music_volume, 0.0)
+		outgoing.music_paused = playback.music_paused
+		outgoing.application_has_focus = playback.application_has_focus
+		outgoing.background_audio = playback.background_audio
+		outgoing.focus_paused = playback.focus_paused
+		outgoing._sync_music_pause()
+		var paused := playback.music_paused or playback.focus_paused or not playback.audio_allowed()
+		if _fade != null and _fade.is_valid():
+			if paused and _fade.is_running():
+				_fade.pause()
+				_fade_held = true
+			elif not paused and _fade_held:
+				_fade.play()
+				_fade_held = false
+		if _transition_waiting and playback.ready_to_fade():
+			_begin_crossfade()
+		if crossfade_seconds > 0.0 and not paused and not _transition_waiting and (_fade == null or not _fade.is_running()):
+			var remaining := playback.remaining_seconds()
+			if remaining > 0.0 and remaining <= crossfade_seconds and outgoing.recording_player.stream == null:
+				step(1)
 	_refresh_elapsed += delta
 	if not visible or _refresh_elapsed < 0.25:
 		return
@@ -511,6 +671,7 @@ func _save() -> void:
 	config.set_value("player", "favorites", favorites.duplicate())
 	config.set_value("player", "favorites_version", 1)
 	config.set_value("player", "gain", volume.value / 100.0)
+	config.set_value("player", "crossfade_seconds", crossfade_seconds)
 	var error := config.save(storage_path)
 	if error != OK:
 		status.text = tr("Cannot save music preferences: %s") % error_string(error)
@@ -600,3 +761,4 @@ func _custom_failed() -> void:
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_TRANSLATION_CHANGED and is_node_ready():
 		rescan()
+		_refresh_soundfont()
