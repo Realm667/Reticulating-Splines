@@ -349,21 +349,23 @@ func _candidates(app: CityApplication, tile: Vector2i, enter: int = 0) -> Array:
 			if own or bridge_lane:
 				if lower_crossing and own:
 					mask = app.moving_sprites._dynamic_train_foreground_image(archive, command, divisor, mask)
-				elif tower:
-					# The tower's front pier extends below the road plane. A height
-					# cutoff removes that wall and lets figures paint across it.
-					# Subtract only the matching deck, with the same bottom anchor.
-					var deck_id := command.sprite_id - BuildingTileIds.RAISING_BRIDGE_TOWER + BuildingTileIds.ROAD_BRIDGE
-					var deck := app.moving_sprites.dynamic_sprite_resource(archive, deck_id, command.flip, divisor, 1, true)
-					if deck != null:
-						mask = CityIsometricRenderer.foreground_difference_mask(mask, deck.image)
 				elif not tunnel:
 					# The deck is beneath the car; its towers and rails remain foreground.
 					var forward := Vector2(CityLifePaths.DIRECTIONS[enter])
 					var opposite := (enter + 2) % 4
 					var a := CityLifeLights._project(city, tile, forward * 0.5, CityLifePaths.edge_height(city, tile, enter))
 					var b := CityLifeLights._project(city, tile, -forward * 0.5, CityLifePaths.edge_height(city, tile, opposite))
-					mask = deck_foreground(mask, origin, (a + b) * 0.5, (b.y - a.y) / (b.x - a.x))
+					var upper := deck_foreground(mask, origin, (a + b) * 0.5, (b.y - a.y) / (b.x - a.x))
+					if tower:
+						# Preserve the complete tower above the road. Its front pier
+						# also extends below it: subtract only the matching deck there.
+						var deck_id := command.sprite_id - BuildingTileIds.RAISING_BRIDGE_TOWER + BuildingTileIds.ROAD_BRIDGE
+						var deck := app.moving_sprites.dynamic_sprite_resource(archive, deck_id, command.flip, divisor, 1, true)
+						if deck != null:
+							mask = CityIsometricRenderer.foreground_difference_mask(mask, deck.image)
+							mask.blend_rect(upper, Rect2i(Vector2i.ZERO, upper.get_size()), Vector2i.ZERO)
+					else:
+						mask = upper
 			candidates.append({"origin": origin, "image": mask})
 	_occluder_bounds[key] = bounds
 	# The figure shader samples exactly this 128-pixel mask. Do not compose

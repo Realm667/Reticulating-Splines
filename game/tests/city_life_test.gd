@@ -104,10 +104,12 @@ func _check_bridge_tower(graphics: GraphicsPack = null) -> void:
 		assert(tower != null)
 		var canvas := CityLifeCanvas.new()
 		var front := Vector2i(11 if flipped else 20, 24) + tower.position
+		var roof := Vector2i(17 if flipped else 14, 12) + tower.position
 		var opening := Vector2i(24 if flipped else 7, 23) + tower.position
 		for offset in [-1, 0, 1]:
 			var masks := canvas._candidates(app, tile + step * offset, 1 if flipped else 0)
 			assert(CityLifeCanvas.hidden_at(front, masks), "The front pier must hide cars and pedestrians on its own and neighboring decks")
+			assert(CityLifeCanvas.hidden_at(roof, masks), "Matching road colors must never punch holes in the tower roof")
 			assert(not CityLifeCanvas.hidden_at(opening, masks), "Figures must remain visible in the tower's road opening")
 		canvas.free()
 	app.map_view.free()
