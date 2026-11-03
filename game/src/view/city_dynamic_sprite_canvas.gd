@@ -24,16 +24,24 @@ func _draw() -> void:
 		var source_size: Vector2 = visual.size
 		if visual.hazard_animation != null:
 			var animation := visual.hazard_animation
-			# Reserved blue values select the eight-frame indexed atlas in the palette shader.
+			# Reserved blue values select the eight-frame atlas and its color format.
+			var tag := 0.75
+			if visual.toxic_cloud:
+				tag = 0.25
+			elif visual.warm_cloud:
+				tag = 0.125
+			elif visual.fullbright:
+				tag = 0.375 if visual.literal_artwork else 0.5
 			draw_texture_rect(texture, Rect2(source_position, source_size), false,
-				Color(animation.phase / 8.0, animation.opacity, 0.25 if visual.toxic_cloud else (0.125 if visual.warm_cloud else (0.5 if visual.fullbright else 0.75))))
+				Color(animation.phase / 8.0, animation.opacity, tag))
 			continue
+		var fire_color := Color(1, 1, 0.625) if visual.literal_artwork else Color(1, 1, 0)
 
 		draw_texture_rect(
 			texture,
 			Rect2(source_position, source_size),
 			false,
-			Color(1, 0, 1) if visual.transparent_shadow else (Color(1, 0, 0) if visual.toxic_cloud else (Color(1, 0.5, 0) if visual.warm_cloud else (Color(1, 1, 0) if visual.fullbright else (ARTWORK_TAG if visual.literal_artwork else Color.WHITE)))),
+			Color(1, 0, 1) if visual.transparent_shadow else (Color(1, 0, 0) if visual.toxic_cloud else (Color(1, 0.5, 0) if visual.warm_cloud else (fire_color if visual.fullbright else (ARTWORK_TAG if visual.literal_artwork else Color.WHITE)))),
 		)
 
 		if visual.emission_texture != null and (detail_lights_visible or not visual.vehicle_light):

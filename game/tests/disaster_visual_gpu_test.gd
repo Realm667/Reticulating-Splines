@@ -251,8 +251,31 @@ func _check_hazard_blending() -> void:
 	var fire := viewport.get_texture().get_image().get_pixel(3, 3)
 	assert(absf(fire.r - 0.3) < 0.02 and absf(fire.g - 0.3) < 0.02 and absf(fire.b - 0.075) < 0.02
 		and absf(fire.a - 0.6) < 0.02, "Palette blending overlapped fire frame blending or opacity")
+	var orange := Color8(223, 111, 55)
+	var gold := Color8(251, 175, 75)
+	for frame in 8:
+		atlas.fill_rect(Rect2i(0, frame * 8, 8, 8), orange if frame % 2 == 0 else gold)
+	(visual.texture as ImageTexture).update(atlas)
+	visual.literal_artwork = true
+	canvas.queue_redraw()
+	await RenderingServer.frame_post_draw
+	var literal := viewport.get_texture().get_image().get_pixel(3, 3)
+	var expected := orange.lerp(gold, 0.5) * 0.6
+	assert(absf(literal.r - expected.r) < 0.02 and absf(literal.g - expected.g) < 0.02
+		and absf(literal.b - expected.b) < 0.02 and absf(literal.a - 0.6) < 0.02,
+		"Literal fire must blend authored RGB colors with the palette animation running")
+	var blend := visual.hazard_animation
+	visual.hazard_animation = null
+	visual.texture = ImageTexture.create_from_image(atlas.get_region(Rect2i(0, 0, 8, 8)))
+	canvas.queue_redraw()
+	await RenderingServer.frame_post_draw
+	var still := viewport.get_texture().get_image().get_pixel(3, 3)
+	assert(still.is_equal_approx(orange), "Literal fire without blending must retain its authored RGB")
+	visual.hazard_animation = blend
 	canvas.hide()
 	sprite.show()
+	for frame in 8:
+		atlas.fill_rect(Rect2i(0, frame * 8, 8, 8), Color8(171 if frame % 2 == 0 else 180, 0, 0))
 	sprite.texture = ImageTexture.create_from_image(atlas.get_region(Rect2i(0, 0, 8, 16)))
 	tornado.set_shader_parameter("animated_palette", clock.cycle_texture)
 	tornado.set_shader_parameter("has_foreground", false)

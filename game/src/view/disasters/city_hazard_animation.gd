@@ -158,8 +158,11 @@ func _build(entry: Entry, archive: Sc2SpriteArchive, view: int) -> bool:
 		var rect := Rect2i(positions[-1], resource.native_size)
 		bounds = rect if phase == 0 else bounds.merge(rect)
 	entry.original = Image.create(bounds.size.x, bounds.size.y * 8, false, Image.FORMAT_RGBA8)
+	entry.visual.literal_artwork = entry.overlay == 0xff and frames.all(
+		func(frame: CitySpriteResource) -> bool: return frame.artwork_image != null)
 	for phase in 8:
-		entry.original.blit_rect(frames[phase].image, Rect2i(Vector2i.ZERO, frames[phase].native_size),
+		var image := frames[phase].artwork_image if entry.visual.literal_artwork else frames[phase].image
+		entry.original.blit_rect(image, Rect2i(Vector2i.ZERO, frames[phase].native_size),
 			positions[phase] - bounds.position + Vector2i(0, bounds.size.y * phase))
 	entry.visual.position = Vector2(bounds.position)
 	entry.visual.size = Vector2(bounds.size)

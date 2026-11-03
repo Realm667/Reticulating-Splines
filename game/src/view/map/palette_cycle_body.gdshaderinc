@@ -92,21 +92,23 @@ varying flat vec2 effect_color_flags;
 #define toxic_draw effect_color_flags.x
 #define warm_cloud_draw effect_color_flags.y
 varying vec2 cloud_ground_grid;
-varying flat vec3 hazard_style;
+varying flat vec4 hazard_style;
 #define hazard_draw hazard_style.x
 #define hazard_phase hazard_style.y
 #define hazard_opacity hazard_style.z
+#define literal_fire hazard_style.w
 
 void vertex() {
 	nature_grid = (nature_canvas_to_grid * vec3((MODEL_MATRIX * vec4(VERTEX, 0.0, 1.0)).xy, 1.0)).xy;
 	edge_grid = (edge_canvas_to_grid * vec3((MODEL_MATRIX * vec4(VERTEX, 0.0, 1.0)).xy, 1.0)).xy;
-	hazard_draw = float(COLOR.b == 0.25 || COLOR.b == 0.5 || COLOR.b == 0.125 || COLOR.b == 0.75);
+	hazard_draw = float(COLOR.b == 0.25 || COLOR.b == 0.5 || COLOR.b == 0.125 || COLOR.b == 0.75 || COLOR.b == 0.375);
 	hazard_phase = COLOR.r * 8.0;
 	hazard_opacity = COLOR.g;
+	literal_fire = float(COLOR.b == 0.375 || COLOR.rgb == vec3(1.0, 1.0, 0.625));
 	emission_draw = float(COLOR.rgb == vec3(0.0, 1.0, 1.0));
 	indexed_emission_draw = float(COLOR.rgb == vec3(0.0, 1.0, 0.0));
 	transparent_shadow_draw = float(COLOR.rgb == vec3(1.0, 0.0, 1.0));
-	fullbright_draw = float(COLOR.rgb == vec3(1.0, 1.0, 0.0) || COLOR.b == 0.5);
+	fullbright_draw = float(COLOR.rgb == vec3(1.0, 1.0, 0.0) || COLOR.b == 0.5 || literal_fire > 0.5);
 	toxic_draw = float(COLOR.rgb == vec3(1.0, 0.0, 0.0) || COLOR.b == 0.25);
 	warm_cloud_draw = float(COLOR.rgb == vec3(1.0, 0.5, 0.0) || COLOR.b == 0.125);
 	cloud_ground_grid = cloud_grid_at((MODEL_MATRIX * vec4(VERTEX, 0.0, 1.0)).xy);
@@ -155,7 +157,7 @@ void vertex() {
 	}
 	// Effect phases use the red channel continuously, so their rounded value
 	// must never select an HD-art record. The blue effect tag takes priority.
-	if (hazard_draw > 0.5) {
+	if (hazard_draw > 0.5 || literal_fire > 0.5) {
 		artwork_kind = 0.0;
 		power_warning = 0.0;
 	}
@@ -323,7 +325,7 @@ void fragment() {
 			(palette_index >= 171 && palette_index <= 198) ||
 			(palette_index >= 200 && palette_index <= 219) ||
 			(palette_index >= 224 && palette_index <= 239);
-		if (palette_cycle_enabled && (palette_lookup_all || animated_index)) {
+		if (literal_fire < 0.5 && palette_cycle_enabled && (palette_lookup_all || animated_index)) {
 			vec2 palette_uv = vec2((float(palette_index) + 0.5) / 256.0, 0.5);
 			vec4 cycle_color = texture(animated_palette, palette_uv);
 			COLOR = vec4(cycle_color.rgb, base_color.a);
@@ -371,8 +373,8 @@ void fragment() {
 			float frame = floor(hazard_phase);
 			vec4 first = texture(TEXTURE, vec2(UV.x, (UV.y + frame) / 8.0));
 			vec4 next = texture(TEXTURE, vec2(UV.x, (UV.y + mod(frame + 1.0, 8.0)) / 8.0));
-			vec3 a = texture(animated_palette, vec2((round(first.r * 255.0) + 0.5) / 256.0, 0.5)).rgb;
-			vec3 b = texture(animated_palette, vec2((round(next.r * 255.0) + 0.5) / 256.0, 0.5)).rgb;
+			vec3 a = literal_fire > 0.5 ? first.rgb : palette_color(int(round(first.r * 255.0))).rgb;
+			vec3 b = literal_fire > 0.5 ? next.rgb : palette_color(int(round(next.r * 255.0))).rgb;
 			float alpha = mix(first.a, next.a, fract(hazard_phase));
 			// Blend resolved colors in premultiplied form, never palette addresses.
 			COLOR = vec4(mix(a * first.a, b * next.a, fract(hazard_phase)) / max(alpha, 0.00001), alpha * hazard_opacity);
