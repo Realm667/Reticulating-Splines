@@ -105,8 +105,16 @@ func _run() -> void:
 	await process_frame
 	await process_frame
 	assert(tab.page_scroll.scroll_vertical == scroll, "Category scroll position was lost")
+	var mix := tab.building_mix_panel
+	var applied_mix: Array[Dictionary] = []
+	mix.applied.connect(func(value: Dictionary) -> void: applied_mix.append(value))
+	var seed: int = mix.options.seed
+	(mix.body.get_child(0) as CheckBox).button_pressed = false
 	dialog.hide()
+	assert(applied_mix.size() == 1 and not applied_mix[0].enabled and applied_mix[0].seed == seed)
+	mix.show_values(applied_mix[0])
 	dialog.show_values(0.5, 0.5, false)
+	assert(not (mix.body.get_child(0) as CheckBox).button_pressed)
 	await process_frame
 	await process_frame
 	assert(dialog.tabs.get_current_tab_control() == tab and tab.selected_category == 3)

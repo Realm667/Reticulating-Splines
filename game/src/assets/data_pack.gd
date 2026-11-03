@@ -5,6 +5,7 @@ extends RefCounted
 ## A data pack never contains an executable.
 
 const FORMAT := "opensc2k-data"
+const BUILTIN_SOURCE := "builtin:rs-data"
 const REQUIRED_FILES := ["DATA/TEXT_USA.DAT", "DATA/TEXT_USA.IDX"]
 # the DOS demo has no newspaper
 const NEWSPAPER_FILES := ["DATA/DATA_USA.DAT", "DATA/DATA_USA.IDX"]
@@ -25,6 +26,9 @@ static func default_folder() -> String:
 
 static func load_folder(folder: String) -> DataPack:
 	var pack := DataPack.new()
+	if folder == BUILTIN_SOURCE:
+		pack.pack_name = "Reticulating Splines"
+		return pack
 	var automatic := folder.strip_edges().is_empty()
 	var pack_root := default_folder() if automatic else folder.strip_edges()
 

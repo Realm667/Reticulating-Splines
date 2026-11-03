@@ -65,6 +65,8 @@ static func ensure_folders() -> Error:
 
 
 static func normalized(path: String, kind: String) -> String:
+	if kind == "data" and path == DataPack.BUILTIN_SOURCE:
+		return path
 	if path.is_empty():
 		return ""
 	var full := path if path.is_absolute_path() or path.begins_with("res://") or path.begins_with("user://") else AppPaths.path(path)
@@ -96,7 +98,7 @@ static func scan(kind: String, selected := "", root := AppPaths.root()) -> Array
 		var supplied := bundled_folder(kind, root)
 		if FileAccess.file_exists(supplied.path_join("pack.json")):
 			_append(result, seen, kind, supplied)
-	if not selected.is_empty():
+	if not selected.is_empty() and not (kind == "data" and selected == DataPack.BUILTIN_SOURCE):
 		_append(result, seen, kind, selected)
 	result.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 		var order := str(a.name).naturalnocasecmp_to(str(b.name))
@@ -127,6 +129,8 @@ static func selection_entries(kind: String, selected := "", root := AppPaths.roo
 			groups[identity] = item
 	var result: Array[Dictionary] = []
 	result.assign(groups.values())
+	if kind == "data":
+		result.append({"name": "Reticulating Splines", "path": DataPack.BUILTIN_SOURCE, "error": ""})
 	result.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return str(a.name).naturalnocasecmp_to(str(b.name)) < 0)
 	return result
 

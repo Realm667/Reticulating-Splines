@@ -44,7 +44,8 @@ func rescan(library_root := AppPaths.root()) -> void:
 		add_item(display)
 		var index := item_count - 1
 		set_item_metadata(index, item.path)
-		set_item_tooltip(index, str(item.path) + ("\n" + str(item.error) if not str(item.error).is_empty() else ""))
+		set_item_tooltip(index, display if item.path == DataPack.BUILTIN_SOURCE else
+			str(item.path) + ("\n" + str(item.error) if not str(item.error).is_empty() else ""))
 		set_item_disabled(index, not str(item.error).is_empty())
 		if _same_path(str(item.path), chosen):
 			select(index)

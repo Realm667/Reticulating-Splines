@@ -1,8 +1,9 @@
 class_name BuildingMixPanel
 extends VBoxContainer
-## Editing is staged; only bundled RS art can supplement original SC2000.
+## Edits are applied when Settings closes; Apply can also reshuffle the mix.
 signal applied(options: Dictionary)
 var options := BuildingVariants.normalize({})
+var _applied_options: Dictionary
 var body: VBoxContainer
 var status: Label
 var available := true
@@ -19,6 +20,7 @@ func _ready() -> void:
 
 func show_values(value: Dictionary, notices := PackedStringArray(), can_mix := true) -> void:
 	options = BuildingVariants.normalize(value)
+	_applied_options = BuildingVariants.normalize(options)
 	available = can_mix
 	_rebuild()
 	status.text = "\n".join(notices)
@@ -32,6 +34,14 @@ func _label(text: String) -> Label:
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	return label
+
+
+func apply_pending() -> void:
+	var value := BuildingVariants.normalize(options)
+	if value == _applied_options:
+		return
+	_applied_options = BuildingVariants.normalize(value)
+	applied.emit(value)
 
 
 func _mix_weight() -> void:
@@ -99,5 +109,5 @@ func _rebuild() -> void:
 	apply.pressed.connect(func() -> void:
 		if available and options.enabled:
 			options.seed = (int(options.seed) + 1) % 2147483647
-		applied.emit(BuildingVariants.normalize(options)))
+		apply_pending())
 	body.add_child(apply)

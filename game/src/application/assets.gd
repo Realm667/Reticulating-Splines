@@ -564,9 +564,11 @@ func stale_pack_kinds() -> PackedStringArray:
 
 	# Original data is optional in a fresh standalone installation. An empty
 	# automatic choice with no imported default is not a broken import.
-	var data_selected := not data_pack_folder().strip_edges().is_empty()
+	var data_source := data_pack_folder().strip_edges()
+	var data_selected := not data_source.is_empty()
 	var default_data_exists := FileAccess.file_exists(DataPack.default_folder().path_join("pack.json"))
-	if app.asset_state.data_pack.is_outdated() or (not app.asset_state.data_pack.is_loaded() and (data_selected or default_data_exists)):
+	if data_source != DataPack.BUILTIN_SOURCE and (app.asset_state.data_pack.is_outdated()
+			or (not app.asset_state.data_pack.is_loaded() and (data_selected or default_data_exists))):
 		kinds.append("data")
 
 	return kinds

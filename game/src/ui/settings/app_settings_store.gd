@@ -73,7 +73,8 @@ static func load_values(
 	result.music_pack_folder = AppPaths.loaded_path(str(config.get_value("audio", "music_pack_folder", result.music_pack_folder)))
 	result.cities_folder = AppPaths.loaded_path(str(config.get_value("data", "cities_folder", "")))
 	result.mods_folder = AppPaths.loaded_path(str(config.get_value("data", "mods_folder", "")))
-	result.data_pack_folder = AppPaths.loaded_path(str(config.get_value("data", "pack_folder", result.data_pack_folder)))
+	var data_source := str(config.get_value("data", "pack_folder", result.data_pack_folder))
+	result.data_pack_folder = data_source if data_source == DataPack.BUILTIN_SOURCE else AppPaths.loaded_path(data_source)
 	result.hd_pack_folder = AppPaths.loaded_path(str(config.get_value("graphics", "hd_pack", result.hd_pack_folder)))
 
 	result.shuffle_music = bool(config.get_value("audio", "shuffle_music", false))
@@ -354,7 +355,8 @@ static func save_values(
 			config.set_value("data", key, AppPaths.stored_path(str(options.get(key)).strip_edges()))
 
 	if options.data_pack_folder != null:
-		config.set_value("data", "pack_folder", AppPaths.stored_path(str(options.data_pack_folder).strip_edges()))
+		var data_source := str(options.data_pack_folder).strip_edges()
+		config.set_value("data", "pack_folder", data_source if data_source == DataPack.BUILTIN_SOURCE else AppPaths.stored_path(data_source))
 
 	if options.hd_pack_folder != null:
 		config.set_value("graphics", "hd_pack", AppPaths.stored_path(str(options.hd_pack_folder).strip_edges()))

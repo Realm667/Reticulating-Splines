@@ -65,15 +65,29 @@ func _run() -> void:
 	var options := AppSettingsStore.SaveOptions.new()
 	options.cities_folder = base.path_join("cities/collection")
 	options.mods_folder = base.path_join("mods/example")
+	options.data_pack_folder = DataPack.BUILTIN_SOURCE
 	assert(AppSettingsStore.save_values(0.5, 0.5, false, settings_path, options) == OK)
 	var saved := AppSettingsStore.load_values(settings_path)
 	assert(saved.cities_folder == options.cities_folder and saved.mods_folder == options.mods_folder)
+	assert(saved.data_pack_folder == DataPack.BUILTIN_SOURCE)
+	var rs_data := DataPack.load_folder(saved.data_pack_folder)
+	assert(rs_data.error.is_empty() and rs_data.pack_name == "Reticulating Splines")
+	assert(rs_data.toolbar_artwork() == null, "Built-in data must use the RS toolbar fallback")
 	var config := ConfigFile.new()
 	assert(config.load(settings_path) == OK and config.get_value("data", "import_prompt_seen", false))
 	var dialog := (load("res://src/ui/settings/app_settings_dialog.tscn") as PackedScene).instantiate() as AppSettingsDialog
 	root.add_child(dialog)
 	await process_frame
 	assert(dialog.pack_selectors.size() == 5)
+	var data_selector: PackSourceSelector = dialog.pack_selectors.data
+	dialog.data_pack_edit.text = saved.data_pack_folder
+	data_selector.rescan(base)
+	assert(data_selector.item_count == 2 and not data_selector.is_item_disabled(data_selector.selected))
+	assert(data_selector.get_item_metadata(data_selector.selected) == DataPack.BUILTIN_SOURCE)
+	data_selector.item_selected.emit(0)
+	assert(dialog.data_pack_edit.text.is_empty())
+	data_selector.item_selected.emit(1)
+	assert(dialog.data_pack_edit.text == DataPack.BUILTIN_SOURCE)
 	assert(not dialog.tabs.get_node("Data/Content/Fields/MusicPackControls").visible)
 	assert(not dialog.cities_folder_edit.visible and not dialog.mods_folder_edit.visible and not dialog.brightmaps_folder_edit.visible)
 	dialog.sound_pack_edit.text = chosen

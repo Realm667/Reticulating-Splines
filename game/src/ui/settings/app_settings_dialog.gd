@@ -145,6 +145,9 @@ func _ready() -> void:
 	sound_pack_edit = %SoundPackEdit
 	tabs = %Tabs
 	visual_tab = VisualEnhancementsTab.new()
+	visibility_changed.connect(func() -> void:
+		if not visible:
+			visual_tab.building_mix_panel.apply_pending())
 	tabs.add_child(visual_tab)
 	for category in visual_tab.category_buttons:
 		category.theme_type_variation = &"NavigationButton"
@@ -692,7 +695,7 @@ func show_pack_error(message: String) -> void:
 
 
 static func pack_file_path(value: String) -> String:
-	if value.is_empty() or value.get_file() == "pack.json":
+	if value.is_empty() or value == DataPack.BUILTIN_SOURCE or value.get_file() == "pack.json":
 		return value
 
 	return value.path_join("pack.json")
