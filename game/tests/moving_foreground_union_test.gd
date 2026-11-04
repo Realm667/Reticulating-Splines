@@ -241,7 +241,8 @@ func _check_train_support() -> void:
 		var command := CityStaticCommand.new()
 		command.sprite_id = ids[index]
 		command.size = sprite.get_size()
-		command.depth_order = end + 1 if index == 4 else end
+		# Both higher silhouettes belong to the elevated tile beside the rail.
+		command.depth_order = end + 1 if index in [4, 5] else end
 		if index == 3:
 			command.train_foreground_reference_sprite_id = -1
 			command.train_foreground_requires_depth = true

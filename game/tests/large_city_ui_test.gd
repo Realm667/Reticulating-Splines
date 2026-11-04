@@ -19,15 +19,17 @@ func run_check() -> void:
 	main.city_dialogs.new_city_dialog.trees_input.value = 0
 
 	assert(main.city_dialogs.new_city_dialog.size_input.get_selected_id() == 128)
-	for selection in Sc2File.MAP_SIZES.size():
-		var edge: int = Sc2File.MAP_SIZES[selection]
+	var offered_sizes: Array[int] = [128, 256, 384, 512, 640, 1024, 2048, 4096]
+	assert(main.city_dialogs.new_city_dialog.size_input.item_count == offered_sizes.size())
+	for selection in offered_sizes.size():
+		var edge: int = offered_sizes[selection]
 		main.city_dialogs.new_city_dialog.size_input.select(selection)
 		main.city_dialogs.new_city_dialog.size_input.item_selected.emit(selection)
 		assert(main.city_dialogs.new_city_dialog.done_button.disabled)
 		assert(main.city_dialogs.new_city_dialog.terrain_options().size == edge)
 		# Size wiring is checked for every option. The minimum-size preview exercises
 		# the worker; New City workflow and terrain tests own larger generation.
-		if edge != 16:
+		if edge != offered_sizes[0]:
 			continue
 		main.new_city.make_new_city_preview()
 		while main.new_city_state.preview_job != null:

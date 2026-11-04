@@ -68,9 +68,11 @@ func _check_camera_bounds(workspace: CityWorkspace, host: Control) -> void:
 		var anchor := camera_rect.get_center() + Vector2(80, 40)
 		var source_anchor := (anchor - map.camera._draw_offset(1.0))
 		assert(map.zoom_in(anchor))
+		map.camera.advance_zoom(CityMapCamera.ZOOM_TRANSITION_SECONDS)
 		assert(((anchor - map.camera._draw_offset(map.zoom_factor)) / map.zoom_factor).distance_to(source_anchor) <= 0.5)
 		var center := map.source_center
 		assert(map.zoom_out(Vector2.INF))
+		map.camera.advance_zoom(CityMapCamera.ZOOM_TRANSITION_SECONDS)
 		assert(map.source_center.distance_to(center) <= 0.5, "Toolbar zoom moved the visible center")
 		assert(map.camera.scroll_state().page == camera_rect.size)
 		assert(map.camera.set_scroll_value(0, 0.0))

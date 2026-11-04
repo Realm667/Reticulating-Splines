@@ -129,8 +129,8 @@ func _run() -> void:
 	main.new_city.create_new_city_unchecked()
 	assert(main.document_state.city == null)
 	dialog.compatibility_input.button_pressed = false
-	dialog.size_input.select(dialog.size_input.get_item_index(16))
-	assert(not dialog.size_input.is_item_disabled(dialog.size_input.get_item_index(16)))
+	dialog.size_input.select(dialog.size_input.get_item_index(128))
+	assert(not dialog.size_input.is_item_disabled(dialog.size_input.get_item_index(128)))
 	dialog._random_name()
 	assert(dialog.city_name_input.text.length() <= 30)
 	main.new_city.make_new_city_preview()

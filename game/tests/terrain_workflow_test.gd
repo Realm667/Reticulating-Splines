@@ -29,7 +29,7 @@ func _run() -> void:
 	assert(background.static_image.get_pixel(0, 0).a == 0.0)
 	main.map_view.zoom_factor = 0.25
 	main.new_city.open_new_city_dialog()
-	main.city_dialogs.new_city_dialog.size_input.select(main.city_dialogs.new_city_dialog.size_input.get_item_index(64))
+	main.city_dialogs.new_city_dialog.size_input.select(main.city_dialogs.new_city_dialog.size_input.get_item_index(128))
 	main.new_city.make_new_city_preview()
 	while main.new_city_state.preview_job != null:
 		await process_frame
