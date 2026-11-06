@@ -25,6 +25,7 @@ func build(id: int, revision: int, point: Vector2i) -> Dictionary:
 		"path": [], "dragged": false}
 
 func run() -> void:
+	framed_backlog()
 	archive_cache()
 	incremental_statistics()
 	await direct_documents()
@@ -37,6 +38,29 @@ func run() -> void:
 	await shaped_connection()
 	print("Multiplayer netcode checks: %d failures" % failures)
 	quit(1 if failures else 0)
+
+func framed_backlog() -> void:
+	var sender := CityTcpChannel.new()
+	for index in 100:
+		sender.send({"type": "command", "id": index, "text": "Straße · 도시"})
+	var receiver := CityTcpChannel.new()
+	var split := sender.output.size() - 5
+	receiver.input = sender.output.slice(0, split)
+	var ids: Array = []
+	while true:
+		var batch := receiver.decode_messages(7)
+		if batch.is_empty():
+			break
+		check(batch.size() <= 7, "message budget remains bounded")
+		for message: Dictionary in batch:
+			ids.append(int(message.id))
+	check(ids == range(99) and not receiver.failed, "fragmented burst retains order without duplicating commands")
+	receiver.input.append_array(sender.output.slice(split))
+	var last := receiver.decode_messages(7)
+	check(last.size() == 1 and int(last[0].id) == 99 and receiver.input.is_empty(), "partial final frame completes exactly once")
+	receiver.input = sender.output.slice(0, 4)
+	receiver.input.encode_u32(0, CityTcpChannel.MAX_FRAME + 1)
+	check(receiver.decode_messages(7).is_empty() and receiver.failed, "oversized frame is still rejected")
 
 func direct_documents() -> void:
 	var source := Sc2xDocument.create_empty(32, "Direct document").document

@@ -29,6 +29,7 @@ var chart: MultiplayerHistoryChart
 var metric_picker: MultiplayerTabs
 var legend: RichTextLabel
 var history: Dictionary = {}
+var displayed: Array = []
 
 func setup(body: VBoxContainer) -> void:
 	picker = MultiplayerTabs.new()
@@ -71,8 +72,27 @@ func setup(body: VBoxContainer) -> void:
 		rebuild())
 
 func update(players: Array, shared: bool, identity: String, samples: Dictionary = {}) -> void:
-	rows = players.duplicate(true)
-	history = samples
+	# Presence carries cursors and selections at a higher rate than statistics.
+	# Keep those fields out of the table, and do not replace focused rows for them.
+	var values: Array = []
+	for player: Dictionary in players:
+		var row := {}
+		for key: String in COLUMNS:
+			if player.has(key):
+				row[key] = player[key]
+		for key: String in ["id", "color", "host", "ranked"]:
+			if player.has(key):
+				row[key] = player[key]
+		values.append(row)
+	var key := [values, shared, identity, TranslationServer.get_locale()]
+	var history_changed := history != samples
+	history = samples.duplicate(true) if history_changed else history
+	if key == displayed:
+		if history_changed and picker.selected == VIEWS.size() - 1:
+			rebuild()
+		return
+	displayed = key
+	rows = values
 	self_id = identity
 	picker.visible = true
 	picker.set_meta("shared", shared)

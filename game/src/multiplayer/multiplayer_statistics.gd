@@ -19,7 +19,7 @@ static func capture(world: CoopWorld, actor: String) -> Dictionary:
 				combined[field] += row[field]
 		return combined
 	var result := {"city": city.city_name(), "population": city.population(), "funds": city.funds(),
-		"balance": BudgetReport.capture(city, BudgetPhase.funding_values(city)).ytd_cash,
+		"balance": BudgetReport.capture(city, BudgetPhase.funding_values(city), false).ytd_cash,
 		"debt": city.document.misc_u32(Sc2MiscLayout.BONDS) * BondCommand.BOND_VALUE,
 		"builds": own.statistics.get(actor, {}).get("builds", 0),
 		"spent": own.statistics.get(actor, {}).get("spent", 0),

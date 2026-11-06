@@ -14,6 +14,44 @@ func check(condition: bool, message: String) -> void:
 		printerr("FAIL: " + message)
 
 
+func progress_updates(main: CityApplication) -> void:
+	var hud := main.coop.windows.goal_hud
+	var roster := [{"id": "own", "name": "Host", "city": "Home", "population": 1500, "color": "46b4ff"},
+		{"id": "other", "name": "Guest", "city": "Other", "population": 1200, "color": "65c78e"}]
+	var state := {"mode": "region", "view_owner": "own", "roster": roster,
+		"goal": {"kind": "population", "target": 1000, "hold_days": 3000, "rule": "leadership", "holding": {"other": {"days": 300}}}}
+	hud.update(state, "own")
+	await process_frame
+	var line := hud.rows.get_child(1)
+	var visit := line.get_child(1) as Button
+	visit.grab_focus()
+	for index in 5:
+		roster[1].population += 1
+		state.goal.holding.other.days += 1
+		hud.update(state, "own")
+		await process_frame
+	check(hud.rows.get_child(1) == line and visit.has_focus(), "live progress retains focused visit button")
+	check(hud.row_controls.other.leadership.value > 10, "retained progress updates accumulated leadership")
+	roster[1].city = "Renamed"
+	hud.update(state, "own")
+	check(visit.tooltip_text.ends_with("Renamed"), "visit tooltip follows city rename without requiring a score change")
+	state.goal = {"kind": "endless"}
+	hud.update(state, "own")
+	check(not hud.row_controls.other.leadership.visible and not hud.row_controls.other.amount.visible, "endless view clears scored overlays")
+	check(hud.row_controls.other.text.offset_right == -6, "hidden amount does not reserve name space")
+	state.view_owner = "other"
+	hud.update(state, "own")
+	check(visit.disabled and not hud.row_controls.own.visit.disabled, "view switch updates visit availability")
+	state.goal = {"kind": "timed_score", "duration_days": 300, "elapsed_days": 50, "end_year": 1901}
+	roster[1]["points"] = 400
+	hud.update(state, "own")
+	check(hud.timer.visible and hud.row_controls.other.amount.visible and not hud.row_controls.other.leadership.visible, "timed score restores values without stale leadership layer")
+	state.mode = "shared"
+	hud.update(state, "own")
+	check(hud.rows.get_child(1).get_child_count() == 1, "mode switch removes region-only visit action")
+	hud.update(main.coop.session.latest, main.coop.session.token.sha256_text())
+
+
 func run() -> void:
 	root.gui_embed_subwindows = true
 	var main: CityApplication = load("res://main.tscn").instantiate()
@@ -55,6 +93,7 @@ func run() -> void:
 	main.coop.session.waiting_for_start = false
 	main.coop.session.publish()
 	await process_frame
+	await progress_updates(main)
 	var display_document := main.document_state.current_document
 	main.visual_environment.process(0.0)
 	main.visual_environment.weather.clock = 123.0

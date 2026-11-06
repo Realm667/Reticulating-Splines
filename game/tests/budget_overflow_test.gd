@@ -51,6 +51,7 @@ func _run() -> void:
 	_check(BudgetAdvice.select(city, large_report, 2, SimRandom.new(1), 0) == 0, "Large tax income does not produce false bond advice")
 	_test_settlement_and_reload()
 	_test_sc2_report()
+	_test_summary()
 	print("Budget overflow: %d failures" % failures)
 	quit(1 if failures else 0)
 
@@ -99,6 +100,28 @@ func _test_sc2_report() -> void:
 		values[id] = 18
 	var report := BudgetReport.capture(city, values)
 	_check(BudgetReport.group_amount(report.estimated, 0) == -3_266_230, "SC2 retains the original forecast wrapping")
+
+
+func _test_summary() -> void:
+	for size in [16, 128]:
+		var city := CityState.from_document(EmptyCityTemplate.create(size))
+		var values := BudgetPhase.funding_values(city)
+		for id in Sc2BudgetLayout.COUNT:
+			_set_budget(city, id, Sc2BudgetLayout.CURRENT, 100_000_003 * (1 if id < 3 else -1))
+			_set_budget(city, id, Sc2BudgetLayout.YEAR_TO_DATE, -200_000_007)
+			for month in 12:
+				_set_budget(city, id, Sc2BudgetLayout.MONTHS + month * Sc2BudgetLayout.MONTH_RECORD_SIZE, (month + 1) * 100_003)
+				_set_budget(city, id, Sc2BudgetLayout.MONTHS + month * Sc2BudgetLayout.MONTH_RECORD_SIZE + Sc2BudgetLayout.MONTH_FUNDING, month * 9)
+		for month in [0, 5, 11]:
+			city.set_age_in_days(month * CityCalendar.DAYS_PER_MONTH)
+			for year_end in [0, 1]:
+				city.document.set_misc_u32(Sc2MiscLayout.YEAR_END, year_end)
+				var before := city.document.serialize().data
+				var full := BudgetReport.capture(city, values)
+				var summary := BudgetReport.capture(city, values, false)
+				for field: String in ["funding", "funds", "year_end", "actual_months", "current", "year_to_date", "estimated", "estimated_raw", "ytd_cash", "estimated_cash"]:
+					_check(summary.get(field) == full.get(field), "Summary retains exact SC2/SC2X accounting: " + field)
+				_check(summary.history.is_empty() and city.document.serialize().data == before, "Summary omits only derived history and never changes saved values")
 
 
 func _set_budget(city: CityState, id: int, field: int, value: int) -> void:

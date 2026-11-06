@@ -102,6 +102,14 @@ func run() -> void:
 	scores.table.get_root().get_first_child().select(0)
 	scores.update([row, other], true, "a")
 	check(scores.table.get_selected().get_metadata(0) == "b", "live refresh keeps selection")
+	var selected := scores.table.get_selected()
+	other["cursor"] = [3.5, 8.0]
+	other["selection"] = [1, 2, 3]
+	scores.update([row, other], true, "a")
+	check(scores.table.get_selected() == selected, "presence changes retain existing selected statistic item")
+	other.funds = 123456
+	scores.update([row, other], true, "a")
+	check(scores.table.get_selected().get_text(scores.columns.find("funds")) == MultiplayerScoreboard.money(123456), "financial changes still refresh selected statistics")
 	scores.update([row, other], false, "a")
 	check(not scores.columns.has("funds") and scores.summary.text.contains("Shared city"), "Koop totals separated from personal contributions")
 	body.queue_free()

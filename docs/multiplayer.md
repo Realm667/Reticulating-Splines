@@ -180,6 +180,12 @@ messages can be handled while a state worker runs. A pending building footprint
 appears immediately and stays until the authoritative display catches up, or the
 host rejects the action. This preview never spends money or predicts simulation.
 
+TCP receive bursts compact their buffer once per poll while retaining the existing
+message and time limits. Progress rows update in place so city-switch buttons keep
+focus; cursor-only presence updates do not rebuild statistics tables. Live financial
+statistics skip unused monthly history construction while retaining the same totals.
+These changes do not alter command ordering, simulation, scoring or save data.
+
 ## Saves, shutdown and single-player copies
 
 File > Save saves the complete match on the host, including private reconnect

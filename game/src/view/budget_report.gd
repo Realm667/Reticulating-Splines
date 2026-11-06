@@ -42,7 +42,7 @@ var ytd_cash := 0
 var estimated_cash := 0
 
 
-static func capture(city: CityState, proposed: PackedInt32Array) -> BudgetReport:
+static func capture(city: CityState, proposed: PackedInt32Array, include_history := true) -> BudgetReport:
 	var report := BudgetReport.new()
 
 	if city == null or proposed.size() != Budget.BUDGET_COUNT:
@@ -77,6 +77,8 @@ static func capture(city: CityState, proposed: PackedInt32Array) -> BudgetReport
 		report.estimated_raw.append(raw_estimate)
 		ytd_scaled = budget_integer(ytd_scaled + raw_ytd / factor, extended)
 		estimate_scaled = budget_integer(estimate_scaled + raw_estimate / factor, extended)
+		if not include_history:
+			continue
 		var amounts := PackedInt64Array()
 		var costs := PackedInt32Array()
 		var rates := PackedInt32Array()

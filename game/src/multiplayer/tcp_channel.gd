@@ -76,23 +76,27 @@ func decode_messages(max_messages: int) -> Array[Dictionary]:
 	var messages: Array[Dictionary] = []
 	# Bound reads rather than rejecting a backlog of individually valid frames.
 	var started := Time.get_ticks_usec()
+	var consumed := 0
 	for _index in max_messages:
 		if not messages.is_empty() and Time.get_ticks_usec() - started >= 2000:
 			break
-		if input.size() < 4:
+		if input.size() - consumed < 4:
 			break
-		var size := input.decode_u32(0)
+		var size := input.decode_u32(consumed)
 		if size < 2 or size > limit:
 			failed = true
 			break
-		if input.size() < size + 4:
+		if input.size() - consumed < size + 4:
 			break
 		var parser := JSON.new()
-		if parser.parse(input.slice(4, size + 4).get_string_from_utf8()) != OK or not parser.data is Dictionary:
+		if parser.parse(input.slice(consumed + 4, consumed + size + 4).get_string_from_utf8()) != OK or not parser.data is Dictionary:
 			failed = true
 			break
 		messages.append(parser.data)
-		input = input.slice(size + 4)
+		consumed += size + 4
+	# Compact the backlog once per poll, not once per message in a brush burst.
+	if consumed > 0:
+		input = input.slice(consumed)
 	if Time.get_ticks_msec() - last_received > 60000:
 		failed = true
 	return messages
