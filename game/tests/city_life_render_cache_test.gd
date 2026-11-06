@@ -8,6 +8,7 @@ func _initialize() -> void:
 	_check_road_pixels()
 	_check_local_invalidation()
 	_check_zoom_banks()
+	_check_source_invalidation()
 	_check_surface_budget()
 	_check_network_search()
 	_check_geometry_changes()
@@ -423,4 +424,35 @@ func _check_zoom_banks() -> void:
 		"Evicting overlapping inactive masks must tolerate neighbours removed in the same batch")
 	canvas._select_occlusion_bank([8, 1, source, 1, 2], 1)
 	assert(canvas._occlusion_banks.size() == 1 and canvas.lights != original, "A replacement city must not retain former artwork banks")
+	canvas.free()
+
+
+func _check_source_invalidation() -> void:
+	var canvas := CityLifeCanvas.new()
+	var sources: Array[RefCounted] = [RefCounted.new(), RefCounted.new(), RefCounted.new()]
+	var signatures: Array[Array] = [[7, 1, sources[0], 1, 1, 0], [7, 1, sources[1], 2, 1, 0], [7, 1, sources[2], 1, 1, 1]]
+	var key := Vector3i(64, 64, 0)
+	var area := Rect2i(100, 100, 64, 48)
+	for signature in signatures:
+		canvas._select_occlusion_bank(signature, 1)
+		canvas._occluders[key] = []
+		canvas._occluder_bounds[key] = area
+	# A new direction's initial publication cannot invalidate any retained bank.
+	canvas.invalidate_occlusion([area], RefCounted.new())
+	for signature in signatures:
+		canvas._select_occlusion_bank(signature, 1)
+		assert(canvas._occluders.has(key), "An unrelated source discarded a retained mask")
+	# A hidden source can publish an edit while another view is selected.
+	canvas.invalidate_occlusion([area], sources[0])
+	for index in signatures.size():
+		canvas._select_occlusion_bank(signatures[index], 1)
+		assert(canvas._occluders.has(key) == (index != 0), "Source-local publication invalidated the wrong view")
+	# The other orientation must observe its own later publication of that edit.
+	canvas.invalidate_occlusion([area], sources[2])
+	canvas._select_occlusion_bank(signatures[2], 1)
+	assert(not canvas._occluders.has(key))
+	canvas._select_occlusion_bank(signatures[1], 1)
+	assert(canvas._occluders.has(key))
+	canvas.invalidate_occlusion([area])
+	assert(not canvas._occluders.has(key), "Unscoped invalidation must still clear every view")
 	canvas.free()

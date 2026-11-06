@@ -190,6 +190,26 @@ func _check_application() -> void:
 		app.city_life.process(0.08)
 	assert(app.city_life.canvas != null and not app.city_life.figures.is_empty())
 	assert(app.city_life.canvas.texture != null and app.city_life.canvas.visible, "Rendering must progress even when every frame advances the cosmetic figures")
+	# An empty GPU view must wait for road pixels, retaining existing figures.
+	var prior_cache := app.render_caches.region_cache
+	var empty_cache := CityRegionCache.new()
+	empty_cache.gpu_enabled = true
+	var prior_figures := app.city_life.figures.duplicate()
+	var prior_random := app.city_life.random.state
+	app.render_caches.region_cache = empty_cache
+	app.city_life.process(0.0)
+	assert(not app.city_life.canvas.visible and app.city_life.figures == prior_figures)
+	assert(app.city_life.random.state == prior_random, "An empty map started unnecessary figure work")
+	app.render_caches.region_cache = prior_cache
+	app.city_life.process(0.0)
+	assert(app.city_life.canvas.visible, "Figures must resume when a drawable map returns")
+	# A rebuilt coordinate space separates lane collection from publication,
+	# but must not wait for another movement tick before showing the new figures.
+	app.city_life._geometry_signature.clear()
+	app.city_life.process(0.0)
+	assert(not app.city_life.canvas.visible)
+	app.city_life.process(0.0)
+	assert(app.city_life.canvas.visible, "Rebuilt figures did not publish on the next frame")
 	_check_lazy_occlusion_resource(app)
 	_check_budgeted_preparation(app)
 	_check_running_cache(app)

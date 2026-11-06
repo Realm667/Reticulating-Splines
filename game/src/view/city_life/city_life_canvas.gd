@@ -405,10 +405,14 @@ func _sync_visible_regions(cache: CityRegionCache) -> void:
 	_visible_regions.assign(cache.visible)
 
 
-func invalidate_occlusion(changes: Array[Rect2i]) -> void:
-	_invalidate_bank(changes, _occluders, _occluder_bounds, _light_occluders, lights)
+func invalidate_occlusion(changes: Array[Rect2i], source: RefCounted = null) -> void:
+	# Region publications describe one source's coordinate space. Other sizes
+	# and directions invalidate their own masks when their regions publish edits.
+	# Calls without a source retain the full invalidation used by CPU views.
+	if source == null or _occlusion_signature.is_empty() or _occlusion_signature[2] == source:
+		_invalidate_bank(changes, _occluders, _occluder_bounds, _light_occluders, lights)
 	for bank: Dictionary in _occlusion_banks.values():
-		if bank.lights != lights:
+		if bank.lights != lights and (source == null or bank.signature[2] == source):
 			_invalidate_bank(changes, bank.occluders, bank.bounds, bank.light_occluders, bank.lights)
 
 

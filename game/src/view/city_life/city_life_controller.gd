@@ -71,6 +71,15 @@ func process(delta: float) -> void:
 		if canvas != null:
 			canvas.hide()
 		return
+	var regions := app.render_caches.region_cache
+	if regions != null and regions.gpu_enabled and regions.entries.is_empty():
+		# A new direction has no roads to draw on yet. Let its first region arrive
+		# before collecting figures and preparing masks that would be discarded.
+		_spawn_cursor = -1
+		_render_elapsed = UPDATE_SECONDS
+		if canvas != null:
+			canvas.hide()
+		return
 	if canvas == null:
 		canvas = CityLifeCanvas.new()
 		canvas.name = "CityLife"
@@ -84,6 +93,7 @@ func process(delta: float) -> void:
 		random.seed = 0x5343324b
 	var geometry := [city.chunk_revision("XBLD"), city.chunk_revision("ALTM"), city.chunk_revision("XTER"),
 		city.compass_rotation(), city.visible_altitude_levels]
+	var rebuilt_view := false
 	var viewport := Rect2i(map.visible_source_rect().grow(96))
 	if geometry != _geometry_signature or not _viewport.encloses(viewport):
 		_spawn_cursor = -1
@@ -93,6 +103,8 @@ func process(delta: float) -> void:
 		_viewport = viewport.grow(96)
 		_collect_tiles(city)
 		if changed_view:
+			rebuilt_view = true
+			_render_elapsed = UPDATE_SECONDS
 			# Rotations and altitude cutaways replace the coordinate space.
 			figures.clear()
 			_deferred_render = false
@@ -122,12 +134,10 @@ func process(delta: float) -> void:
 	elapsed = VisualEnhancementOptions.animation_delta(elapsed, options, speed)
 	_elapsed += elapsed
 	_spawn_elapsed += elapsed
-	var spawned := false
 	if _spawn_cursor >= 0 or _spawn_elapsed >= 0.8:
 		if _spawn_cursor < 0:
 			_spawn_elapsed = 0.0
 		_spawn(city, options, SPAWN_TILES_PER_FRAME)
-		spawned = true
 	var advanced := false
 	if _elapsed >= UPDATE_SECONDS:
 		advanced = true
@@ -142,7 +152,10 @@ func process(delta: float) -> void:
 	_render_elapsed += maxf(delta, 0.0)
 	# Cold preparation may shift the publication phase. Keep full figure
 	# advancement and buffer publication on separate frames once art is present.
-	if (_render_elapsed >= UPDATE_SECONDS or canvas.texture == null) and ((not advanced and not spawned) or canvas.texture == null or _deferred_render):
+	# A changed coordinate space collects lanes first and publishes next frame.
+	# Bounded spawn portions can accompany publication; deferring for them would
+	# force publication onto the next expensive movement frame.
+	if (_render_elapsed >= UPDATE_SECONDS or canvas.texture == null) and ((not advanced and not rebuilt_view) or canvas.texture == null or _deferred_render):
 		_deferred_render = false
 		_render_elapsed = 0.0
 		canvas.interpolation = 0.0 if elapsed > 0.0 else 1.0
