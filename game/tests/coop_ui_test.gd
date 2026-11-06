@@ -516,6 +516,20 @@ func readonly_city(main: CityApplication, expansion := false) -> void:
 	main.reports.on_windows_menu(0)
 	check(not main.city_dialogs.budget_dialog.visible and main.city_menu_bar.debug_menu.disabled, "visitor administrative UI is disabled")
 	check(main.coop.windows.goal_hud.home.visible and main.coop.windows.goal_hud.visit_frame.visible, "visit frame and return button shown even without a goal")
+	var visit_hud := main.coop.windows.goal_hud
+	var visit_view := Rect2(Vector2.ZERO, main.map_view.size)
+	var tip := main.knowledge.card
+	tip.hide()
+	visit_hud.layout(visit_view)
+	var normal_home := visit_hud.home.position
+	tip.show()
+	tip.position = visit_hud.home.get_global_rect().position - Vector2(0, 100)
+	tip.size = Vector2(360, 200)
+	visit_hud.layout(visit_view)
+	check(not visit_hud.home.get_global_rect().intersects(tip.get_global_rect()), "return action remains outside the visible knowledge card")
+	tip.hide()
+	visit_hud.layout(visit_view)
+	check(visit_hud.home.position == normal_home, "return action restores its bottom anchor when the tip closes")
 	main.coop.windows.competition.open_regions()
 	check(regions.return_button.visible and regions.neighbor_details.text.contains("Visited city"), "overview follows visited city and exposes return action")
 	check(regions.grid.state.active == [rival_cell.x, rival_cell.y], "viewed region is highlighted")

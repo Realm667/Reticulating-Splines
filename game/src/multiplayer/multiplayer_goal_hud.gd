@@ -57,8 +57,14 @@ func _init(windows: MultiplayerWindows) -> void:
 	glow.border_color = Color(0.4, 0.75, 1.0, 0.55)
 	glow.set_border_width_all(2)
 	glow.shadow_color = Color(0.3, 0.7, 1.0, 0.22)
-	glow.shadow_size = 6
+	# A StyleBox shadow fills the transparent centre too. Draw only edge bands.
+	glow.shadow_size = 0
 	visit_frame.add_theme_stylebox_override("panel", glow)
+	visit_frame.draw.connect(func() -> void:
+		for width: int in [8, 6, 4]:
+			var inset := float(width) * 0.5
+			var bounds := Rect2(Vector2.ONE * inset, visit_frame.size - Vector2.ONE * width)
+			visit_frame.draw_rect(bounds, Color(glow.border_color, 0.035), false, float(width), true))
 	visit_frame.hide()
 	timer = ApplicationMultiplayer.label(body, "")
 	timer.hide()
@@ -79,6 +85,13 @@ func layout(view: Rect2) -> void:
 	visit_frame.size = view.size - Vector2(6, 6)
 	home.size = home.get_combined_minimum_size()
 	home.position = view.end - home.size - Vector2(12, 12)
+	var windows: MultiplayerWindows = owner_ref.get_ref()
+	var knowledge := windows.coop.app.knowledge
+	if home.visible and knowledge != null and is_instance_valid(knowledge.card) and knowledge.card.visible:
+		var card_rect := knowledge.card.get_global_rect()
+		if home.get_global_rect().intersects(card_rect):
+			var card_top: Vector2 = windows.coop.app.map_view.get_global_transform().affine_inverse() * card_rect.position
+			home.position.y = maxf(view.position.y + 8, card_top.y - home.size.y - 8)
 
 static func value(player: Dictionary, kind: String) -> int:
 	if kind == "timed_score":
@@ -112,6 +125,7 @@ func update(state: Dictionary, actor: String) -> void:
 			var glow := visit_frame.get_theme_stylebox("panel") as StyleBoxFlat
 			glow.border_color = Color(CoopSession.valid_color(player.get("color")), 0.55)
 			glow.shadow_color = Color(glow.border_color, 0.22)
+			visit_frame.queue_redraw()
 	standing.text = MultiplayerGoal.standing(goal, state.get("roster", []), actor)
 	standing.visible = not standing.text.is_empty()
 	title.text = tr("Endless game · no scoring") if goal.get("unscored", false) else tr("Endless game") if endless else "%s · %s" % [tr("Population") if kind == "population" else tr("Net wealth"), number(int(goal.get("target", 1)), kind)]

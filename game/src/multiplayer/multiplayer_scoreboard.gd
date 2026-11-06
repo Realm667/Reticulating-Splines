@@ -118,6 +118,7 @@ func rebuild() -> void:
 	metric_picker.visible = show_history
 	legend.visible = show_history
 	if show_history:
+		summary.text = tr("History begins when the game starts; a new sample is recorded each month.")
 		chart.series = history
 		chart.players = rows if picker.get_meta("shared", false) else rows.slice(0, 1)
 		chart.queue_redraw()
