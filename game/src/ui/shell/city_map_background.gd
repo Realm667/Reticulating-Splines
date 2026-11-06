@@ -96,7 +96,7 @@ static func _paper_grain() -> ImageTexture:
 	for y in image.get_height():
 		for x in image.get_width():
 			var light := 1.0 if random.randf() < 0.5 else 0.0
-			image.set_pixel(x, y, Color(light, light, light, random.randf_range(0.0, 0.055)))
+			image.set_pixel(x, y, Color(light, light, light, random.randf_range(0.0, 0.026)))
 	return ImageTexture.create_from_image(image)
 
 

@@ -398,6 +398,30 @@ func use_default_sprites() -> void:
 	use_dos_colors(corrections)
 
 
+## Compact, shareable report for renderer issues. Paths and city names stay out.
+func graphics_diagnostics() -> String:
+	var lines := PackedStringArray([
+		"OS: %s %s | CPU: %s" % [OS.get_name(), OS.get_version(), OS.get_processor_name()],
+	])
+	var renderer := ConsoleLog.renderer_line()
+	if not renderer.is_empty():
+		lines.append(renderer)
+	var source := app.asset_state.asset_source
+	if source != null:
+		lines.append("Graphics: %s | Source platform: %s | Import revision: %d | Shuffle: %s" % [
+			source.graphics_name, source.source_platform, source.import_revision,
+			str(app.preferences.building_mix.enabled and BuildingVariants.supports_source(source)),
+		])
+	var cache := app.render_caches.region_cache
+	var active := "no active map"
+	if cache != null and app.document_state.city != null:
+		active = "%s | Ready: %s | Published regions: %d" % [
+			"GPU" if cache.gpu_enabled else "CPU", str(cache.ready()), cache.entries.size(),
+		]
+	lines.append("City renderer: %s | Preference: %s" % [active, app.preferences.city_renderer])
+	return "\n".join(lines)
+
+
 func set_building_mix(value: Dictionary) -> void:
 	app.preferences.building_mix = BuildingVariants.normalize(value)
 	_reload_sprites()

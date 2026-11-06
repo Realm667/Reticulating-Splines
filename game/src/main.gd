@@ -139,6 +139,7 @@ func _ready() -> void:
 	console_window.toggle_shortcut = controls.is_console_shortcut
 	add_child(console_window)
 	scripting.attach_console(console_window.commands)
+	console_window.commands.version_details = assets.graphics_diagnostics
 	scripting.apply_command_line(OS.get_cmdline_args() + OS.get_cmdline_user_args())
 
 	if asset_state.reference_root.is_empty():

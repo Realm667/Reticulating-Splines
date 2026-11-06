@@ -8,6 +8,7 @@ extends RefCounted
 var _commands: Dictionary[String, Command] = {}
 # (source: String) -> String. the result text, or "" when there is no result
 var evaluator := Callable()
+var version_details := Callable()
 
 
 func _init() -> void:
@@ -16,8 +17,7 @@ func _init() -> void:
 		ConsoleLog.clear()
 
 		return "")
-	register("version", "Show the OpenSC2K and Godot versions.", func(_arguments: PackedStringArray) -> String:
-		return ConsoleCommands.version_text())
+	register("version", "Show the OpenSC2K and Godot versions.", _version)
 	register("save", "Save the console to a text file: save [path]. The log folder holds a relative path.", _save)
 
 
@@ -82,6 +82,12 @@ func completions(prefix: String) -> PackedStringArray:
 			result.append(name)
 
 	return result
+
+
+func _version(_arguments: PackedStringArray) -> String:
+	var version := version_text()
+	var details := str(version_details.call()) if version_details.is_valid() else ""
+	return version if details.is_empty() else version + "\n" + details
 
 
 static func version_text() -> String:

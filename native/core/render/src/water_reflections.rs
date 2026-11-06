@@ -308,7 +308,7 @@ impl Builder {
                     && !draw.shadow
                     && !draw.moving
                     && crate::nature::original(draw.sprite) == self.config.base() + i32::from(b)
-                    && (bridge(b) || b == crate::ids::building_tile_ids::MARINA)
+                    && (bridge(b) || matches!(b, crate::ids::building_tile_ids::MARINA | crate::ids::building_tile_ids::PIER))
                     && self.city.wet(i)
             });
             let clipped = draw.rect.clip(bounds);
@@ -1082,6 +1082,38 @@ mod tests {
             .water_pixels(bounds, &[0; 256], &HashMap::new(), &HashMap::from([(variant as u64 * 2, mask)]))
             .unwrap();
         assert_eq!(before.surface, after.surface);
+    }
+
+    #[test]
+    fn pier_water_receiver_keeps_unmarked_deck_dry() {
+        for view in 0..3 {
+            let mut b = fixture(view);
+            let c = b.config;
+            let pier = crate::ids::building_tile_ids::PIER;
+            let key = (c.base() + i32::from(pier)) as u64 * 2;
+            let size = 16 / c.divisor();
+            let sprite = Sprite {
+                w: size,
+                h: size,
+                rgba: [12, 0, 0, 255].repeat((size * size) as usize),
+                la: vec![],
+            };
+            b.sprites.images.insert(key, sprite.clone());
+            b.city.buildings[0] = pier;
+            b.city.flags[0] = 4;
+            b.city.terrain[0] = 0x10;
+            let mut mask = sprite;
+            for (i, pixel) in mask.rgba.chunks_exact_mut(4).enumerate() {
+                pixel.copy_from_slice(if i % 2 == 0 { &[0, 0, 153, 255] } else { &[0, 0, 0, 0] });
+            }
+            let bounds = Rect::new(c.side(), c.top() - 32, 160, 160);
+            let result = b
+                .water_pixels(bounds, &[0; 256], &HashMap::new(), &HashMap::from([(key, mask)]))
+                .unwrap();
+            let wet = result.surface.chunks_exact(4).filter(|pixel| pixel[3] != 0).count();
+            assert!(wet > 0, "pier water mask ignored at view {view}");
+            assert!(wet < (size * size) as usize, "deck classified as water at view {view}");
+        }
     }
 
     #[test]

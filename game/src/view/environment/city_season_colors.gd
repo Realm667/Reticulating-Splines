@@ -23,7 +23,8 @@ static func prepare(archive: Sc2SpriteArchive, palette: Sc2Palette) -> void:
 		var power_warning := offset == 386
 		var water_side := offset == 284
 		var land_side := offset == 269
-		var waterfront := offset == BuildingTileIds.MARINA or (offset >= BuildingTileIds.SUSPENSION_BRIDGE_1 and offset <= BuildingTileIds.POWER_BRIDGE) or offset in [BuildingTileIds.HIGHWAY_BRIDGE, BuildingTileIds.REINFORCED_HIGHWAY_BRIDGE]
+		var port_water := offset in [BuildingTileIds.MARINA, BuildingTileIds.PIER]
+		var waterfront := port_water or (offset >= BuildingTileIds.SUSPENSION_BRIDGE_1 and offset <= BuildingTileIds.POWER_BRIDGE) or offset in [BuildingTileIds.HIGHWAY_BRIDGE, BuildingTileIds.REINFORCED_HIGHWAY_BRIDGE]
 		# Channel and connecting-water sprites contain land banks too. Their
 		# soil mask carries terrain variation; water gets its own material marker.
 		var ground := (offset >= 256 and offset <= 268) or (offset >= 270 and offset <= 283) or (offset >= 285 and offset <= 290)
@@ -51,10 +52,10 @@ static func prepare(archive: Sc2SpriteArchive, palette: Sc2Palette) -> void:
 				image.set_pixel(at % entry.width, at / entry.width, Color(0, 0, 0.4, 1))
 			elif water_side:
 				image.set_pixel(at % entry.width, at / entry.width, Color(0, 0, 0.25, 1))
-			elif (ground and blue_water) or (offset == BuildingTileIds.MARINA and blue_water) or (waterfront and (pixels[at] == 95 or (pixels[at] >= 200 and pixels[at] <= 211))):
+			elif ((ground or port_water) and blue_water) or (waterfront and (pixels[at] == 95 or (pixels[at] >= 200 and pixels[at] <= 211))):
 				# Terrain water also needs grading below the separate surface pass,
 				# including its exposed edge texels. On objects, use only the authored
-				# water ramp and waterfront IDs. Marinas also contain static blue water
+				# water ramp and waterfront IDs. Port sprites also contain static blue water
 				# shades (including imported variants), not only the animated ramp.
 				# Never replace blue pixels globally across unrelated buildings.
 				image.set_pixel(at % entry.width, at / entry.width, Color(0, 0, 0.6, 1))
