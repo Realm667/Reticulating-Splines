@@ -279,6 +279,12 @@
     "lane": "product"
   },
   {
+    "id": "city_ambience_test",
+    "script": "tests/city_ambience_test.gd",
+    "domain": "audio",
+    "lane": "product"
+  },
+  {
     "id": "water_reflections_test",
     "script": "tests/water_reflections_test.gd",
     "domain": "rendering",

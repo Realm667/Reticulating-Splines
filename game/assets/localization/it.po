@@ -40737,3 +40737,19 @@ msgstr "Atlante"
 #: game/src/ui/settings/app_settings_dialog.tscn
 msgid "Diorama"
 msgstr "Diorama"
+
+#: src/ui/settings/app_settings_dialog.tscn
+msgid "Spatial city ambience"
+msgstr "Ambiente urbano spaziale"
+
+#: src/ui/settings/app_settings_dialog.tscn
+msgid "Ambience volume"
+msgstr "Volume dell’ambiente"
+
+#: src/ui/settings/app_settings_dialog.tscn
+msgid "Hear nearby traffic, people and water. Zoom out to hear wind and distant city sounds."
+msgstr "Ascolta il traffico, i passanti e l’acqua nelle vicinanze. Riduci lo zoom per sentire il vento e i rumori lontani della città."
+
+#: src/ui/settings/about_dialog.gd
+msgid "City ambience recordings — CC0"
+msgstr "Registrazioni di ambiente urbano — CC0"

@@ -10964,3 +10964,19 @@ msgstr ""
 #: game/src/ui/settings/app_settings_dialog.tscn
 msgid "Diorama"
 msgstr ""
+
+#: src/ui/settings/app_settings_dialog.tscn
+msgid "Spatial city ambience"
+msgstr ""
+
+#: src/ui/settings/app_settings_dialog.tscn
+msgid "Ambience volume"
+msgstr ""
+
+#: src/ui/settings/app_settings_dialog.tscn
+msgid "Hear nearby traffic, people and water. Zoom out to hear wind and distant city sounds."
+msgstr ""
+
+#: src/ui/settings/about_dialog.gd
+msgid "City ambience recordings — CC0"
+msgstr ""

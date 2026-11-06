@@ -26,6 +26,8 @@ var soundfont_edit: LineEdit
 var soundfont_status_label: Label
 var toolbar_sounds_check: CheckBox
 var city_sounds_selector: OptionButton
+var city_ambience_check: CheckBox
+var city_ambience_slider: HSlider
 var sound_pack_edit: LineEdit
 var music_pack_edit: LineEdit
 var data_pack_edit: LineEdit
@@ -164,6 +166,9 @@ func _ready() -> void:
 	visual_tab.export_requested.connect(func() -> void: brightmaps_export_requested.emit())
 	toolbar_sounds_check = %ToolbarSoundsCheck
 	city_sounds_selector = %CitySoundsSelector
+	city_ambience_check = %CityAmbienceCheck
+	city_ambience_slider = %CityAmbienceSlider
+	city_ambience_check.toggled.connect(func(enabled: bool) -> void: city_ambience_slider.editable = enabled)
 	folder_row = folder_edit.get_parent() as HBoxContainer
 	controls_list = %ControlsList
 	zoom_graphics_selectors = [%Zoom25, %Zoom50, %Zoom100, %Zoom200, %Zoom300, %Zoom400]
@@ -453,6 +458,12 @@ func show_control_bindings(bindings: ControlBindings) -> void:
 	controls_list.show_bindings(bindings)
 
 
+func set_city_ambience(enabled: bool, volume: float) -> void:
+	city_ambience_check.set_pressed_no_signal(enabled)
+	city_ambience_slider.editable = enabled
+	city_ambience_slider.value = volume * 100.0
+
+
 func selected_values() -> AppSettingsStore.Values:
 	var result := AppSettingsStore.Values.new()
 	result.visual_enhancements = visual_tab.selected_values()
@@ -470,6 +481,8 @@ func selected_values() -> AppSettingsStore.Values:
 	result.overview_graphics = overview_graphics_selector.selected
 	result.toolbar_sounds = toolbar_sounds_check.button_pressed
 	result.city_sounds = maxi(0, city_sounds_selector.selected)
+	result.city_ambience_enabled = city_ambience_check.button_pressed
+	result.city_ambience_volume = city_ambience_slider.value / 100.0
 	result.music_soundfont = selected_soundfont()
 	result.music_soundfont_path = soundfont_edit.text.strip_edges()
 	result.sound_pack_folder = sound_pack_edit.text.strip_edges()

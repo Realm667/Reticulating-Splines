@@ -72,6 +72,8 @@ static func load_values(
 
 	result.toolbar_sounds = bool(config.get_value("audio", "toolbar_sounds", result.toolbar_sounds))
 	result.city_sounds = normalize_city_sounds(config.get_value("audio", "city_sounds", result.city_sounds))
+	result.city_ambience_enabled = bool(config.get_value("audio", "city_ambience_enabled", false))
+	result.city_ambience_volume = clampf(float(config.get_value("audio", "city_ambience_volume", 0.55)), 0.0, 1.0)
 	result.sound_pack_folder = AppPaths.loaded_path(str(config.get_value("audio", "sound_pack_folder", result.sound_pack_folder)))
 	result.music_pack_folder = AppPaths.loaded_path(str(config.get_value("audio", "music_pack_folder", result.music_pack_folder)))
 	result.cities_folder = AppPaths.loaded_path(str(config.get_value("data", "cities_folder", "")))
@@ -351,6 +353,10 @@ static func save_values(
 
 	if options.city_sounds != null:
 		config.set_value("audio", "city_sounds", normalize_city_sounds(options.city_sounds))
+	if options.city_ambience_enabled != null:
+		config.set_value("audio", "city_ambience_enabled", bool(options.city_ambience_enabled))
+	if options.city_ambience_volume != null:
+		config.set_value("audio", "city_ambience_volume", clampf(float(options.city_ambience_volume), 0.0, 1.0))
 
 	if options.zoom_graphics != null:
 		config.set_value("graphics", "zoom_graphics",
@@ -460,6 +466,8 @@ class Values extends RefCounted:
 	var music_soundfont_path := ""
 	var toolbar_sounds := true
 	var city_sounds: int = WaveSoundGate.CitySounds.DEFAULT
+	var city_ambience_enabled := false
+	var city_ambience_volume := 0.55
 	var sound_pack_folder := ""
 	var music_pack_folder := ""
 	var cities_folder := ""
@@ -494,6 +502,8 @@ class SaveOptions extends RefCounted:
 	var zoom_graphics: Variant = null
 	var toolbar_sounds: Variant = null
 	var city_sounds: Variant = null
+	var city_ambience_enabled: Variant = null
+	var city_ambience_volume: Variant = null
 	var sound_pack_folder: Variant = null
 	var music_pack_folder: Variant = null
 	var shuffle_music: Variant = null

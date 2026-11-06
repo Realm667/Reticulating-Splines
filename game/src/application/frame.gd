@@ -6,11 +6,13 @@ const GameSpeed = preload("res://src/simulation/core/game_speed_controller.gd")
 
 var app: CityApplication
 var palette_clock: PaletteAnimationClock
+var city_ambience: CityAmbience
 
 
 func _init(application: CityApplication) -> void:
 	app = application
 	palette_clock = application.palette_clock
+	city_ambience = CityAmbience.new(application)
 
 
 func process(delta: float) -> void:
@@ -26,6 +28,7 @@ func process(delta: float) -> void:
 	app.new_city.poll_new_city_preview()
 	app.current_tool.update_network_preview()
 	app.camera_input.update_keyboard_camera(delta)
+	city_ambience.process(delta, preparing)
 
 	if app.audio_controller != null:
 		app.audio_controller.set_menu_music(

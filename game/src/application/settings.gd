@@ -114,6 +114,7 @@ func open_settings_dialog() -> void:
 		app.audio_controller.music_player.synth_status if app.audio_controller != null and app.audio_controller.music_player != null else "")
 	app.main_overlays.settings_dialog.toolbar_sounds_check.button_pressed = preferences.toolbar_sounds
 	app.main_overlays.settings_dialog.city_sounds_selector.select(preferences.city_sounds)
+	app.main_overlays.settings_dialog.set_city_ambience(preferences.city_ambience_enabled, preferences.city_ambience_volume)
 	app.main_overlays.settings_dialog.sound_pack_edit.text = AppSettingsDialog.pack_file_path(preferences.sound_pack_folder)
 	app.main_overlays.settings_dialog.music_pack_edit.text = AppSettingsDialog.pack_file_path(preferences.music_pack_folder)
 	app.main_overlays.settings_dialog.data_pack_edit.text = AppSettingsDialog.pack_file_path(preferences.data_pack_folder)
@@ -355,6 +356,8 @@ func apply_settings() -> void:
 
 	preferences.toolbar_sounds = bool(values.toolbar_sounds)
 	preferences.city_sounds = SettingsStore.normalize_city_sounds(values.city_sounds)
+	preferences.city_ambience_enabled = values.city_ambience_enabled
+	preferences.city_ambience_volume = values.city_ambience_volume
 	preferences.sound_pack_folder = str(values.sound_pack_folder)
 	preferences.music_pack_folder = str(values.music_pack_folder)
 
@@ -520,6 +523,8 @@ func load_app_settings() -> void:
 	if app.main_menu != null:
 		app.main_menu.city_background.set_visual_options(preferences.visual_enhancements)
 	preferences.city_sounds = values.city_sounds
+	preferences.city_ambience_enabled = values.city_ambience_enabled
+	preferences.city_ambience_volume = values.city_ambience_volume
 	preferences.sound_pack_folder = str(values.sound_pack_folder)
 	preferences.music_pack_folder = str(values.music_pack_folder)
 	preferences.cities_folder = values.cities_folder

@@ -301,6 +301,27 @@ popup/item_1/id = 1
 popup/item_2/text = "Off"
 popup/item_2/id = 2
 
+[node name="CityAmbienceSpacer" type="Control" parent="Tabs/Audio/Content/PackFields"]
+layout_mode = 2
+
+[node name="CityAmbienceCheck" type="CheckBox" parent="Tabs/Audio/Content/PackFields"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 32)
+text = "Spatial city ambience"
+tooltip_text = "Hear nearby traffic, people and water. Zoom out to hear wind and distant city sounds."
+
+[node name="CityAmbienceVolume" type="Label" parent="Tabs/Audio/Content/PackFields"]
+layout_mode = 2
+text = "Ambience volume"
+
+[node name="CityAmbienceSlider" type="HSlider" parent="Tabs/Audio/Content/PackFields"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(250, 32)
+layout_mode = 2
+value = 55.0
+editable = false
+
 [node name="ShuffleSpacer" type="Label" parent="Tabs/Audio/Content/PackFields"]
 custom_minimum_size = Vector2(150, 32)
 layout_mode = 2

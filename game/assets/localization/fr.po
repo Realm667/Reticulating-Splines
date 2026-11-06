@@ -41291,3 +41291,19 @@ msgstr "Atlas"
 #: game/src/ui/settings/app_settings_dialog.tscn
 msgid "Diorama"
 msgstr "Diorama"
+
+#: src/ui/settings/app_settings_dialog.tscn
+msgid "Spatial city ambience"
+msgstr "Ambiance urbaine spatialisée"
+
+#: src/ui/settings/app_settings_dialog.tscn
+msgid "Ambience volume"
+msgstr "Volume de l’ambiance"
+
+#: src/ui/settings/app_settings_dialog.tscn
+msgid "Hear nearby traffic, people and water. Zoom out to hear wind and distant city sounds."
+msgstr "Écoutez la circulation, les passants et l’eau à proximité. Dézoomez pour entendre le vent et la ville au loin."
+
+#: src/ui/settings/about_dialog.gd
+msgid "City ambience recordings — CC0"
+msgstr "Enregistrements d’ambiance urbaine — CC0"

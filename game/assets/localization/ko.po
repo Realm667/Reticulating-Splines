@@ -10632,3 +10632,19 @@ msgstr "지도책"
 #: game/src/ui/settings/app_settings_dialog.tscn
 msgid "Diorama"
 msgstr "디오라마"
+
+#: src/ui/settings/app_settings_dialog.tscn
+msgid "Spatial city ambience"
+msgstr "공간 도시 환경음"
+
+#: src/ui/settings/app_settings_dialog.tscn
+msgid "Ambience volume"
+msgstr "환경음 음량"
+
+#: src/ui/settings/app_settings_dialog.tscn
+msgid "Hear nearby traffic, people and water. Zoom out to hear wind and distant city sounds."
+msgstr "근처의 교통, 사람, 물소리를 들을 수 있습니다. 화면을 축소하면 바람과 멀리서 들리는 도시 소리가 납니다."
+
+#: src/ui/settings/about_dialog.gd
+msgid "City ambience recordings — CC0"
+msgstr "도시 환경음 녹음 — CC0"
