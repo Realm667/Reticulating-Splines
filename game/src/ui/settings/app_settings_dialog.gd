@@ -61,6 +61,7 @@ var zoom_graphics_selectors: Array[OptionButton] = []
 var classic_zoom_check: CheckBox
 var overview_graphics_selector: OptionButton
 var theme_selector: OptionButton
+var map_background_selector: OptionButton
 var language_selector: OptionButton
 var ui_scale_selector: OptionButton
 var translucent_menus_check: CheckBox
@@ -97,6 +98,7 @@ func _ready() -> void:
 	update_status_label = %UpdateStatusLabel
 	default_mayor_edit = %DefaultMayorEdit
 	theme_selector = %ThemeSelector
+	map_background_selector = %MapBackgroundSelector
 	language_selector = %LanguageSelector
 
 	# each language shows its own name, in every language
@@ -459,6 +461,7 @@ func selected_values() -> AppSettingsStore.Values:
 	result.mods_folder = mods_folder_edit.text.strip_edges()
 	result.default_mayor_name = default_mayor_edit.text.strip_edges()
 	result.ui_theme = AppUiTheme.IDS[maxi(0, theme_selector.selected)]
+	result.map_background = AppSettingsStore.MAP_BACKGROUNDS[maxi(0, map_background_selector.selected)]
 	result.ui_language = AppLocalization.codes()[maxi(0, language_selector.selected)]
 	result.translucent_menus = translucent_menus_check.button_pressed
 	result.region_backdrops = region_backdrops_check.button_pressed

@@ -40713,3 +40713,27 @@ msgstr "Mostra viste statiche in grigio delle aree urbane possedute intorno alla
 #: game/src/ui/settings/controls_binding_list.gd
 msgid "On a touchscreen, drag to position a building's transparent preview, lift your finger, then tap again to build. Drag again to reposition it."
 msgstr "Su uno schermo touch, trascina l’anteprima trasparente dell’edificio per posizionarla, solleva il dito e tocca di nuovo per costruire. Trascina di nuovo per riposizionarla."
+
+#: game/src/ui/settings/app_settings_dialog.tscn
+msgid "Map background"
+msgstr "Sfondo della mappa"
+
+#: game/src/ui/settings/app_settings_dialog.tscn
+msgid "Classic"
+msgstr "Classico"
+
+#: game/src/ui/settings/app_settings_dialog.tscn
+msgid "Graphite"
+msgstr "Grafite"
+
+#: game/src/ui/settings/app_settings_dialog.tscn
+msgid "Drafting Table"
+msgstr "Tavolo da disegno"
+
+#: game/src/ui/settings/app_settings_dialog.tscn
+msgid "Atlas"
+msgstr "Atlante"
+
+#: game/src/ui/settings/app_settings_dialog.tscn
+msgid "Diorama"
+msgstr "Diorama"

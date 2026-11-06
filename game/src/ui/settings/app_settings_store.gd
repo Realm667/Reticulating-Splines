@@ -1,6 +1,8 @@
 class_name AppSettingsStore
 extends RefCounted
 
+const MAP_BACKGROUNDS := ["classic", "graphite", "drafting_table", "atlas", "diorama"]
+
 const GRAPHICS_ZOOMS := [25, 50, 100, 200, 300, 400]
 const GRAPHICS_SIZES := ["Small", "Medium", "Large"]
 const DEFAULT_ZOOM_GRAPHICS := [0, 1, 2, 2, 2, 2]
@@ -49,6 +51,7 @@ static func load_values(
 	result.recent_autosaves = bool(config.get_value("general", "recent_autosaves", true))
 	result.share_singleplayer_activity = bool(config.get_value("privacy", "share_singleplayer_activity", true))
 	result.ui_theme = normalize_theme(config.get_value("general", "ui_theme", "dark"))
+	result.map_background = normalize_map_background(str(config.get_value("general", "map_background", "classic")))
 	result.ui_language = AppLocalization.normalize(config.get_value("general", "ui_language", AppLocalization.DEFAULT))
 	result.translucent_menus = bool(config.get_value("general", "translucent_menus", true))
 	result.region_backdrops = bool(config.get_value("general", "region_backdrops", true))
@@ -106,6 +109,10 @@ static func load_values(
 	result.debug_mode = bool(config.get_value("debug", "enabled", false))
 
 	return result
+
+
+static func normalize_map_background(value: String) -> String:
+	return value if value in MAP_BACKGROUNDS else MAP_BACKGROUNDS[0]
 
 
 static func normalize_theme(value: Variant) -> String:
@@ -294,6 +301,8 @@ static func save_values(
 	if options.ui_theme != null:
 		config.set_value("general", "ui_theme", normalize_theme(options.ui_theme))
 
+	if options.map_background != null:
+		config.set_value("general", "map_background", normalize_map_background(str(options.map_background)))
 	if options.ui_language != null:
 		config.set_value("general", "ui_language", AppLocalization.normalize(options.ui_language))
 
@@ -424,6 +433,7 @@ class Values extends RefCounted:
 	var visual_enhancements := VisualEnhancementOptions.normalize({})
 	var default_mayor_name := "Mayor"
 	var ui_theme := "dark"
+	var map_background := "classic"
 	var ui_language := AppLocalization.DEFAULT
 	var ui_scale := AppUiScale.DEFAULT
 	var translucent_menus := true
@@ -493,6 +503,7 @@ class SaveOptions extends RefCounted:
 	var use_classic_zoom_graphics: Variant = null
 	var overview_graphics: Variant = null
 	var ui_theme: Variant = null
+	var map_background: Variant = null
 	var ui_language: Variant = null
 	var dark_underground: Variant = null
 	var sprite_corrections: Variant = null

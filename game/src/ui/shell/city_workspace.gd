@@ -6,6 +6,7 @@ var menu_bar: CityMenuBar
 var toolbar: CityToolbar
 var map_view: CityMapControl
 var status_bar: CityStatusBar
+@onready var map_background: CityMapBackground = $Background
 var _palette_scroll: ScrollContainer
 var _dock_scroll: ScrollContainer
 var _sidebar: VBoxContainer
@@ -26,10 +27,12 @@ func _enter_tree() -> void:
 
 
 func _ready() -> void:
-	AppUiTheme.bind_canvas($Background, "map_canvas")
 	menu_bar = %MenuBar
 	toolbar = %Toolbar
 	map_view = %MapView
+	map_background.map = map_view
+	map_view.viewport_changed.connect(map_background.refresh_shadows)
+	map_view.draw.connect(map_background.refresh_shadows)
 	_sync_map_rect()
 	resized.connect(_sync_map_rect)
 	status_bar = %StatusBar

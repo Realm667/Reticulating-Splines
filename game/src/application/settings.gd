@@ -97,6 +97,7 @@ func open_settings_dialog() -> void:
 	app.main_overlays.settings_dialog.recent_autosaves_check.button_pressed = preferences.recent_autosaves
 	app.main_overlays.settings_dialog.share_activity_check.button_pressed = preferences.share_singleplayer_activity
 	app.main_overlays.settings_dialog.theme_selector.select(AppUiTheme.IDS.find(preferences.ui_theme))
+	app.main_overlays.settings_dialog.map_background_selector.select(AppSettingsStore.MAP_BACKGROUNDS.find(preferences.map_background))
 	app.main_overlays.settings_dialog.language_selector.select(AppLocalization.codes().find(preferences.ui_language))
 	app.main_overlays.settings_dialog.translucent_menus_check.button_pressed = preferences.translucent_menus
 	app.main_overlays.settings_dialog.region_backdrops_check.button_pressed = preferences.region_backdrops
@@ -326,6 +327,10 @@ func apply_settings() -> void:
 		AppUiTheme.select(preferences.ui_theme, preferences.translucent_menus)
 		apply_ui_scale()
 
+	preferences.map_background = values.map_background
+	if is_instance_valid(app.city_workspace):
+		app.city_workspace.map_background.style = preferences.map_background
+
 	var ui_scale := AppUiScale.normalize(values.ui_scale)
 
 	if preferences.ui_scale != ui_scale or preferences.exact_ui_scale != values.exact_ui_scale:
@@ -532,6 +537,7 @@ func load_app_settings() -> void:
 	preferences.ui_language = AppLocalization.normalize(values.ui_language)
 	AppLocalization.select(preferences.ui_language)
 	preferences.ui_theme = str(values.ui_theme)
+	preferences.map_background = values.map_background
 	preferences.translucent_menus = bool(values.translucent_menus)
 	preferences.region_backdrops = values.region_backdrops
 	AppUiTheme.select(preferences.ui_theme, preferences.translucent_menus)

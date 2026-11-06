@@ -29446,3 +29446,27 @@ msgstr "Zeigt eingefrorene, graue Ansichten eigener Stadtgebiete um die aktive S
 #: game/src/ui/settings/controls_binding_list.gd
 msgid "On a touchscreen, drag to position a building's transparent preview, lift your finger, then tap again to build. Drag again to reposition it."
 msgstr "Ziehe auf einem Touchscreen die halbtransparente Gebäudevorschau an die gewünschte Position. Hebe den Finger an und tippe erneut, um zu bauen. Erneutes Ziehen verschiebt die Vorschau."
+
+#: game/src/ui/settings/app_settings_dialog.tscn
+msgid "Map background"
+msgstr "Kartenhintergrund"
+
+#: game/src/ui/settings/app_settings_dialog.tscn
+msgid "Classic"
+msgstr "Klassisch"
+
+#: game/src/ui/settings/app_settings_dialog.tscn
+msgid "Graphite"
+msgstr "Graphit"
+
+#: game/src/ui/settings/app_settings_dialog.tscn
+msgid "Drafting Table"
+msgstr "Zeichentisch"
+
+#: game/src/ui/settings/app_settings_dialog.tscn
+msgid "Atlas"
+msgstr "Atlas"
+
+#: game/src/ui/settings/app_settings_dialog.tscn
+msgid "Diorama"
+msgstr "Diorama"

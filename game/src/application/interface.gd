@@ -22,6 +22,7 @@ func build_interface(original_assets: OriginalGameAssets) -> void:
 	app.city_workspace = workspace_scene.instantiate() as CityWorkspace
 	app.city_workspace.toolbar_art = app.asset_state.data_pack.toolbar_artwork()
 	app.add_child(app.city_workspace)
+	app.city_workspace.map_background.style = app.preferences.map_background
 
 	app.city_menu_bar = app.city_workspace.menu_bar
 	app.city_menu_bar.file_menu_requested.connect(app.menus.on_file_menu)
