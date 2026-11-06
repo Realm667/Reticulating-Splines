@@ -569,19 +569,17 @@ func _structure_audio() -> void:
 
 
 func _audio_section(body: Node, heading: String) -> GridContainer:
-	var panel := PanelContainer.new()
-	panel.theme_type_variation = "InformationPanel"
-	body.add_child(panel)
 	var column := VBoxContainer.new()
 	column.add_theme_constant_override("separation", 10)
-	panel.add_child(column)
+	body.add_child(column)
 	var title := Label.new()
 	title.text = heading
 	title.theme_type_variation = "SectionHeading"
 	column.add_child(title)
+	column.add_child(HSeparator.new())
 	var grid := GridContainer.new()
 	grid.columns = 2
-	grid.add_theme_constant_override("h_separation", 16)
+	grid.add_theme_constant_override("h_separation", 14)
 	grid.add_theme_constant_override("v_separation", 8)
 	column.add_child(grid)
 	return grid

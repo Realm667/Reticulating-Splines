@@ -20,6 +20,10 @@ func _run() -> void:
 	building.tile_id = BuildingTileIds.FIRE_STATION
 	building.site = Rect2i(12, 18, 3, 3)
 	journal.record_building(building)
+	assert(journal.events.is_empty(), "Routine service buildings are not historical milestones")
+	building.tile_id = BuildingTileIds.MAYOR_HOUSE
+	journal.record_building(building)
+	assert(journal.events.size() == 1)
 	journal.undo_building(building)
 	assert(journal.events.is_empty())
 	journal.record_building(building)
@@ -55,6 +59,7 @@ func _run() -> void:
 	var edition := app.reports.annual_review.edition()
 	assert(edition.year == first_year and edition.start == 100 and edition.end == 135 and edition.budget == 100)
 	assert(edition.events.size() == 2)
+	assert(edition.statistics.has("developed") and edition.statistics.has("funds"))
 	app.reports.refresh_newspaper_menu()
 	var menu := app.city_menu_bar.newspaper_menu.get_popup()
 	assert(menu.get_item_index(CityMenuBar.MENU_ANNUAL_REVIEW) >= 0)
@@ -75,15 +80,18 @@ func _run() -> void:
 	journal.attach(CityState.from_document(reloaded))
 	var saved := journal.edition()
 	assert(saved.budget == 100 and saved.events.size() == 2)
+	assert(saved.statistics == edition.statistics, "Year-end measurements must survive SC2X save/load")
 	assert(journal.editions().size() == 1)
 	var migration := reloaded.sc2x_extra_entries[AnnualCityReview.ENTRY]
 	var old_archive: Dictionary = JSON.parse_string(migration.get_string_from_utf8())
 	old_archive.version = 1
 	old_archive.erase("history")
+	old_archive.latest.erase("statistics")
 	reloaded.sc2x_extra_entries[AnnualCityReview.ENTRY] = JSON.stringify(old_archive).to_utf8_buffer()
 	journal.attach(CityState.from_document(reloaded))
 	assert(journal.editions().size() == 1 and journal.editions()[0].budget == 100,
 		"The previous annual edition must migrate into the chronicle")
+	assert(not journal.editions()[0].has("statistics"), "Old years must not receive invented measurements")
 	assert(journal.point_in_current_view(saved.events[0]) == Vector2i(42, 52)
 		or journal.point_in_current_view(saved.events[1]) == Vector2i(42, 52))
 	var source := journal.point_in_current_view(saved.events[0])
@@ -108,6 +116,25 @@ func _run() -> void:
 	assert(ten_years.ok and reopened.parse(ten_years.data))
 	journal.attach(CityState.from_document(reopened))
 	assert(journal.history.size() == 10)
+	var measured_document := Sc2xDocument.create_empty(128, "Statistics fixture").document
+	var measured_city := CityState.from_document(measured_document)
+	measured_city.set_funds(34567)
+	measured_document.set_misc_u32(Sc2MiscLayout.BONDS, 2)
+	measured_document.set_misc_u32(Sc2MiscLayout.CITY_VALUE, 200000)
+	measured_city.set_building_id(10, 10, BuildingTileIds.ROAD_STRAIGHT_1)
+	measured_city.set_building_id(11, 10, BuildingTileIds.MAYOR_HOUSE)
+	measured_city.set_building_id(12, 10, BuildingTileIds.TREES_1)
+	measured_city.set_building_id(13, 10, BuildingTileIds.RUBBLE_1)
+	journal.attach(measured_city)
+	var measured := journal._capture_statistics()
+	assert(measured.developed == 2 and measured.tiles == 128 * 128)
+	assert(measured.funds == 34567 and measured.debt == 20000 and measured.city_value == 200000)
+	assert(journal._valid_statistics({"developed": -1, "tiles": 1, "funds": "missing", "unemployment": 500}).is_empty())
+	# Keep more than the old three-headline limit, preserving disasters and landmarks.
+	for month_index in 6:
+		measured_city.set_age_in_days(month_index * CityCalendar.DAYS_PER_MONTH)
+		journal.record_disaster(disaster, measured_city.age_in_days())
+	assert(journal._headline_events().size() == 6)
 	var legacy := EmptyCityTemplate.create()
 	var legacy_city := CityState.from_document(legacy)
 	legacy_city.set_age_in_days(600)

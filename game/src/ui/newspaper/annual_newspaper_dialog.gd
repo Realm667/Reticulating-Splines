@@ -106,8 +106,8 @@ func _ready() -> void:
 
 func open(review: AnnualCityReview) -> void:
 	_review = review
-	_rebuild()
 	_fit()
+	_rebuild()
 	popup_centered(size)
 
 
@@ -136,8 +136,8 @@ func _rebuild() -> void:
 	_range.text = _review.city.display_name() + ("  ·  %d – %d" % [_editions.front().year, _editions.back().year] if not _editions.is_empty() else "")
 	var first_population: int = _editions.front().start if not _editions.is_empty() else -1
 	var last_population: int = _editions.back().end if not _editions.is_empty() else -1
-	_summary.text = (tr("Population: %s → %s") % [DisplayNumberFormat.format(first_population),
-		DisplayNumberFormat.format(last_population)] if first_population >= 0 and last_population >= 0
+	_summary.text = (tr("Population: %s → %s") % [MultiplayerScoreboard.number(first_population),
+		MultiplayerScoreboard.number(last_population)] if first_population >= 0 and last_population >= 0
 		else tr("The story of your city, year by year"))
 	_select_year(_editions.size() - 1)
 
@@ -154,31 +154,67 @@ func _select_year(index: int) -> void:
 	var edition := _editions[index]
 	_stories.add_child(_label(tr("The year %d") % int(edition.year), 28, NewspaperFonts.headline()))
 	var figures := GridContainer.new()
-	figures.columns = 2
+	figures.columns = 3 if size.x >= 700 else 2 if size.x >= 480 else 1
 	figures.add_theme_constant_override("h_separation", 18)
+	figures.add_theme_constant_override("v_separation", 12)
 	figures.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_stories.add_child(figures)
-	var population := (tr("Population: %s → %s") % [DisplayNumberFormat.format(int(edition.start)),
-		DisplayNumberFormat.format(int(edition.end))] if edition.start >= 0 and edition.end >= 0 else tr("Some annual figures are unavailable."))
-	figures.add_child(_label(population, 16))
-	figures.add_child(_label(tr("Annual budget balance: %s") % BudgetReport.currency(int(edition.budget))
-		if edition.has("budget") else tr("Some annual figures are unavailable."), 16))
-	if edition.events.is_empty():
-		_stories.add_child(_label(tr("No events were recorded for this year."), 16))
+	var unavailable := tr("Not available")
+	_figure(figures, tr("Population"), MultiplayerScoreboard.number(edition.end) if edition.end >= 0 else unavailable)
+	_figure(figures, tr("Population change"), MultiplayerScoreboard.signed_number(edition.end - edition.start)
+		if edition.start >= 0 and edition.end >= 0 else unavailable)
+	var statistics: Dictionary = edition.get("statistics", {})
+	var area := unavailable
+	if statistics.has("developed") and statistics.get("tiles", 0) > 0:
+		var percentage := String.num(100.0 * statistics.developed / statistics.tiles, 1)
+		if TranslationServer.get_locale().get_slice("_", 0) in ["de", "es", "fr", "it", "pt"]:
+			percentage = percentage.replace(".", ",")
+		area = tr("%s tiles · %s%%") % [MultiplayerScoreboard.number(statistics.developed),
+			percentage]
+	_figure(figures, tr("Built-up area"), area, tr("Developed land includes buildings and infrastructure; trees and rubble are excluded."))
+	_figure(figures, tr("Net wealth"), MultiplayerScoreboard.money(statistics.funds - statistics.debt)
+		if statistics.has("funds") and statistics.has("debt") else unavailable, tr("Net wealth = city funds minus outstanding debt."))
+	_figure(figures, tr("Funds"), MultiplayerScoreboard.money(statistics.funds) if statistics.has("funds") else unavailable)
+	_figure(figures, tr("Debt"), MultiplayerScoreboard.money(statistics.debt) if statistics.has("debt") else unavailable)
+	_figure(figures, tr("Year-end balance"), MultiplayerScoreboard.money(edition.budget) if edition.has("budget") else unavailable)
+	_figure(figures, tr("City value"), MultiplayerScoreboard.money(statistics.city_value) if statistics.has("city_value") else unavailable)
+	_figure(figures, tr("Education"), str(statistics.education) if statistics.has("education") else unavailable)
+	_figure(figures, tr("Life expectancy"), tr("%s years") % str(statistics.life_expectancy) if statistics.has("life_expectancy") else unavailable)
+	_figure(figures, tr("Unemployment"), str(statistics.unemployment) + "%" if statistics.has("unemployment") else unavailable)
+	var note := _label(tr("Figures recorded at year end. Earlier statistics are not reconstructed."), 13)
+	note.add_theme_color_override("font_color", ACCENT)
+	_stories.add_child(note)
+	_event_section(edition, "disaster", tr("Disaster chronicle"), tr("No disasters recorded."))
+	_event_section(edition, "building", tr("Landmark buildings"), tr("No landmark buildings recorded."))
+	(_stories.get_parent() as ScrollContainer).set_deferred("scroll_vertical", 0)
+
+
+func _figure(parent: GridContainer, caption: String, value: String, help := "") -> void:
+	var block := VBoxContainer.new()
+	block.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	block.tooltip_text = help
+	parent.add_child(block)
+	var title_label := _label(caption, 14)
+	title_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	block.add_child(title_label)
+	var amount := _label(value, 23, NewspaperFonts.headline())
+	amount.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	block.add_child(amount)
+
+
+func _event_section(edition: Dictionary, kind: String, heading: String, empty: String) -> void:
+	_stories.add_child(_label(heading, 23, NewspaperFonts.headline()))
+	var found := false
 	for item: Dictionary in edition.events:
-		var story := VBoxContainer.new()
-		story.add_theme_constant_override("separation", 6)
-		_stories.add_child(story)
+		if item.kind != kind or (kind == "building" and item.id not in AnnualCityReview.FACILITIES):
+			continue
+		found = true
 		var month := tr(BudgetReport.MONTHS[item.month])
 		var headline := (tr("%s: %s was built.") % [month, tr(BuildingConstants.DEFAULT_MICROSIM_LABELS[item.id])]
-			if item.kind == "building" else tr("%s: %s struck the city.") % [month, tr(CityMenuBar.disaster_name(item.id))])
-		story.add_child(_label(headline, 21, NewspaperFonts.headline()))
-		if _review.point_in_current_view(item).x >= 0:
-			var locate := _button(tr("Show on map") + "  ↗", func() -> void:
-				hide()
-				location_requested.emit(_review.point_in_current_view(item)))
-			locate.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-			story.add_child(locate)
+			if kind == "building" else tr("%s: %s struck the city.") % [month, tr(CityMenuBar.disaster_name(item.id))])
+		_stories.add_child(_label(headline, 17))
+	if not found:
+		_stories.add_child(_label(empty, 16))
 
 
 func _rule(width: int) -> void:

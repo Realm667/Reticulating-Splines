@@ -5,16 +5,13 @@ extends RefCounted
 @warning_ignore_start("integer_division")
 
 const ENTRY := "annual-review.json"
-const VERSION := 2
+const VERSION := 3
 const YEARS := 10
 const DAYS := CityCalendar.DAYS_PER_YEAR
-const MAX_EVENTS := 12
-const DISPLAY_EVENTS := 3
+const MAX_EVENTS := 32
+const DISPLAY_EVENTS := MAX_EVENTS
 const FACILITIES := [
-	BuildingTileIds.HOSPITAL, BuildingTileIds.POLICE_STATION, BuildingTileIds.FIRE_STATION,
-	BuildingTileIds.SCHOOL, BuildingTileIds.COLLEGE, BuildingTileIds.WATER_TREATMENT,
-	BuildingTileIds.DESALINIZATION, BuildingTileIds.COAL_POWER, BuildingTileIds.NUCLEAR_POWER,
-	BuildingTileIds.SOLAR_POWER, BuildingTileIds.MICROWAVE_POWER, BuildingTileIds.FUSION_POWER,
+	BuildingTileIds.MAYOR_HOUSE, BuildingTileIds.CITY_HALL, BuildingTileIds.STATUE, BuildingTileIds.LLAMA_DOME,
 	BuildingTileIds.PLYMOUTH_ARCOLOGY, BuildingTileIds.FOREST_ARCOLOGY, BuildingTileIds.DARCO_ARCOLOGY,
 	BuildingTileIds.LAUNCH_ARCOLOGY,
 ]
@@ -30,6 +27,8 @@ var _previous_population := -1
 var _budget_year := -1
 var _budget_total := 0
 var _unpublished := false
+var _statistics_year := -1
+var _closing_statistics: Dictionary = {}
 
 
 func attach(value: CityState) -> void:
@@ -43,16 +42,18 @@ func attach(value: CityState) -> void:
 	_previous_population = -1
 	_budget_year = -1
 	_unpublished = false
+	_statistics_year = -1
+	_closing_statistics = {}
 	if city == null:
 		return
 	year = city.current_year()
 	if city.age_in_days() % DAYS == 0:
 		population_start = city.population()
 	var raw: PackedByteArray = city.document.sc2x_extra_entries.get(ENTRY, PackedByteArray())
-	if raw.is_empty() or raw.size() > 49152:
+	if raw.is_empty() or raw.size() > 262144:
 		return
 	var data: Variant = JSON.parse_string(raw.get_string_from_utf8())
-	if not data is Dictionary or (data.get("version") != 1 and data.get("version") != VERSION):
+	if not data is Dictionary or (data.get("version") != 1 and data.get("version") != 2 and data.get("version") != VERSION):
 		return
 	if data.get("year") == year:
 		population_start = _population(data.get("start"))
@@ -71,6 +72,8 @@ func attach(value: CityState) -> void:
 		var budget: Variant = archive.get("budget")
 		if _whole_number(budget) and absf(float(budget)) <= 4294967295.0:
 			edition.budget = int(budget)
+		if archive.get("statistics") is Dictionary:
+			edition.statistics = _valid_statistics(archive.statistics)
 		_remember(edition)
 	for edition in history:
 		if edition.year == year - 1:
@@ -80,6 +83,9 @@ func attach(value: CityState) -> void:
 func prepare() -> void:
 	_previous_day = city.age_in_days()
 	_previous_population = city.population()
+	if _previous_day % DAYS == DAYS - 1 and _statistics_year != city.current_year():
+		_closing_statistics = _capture_statistics()
+		_statistics_year = city.current_year()
 	var document := city.document
 	if document.misc_u32(Sc2MiscLayout.YEAR_END) == 0 or city.current_month() not in [1, 12]:
 		return
@@ -105,6 +111,8 @@ func observe(tick: SimulationTickResult) -> bool:
 			var closing_population := _previous_population if _previous_day == day.day - 1 else -1
 			latest = {"year": day_year - 1, "start": population_start if day_year == year + 1 else -1,
 				"end": closing_population, "events": _headline_events() if day_year == year + 1 else []}
+			if _statistics_year == day_year - 1:
+				latest.statistics = _closing_statistics.duplicate()
 			year = day_year
 			population_start = closing_population
 			events.clear()
@@ -120,6 +128,10 @@ func observe(tick: SimulationTickResult) -> bool:
 
 		if _unpublished and (day.complete or (budget != null and budget.settled_year)):
 			_unpublished = false
+			if latest.has("statistics"):
+				# Settlement changes the treasury; retain the closing year's other measurements.
+				latest.statistics.funds = city.funds()
+				latest.statistics.debt = city.document.misc_u32(Sc2MiscLayout.BONDS) * BondCommand.BOND_VALUE
 			_remember(latest)
 			_store()
 			published = true
@@ -143,7 +155,7 @@ func record_disaster(result: DisasterStartResult, day: int) -> void:
 
 
 func record_building(result: BuildingEditResult) -> void:
-	if result.tile_id in FACILITIES and not result.free_mode and result.site.has_area():
+	if result.ok and result.tile_id in FACILITIES and not result.free_mode and result.site.has_area():
 		_record("building", result.tile_id, result.site.position, city.age_in_days())
 
 
@@ -226,6 +238,33 @@ func _headline_events() -> Array[Dictionary]:
 				selected.append(item)
 	selected.sort_custom(func(left: Dictionary, right: Dictionary) -> bool: return left.day < right.day)
 	return selected
+
+
+func _capture_statistics() -> Dictionary:
+	# Packed-array counts run natively, only at year end, without a map-sized script loop.
+	var developed := city.buildings.size()
+	for tile in BuildingTileIds.POWER_LINE_FIRST:
+		developed -= city.buildings.count(tile)
+	var document := city.document
+	return {"developed": developed, "tiles": city.map_size * city.map_size,
+		"funds": city.funds(), "debt": document.misc_u32(Sc2MiscLayout.BONDS) * BondCommand.BOND_VALUE,
+		"city_value": document.misc_i32(Sc2MiscLayout.CITY_VALUE),
+		"education": document.misc_u32(Sc2MiscLayout.WORKFORCE_EDUCATION),
+		"life_expectancy": document.misc_u32(Sc2MiscLayout.WORKFORCE_LIFE_EXPECTANCY),
+		"unemployment": document.misc_u32(Sc2MiscLayout.UNEMPLOYMENT)}
+
+
+func _valid_statistics(value: Dictionary) -> Dictionary:
+	var result := {}
+	var bounds := {"developed": [0, city.map_size * city.map_size], "tiles": [city.map_size * city.map_size, city.map_size * city.map_size],
+		"funds": [-2147483648, 2147483647], "debt": [0, 4294967295 * BondCommand.BOND_VALUE],
+		"city_value": [-2147483648, 2147483647], "education": [0, 255],
+		"life_expectancy": [0, 255], "unemployment": [0, 100]}
+	for key: String in bounds:
+		var number: Variant = value.get(key)
+		if _whole_number(number) and number >= bounds[key][0] and number <= bounds[key][1]:
+			result[key] = int(number)
+	return result
 
 
 func _store() -> void:

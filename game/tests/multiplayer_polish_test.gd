@@ -97,6 +97,7 @@ func run() -> void:
 	var other := row.duplicate()
 	other.merge({"id": "b", "name": "Bob", "funds": 9}, true)
 	scores.update([row, other], true, "a")
+	check(not scores.trend_cards.visible, "missing history does not display fabricated trend values")
 	scores.sort_key = "funds"
 	scores.rebuild()
 	check(scores.table.get_root().get_first_child().get_metadata(0) == "b", "numeric money sort")
@@ -117,7 +118,15 @@ func run() -> void:
 	other.funds = row.funds
 	scores.update([row, other], true, "a")
 	check(scores.table.get_selected().get_icon(scores.columns.find("funds")) == null, "unranked tie cannot receive a crown either")
-	scores.update([row, other], false, "a")
+	var comparison := {}
+	for player: Dictionary in [row, other]:
+		comparison[player.id] = [{"year": 1900, "month": 0, "population": 10, "funds": 1000, "debt": 0, "points": 0},
+			{"year": 1901, "month": 0, "population": player.population, "funds": player.funds, "debt": player.debt, "points": 0}]
+	scores.update([row, other], true, "a", comparison)
+	check(scores.trend_cards.visible and scores.trend_values.size() == 3, "comparable history exposes three distinct trend metrics")
+	check(not scores.trend_panels[1].tooltip_text.is_empty(), "funds trend has an explanation separate from budget balance")
+	scores.update([row, other], false, "a", comparison)
+	check(not scores.trend_cards.visible, "competitive trends stay hidden for shared cooperative city")
 	check(not scores.columns.has("funds") and scores.summary.text.contains("Shared city"), "Koop totals separated from personal contributions")
 	body.queue_free()
 	await network_events()

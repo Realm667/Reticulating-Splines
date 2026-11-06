@@ -32695,3 +32695,91 @@ msgstr "A distância para a liderança aumentou em %s (%s)."
 # Reticulating Splines UI and city chronicle
 msgid "Gap to the lead held steady."
 msgstr "A distância para a liderança se manteve."
+
+#. Reticulating Splines chronicle and multiplayer insights
+msgid "Population change"
+msgstr "Variação populacional"
+
+#. Reticulating Splines chronicle and multiplayer insights
+msgid "%s tiles · %s%%"
+msgstr "%s quadrados · %s%%"
+
+#. Reticulating Splines chronicle and multiplayer insights
+msgid "Built-up area"
+msgstr "Área urbanizada"
+
+#. Reticulating Splines chronicle and multiplayer insights
+msgid "Developed land includes buildings and infrastructure; trees and rubble are excluded."
+msgstr "A área urbanizada inclui edifícios e infraestrutura; árvores e escombros não são contabilizados."
+
+#. Reticulating Splines chronicle and multiplayer insights
+msgid "Year-end balance"
+msgstr "Saldo anual"
+
+#. Reticulating Splines chronicle and multiplayer insights
+msgid "City value"
+msgstr "Valor da cidade"
+
+#. Reticulating Splines chronicle and multiplayer insights
+msgid "Life expectancy"
+msgstr "Expectativa de vida"
+
+#. Reticulating Splines chronicle and multiplayer insights
+msgid "%s years"
+msgstr "%s anos"
+
+#. Reticulating Splines chronicle and multiplayer insights
+msgid "Figures recorded at year end. Earlier statistics are not reconstructed."
+msgstr "Dados registrados no fim do ano. As estatísticas anteriores não são reconstruídas."
+
+#. Reticulating Splines chronicle and multiplayer insights
+msgid "Disaster chronicle"
+msgstr "Crônica de desastres"
+
+#. Reticulating Splines chronicle and multiplayer insights
+msgid "No disasters recorded."
+msgstr "Nenhum desastre registrado."
+
+#. Reticulating Splines chronicle and multiplayer insights
+msgid "Landmark buildings"
+msgstr "Edifícios especiais"
+
+#. Reticulating Splines chronicle and multiplayer insights
+msgid "No landmark buildings recorded."
+msgstr "Nenhum edifício especial registrado."
+
+#. Reticulating Splines chronicle and multiplayer insights
+msgid "Funds change"
+msgstr "Variação de fundos"
+
+#. Reticulating Splines chronicle and multiplayer insights
+msgid "Race trend"
+msgstr "Evolução da competição"
+
+#. Reticulating Splines chronicle and multiplayer insights
+msgid "Your trend over %d months"
+msgstr "Sua evolução · %d meses"
+
+#. Reticulating Splines chronicle and multiplayer insights
+msgid "Change in your city's population over the comparison period."
+msgstr "Variação da população da sua cidade no período comparado."
+
+#. Reticulating Splines chronicle and multiplayer insights
+msgid "Change in available funds, including construction and land transactions. This is not the annual budget balance."
+msgstr "Variação dos fundos disponíveis, incluindo construções e transações de terrenos. Não equivale ao saldo do orçamento anual."
+
+#. Reticulating Splines chronicle and multiplayer insights
+msgid "Closing by %s"
+msgstr "Recuperação: %s"
+
+#. Reticulating Splines chronicle and multiplayer insights
+msgid "Falling behind by %s"
+msgstr "Atraso ampliado: %s"
+
+#. Reticulating Splines chronicle and multiplayer insights
+msgid "Unchanged"
+msgstr "Sem alteração"
+
+#. Reticulating Splines chronicle and multiplayer insights
+msgid "Change in the distance to the leading player, measured by the agreed objective."
+msgstr "Variação da distância para o jogador líder, medida pelo objetivo combinado."

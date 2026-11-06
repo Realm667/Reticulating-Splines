@@ -10900,3 +10900,91 @@ msgstr "선두와의 격차가 %s 늘었습니다 (%s)."
 # Reticulating Splines UI and city chronicle
 msgid "Gap to the lead held steady."
 msgstr "선두와의 격차가 유지되었습니다."
+
+#. Reticulating Splines chronicle and multiplayer insights
+msgid "Population change"
+msgstr "인구 변화"
+
+#. Reticulating Splines chronicle and multiplayer insights
+msgid "%s tiles · %s%%"
+msgstr "%s타일 · %s%%"
+
+#. Reticulating Splines chronicle and multiplayer insights
+msgid "Built-up area"
+msgstr "개발 면적"
+
+#. Reticulating Splines chronicle and multiplayer insights
+msgid "Developed land includes buildings and infrastructure; trees and rubble are excluded."
+msgstr "개발 면적에는 건물과 기반 시설이 포함되며, 나무와 잔해는 제외됩니다."
+
+#. Reticulating Splines chronicle and multiplayer insights
+msgid "Year-end balance"
+msgstr "연말 수지"
+
+#. Reticulating Splines chronicle and multiplayer insights
+msgid "City value"
+msgstr "도시 가치"
+
+#. Reticulating Splines chronicle and multiplayer insights
+msgid "Life expectancy"
+msgstr "기대 수명"
+
+#. Reticulating Splines chronicle and multiplayer insights
+msgid "%s years"
+msgstr "%s년"
+
+#. Reticulating Splines chronicle and multiplayer insights
+msgid "Figures recorded at year end. Earlier statistics are not reconstructed."
+msgstr "연말에 기록된 수치입니다. 과거 통계는 소급하여 재구성하지 않습니다."
+
+#. Reticulating Splines chronicle and multiplayer insights
+msgid "Disaster chronicle"
+msgstr "재해 연대기"
+
+#. Reticulating Splines chronicle and multiplayer insights
+msgid "No disasters recorded."
+msgstr "기록된 재해가 없습니다."
+
+#. Reticulating Splines chronicle and multiplayer insights
+msgid "Landmark buildings"
+msgstr "특별 건물"
+
+#. Reticulating Splines chronicle and multiplayer insights
+msgid "No landmark buildings recorded."
+msgstr "기록된 특별 건물이 없습니다."
+
+#. Reticulating Splines chronicle and multiplayer insights
+msgid "Funds change"
+msgstr "자금 변화"
+
+#. Reticulating Splines chronicle and multiplayer insights
+msgid "Race trend"
+msgstr "경쟁 추세"
+
+#. Reticulating Splines chronicle and multiplayer insights
+msgid "Your trend over %d months"
+msgstr "나의 변화 · %d개월"
+
+#. Reticulating Splines chronicle and multiplayer insights
+msgid "Change in your city's population over the comparison period."
+msgstr "비교 기간 동안 내 도시의 인구 변화입니다."
+
+#. Reticulating Splines chronicle and multiplayer insights
+msgid "Change in available funds, including construction and land transactions. This is not the annual budget balance."
+msgstr "건설과 토지 거래를 포함한 가용 자금의 변화입니다. 연간 예산 수지와는 다릅니다."
+
+#. Reticulating Splines chronicle and multiplayer insights
+msgid "Closing by %s"
+msgstr "%s만큼 추격"
+
+#. Reticulating Splines chronicle and multiplayer insights
+msgid "Falling behind by %s"
+msgstr "%s만큼 뒤처짐"
+
+#. Reticulating Splines chronicle and multiplayer insights
+msgid "Unchanged"
+msgstr "변화 없음"
+
+#. Reticulating Splines chronicle and multiplayer insights
+msgid "Change in the distance to the leading player, measured by the agreed objective."
+msgstr "합의된 목표를 기준으로 측정한 선두 플레이어와의 격차 변화입니다."

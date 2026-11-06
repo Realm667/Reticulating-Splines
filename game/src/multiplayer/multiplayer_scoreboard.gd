@@ -29,7 +29,10 @@ const CROWN = preload("res://src/multiplayer/icons/crown.svg")
 var table: Tree
 var summary: Label
 var description: Label
-var trend_label: Label
+var view_help: Button
+var trend_cards: HFlowContainer
+var trend_values: Array[Label] = []
+var trend_panels: Array[PanelContainer] = []
 var sort_hint: Label
 var picker: MultiplayerTabs
 var rows: Array = []
@@ -62,14 +65,25 @@ func setup(body: VBoxContainer) -> void:
 	for title in VIEWS:
 		picker.add_item(title)
 	body.add_child(picker)
+	var insight_header := HBoxContainer.new()
+	body.add_child(insight_header)
+	view_help = Button.new()
+	view_help.text = "ⓘ"
+	view_help.flat = true
+	view_help.custom_minimum_size = Vector2(28, 28)
+	insight_header.add_child(view_help)
 	description = Label.new()
 	description.theme_type_variation = "HelpLabel"
 	description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	body.add_child(description)
-	trend_label = Label.new()
-	trend_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	trend_label.theme_type_variation = "HelpLabel"
-	body.add_child(trend_label)
+	description.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	insight_header.add_child(description)
+	trend_cards = HFlowContainer.new()
+	trend_cards.add_theme_constant_override("h_separation", 10)
+	trend_cards.add_theme_constant_override("v_separation", 8)
+	body.add_child(trend_cards)
+	_trend_card("Population change", preload("res://src/ui/shell/icons/residential.svg"))
+	_trend_card("Funds change", preload("res://src/multiplayer/icons/funds.svg"))
+	_trend_card("Race trend", CROWN)
 	table = Tree.new()
 	table.hide_root = true
 	table.column_titles_visible = true
@@ -146,17 +160,14 @@ func update(players: Array, shared: bool, identity: String, samples: Dictionary 
 func rebuild() -> void:
 	table.custom_minimum_size.y = maxi(80, rows.size() * 28 + 32)
 	var show_history := picker.selected == VIEWS.size() - 1
-	description.text = tr(DESCRIPTIONS[picker.selected]) if picker.get_meta("shared", false) else tr("Personal contributions to the shared city.")
+	_refresh_insights()
 	sort_hint.visible = not show_history
-	trend_label.visible = picker.get_meta("shared", false) and not trend_cache.is_empty()
-	trend_label.text = trend_text() if trend_label.visible else ""
-	trend_label.tooltip_text = tr("Only matching calendar months are compared.")
 	table.visible = not show_history
 	chart.visible = show_history
 	metric_picker.visible = show_history
 	legend.visible = show_history
 	if show_history:
-		description.text = tr("History begins when the game starts; a new sample is recorded each month.")
+		view_help.tooltip_text = tr("History begins when the game starts; a new sample is recorded each month.")
 		chart.series = history
 		chart.players = rows if picker.get_meta("shared", false) else rows.slice(0, 1)
 		chart.queue_redraw()
@@ -246,6 +257,69 @@ func rebuild() -> void:
 			child.set_deferred("value", scroll.x)
 		elif child is VScrollBar:
 			child.set_deferred("value", scroll.y)
+
+
+func _trend_card(caption: String, texture: Texture2D) -> void:
+	var panel := PanelContainer.new()
+	panel.theme_type_variation = "UtilityPanel"
+	panel.custom_minimum_size.x = 200
+	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	trend_cards.add_child(panel)
+	trend_panels.append(panel)
+	var row := HBoxContainer.new()
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_theme_constant_override("separation", 12)
+	panel.add_child(row)
+	var icon := TextureRect.new()
+	icon.texture = texture
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.custom_minimum_size = Vector2(26, 26)
+	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(icon)
+	var text := VBoxContainer.new()
+	text.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(text)
+	var label := Label.new()
+	label.text = caption
+	label.theme_type_variation = "HelpLabel"
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	text.add_child(label)
+	var value := Label.new()
+	value.theme_type_variation = "SectionHeading"
+	value.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	value.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	text.add_child(value)
+	trend_values.append(value)
+
+
+func _refresh_insights() -> void:
+	var shared: bool = picker.get_meta("shared", false)
+	var available: bool = shared and not trend_cache.is_empty() and trend_cache.rows.has(self_id)
+	trend_cards.visible = available
+	view_help.tooltip_text = tr(DESCRIPTIONS[picker.selected]) + "\n" + tr("Only matching calendar months are compared.")
+	if not shared:
+		description.text = tr("Personal contributions to the shared city.")
+		view_help.tooltip_text = description.text
+		return
+	if not available:
+		description.text = tr("Comparable monthly history is not available yet.")
+		return
+	description.text = tr("Your trend over %d months") % trend_cache.months
+	var row: Dictionary = trend_cache.rows[self_id]
+	trend_values[0].text = signed_number(row.population)
+	trend_values[1].text = signed_number(row.funds, true)
+	var period := description.text + "\n" + tr("Only matching calendar months are compared.")
+	trend_panels[0].tooltip_text = tr("Change in your city's population over the comparison period.") + "\n" + period
+	trend_panels[1].tooltip_text = tr("Change in available funds, including construction and land transactions. This is not the annual budget balance.") + "\n" + period
+	var metric := "points" if goal_kind == "timed_score" else "wealth" if goal_kind == "wealth" else "population"
+	var change: int = row[metric + "_gap"]
+	var difference := MultiplayerGoalHud.number(absi(change), "timed_score" if metric == "points" else metric)
+	trend_values[2].text = ("↗ " + tr("Closing by %s") % difference if change < 0
+		else "↘ " + tr("Falling behind by %s") % difference if change > 0 else "→ " + tr("Unchanged"))
+	var metric_label := tr("Points") if metric == "points" else tr("Net wealth") if metric == "wealth" else tr("Population")
+	trend_panels[2].tooltip_text = tr("Change in the distance to the leading player, measured by the agreed objective.") + "\n" + metric_label + "\n" + period
 
 static func trends(players: Array, samples: Dictionary) -> Dictionary:
 	# Compare exact common calendar months, never different city ages or invented zeros.

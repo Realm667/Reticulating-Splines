@@ -11232,3 +11232,91 @@ msgstr ""
 # Reticulating Splines UI and city chronicle
 msgid "Gap to the lead held steady."
 msgstr ""
+
+#. Reticulating Splines chronicle and multiplayer insights
+msgid "Population change"
+msgstr ""
+
+#. Reticulating Splines chronicle and multiplayer insights
+msgid "%s tiles · %s%%"
+msgstr ""
+
+#. Reticulating Splines chronicle and multiplayer insights
+msgid "Built-up area"
+msgstr ""
+
+#. Reticulating Splines chronicle and multiplayer insights
+msgid "Developed land includes buildings and infrastructure; trees and rubble are excluded."
+msgstr ""
+
+#. Reticulating Splines chronicle and multiplayer insights
+msgid "Year-end balance"
+msgstr ""
+
+#. Reticulating Splines chronicle and multiplayer insights
+msgid "City value"
+msgstr ""
+
+#. Reticulating Splines chronicle and multiplayer insights
+msgid "Life expectancy"
+msgstr ""
+
+#. Reticulating Splines chronicle and multiplayer insights
+msgid "%s years"
+msgstr ""
+
+#. Reticulating Splines chronicle and multiplayer insights
+msgid "Figures recorded at year end. Earlier statistics are not reconstructed."
+msgstr ""
+
+#. Reticulating Splines chronicle and multiplayer insights
+msgid "Disaster chronicle"
+msgstr ""
+
+#. Reticulating Splines chronicle and multiplayer insights
+msgid "No disasters recorded."
+msgstr ""
+
+#. Reticulating Splines chronicle and multiplayer insights
+msgid "Landmark buildings"
+msgstr ""
+
+#. Reticulating Splines chronicle and multiplayer insights
+msgid "No landmark buildings recorded."
+msgstr ""
+
+#. Reticulating Splines chronicle and multiplayer insights
+msgid "Funds change"
+msgstr ""
+
+#. Reticulating Splines chronicle and multiplayer insights
+msgid "Race trend"
+msgstr ""
+
+#. Reticulating Splines chronicle and multiplayer insights
+msgid "Your trend over %d months"
+msgstr ""
+
+#. Reticulating Splines chronicle and multiplayer insights
+msgid "Change in your city's population over the comparison period."
+msgstr ""
+
+#. Reticulating Splines chronicle and multiplayer insights
+msgid "Change in available funds, including construction and land transactions. This is not the annual budget balance."
+msgstr ""
+
+#. Reticulating Splines chronicle and multiplayer insights
+msgid "Closing by %s"
+msgstr ""
+
+#. Reticulating Splines chronicle and multiplayer insights
+msgid "Falling behind by %s"
+msgstr ""
+
+#. Reticulating Splines chronicle and multiplayer insights
+msgid "Unchanged"
+msgstr ""
+
+#. Reticulating Splines chronicle and multiplayer insights
+msgid "Change in the distance to the leading player, measured by the agreed objective."
+msgstr ""
