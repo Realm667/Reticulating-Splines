@@ -47,6 +47,7 @@ static func load_track(paths: PackedStringArray) -> Result:
 			var result := Result.new()
 			result.stream = stream
 			result.path = path
+			result.gain = MusicLoudness.recording_gain(stream, path)
 
 			return result
 
@@ -100,6 +101,7 @@ static func ffmpeg_executable() -> String:
 class Result extends RefCounted:
 	var stream: AudioStream
 	var path := ""
+	var gain := 1.0
 
 
 class Request extends RefCounted:

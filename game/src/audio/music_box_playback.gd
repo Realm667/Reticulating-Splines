@@ -46,7 +46,7 @@ func _process(delta: float) -> void:
 			return
 		current_track_name = MusicTrackTitle.resolve(result.path)
 		announce_music()
-		recording_player.stream = result.stream
+		_set_recording(result)
 		recording_player.play()
 		_sync_music_pause()
 	if recording_loader.start_pending() != OK:
@@ -77,7 +77,7 @@ func _on_music_track_finished(track_id: int) -> void:
 
 func ready_to_fade() -> bool:
 	return (dummy_music_active or (recording_player.stream != null and recording_player.playing)
-		or (music_player.is_track_active() and not music_player.is_loading_soundfont()))
+		or music_player.has_buffered_audio())
 
 
 func remaining_seconds() -> float:

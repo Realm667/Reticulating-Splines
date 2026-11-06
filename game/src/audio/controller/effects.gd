@@ -65,6 +65,8 @@ static func play_sound_events(
 		audio.add_child(player)
 		player.add_to_group(CityAudioController.SOUND_EFFECT_GROUP)
 		player.play()
+		if sound_id == DisasterStartConstants.SOUND_SIREN and not sound_event.from_thing and player.volume_linear > 0.0:
+			audio.highlight_warning()
 
 	sync_sound_loop(audio)
 
@@ -84,6 +86,9 @@ static func sync_sound_loop(audio: CityAudioController) -> void:
 		_start_loop_player(audio, sound_id, audio.wave_sound_gate.loop_plays) if sound_id >= 0 else null
 	)
 	audio.sound_loop_id = sound_id
+	if sound_id == DisasterStartConstants.SOUND_SIREN and is_instance_valid(audio.sound_loop_player) \
+			and audio.sound_loop_player.volume_linear > 0.0:
+		audio.highlight_warning()
 
 
 static func start_tool_loop_sound(audio: CityAudioController, sound_id: int, sound_enabled: bool) -> void:

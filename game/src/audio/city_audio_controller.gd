@@ -10,6 +10,12 @@ const MidiSynth = preload("res://src/audio/midi_synth_player.gd")
 const WaveSounds = preload("res://src/audio/wave_sound_gate.gd")
 const MUSIC_GAP_MSEC := 15000.0
 const SOUND_EFFECT_GROUP := &"open_sc2k_sound_effects"
+const MUSIC_BUS := &"Music"
+const MUSIC_AMBIENCE_BUS := &"Music and City Ambience"
+const WARNING_DUCK_DB := -5.0
+const WARNING_ATTACK := 0.10
+const WARNING_HOLD := 0.68
+const WARNING_RELEASE := 0.88
 
 var sound_pack := MediaPack.new()
 var music_pack := MediaPack.new()
@@ -18,6 +24,8 @@ var original_media_enabled := true
 var music_volume := 0.8
 # Presentation-only gain; the logical music state continues unchanged.
 var music_output_gain := 1.0
+var recording_gain := 1.0
+var _warning_duck: Tween
 var effects_volume := 0.8
 var music_director := Music.new()
 var music_player: MidiSynthPlayer
@@ -50,7 +58,7 @@ var wave_stream_cache: Dictionary = {}
 func _process(_delta: float) -> void:
 	var result := recording_loader.take_completed()
 	if result != null:
-		recording_player.stream = result.stream
+		_set_recording(result)
 
 		if recording_player.stream != null:
 			_set_track_title(result.path)
@@ -67,6 +75,7 @@ func _process(_delta: float) -> void:
 
 
 func _exit_tree() -> void:
+	_clear_warning_duck()
 	recording_loader.close()
 
 
@@ -79,7 +88,9 @@ func setup(
 	music_volume = initial_music_volume
 	effects_volume = initial_effects_volume
 	soundtrack_folder = resolve_soundtrack_folder("")
+	_ensure_music_bus()
 	recording_player = AudioStreamPlayer.new()
+	recording_player.bus = MUSIC_BUS
 	recording_player.finished.connect(func() -> void:
 		_on_music_track_finished(current_track_id))
 	add_child(recording_player)
@@ -89,6 +100,7 @@ func setup(
 	music_player.track_finished.connect(_on_music_track_finished)
 	music_player.synth_status_changed.connect(_on_synth_status_changed)
 	add_child(music_player)
+	music_player.set_output_bus(MUSIC_BUS)
 	music_player.set_volume_linear(music_volume)
 
 
@@ -126,11 +138,62 @@ func set_volumes(new_music_volume: float, new_effects_volume: float) -> void:
 	if music_player != null:
 		music_player.set_volume_linear(music_volume * music_output_gain)
 
-	if recording_player != null:
-		recording_player.volume_linear = music_volume * music_output_gain
+	_update_recording_volume()
 
 	if is_instance_valid(sound_loop_player):
 		sound_loop_player.volume_linear = effects_volume
+
+
+func _set_recording(result: RecordedSoundtrack.Result) -> void:
+	recording_gain = result.gain
+	recording_player.stream = result.stream
+	_update_recording_volume()
+
+
+func _update_recording_volume() -> void:
+	if recording_player != null:
+		recording_player.volume_linear = music_volume * music_output_gain * recording_gain
+
+
+static func ensure_audio_bus(bus_name: StringName) -> int:
+	var index := AudioServer.get_bus_index(bus_name)
+	if index < 0:
+		index = AudioServer.bus_count
+		AudioServer.add_bus()
+		AudioServer.set_bus_name(index, bus_name)
+	return index
+
+
+static func _ensure_music_bus() -> void:
+	ensure_audio_bus(MUSIC_AMBIENCE_BUS)
+	var bus := ensure_audio_bus(MUSIC_BUS)
+	AudioServer.set_bus_send(bus, MUSIC_AMBIENCE_BUS)
+	if AudioServer.get_bus_effect_count(bus) == 0:
+		var limiter := AudioEffectHardLimiter.new()
+		limiter.ceiling_db = -1.5
+		AudioServer.add_bus_effect(bus, limiter)
+
+
+func highlight_warning() -> void:
+	var bus := ensure_audio_bus(MUSIC_AMBIENCE_BUS)
+	if _warning_duck != null:
+		_warning_duck.kill()
+	_warning_duck = create_tween()
+	var set_level := func(level: float) -> void: AudioServer.set_bus_volume_db(bus, level)
+	_warning_duck.tween_method(set_level, AudioServer.get_bus_volume_db(bus), WARNING_DUCK_DB, WARNING_ATTACK) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	_warning_duck.tween_interval(WARNING_HOLD)
+	_warning_duck.tween_method(set_level, WARNING_DUCK_DB, 0.0, WARNING_RELEASE) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
+
+func _clear_warning_duck() -> void:
+	if _warning_duck != null:
+		_warning_duck.kill()
+		_warning_duck = null
+		var bus := AudioServer.get_bus_index(MUSIC_AMBIENCE_BUS)
+		if bus >= 0:
+			AudioServer.set_bus_volume_db(bus, 0.0)
 
 
 func set_music_output_gain(value: float) -> void:
@@ -337,6 +400,7 @@ func stop_music(clear_gap := true) -> void:
 	queued_choose_shuffle = true
 	focus_paused = false
 	recording_loader.cancel()
+	recording_gain = 1.0
 
 	if recording_player != null:
 		recording_player.stop()
@@ -352,11 +416,13 @@ func stop_music(clear_gap := true) -> void:
 
 
 func stop_sound_effects() -> void:
+	_clear_warning_duck()
 	CityAudioEffects.stop_sound_effects(self)
 
 
 # stop the disaster loop when its city closes
 func stop_sound_loop() -> void:
+	_clear_warning_duck()
 	wave_sound_gate.stop_loop()
 	CityAudioEffects.sync_sound_loop(self)
 

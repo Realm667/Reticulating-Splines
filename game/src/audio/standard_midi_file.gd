@@ -9,6 +9,7 @@ var ticks_per_quarter := 0
 var events: Array[Event] = []
 var duration_seconds := 0.0
 var parse_error := ""
+var source_hash := ""
 
 
 static func load_path(path: String) -> StandardMidiFile:
@@ -33,6 +34,10 @@ static func load_path(path: String) -> StandardMidiFile:
 
 # The native audio library parses the file; see native/core/audio/src/smf.rs
 func parse(data: PackedByteArray) -> bool:
+	var digest := HashingContext.new()
+	digest.start(HashingContext.HASH_SHA256)
+	digest.update(data)
+	source_hash = digest.finish().hex_encode()
 	var parsed := NativeMidiFile.parse(data)
 	format_type = parsed.format_type
 	track_count = parsed.track_count

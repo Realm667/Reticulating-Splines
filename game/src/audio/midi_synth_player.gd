@@ -27,6 +27,8 @@ const MAX_FRAMES_PER_FILL := 1024
 const IDLE_POLL_MSEC := 10
 
 const SAMPLE_RATE := float(FluidMidiSynth.SAMPLE_RATE)
+# Reference output level used by the FluidMidiSynth bridge.
+const REFERENCE_GAIN := 0.35
 const PREFILL_FRAMES := int(PREFILL_SECONDS * SAMPLE_RATE)
 const NO_SOUNDFONT := "No General MIDI sound set was found. Select a custom SoundFont in the Audio settings"
 
@@ -63,6 +65,7 @@ var _pending_engine: FluidMidiSynth
 var _pending_start_seconds := 0.0
 var _generation := 0
 var _render_generation := -1
+var _buffer_generation := -1
 var _frames_pushed := 0
 var _fill_count := 0
 var _idle_polls := 0
@@ -255,6 +258,17 @@ func is_track_active() -> bool:
 
 
 # only the main thread owns _audio_player, so the volume needs no lock
+func set_output_bus(bus_name: StringName) -> void:
+	_audio_player.bus = bus_name
+
+
+func has_buffered_audio() -> bool:
+	_mutex.lock()
+	var buffered := _active and _buffer_generation == _generation
+	_mutex.unlock()
+	return buffered
+
+
 func set_volume_linear(value: float) -> void:
 	if _audio_player != null:
 		_audio_player.volume_linear = clampf(value, 0.0, 1.0)
@@ -498,8 +512,25 @@ func _begin_render(
 	_render_generation = generation
 	_playback = playback
 	_sequence = sequence
+	engine.set_gain(REFERENCE_GAIN)
+	var soundfont_key := MusicLoudness.file_key(engine.soundfont_path())
+	var key := "midi:" + sequence.source_hash + ":" + soundfont_key if not sequence.source_hash.is_empty() \
+		and not soundfont_key.is_empty() else ""
+	var gain := MusicLoudness.gain_for(key, _measure_sequence.bind(engine, sequence))
+	engine.set_gain(REFERENCE_GAIN * gain)
 	_synth = fluid_synth(engine, sequence, start_seconds)
 	_track_complete = false
+
+
+static func _measure_sequence(engine: FluidMidiSynth, sequence: StandardMidiFile) -> float:
+	fluid_synth(engine, sequence)
+	var reader := func(position: float, frames: int) -> PackedVector2Array:
+		var lead_in := minf(position, 0.8)
+		engine.seek(position - lead_in)
+		if lead_in > 0.0:
+			engine.render(roundi(lead_in * SAMPLE_RATE))
+		return engine.render(frames)
+	return MusicLoudness.estimate(sequence.duration_seconds, SAMPLE_RATE, reader)
 
 
 func _release_render_state() -> void:
@@ -561,6 +592,7 @@ func _fill_audio(frame_count: int) -> void:
 
 	if current and frames > 0:
 		_playback.push_buffer(_output)
+		_buffer_generation = _generation
 		# a growing skip count means the thread fell behind the device
 		_skips = _playback.get_skips()
 		_frames_pushed += frames

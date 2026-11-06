@@ -27,6 +27,17 @@ func _run() -> void:
 			{ "ogg": "vorbis", "mp3": "libmp3lame", "flac": "flac" }[extension], path])) == 0)
 		var loaded := RecordedSoundtrack.load_track(PackedStringArray([path]))
 		assert(loaded.stream != null and loaded.stream.get_length() >= 0.9)
+		assert(loaded.gain > 1.1 and loaded.gain <= MusicLoudness.MAX_GAIN, "Expected a lift for quiet %s" % extension)
+
+	var loud_mp3 := folder.path_join("loud.mp3")
+	assert(OS.execute(RecordedSoundtrack.ffmpeg_executable(), PackedStringArray([
+		"-nostdin", "-v", "error", "-y", "-i", folder.path_join("source.wav"),
+		"-af", "volume=8", "-ac", "2", "-c:a", "libmp3lame", loud_mp3,
+	])) == 0)
+	var loud_hash := FileAccess.get_sha256(loud_mp3)
+	var loud := RecordedSoundtrack.load_track(PackedStringArray([loud_mp3]))
+	assert(loud.stream != null and loud.gain < 0.5 and loud.gain > 0.1)
+	assert(FileAccess.get_sha256(loud_mp3) == loud_hash)
 
 	var matches := RecordedSoundtrack.find_tracks(folder, 10001)
 	assert(matches.size() == 3 and matches[0].ends_with("flac"))
@@ -58,7 +69,8 @@ func _run() -> void:
 
 	assert(controller.recording_player.playing)
 	controller.set_volumes(0.1, 0.0)
-	assert(is_equal_approx(controller.recording_player.volume_linear, 0.1))
+	assert(controller.recording_gain > 1.1)
+	assert(is_equal_approx(controller.recording_player.volume_linear, 0.1 * controller.recording_gain))
 	controller.handle_application_focus_out()
 	assert(controller.recording_player.stream != null and controller.recording_player.stream_paused
 		and controller.recording_loader.pending == null)

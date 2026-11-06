@@ -1624,6 +1624,12 @@
     "lane": "product"
   },
   {
+    "id": "music_mix_test",
+    "script": "tests/music_mix_test.gd",
+    "domain": "audio",
+    "lane": "product"
+  },
+  {
     "id": "disaster_sound_loop_test",
     "script": "tests/disaster_sound_loop_test.gd",
     "domain": "audio",

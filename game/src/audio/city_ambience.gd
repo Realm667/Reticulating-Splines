@@ -115,8 +115,12 @@ func _create_mixer() -> void:
 	root = Node2D.new()
 	root.name = "CityAmbience"
 	app.add_child(root)
-	_bus(NEAR_BUS)
-	var far_bus := _bus(FAR_BUS)
+	var output := CityAudioController.MUSIC_AMBIENCE_BUS
+	CityAudioController.ensure_audio_bus(output)
+	var near_bus := CityAudioController.ensure_audio_bus(NEAR_BUS)
+	var far_bus := CityAudioController.ensure_audio_bus(FAR_BUS)
+	AudioServer.set_bus_send(near_bus, output)
+	AudioServer.set_bus_send(far_bus, output)
 	if AudioServer.get_bus_effect_count(far_bus) == 0:
 		distant_filter = AudioEffectLowPassFilter.new()
 		distant_filter.cutoff_hz = 1800.0
@@ -139,15 +143,6 @@ func _create_mixer() -> void:
 			beds[kind] = voice
 	if beds.has("wind"):
 		beds.wind.player.panning_strength = 0.0
-
-
-static func _bus(bus_name: StringName) -> int:
-	var index := AudioServer.get_bus_index(bus_name)
-	if index < 0:
-		index = AudioServer.bus_count
-		AudioServer.add_bus()
-		AudioServer.set_bus_name(index, bus_name)
-	return index
 
 
 func _voice(kind: String, loop: bool, bus: StringName) -> Voice:
