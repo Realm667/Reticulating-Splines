@@ -20,6 +20,7 @@ func _run() -> void:
 	_check_sloped_atlas()
 	_check_spacing()
 	_check_vehicle_mix()
+	_check_incremental_spawn(city)
 	var before := DocumentState.capture(city.document)
 	var app := CityApplication.new()
 	var life := app.city_life
@@ -64,6 +65,47 @@ func _run() -> void:
 	await _check_application()
 	print("PASS: city life topology, continuous lanes, local density, shared artwork, occlusion and unchanged city data")
 	quit()
+
+
+func _check_incremental_spawn(city: CityState) -> void:
+	var whole_app := CityApplication.new()
+	var sliced_app := CityApplication.new()
+	var whole := whole_app.city_life
+	var sliced := sliced_app.city_life
+	var options := VisualEnhancementOptions.normalize({})
+	for life: CityLifeController in [whole, sliced]:
+		life._viewport = Rect2i(0, 0, 5000, 4000)
+		for x in range(58, 71):
+			for y in range(58, 71):
+				if CityLifePaths.ports(city, Vector2i(x, y)) > 0:
+					life.tiles.append(Vector2i(x, y))
+	for wave in 5:
+		assert(whole._spawn(city, options))
+		var portions := 0
+		while true:
+			var before := sliced.figures.size()
+			var complete := sliced._spawn(city, options, 3)
+			assert(sliced.figures.size() - before <= 6, "A spawn portion exceeded its tile budget")
+			portions += 1
+			if complete:
+				break
+			assert(portions <= sliced.tiles.size(), "Incremental spawn did not make progress")
+		assert(portions > 1 and sliced._spawn_cursor == -1)
+		assert(whole.random.state == sliced.random.state, "Spawn portions changed the decorative RNG stream")
+		assert(whole.figures.size() == sliced.figures.size())
+		for i in whole.figures.size():
+			var a := whole.figures[i]
+			var b := sliced.figures[i]
+			assert([a.tile, a.enter, a.exit, a.walking, a.vehicle_kind, a.variant, a.position, a.speed, a.lifetime] ==
+				[b.tile, b.enter, b.exit, b.walking, b.vehicle_kind, b.variant, b.position, b.speed, b.lifetime],
+				"Incremental spawn changed an unchanged candidate")
+	# A pending wave must also terminate safely if its candidate set disappears.
+	sliced.figures.clear()
+	assert(not sliced._spawn(city, options, 1))
+	sliced.tiles.clear()
+	assert(sliced._spawn(city, options, 1) and sliced._spawn_cursor == -1)
+	whole_app.free()
+	sliced_app.free()
 
 
 func _check_bridge_tower(graphics: GraphicsPack = null) -> void:
@@ -172,8 +214,13 @@ func _check_application() -> void:
 	app.preferences.visual_enhancements.life_people_enabled = false
 	app.city_life.process(0.0)
 	assert(app.city_life.figures.all(func(f: CityLifeController.Figure) -> bool: return not f.walking))
+	# Disabling both categories must cancel a partially visited spawn wave.
+	app.city_life.figures.clear()
+	app.city_life._spawn_cursor = -1
+	assert(not app.city_life._spawn(city, app.preferences.visual_enhancements, 1))
 	app.preferences.visual_enhancements.life_cars_enabled = false
 	app.city_life.process(0.0)
+	assert(app.city_life._spawn_cursor == -1)
 	assert(not app.asset_state.large_sprites.visual_city_life_traffic and not app.city_life.canvas.visible)
 	assert(DocumentState.capture(city.document) == before)
 	assert([engine.random.state, engine.lfsr_random.state, engine.game_random.state] == random_before)

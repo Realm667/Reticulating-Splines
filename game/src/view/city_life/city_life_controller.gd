@@ -5,6 +5,7 @@ extends RefCounted
 @warning_ignore_start("integer_division")
 
 const MAX_FIGURES := 600
+const SPAWN_TILES_PER_FRAME := 32
 const UPDATE_SECONDS := 0.08
 const FADE_IN_SECONDS := 0.65
 const FADE_OUT_SECONDS := 0.9
@@ -35,6 +36,8 @@ var _paths: Dictionary[Vector3i, CityLifePaths.Segment] = {}
 var _tile_cache := CityLifeTiles.new()
 var _spawn_counts: Dictionary[Vector3i, int] = {}
 var _spawn_entries: Array[int] = []
+var _spawn_cursor := -1
+var _spawn_start := 0
 
 
 func _init(application: CityApplication) -> void:
@@ -64,6 +67,7 @@ func process(delta: float) -> void:
 	var active := _active_view()
 	_sync_traffic(active and bool(options.life_cars_enabled))
 	if not active or (not options.life_cars_enabled and not options.life_people_enabled):
+		_spawn_cursor = -1
 		if canvas != null:
 			canvas.hide()
 		return
@@ -72,6 +76,7 @@ func process(delta: float) -> void:
 		canvas.name = "CityLife"
 		map.add_child(canvas)
 	if city.document.get_instance_id() != _city_id:
+		_spawn_cursor = -1
 		_city_id = city.document.get_instance_id()
 		figures.clear()
 		_geometry_signature.clear()
@@ -81,6 +86,7 @@ func process(delta: float) -> void:
 		city.compass_rotation(), city.visible_altitude_levels]
 	var viewport := Rect2i(map.visible_source_rect().grow(96))
 	if geometry != _geometry_signature or not _viewport.encloses(viewport):
+		_spawn_cursor = -1
 		var changed_geometry := geometry != _geometry_signature
 		var changed_view := _geometry_signature.is_empty() or geometry.slice(3) != _geometry_signature.slice(3)
 		_geometry_signature = geometry
@@ -98,6 +104,7 @@ func process(delta: float) -> void:
 	var activity := [city.chunk_revision("XPOP"), city.chunk_revision("XTRF"), options.life_cars_enabled,
 		options.life_people_enabled, options.life_car_amount, options.life_people_amount, app.view_state.show_vehicles]
 	if activity != _activity_signature:
+		_spawn_cursor = -1
 		_activity_signature = activity
 		_spawn_elapsed = 1.0
 	# Compact in place instead of allocating a filtered array every frame.
@@ -116,9 +123,10 @@ func process(delta: float) -> void:
 	_elapsed += elapsed
 	_spawn_elapsed += elapsed
 	var spawned := false
-	if _spawn_elapsed >= 0.8:
-		_spawn_elapsed = 0.0
-		_spawn(city, options)
+	if _spawn_cursor >= 0 or _spawn_elapsed >= 0.8:
+		if _spawn_cursor < 0:
+			_spawn_elapsed = 0.0
+		_spawn(city, options, SPAWN_TILES_PER_FRAME)
 		spawned = true
 	var advanced := false
 	if _elapsed >= UPDATE_SECONDS:
@@ -176,7 +184,7 @@ func _collect_tiles(city: CityState) -> void:
 	figures = figures.filter(func(f: Figure) -> bool: return _viewport.has_point(Vector2i(f.position)))
 
 
-func _spawn(city: CityState, options: Dictionary) -> void:
+func _spawn(city: CityState, options: Dictionary, tile_limit := 0) -> bool:
 	_refresh_bus_area(city)
 	_rebuild_buckets()
 	_spawn_counts.clear()
@@ -185,12 +193,20 @@ func _spawn(city: CityState, options: Dictionary) -> void:
 		var key := Vector3i(figure.tile.x, figure.tile.y, int(figure.walking))
 		counts[key] = counts.get(key, 0) + 1
 	if tiles.is_empty():
-		return
-	var start := random.randi_range(0, tiles.size() - 1)
-	for index in tiles.size():
+		_spawn_cursor = -1
+		return true
+	if _spawn_cursor < 0:
+		_spawn_cursor = 0
+		_spawn_start = random.randi_range(0, tiles.size() - 1)
+	# Keep the same traversal and RNG stream across portions. The controller
+	# cancels it when geometry, viewport or population options change.
+	var end := mini(tiles.size(), _spawn_cursor + tile_limit) if tile_limit > 0 else tiles.size()
+	while _spawn_cursor < end:
 		if figures.size() >= MAX_FIGURES:
+			_spawn_cursor = tiles.size()
 			break
-		var tile := tiles[(start + index) % tiles.size()]
+		var tile := tiles[(_spawn_start + _spawn_cursor) % tiles.size()]
+		_spawn_cursor += 1
 		for walking in [false, true]:
 			if (walking and not options.life_people_enabled) or (not walking and (not options.life_cars_enabled or not app.view_state.show_vehicles)):
 				continue
@@ -232,6 +248,10 @@ func _spawn(city: CityState, options: Dictionary) -> void:
 			figures.append(figure)
 			_bucket_add(figure)
 			counts[key] = count + 1
+	if _spawn_cursor >= tiles.size():
+		_spawn_cursor = -1
+		return true
+	return false
 
 
 func _revalidate_lanes(city: CityState) -> void:
