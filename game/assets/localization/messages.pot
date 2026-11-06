@@ -11036,3 +11036,19 @@ msgstr ""
 #. Multiplayer clarity pass; supplementary AI-assisted translation.
 msgid "Viewing %s · %s · Read-only"
 msgstr ""
+
+# Reticulating Splines SimCity Classic import
+msgid "SimCity Classic cities"
+msgstr ""
+
+# Reticulating Splines SimCity Classic import
+msgid "Cannot import this SimCity Classic city. The CTY file is damaged or its format is unsupported."
+msgstr ""
+
+# Reticulating Splines SimCity Classic import
+msgid "Could not create the city folder."
+msgstr ""
+
+# Reticulating Splines SimCity Classic import
+msgid "Imported SimCity Classic city. Saved a new copy as %s."
+msgstr ""

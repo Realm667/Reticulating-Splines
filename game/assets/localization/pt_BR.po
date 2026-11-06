@@ -32499,3 +32499,19 @@ msgstr "Aguardando confirmação do anfitrião…"
 #. Multiplayer clarity pass; supplementary AI-assisted translation.
 msgid "Viewing %s · %s · Read-only"
 msgstr "Vista: %s · %s · Somente leitura"
+
+# Reticulating Splines SimCity Classic import
+msgid "SimCity Classic cities"
+msgstr "Cidades do SimCity Classic"
+
+# Reticulating Splines SimCity Classic import
+msgid "Cannot import this SimCity Classic city. The CTY file is damaged or its format is unsupported."
+msgstr "Não foi possível importar esta cidade do SimCity Classic. O arquivo CTY está danificado ou seu formato não é compatível."
+
+# Reticulating Splines SimCity Classic import
+msgid "Could not create the city folder."
+msgstr "Não foi possível criar a pasta de cidades."
+
+# Reticulating Splines SimCity Classic import
+msgid "Imported SimCity Classic city. Saved a new copy as %s."
+msgstr "Cidade do SimCity Classic importada. Uma nova cópia foi salva como %s."

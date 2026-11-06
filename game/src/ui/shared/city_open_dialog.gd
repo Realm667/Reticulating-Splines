@@ -241,7 +241,7 @@ func image_for_path(path: String) -> Image:
 
 
 static func _is_city(path: String) -> bool:
-	return path.get_extension().to_lower() in ["sc2", "sc2x", "scn"] and FileAccess.file_exists(path)
+	return path.get_extension().to_lower() in ["sc2", "sc2x", "scn", "cty"] and FileAccess.file_exists(path)
 
 
 func _exit_tree() -> void:

@@ -141,8 +141,10 @@ func run() -> void:
 		file.close()
 		# Legacy formats need their reader; native SC2X details need no terrain.
 		if archive.is_empty():
-			document = Sc2File.load_path(path)
+			document = SimCityClassicImport.read(path) if SimCityClassicImport.matches(path) else Sc2File.load_path(path)
 			_set_details(CityPreviewInfo.from_document(document))
+			if document == null:
+				return
 		if cancelled() or palette == null or sprites == null:
 			return
 		prepare_graphics_key()

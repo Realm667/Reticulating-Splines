@@ -332,7 +332,7 @@ func _continue_pending_city_exit() -> void:
 
 
 func load_city(path: String) -> void:
-	if not app.coop.active():
+	if not app.coop.active() and not SimCityClassicImport.matches(path):
 		var multiplayer_document := Sc2File.new()
 		if path.to_lower().ends_with(".sc2mp"):
 			app.coop.open()
@@ -401,6 +401,13 @@ func _finish_background_load(read: ReadCity) -> void:
 # application, so a worker thread can run it
 func _read_city(path: String) -> ReadCity:
 	var read := ReadCity.new()
+	if SimCityClassicImport.matches(path):
+		read.document = SimCityClassicImport.read(path)
+		if read.document == null:
+			read.error = tr("Cannot import this SimCity Classic city. The CTY file is damaged or its format is unsupported.")
+		else:
+			read.classic_source = path
+		return read
 	var document := Sc2Document.load_path(path)
 
 	if not document.is_valid():
@@ -457,6 +464,8 @@ func _activate_read_city(read: ReadCity) -> void:
 		return
 
 	var document := read.document
+	if not read.classic_source.is_empty() and not _save_classic_import(read):
+		return
 	app.city_session.activate_document(document, read.scenario, read.status, true, read.snapshot)
 	app.scurk_workspace.restore_city_tile_sets(document)
 
@@ -464,6 +473,27 @@ func _activate_read_city(read: ReadCity) -> void:
 	if not document.sc2x_converted_from.is_empty():
 		document_state.current_save_path = ""
 		document_state.current_city_saved_once = false
+
+
+func _save_classic_import(read: ReadCity) -> bool:
+	var directory := AppPaths.path("cities")
+	var stem := read.classic_source.get_file().get_basename()
+	var destination := directory.path_join(stem + ".sc2x")
+	var suffix := 2
+	while FileAccess.file_exists(destination) or DirAccess.dir_exists_absolute(destination):
+		destination = directory.path_join("%s (%d).sc2x" % [stem, suffix])
+		suffix += 1
+	if DirAccess.make_dir_recursive_absolute(directory) != OK:
+		app.interface.show_error(tr("Could not create the city folder."))
+		return false
+	var outcome := CityFiles.save_copy(read.document, destination, app.asset_state.reference_root)
+	if not outcome.ok:
+		app.interface.show_error(outcome.error)
+		return false
+	read.document.source_path = outcome.path
+	read.snapshot = read.document.content_snapshot()
+	read.status = tr("Imported SimCity Classic city. Saved a new copy as %s.") % outcome.path.get_file()
+	return true
 
 
 func _loaded_scenario(document: Sc2File) -> ScenarioState:
@@ -615,6 +645,7 @@ func request_main_menu() -> void:
 
 class ReadCity extends RefCounted:
 	var document: Sc2File
+	var classic_source := ""
 	var scenario: ScenarioState
 	var status := ""
 	var error := ""

@@ -9,6 +9,7 @@ static func city_open() -> FileDialog:
 			["*.SC2, *.sc2", "SimCity 2000 cities"],
 			["*.sc2x", "Extended and sc2kfix cities"],
 			["*.SCN, *.scn", "SimCity 2000 scenarios"],
+			["*.CTY, *.cty", "SimCity Classic cities"],
 		],
 		CityOpenDialog.new(),
 	)

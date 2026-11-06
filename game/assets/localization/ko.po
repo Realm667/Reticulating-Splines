@@ -10704,3 +10704,19 @@ msgstr "호스트 확인 대기 중…"
 #. Multiplayer clarity pass; supplementary AI-assisted translation.
 msgid "Viewing %s · %s · Read-only"
 msgstr "보기: %s · %s · 읽기 전용"
+
+# Reticulating Splines SimCity Classic import
+msgid "SimCity Classic cities"
+msgstr "심시티 클래식 도시"
+
+# Reticulating Splines SimCity Classic import
+msgid "Cannot import this SimCity Classic city. The CTY file is damaged or its format is unsupported."
+msgstr "이 심시티 클래식 도시를 가져올 수 없습니다. CTY 파일이 손상되었거나 지원하지 않는 형식입니다."
+
+# Reticulating Splines SimCity Classic import
+msgid "Could not create the city folder."
+msgstr "도시 폴더를 만들 수 없습니다."
+
+# Reticulating Splines SimCity Classic import
+msgid "Imported SimCity Classic city. Saved a new copy as %s."
+msgstr "심시티 클래식 도시를 가져왔습니다. 새 복사본을 %s(으)로 저장했습니다."
