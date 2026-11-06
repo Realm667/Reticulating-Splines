@@ -32,7 +32,7 @@ func _ready() -> void:
 	rci_graph = $Metrics/RCI
 	reports_label = $Metrics/Reports
 	annual_review_button = Button.new()
-	annual_review_button.text = "Annual review"
+	annual_review_button.text = "City chronicle"
 	annual_review_button.custom_minimum_size = reports_label.custom_minimum_size
 	annual_review_button.size_flags_horizontal = reports_label.size_flags_horizontal
 	annual_review_button.clip_text = true

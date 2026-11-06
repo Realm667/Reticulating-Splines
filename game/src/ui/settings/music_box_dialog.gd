@@ -36,6 +36,10 @@ var favorite_index := -1
 var now_playing: Label
 var status: Label
 var play_button: Button
+var add_favorite: Button
+var remove_favorite: Button
+var move_favorite: Button
+var player_settings: TabContainer
 var volume: HSlider
 var active := false
 var _playing_favorites := false
@@ -92,38 +96,48 @@ func _init(application: CityApplication) -> void:
 		play_track(favorites[index], true))
 	track_tabs.add_child(favorites_list)
 	var edit := row()
+	add_favorite = button(edit, "Add to favorites", _add_selected)
+	remove_favorite = button(edit, "Remove", _remove_selected)
+	move_favorite = button(edit, "Move up", _move_up)
+	track_tabs.tab_changed.connect(func(_index: int) -> void: _sync_favorite_actions())
+	library.item_selected.connect(func(_index: int) -> void: _sync_favorite_actions())
+	favorites_list.item_selected.connect(func(_index: int) -> void: _sync_favorite_actions())
+	var controls := row()
+	controls.alignment = BoxContainer.ALIGNMENT_CENTER
+	button(controls, "Previous", func() -> void: step(-1))
+	play_button = button(controls, "Play / Pause", _toggle_pause)
+	play_button.theme_type_variation = "PrimaryButton"
+	button(controls, "Next", func() -> void: step(1))
+	progress = ProgressBar.new()
+	progress.show_percentage = false
+	column.add_child(progress)
+	elapsed = label("", "HelpLabel")
+	elapsed.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
+	player_settings = TabContainer.new()
+	player_settings.custom_minimum_size.y = 190
+	column.add_child(player_settings)
+	var playback_settings := _settings_page("Playback")
+	var playback_row := HBoxContainer.new()
+	playback_settings.add_child(playback_row)
+	var order_label := Label.new()
+	order_label.text = "Playback order"
+	playback_row.add_child(order_label)
 	playback_mode = Button.new()
 	playback_mode.toggle_mode = true
 	playback_mode.toggled.connect(_set_shuffle_music)
-	edit.add_child(playback_mode)
+	playback_row.add_child(playback_mode)
 	_refresh_playback_mode()
-	button(edit, "Add to favorites", _add_selected)
-	button(edit, "Remove", _remove_selected)
-	button(edit, "Move up", _move_up)
-	var controls := row()
-	var transport_panel := VBoxContainer.new()
-	transport_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	controls.add_child(transport_panel)
-	var transport := HBoxContainer.new()
-	transport_panel.add_child(transport)
-	button(transport, "Previous", func() -> void: step(-1))
-	play_button = button(transport, "Play / Pause", _toggle_pause)
-	play_button.theme_type_variation = "PrimaryButton"
-	button(transport, "Next", func() -> void: step(1))
-	progress = ProgressBar.new()
-	progress.show_percentage = false
-	transport_panel.add_child(progress)
-	elapsed = Label.new()
-	elapsed.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
-	transport_panel.add_child(elapsed)
-	var levels := VBoxContainer.new()
-	levels.custom_minimum_size.x = 180
-	levels.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	controls.add_child(levels)
+	var sound_settings := _settings_page("Sound")
+	var levels := GridContainer.new()
+	levels.columns = 2
+	levels.add_theme_constant_override("h_separation", 14)
+	sound_settings.add_child(levels)
 	var music_label := Label.new()
 	music_label.text = "Music volume"
 	levels.add_child(music_label)
 	volume = HSlider.new()
+	volume.custom_minimum_size.x = 140
+	volume.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	volume.max_value = 100.0
 	volume.value = clampf(float(config.get_value("player", "gain", 1.0)), 0.0, 1.0) * 100.0
 	volume.value_changed.connect(_volume_changed)
@@ -132,6 +146,8 @@ func _init(application: CityApplication) -> void:
 	effects_label.text = "Sound effects volume"
 	levels.add_child(effects_label)
 	var effects := HSlider.new()
+	effects.custom_minimum_size.x = 140
+	effects.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	effects.max_value = 100.0
 	effects.value = app.preferences.effects_volume * 100.0
 	effects.value_changed.connect(func(value: float) -> void:
@@ -140,7 +156,8 @@ func _init(application: CityApplication) -> void:
 		_effects_dirty = true
 		_effects_save_delay = 0.5)
 	levels.add_child(effects)
-	var soundfonts := row()
+	var soundfonts := HBoxContainer.new()
+	sound_settings.add_child(soundfonts)
 	var soundfont_label := Label.new()
 	soundfont_label.text = "Music SoundFont"
 	soundfonts.add_child(soundfont_label)
@@ -163,9 +180,12 @@ func _init(application: CityApplication) -> void:
 	button(soundfonts, "Browse...", func() -> void: picker.popup_centered_ratio(0.8))
 	var compare := button(soundfonts, "A/B", _compare_soundfont)
 	compare.tooltip_text = "Compare the current MIDI with the previous SoundFont at the same playback position."
-	soundfont_description = label("", "HelpLabel")
-	soundfont_description.custom_minimum_size.x = 0
-	var transitions := row()
+	soundfont_description = Label.new()
+	soundfont_description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	soundfont_description.theme_type_variation = "HelpLabel"
+	sound_settings.add_child(soundfont_description)
+	var transitions := HBoxContainer.new()
+	playback_settings.add_child(transitions)
 	var transition_label := Label.new()
 	transition_label.text = "Track transitions"
 	transitions.add_child(transition_label)
@@ -178,13 +198,41 @@ func _init(application: CityApplication) -> void:
 		crossfade_seconds = float(transition_selector.get_item_metadata(index))
 		_save())
 	transitions.add_child(transition_selector)
-	var automatic_button := button(row(), "Automatic music", automatic)
+	var automatic_row := HBoxContainer.new()
+	playback_settings.add_child(automatic_row)
+	var automatic_button := button(automatic_row, "Automatic music", automatic)
 	automatic_button.tooltip_text = "Stop manual playback and let the game choose the music again."
-	var folders := row()
+	var library_settings := _settings_page("Library")
+	var folders := HBoxContainer.new()
+	library_settings.add_child(folders)
 	button(folders, "Open music folder", _open_music_folder)
 	button(folders, "Rescan", rescan)
 	status = label("", "HelpLabel")
+	_sync_favorite_actions()
 	close_requested.connect(_save)
+
+
+func _settings_page(title_text: String) -> VBoxContainer:
+	var scroll := ScrollContainer.new()
+	scroll.name = title_text
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	player_settings.add_child(scroll)
+	var page := VBoxContainer.new()
+	page.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	page.add_theme_constant_override("separation", 8)
+	scroll.add_child(page)
+	return page
+
+
+func _sync_favorite_actions() -> void:
+	var editing_favorites := track_tabs.current_tab == 1
+	add_favorite.visible = not editing_favorites
+	remove_favorite.visible = editing_favorites
+	move_favorite.visible = editing_favorites
+	add_favorite.disabled = library.get_selected_items().is_empty()
+	var selected := favorites_list.get_selected_items()
+	remove_favorite.disabled = selected.is_empty()
+	move_favorite.disabled = selected.is_empty() or selected[0] == 0
 
 
 func _ready() -> void:
@@ -374,6 +422,7 @@ func _refresh_favorites() -> void:
 		favorites_list.add_item(track_name(id) + ("" if _available(id) else " — " + tr("This music track is not available.")))
 	if favorite_index >= 0 and favorite_index < favorites.size():
 		favorites_list.select(favorite_index)
+	_sync_favorite_actions()
 
 
 func open() -> void:
@@ -740,6 +789,8 @@ func rescan() -> void:
 	collection.tooltip_text = custom_music.folder
 	track_tabs.set_tab_title(0, tr("Tracks"))
 	track_tabs.set_tab_title(1, tr("Favorites"))
+	for index in ["Playback", "Sound", "Library"].size():
+		player_settings.set_tab_title(index, tr(["Playback", "Sound", "Library"][index]))
 	_refresh_library()
 	_refresh_favorites()
 	status.text = tr("My music: %d MP3 files") % custom_music.tracks.size()

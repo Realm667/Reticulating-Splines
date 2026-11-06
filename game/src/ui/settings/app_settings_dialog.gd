@@ -169,6 +169,7 @@ func _ready() -> void:
 	city_ambience_check = %CityAmbienceCheck
 	city_ambience_slider = %CityAmbienceSlider
 	city_ambience_check.toggled.connect(func(enabled: bool) -> void: city_ambience_slider.editable = enabled)
+	_structure_audio()
 	folder_row = folder_edit.get_parent() as HBoxContainer
 	controls_list = %ControlsList
 	zoom_graphics_selectors = [%Zoom25, %Zoom50, %Zoom100, %Zoom200, %Zoom300, %Zoom400]
@@ -528,6 +529,62 @@ func _update_zoom_graphics_choices() -> void:
 
 		for size_index in AppSettingsStore.GRAPHICS_SIZES.size():
 			selector.set_item_disabled(size_index, size_index < (sizes[index - 1] if index > 0 else overview_graphics_selector.selected))
+
+
+func _structure_audio() -> void:
+	var body := tabs.get_node("Audio/Content")
+	var old := body.get_node("PackFields")
+	var levels := _audio_section(body, "Volume")
+	for pair in [["MusicVolumeLabel", "MusicSlider"], ["SoundEffectsVolumeLabel", "EffectsSlider"],
+			["CityAmbienceVolume", "CityAmbienceSlider"]]:
+		old.get_node(pair[0]).reparent(levels)
+		var slider := old.get_node(pair[1]) as HSlider
+		var row := HBoxContainer.new()
+		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		levels.add_child(row)
+		slider.reparent(row)
+		slider.custom_minimum_size.x = 140
+		slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var value := Label.new()
+		value.custom_minimum_size.x = 54
+		value.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		row.add_child(value)
+		value.text = "%d %%" % roundi(slider.value)
+		slider.value_changed.connect(func(amount: float) -> void: value.text = "%d %%" % roundi(amount))
+	var soundscape := _audio_section(body, "City soundscape")
+	for name in ["CitySoundsLabel", "CitySoundsSelector"]:
+		old.get_node(name).reparent(soundscape)
+	var spacer := Control.new()
+	soundscape.add_child(spacer)
+	city_ambience_check.reparent(soundscape)
+	var midi := _audio_section(body, "MIDI sound")
+	old.get_node("SoundFontLabel").reparent(midi)
+	old.get_node("SoundFontControls").reparent(midi)
+	%SoundFontSelector.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var behaviour := _audio_section(body, "Playback behaviour")
+	behaviour.columns = 1
+	toolbar_sounds_check.reparent(behaviour)
+	background_audio_check.reparent(behaviour)
+	old.hide()
+
+
+func _audio_section(body: Node, heading: String) -> GridContainer:
+	var panel := PanelContainer.new()
+	panel.theme_type_variation = "InformationPanel"
+	body.add_child(panel)
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 10)
+	panel.add_child(column)
+	var title := Label.new()
+	title.text = heading
+	title.theme_type_variation = "SectionHeading"
+	column.add_child(title)
+	var grid := GridContainer.new()
+	grid.columns = 2
+	grid.add_theme_constant_override("h_separation", 16)
+	grid.add_theme_constant_override("v_separation", 8)
+	column.add_child(grid)
+	return grid
 
 
 func _build_soundfont_controls() -> void:

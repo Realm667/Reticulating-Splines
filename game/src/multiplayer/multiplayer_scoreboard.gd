@@ -2,6 +2,15 @@ class_name MultiplayerScoreboard
 extends RefCounted
 
 const VIEWS := ["Overview", "Finances", "Land ownership", "Zoning", "Construction", "Emergency services", "History"]
+const DESCRIPTIONS := [
+	"Compare the current cities and standings.",
+	"Compare available funds, the current annual balance and outstanding debt.",
+	"Land holdings and confirmed purchases and sales.",
+	"Residential, commercial and industrial land by city.",
+	"Confirmed construction activity and spending by player.",
+	"Connection status and currently deployed emergency units.",
+	"Monthly snapshots on a common timeline.",
+]
 const COLUMNS := {
 	"name": "Player", "city": "City", "online": "Connection", "population": "Population",
 	"points": "Points", "funds": "Funds", "balance": "Year-to-date balance", "debt": "Debt", "land": "Owned tiles",
@@ -19,6 +28,9 @@ const PERSONAL := ["name", "online", "builds", "spent", "units", "aid"]
 const CROWN = preload("res://src/multiplayer/icons/crown.svg")
 var table: Tree
 var summary: Label
+var description: Label
+var trend_label: Label
+var sort_hint: Label
 var picker: MultiplayerTabs
 var rows: Array = []
 var columns: Array = []
@@ -35,13 +47,29 @@ var trend_players: Array = []
 var trend_cache: Dictionary = {}
 
 func setup(body: VBoxContainer) -> void:
+	var context := HBoxContainer.new()
+	body.add_child(context)
+	summary = Label.new()
+	summary.theme_type_variation = "SectionHeading"
+	summary.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	context.add_child(summary)
+	var authority := Label.new()
+	authority.text = "Host-confirmed"
+	authority.theme_type_variation = "HelpLabel"
+	context.add_child(authority)
 	picker = MultiplayerTabs.new()
 	for title in VIEWS:
 		picker.add_item(title)
 	body.add_child(picker)
-	summary = Label.new()
-	summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	body.add_child(summary)
+	description = Label.new()
+	description.theme_type_variation = "HelpLabel"
+	description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	body.add_child(description)
+	trend_label = Label.new()
+	trend_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	trend_label.theme_type_variation = "HelpLabel"
+	body.add_child(trend_label)
 	table = Tree.new()
 	table.hide_root = true
 	table.column_titles_visible = true
@@ -51,6 +79,10 @@ func setup(body: VBoxContainer) -> void:
 	table.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	table.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	body.add_child(table)
+	sort_hint = Label.new()
+	sort_hint.text = "Select a column heading to sort."
+	sort_hint.theme_type_variation = "HelpLabel"
+	body.add_child(sort_hint)
 	metric_picker = MultiplayerTabs.new()
 	for metric: String in MultiplayerHistory.METRICS:
 		metric_picker.add_item(COLUMNS[metric])
@@ -104,21 +136,27 @@ func update(players: Array, shared: bool, identity: String, samples: Dictionary 
 	self_id = identity
 	picker.visible = true
 	picker.set_meta("shared", shared)
-	summary.text = tr("Statistics are host-confirmed. Select a column heading to sort.")
+	summary.text = tr("Player comparison")
 	if not shared and not rows.is_empty():
 		var city: Dictionary = rows[0]
-		summary.text = tr("Shared city: %s · Population %s · Funds %s · Year-to-date balance %s · Debt %s") % [city.city, number(city.population), money(city.funds), money(city.balance), money(city.debt)]
+		summary.text = tr("Shared city") + " · " + str(city.city)
+		summary.tooltip_text = tr("Shared city: %s · Population %s · Funds %s · Year-to-date balance %s · Debt %s") % [city.city, number(city.population), money(city.funds), money(city.balance), money(city.debt)]
 	rebuild()
 
 func rebuild() -> void:
 	table.custom_minimum_size.y = maxi(80, rows.size() * 28 + 32)
 	var show_history := picker.selected == VIEWS.size() - 1
+	description.text = tr(DESCRIPTIONS[picker.selected]) if picker.get_meta("shared", false) else tr("Personal contributions to the shared city.")
+	sort_hint.visible = not show_history
+	trend_label.visible = picker.get_meta("shared", false) and not trend_cache.is_empty()
+	trend_label.text = trend_text() if trend_label.visible else ""
+	trend_label.tooltip_text = tr("Only matching calendar months are compared.")
 	table.visible = not show_history
 	chart.visible = show_history
 	metric_picker.visible = show_history
 	legend.visible = show_history
 	if show_history:
-		summary.text = tr("History begins when the game starts; a new sample is recorded each month.")
+		description.text = tr("History begins when the game starts; a new sample is recorded each month.")
 		chart.series = history
 		chart.players = rows if picker.get_meta("shared", false) else rows.slice(0, 1)
 		chart.queue_redraw()
@@ -128,7 +166,6 @@ func rebuild() -> void:
 			legend.push_color(Color(CoopSession.valid_color(row.get("color"))) if row.get("ranked", true) else Color(0.6, 0.6, 0.6))
 			legend.add_text("● " + str(row.name) + (" · " + tr("Unranked") if not row.get("ranked", true) else "") + "   ")
 			legend.pop()
-		legend.add_text("\n" + trend_text())
 		return
 	var selected := str(table.get_selected().get_metadata(0)) if table.get_selected() != null else ""
 	var scroll := table.get_scroll()
@@ -209,13 +246,6 @@ func rebuild() -> void:
 			child.set_deferred("value", scroll.x)
 		elif child is VScrollBar:
 			child.set_deferred("value", scroll.y)
-	if picker.get_meta("shared", false):
-		summary.text = tr("Statistics are host-confirmed. Select a column heading to sort.") + "\n" + trend_text()
-		if goal_kind == "timed_score" and picker.selected == 0:
-			for row: Dictionary in rows:
-				if row.id == self_id:
-					summary.text += "\n" + MultiplayerGoal.score_breakdown(row)
-
 
 static func trends(players: Array, samples: Dictionary) -> Dictionary:
 	# Compare exact common calendar months, never different city ages or invented zeros.
@@ -258,11 +288,17 @@ func trend_text() -> String:
 	if trend.is_empty() or not trend.rows.has(self_id):
 		return tr("Comparable monthly history is not available yet.")
 	var row: Dictionary = trend.rows[self_id]
-	var result := tr("Last %d common months · Your population %s · Funds %s") % [trend.months, signed_number(row.population), signed_number(row.funds, true)]
+	var result := tr("Your trend over %d months · Population %s · Funds %s") % [trend.months, signed_number(row.population), signed_number(row.funds, true)]
 	var metric := "points" if goal_kind == "timed_score" else "wealth" if goal_kind == "wealth" else "population"
 	var label := tr("Points") if metric == "points" else tr("Net wealth") if metric == "wealth" else tr("Population")
 	var change: int = row[metric + "_gap"]
-	result += "\n" + tr("Change in gap (%s): %s · Negative means catching up.") % [label, ("+" if change > 0 else "") + MultiplayerGoalHud.number(change, "timed_score" if metric == "points" else metric)]
+	var difference := MultiplayerGoalHud.number(absi(change), "timed_score" if metric == "points" else metric)
+	if change < 0:
+		result += "\n" + tr("Gap to the lead narrowed by %s (%s).") % [difference, label]
+	elif change > 0:
+		result += "\n" + tr("Gap to the lead widened by %s (%s).") % [difference, label]
+	else:
+		result += "\n" + tr("Gap to the lead held steady.")
 	return result
 
 

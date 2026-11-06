@@ -440,7 +440,7 @@ func set_newspapers(titles: PackedStringArray, subscribed := false, extras := fa
 
 	if titles.is_empty():
 		if annual_review:
-			popup.add_item("Annual review", MENU_ANNUAL_REVIEW)
+			popup.add_radio_check_item("City chronicle", MENU_ANNUAL_REVIEW)
 		return
 
 	popup.add_check_item("Subscription", MENU_NEWSPAPER_SUBSCRIPTION)
@@ -453,8 +453,7 @@ func set_newspapers(titles: PackedStringArray, subscribed := false, extras := fa
 		popup.add_radio_check_item(titles[index], index)
 		popup.set_item_checked(popup.get_item_index(index), index == selected)
 	if annual_review:
-		popup.add_separator()
-		popup.add_item("Annual review", MENU_ANNUAL_REVIEW)
+		popup.add_radio_check_item("City chronicle", MENU_ANNUAL_REVIEW)
 
 
 func set_population(display_value: String, available := true) -> void:

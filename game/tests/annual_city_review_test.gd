@@ -75,11 +75,39 @@ func _run() -> void:
 	journal.attach(CityState.from_document(reloaded))
 	var saved := journal.edition()
 	assert(saved.budget == 100 and saved.events.size() == 2)
+	assert(journal.editions().size() == 1)
+	var migration := reloaded.sc2x_extra_entries[AnnualCityReview.ENTRY]
+	var old_archive: Dictionary = JSON.parse_string(migration.get_string_from_utf8())
+	old_archive.version = 1
+	old_archive.erase("history")
+	reloaded.sc2x_extra_entries[AnnualCityReview.ENTRY] = JSON.stringify(old_archive).to_utf8_buffer()
+	journal.attach(CityState.from_document(reloaded))
+	assert(journal.editions().size() == 1 and journal.editions()[0].budget == 100,
+		"The previous annual edition must migrate into the chronicle")
 	assert(journal.point_in_current_view(saved.events[0]) == Vector2i(42, 52)
 		or journal.point_in_current_view(saved.events[1]) == Vector2i(42, 52))
 	var source := journal.point_in_current_view(saved.events[0])
 	reloaded.set_misc_u32(Sc2MiscLayout.COMPASS, (journal.city.compass_rotation() + 1) % 4)
 	assert(journal.point_in_current_view(saved.events[0]) == CityRotationCommand.rotate_point(source, 128, true))
+	for completed_year in range(2, 14):
+		var observed_city := journal.city
+		observed_city.set_age_in_days(completed_year * CityCalendar.DAYS_PER_YEAR - 1)
+		journal.prepare()
+		observed_city.set_age_in_days(completed_year * CityCalendar.DAYS_PER_YEAR)
+		var next_year := SimulationDayResult.new()
+		next_year.ok = true
+		next_year.complete = true
+		next_year.day = observed_city.age_in_days()
+		var next_tick := SimulationTickResult.new()
+		next_tick.day_results.append(next_year)
+		journal.observe(next_tick)
+	assert(journal.editions().size() == 10 and journal.history.size() == 10)
+	assert(journal.editions().front().year == first_year + 3 and journal.editions().back().year == first_year + 12)
+	var ten_years := Sc2xDocument.encode(reloaded)
+	var reopened := Sc2File.new()
+	assert(ten_years.ok and reopened.parse(ten_years.data))
+	journal.attach(CityState.from_document(reopened))
+	assert(journal.history.size() == 10)
 	var legacy := EmptyCityTemplate.create()
 	var legacy_city := CityState.from_document(legacy)
 	legacy_city.set_age_in_days(600)

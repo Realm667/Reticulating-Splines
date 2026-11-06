@@ -10768,3 +10768,135 @@ msgstr "%s: %s 건설 완료."
 # Reticulating Splines annual newspaper
 msgid "%s: %s struck the city."
 msgstr "%s: %s 발생."
+
+# Reticulating Splines UI and city chronicle
+msgid "Volume"
+msgstr "음량"
+
+# Reticulating Splines UI and city chronicle
+msgid "City soundscape"
+msgstr "도시 소리"
+
+# Reticulating Splines UI and city chronicle
+msgid "MIDI sound"
+msgstr "MIDI 음색"
+
+# Reticulating Splines UI and city chronicle
+msgid "Playback behaviour"
+msgstr "재생 동작"
+
+# Reticulating Splines UI and city chronicle
+msgid "Playback"
+msgstr "재생"
+
+# Reticulating Splines UI and city chronicle
+msgid "Playback order"
+msgstr "재생 순서"
+
+# Reticulating Splines UI and city chronicle
+msgid "Sound"
+msgstr "음향"
+
+# Reticulating Splines UI and city chronicle
+msgid "City chronicle"
+msgstr "도시 연대기"
+
+# Reticulating Splines UI and city chronicle
+msgid "The City Chronicle"
+msgstr "도시 연대기"
+
+# Reticulating Splines UI and city chronicle
+msgid "CITY ARCHIVE"
+msgstr "도시 기록 보관소"
+
+# Reticulating Splines UI and city chronicle
+msgid "YEARS OF CITY HISTORY"
+msgstr "년의 도시 역사"
+
+# Reticulating Splines UI and city chronicle
+msgid "Previous year"
+msgstr "이전 연도"
+
+# Reticulating Splines UI and city chronicle
+msgid "Next year"
+msgstr "다음 연도"
+
+# Reticulating Splines UI and city chronicle
+msgid "A record of the last ten completed years. Missing years are marked in the archive."
+msgstr "최근 완료된 10년의 기록입니다. 누락된 연도는 기록 보관소에 표시됩니다."
+
+# Reticulating Splines UI and city chronicle
+msgid "The story of your city, year by year"
+msgstr "한 해씩 살펴보는 도시의 역사"
+
+# Reticulating Splines UI and city chronicle
+msgid "The year %d"
+msgstr "%d년"
+
+# Reticulating Splines UI and city chronicle
+msgid "Compare the current cities and standings."
+msgstr "도시와 현재 순위를 비교합니다."
+
+# Reticulating Splines UI and city chronicle
+msgid "Compare available funds, the current annual balance and outstanding debt."
+msgstr "가용 자금, 당해 연도 수지와 미상환 부채를 비교합니다."
+
+# Reticulating Splines UI and city chronicle
+msgid "Land holdings and confirmed purchases and sales."
+msgstr "소유 토지 및 확정된 매입과 매각입니다."
+
+# Reticulating Splines UI and city chronicle
+msgid "Residential, commercial and industrial land by city."
+msgstr "도시별 주거, 상업 및 산업 토지입니다."
+
+# Reticulating Splines UI and city chronicle
+msgid "Confirmed construction activity and spending by player."
+msgstr "플레이어별 확정된 건설 활동과 지출입니다."
+
+# Reticulating Splines UI and city chronicle
+msgid "Connection status and currently deployed emergency units."
+msgstr "연결 상태 및 현재 배치된 긴급 대응 부대입니다."
+
+# Reticulating Splines UI and city chronicle
+msgid "Monthly snapshots on a common timeline."
+msgstr "공통 시간축의 월별 기록입니다."
+
+# Reticulating Splines UI and city chronicle
+msgid "Host-confirmed"
+msgstr "호스트 확인 완료"
+
+# Reticulating Splines UI and city chronicle
+msgid "Select a column heading to sort."
+msgstr "열 제목을 선택하여 정렬합니다."
+
+# Reticulating Splines UI and city chronicle
+msgid "Player comparison"
+msgstr "플레이어 비교"
+
+# Reticulating Splines UI and city chronicle
+msgid "Shared city"
+msgstr "공유 도시"
+
+# Reticulating Splines UI and city chronicle
+msgid "Personal contributions to the shared city."
+msgstr "공유 도시에 대한 개인별 기여입니다."
+
+# Reticulating Splines UI and city chronicle
+msgid "Only matching calendar months are compared."
+msgstr "동일한 달력 월만 비교합니다."
+
+# Reticulating Splines UI and city chronicle
+msgid "Your trend over %d months · Population %s · Funds %s"
+msgstr "%d개월 추세 · 인구 %s · 자금 %s"
+
+# Reticulating Splines UI and city chronicle
+msgid "Gap to the lead narrowed by %s (%s)."
+msgstr "선두와의 격차가 %s 줄었습니다 (%s)."
+
+# Reticulating Splines UI and city chronicle
+msgid "Gap to the lead widened by %s (%s)."
+msgstr "선두와의 격차가 %s 늘었습니다 (%s)."
+
+# Reticulating Splines UI and city chronicle
+msgid "Gap to the lead held steady."
+msgstr "선두와의 격차가 유지되었습니다."

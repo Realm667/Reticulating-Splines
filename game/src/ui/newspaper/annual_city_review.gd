@@ -5,7 +5,8 @@ extends RefCounted
 @warning_ignore_start("integer_division")
 
 const ENTRY := "annual-review.json"
-const VERSION := 1
+const VERSION := 2
+const YEARS := 10
 const DAYS := CityCalendar.DAYS_PER_YEAR
 const MAX_EVENTS := 12
 const DISPLAY_EVENTS := 3
@@ -23,6 +24,7 @@ var year := -1
 var population_start := -1
 var events: Array[Dictionary] = []
 var latest: Dictionary = {}
+var history: Array[Dictionary] = []
 var _previous_day := -1
 var _previous_population := -1
 var _budget_year := -1
@@ -36,6 +38,7 @@ func attach(value: CityState) -> void:
 	population_start = -1
 	events.clear()
 	latest = {}
+	history.clear()
 	_previous_day = -1
 	_previous_population = -1
 	_budget_year = -1
@@ -46,21 +49,32 @@ func attach(value: CityState) -> void:
 	if city.age_in_days() % DAYS == 0:
 		population_start = city.population()
 	var raw: PackedByteArray = city.document.sc2x_extra_entries.get(ENTRY, PackedByteArray())
-	if raw.is_empty() or raw.size() > 8192:
+	if raw.is_empty() or raw.size() > 49152:
 		return
 	var data: Variant = JSON.parse_string(raw.get_string_from_utf8())
-	if not data is Dictionary or data.get("version") != VERSION:
+	if not data is Dictionary or (data.get("version") != 1 and data.get("version") != VERSION):
 		return
 	if data.get("year") == year:
 		population_start = _population(data.get("start"))
 		events = _valid_events(data.get("events"), year)
-	var archive: Variant = data.get("latest")
-	if archive is Dictionary and archive.get("year") == year - 1:
-		latest = {"year": year - 1, "start": _population(archive.get("start")),
-			"end": _population(archive.get("end")), "events": _valid_events(archive.get("events"), year - 1).slice(0, DISPLAY_EVENTS)}
+	var archives: Array = data.get("history", []) if data.get("history") is Array else []
+	archives = archives.slice(0, YEARS)
+	archives.append(data.get("latest"))
+	for archive: Variant in archives:
+		if not archive is Dictionary or not _whole_number(archive.get("year")):
+			continue
+		var archive_year := int(archive.year)
+		if archive_year < maxi(city.founding_year(), year - YEARS) or archive_year >= year:
+			continue
+		var edition := {"year": archive_year, "start": _population(archive.get("start")),
+			"end": _population(archive.get("end")), "events": _valid_events(archive.get("events"), archive_year).slice(0, DISPLAY_EVENTS)}
 		var budget: Variant = archive.get("budget")
 		if _whole_number(budget) and absf(float(budget)) <= 4294967295.0:
-			latest.budget = int(budget)
+			edition.budget = int(budget)
+		_remember(edition)
+	for edition in history:
+		if edition.year == year - 1:
+			latest = edition
 
 
 func prepare() -> void:
@@ -106,6 +120,7 @@ func observe(tick: SimulationTickResult) -> bool:
 
 		if _unpublished and (day.complete or (budget != null and budget.settled_year)):
 			_unpublished = false
+			_remember(latest)
 			_store()
 			published = true
 
@@ -157,6 +172,30 @@ func edition() -> Dictionary:
 	return {"year": city.current_year() - 1, "start": -1, "end": -1, "events": []}
 
 
+func editions() -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	if city == null:
+		return result
+	for completed_year in range(maxi(city.founding_year(), city.current_year() - YEARS), city.current_year()):
+		var found := {"year": completed_year, "start": -1, "end": -1, "events": []}
+		for recorded in history:
+			if recorded.year == completed_year:
+				found = recorded
+				break
+		result.append(found)
+	return result
+
+
+func _remember(edition: Dictionary) -> void:
+	for index in range(history.size() - 1, -1, -1):
+		if history[index].year == edition.year or history[index].year < year - YEARS:
+			history.remove_at(index)
+	history.append(edition.duplicate(true))
+	history.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a.year < b.year)
+	while history.size() > YEARS:
+		history.pop_front()
+
+
 func _record(kind: String, id: int, point: Vector2i, day: int) -> void:
 	if city.founding_year() + day / DAYS != year:
 		return
@@ -192,7 +231,7 @@ func _headline_events() -> Array[Dictionary]:
 func _store() -> void:
 	if city.document.is_sc2x():
 		city.document.sc2x_extra_entries[ENTRY] = JSON.stringify({"version": VERSION, "year": year,
-			"start": population_start, "events": events, "latest": latest}).to_utf8_buffer()
+			"start": population_start, "events": events, "latest": latest, "history": history}).to_utf8_buffer()
 
 
 func _valid_events(value: Variant, event_year: int) -> Array[Dictionary]:

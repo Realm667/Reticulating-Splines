@@ -11100,3 +11100,135 @@ msgstr ""
 # Reticulating Splines annual newspaper
 msgid "%s: %s struck the city."
 msgstr ""
+
+# Reticulating Splines UI and city chronicle
+msgid "Volume"
+msgstr ""
+
+# Reticulating Splines UI and city chronicle
+msgid "City soundscape"
+msgstr ""
+
+# Reticulating Splines UI and city chronicle
+msgid "MIDI sound"
+msgstr ""
+
+# Reticulating Splines UI and city chronicle
+msgid "Playback behaviour"
+msgstr ""
+
+# Reticulating Splines UI and city chronicle
+msgid "Playback"
+msgstr ""
+
+# Reticulating Splines UI and city chronicle
+msgid "Playback order"
+msgstr ""
+
+# Reticulating Splines UI and city chronicle
+msgid "Sound"
+msgstr ""
+
+# Reticulating Splines UI and city chronicle
+msgid "City chronicle"
+msgstr ""
+
+# Reticulating Splines UI and city chronicle
+msgid "The City Chronicle"
+msgstr ""
+
+# Reticulating Splines UI and city chronicle
+msgid "CITY ARCHIVE"
+msgstr ""
+
+# Reticulating Splines UI and city chronicle
+msgid "YEARS OF CITY HISTORY"
+msgstr ""
+
+# Reticulating Splines UI and city chronicle
+msgid "Previous year"
+msgstr ""
+
+# Reticulating Splines UI and city chronicle
+msgid "Next year"
+msgstr ""
+
+# Reticulating Splines UI and city chronicle
+msgid "A record of the last ten completed years. Missing years are marked in the archive."
+msgstr ""
+
+# Reticulating Splines UI and city chronicle
+msgid "The story of your city, year by year"
+msgstr ""
+
+# Reticulating Splines UI and city chronicle
+msgid "The year %d"
+msgstr ""
+
+# Reticulating Splines UI and city chronicle
+msgid "Compare the current cities and standings."
+msgstr ""
+
+# Reticulating Splines UI and city chronicle
+msgid "Compare available funds, the current annual balance and outstanding debt."
+msgstr ""
+
+# Reticulating Splines UI and city chronicle
+msgid "Land holdings and confirmed purchases and sales."
+msgstr ""
+
+# Reticulating Splines UI and city chronicle
+msgid "Residential, commercial and industrial land by city."
+msgstr ""
+
+# Reticulating Splines UI and city chronicle
+msgid "Confirmed construction activity and spending by player."
+msgstr ""
+
+# Reticulating Splines UI and city chronicle
+msgid "Connection status and currently deployed emergency units."
+msgstr ""
+
+# Reticulating Splines UI and city chronicle
+msgid "Monthly snapshots on a common timeline."
+msgstr ""
+
+# Reticulating Splines UI and city chronicle
+msgid "Host-confirmed"
+msgstr ""
+
+# Reticulating Splines UI and city chronicle
+msgid "Select a column heading to sort."
+msgstr ""
+
+# Reticulating Splines UI and city chronicle
+msgid "Player comparison"
+msgstr ""
+
+# Reticulating Splines UI and city chronicle
+msgid "Shared city"
+msgstr ""
+
+# Reticulating Splines UI and city chronicle
+msgid "Personal contributions to the shared city."
+msgstr ""
+
+# Reticulating Splines UI and city chronicle
+msgid "Only matching calendar months are compared."
+msgstr ""
+
+# Reticulating Splines UI and city chronicle
+msgid "Your trend over %d months · Population %s · Funds %s"
+msgstr ""
+
+# Reticulating Splines UI and city chronicle
+msgid "Gap to the lead narrowed by %s (%s)."
+msgstr ""
+
+# Reticulating Splines UI and city chronicle
+msgid "Gap to the lead widened by %s (%s)."
+msgstr ""
+
+# Reticulating Splines UI and city chronicle
+msgid "Gap to the lead held steady."
+msgstr ""

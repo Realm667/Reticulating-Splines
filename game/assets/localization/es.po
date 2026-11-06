@@ -31197,3 +31197,135 @@ msgstr "%s: Se completó la construcción de %s."
 # Reticulating Splines annual newspaper
 msgid "%s: %s struck the city."
 msgstr "%s: %s afectó a la ciudad."
+
+# Reticulating Splines UI and city chronicle
+msgid "Volume"
+msgstr "Volumen"
+
+# Reticulating Splines UI and city chronicle
+msgid "City soundscape"
+msgstr "Sonidos de la ciudad"
+
+# Reticulating Splines UI and city chronicle
+msgid "MIDI sound"
+msgstr "Sonido MIDI"
+
+# Reticulating Splines UI and city chronicle
+msgid "Playback behaviour"
+msgstr "Comportamiento de reproducción"
+
+# Reticulating Splines UI and city chronicle
+msgid "Playback"
+msgstr "Reproducción"
+
+# Reticulating Splines UI and city chronicle
+msgid "Playback order"
+msgstr "Orden de reproducción"
+
+# Reticulating Splines UI and city chronicle
+msgid "Sound"
+msgstr "Sonido"
+
+# Reticulating Splines UI and city chronicle
+msgid "City chronicle"
+msgstr "Crónica de la ciudad"
+
+# Reticulating Splines UI and city chronicle
+msgid "The City Chronicle"
+msgstr "La Crónica de la Ciudad"
+
+# Reticulating Splines UI and city chronicle
+msgid "CITY ARCHIVE"
+msgstr "ARCHIVO MUNICIPAL"
+
+# Reticulating Splines UI and city chronicle
+msgid "YEARS OF CITY HISTORY"
+msgstr "AÑOS DE HISTORIA URBANA"
+
+# Reticulating Splines UI and city chronicle
+msgid "Previous year"
+msgstr "Año anterior"
+
+# Reticulating Splines UI and city chronicle
+msgid "Next year"
+msgstr "Año siguiente"
+
+# Reticulating Splines UI and city chronicle
+msgid "A record of the last ten completed years. Missing years are marked in the archive."
+msgstr "Los últimos diez años completos. El archivo indica los años sin registros."
+
+# Reticulating Splines UI and city chronicle
+msgid "The story of your city, year by year"
+msgstr "La historia de tu ciudad, año a año"
+
+# Reticulating Splines UI and city chronicle
+msgid "The year %d"
+msgstr "El año %d"
+
+# Reticulating Splines UI and city chronicle
+msgid "Compare the current cities and standings."
+msgstr "Compara las ciudades y la clasificación actual."
+
+# Reticulating Splines UI and city chronicle
+msgid "Compare available funds, the current annual balance and outstanding debt."
+msgstr "Compara los fondos disponibles, el balance anual actual y la deuda pendiente."
+
+# Reticulating Splines UI and city chronicle
+msgid "Land holdings and confirmed purchases and sales."
+msgstr "Terrenos en propiedad y compras y ventas confirmadas."
+
+# Reticulating Splines UI and city chronicle
+msgid "Residential, commercial and industrial land by city."
+msgstr "Suelo residencial, comercial e industrial por ciudad."
+
+# Reticulating Splines UI and city chronicle
+msgid "Confirmed construction activity and spending by player."
+msgstr "Construcciones y gastos confirmados por jugador."
+
+# Reticulating Splines UI and city chronicle
+msgid "Connection status and currently deployed emergency units."
+msgstr "Estado de conexión y unidades de emergencia desplegadas."
+
+# Reticulating Splines UI and city chronicle
+msgid "Monthly snapshots on a common timeline."
+msgstr "Valores mensuales en una línea temporal común."
+
+# Reticulating Splines UI and city chronicle
+msgid "Host-confirmed"
+msgstr "Confirmado por el anfitrión"
+
+# Reticulating Splines UI and city chronicle
+msgid "Select a column heading to sort."
+msgstr "Selecciona un encabezado para ordenar."
+
+# Reticulating Splines UI and city chronicle
+msgid "Player comparison"
+msgstr "Comparación de jugadores"
+
+# Reticulating Splines UI and city chronicle
+msgid "Shared city"
+msgstr "Ciudad compartida"
+
+# Reticulating Splines UI and city chronicle
+msgid "Personal contributions to the shared city."
+msgstr "Aportaciones personales a la ciudad compartida."
+
+# Reticulating Splines UI and city chronicle
+msgid "Only matching calendar months are compared."
+msgstr "Solo se comparan los mismos meses del calendario."
+
+# Reticulating Splines UI and city chronicle
+msgid "Your trend over %d months · Population %s · Funds %s"
+msgstr "Tu evolución en %d meses · Población %s · Fondos %s"
+
+# Reticulating Splines UI and city chronicle
+msgid "Gap to the lead narrowed by %s (%s)."
+msgstr "La distancia al líder se redujo en %s (%s)."
+
+# Reticulating Splines UI and city chronicle
+msgid "Gap to the lead widened by %s (%s)."
+msgstr "La distancia al líder aumentó en %s (%s)."
+
+# Reticulating Splines UI and city chronicle
+msgid "Gap to the lead held steady."
+msgstr "La distancia al líder se mantuvo."
