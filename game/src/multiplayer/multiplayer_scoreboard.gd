@@ -30,6 +30,9 @@ var metric_picker: MultiplayerTabs
 var legend: RichTextLabel
 var history: Dictionary = {}
 var displayed: Array = []
+var goal_kind := "population"
+var trend_players: Array = []
+var trend_cache: Dictionary = {}
 
 func setup(body: VBoxContainer) -> void:
 	picker = MultiplayerTabs.new()
@@ -63,7 +66,7 @@ func setup(body: VBoxContainer) -> void:
 	body.add_child(legend)
 	metric_picker.item_selected.connect(func(index: int) -> void:
 		chart.metric = MultiplayerHistory.METRICS[index]
-		chart.queue_redraw())
+		rebuild())
 	picker.item_selected.connect(func(_index: int) -> void: rebuild())
 	table.column_title_clicked.connect(func(index: int, _button: int) -> void:
 		var key: String = columns[index]
@@ -71,7 +74,7 @@ func setup(body: VBoxContainer) -> void:
 		sort_key = key
 		rebuild())
 
-func update(players: Array, shared: bool, identity: String, samples: Dictionary = {}) -> void:
+func update(players: Array, shared: bool, identity: String, samples: Dictionary = {}, kind := "population") -> void:
 	# Presence carries cursors and selections at a higher rate than statistics.
 	# Keep those fields out of the table, and do not replace focused rows for them.
 	var values: Array = []
@@ -84,11 +87,16 @@ func update(players: Array, shared: bool, identity: String, samples: Dictionary 
 			if player.has(key):
 				row[key] = player[key]
 		values.append(row)
-	var key := [values, shared, identity, TranslationServer.get_locale()]
+	var key := [values, shared, identity, kind, TranslationServer.get_locale()]
+	goal_kind = kind
 	var history_changed := history != samples
 	history = samples.duplicate(true) if history_changed else history
+	var participants := values.map(func(row: Dictionary) -> Array: return [row.id, row.get("ranked", true)])
+	if history_changed or participants != trend_players:
+		trend_players = participants
+		trend_cache = trends(values, history)
 	if key == displayed:
-		if history_changed and picker.selected == VIEWS.size() - 1:
+		if history_changed:
 			rebuild()
 		return
 	displayed = key
@@ -119,6 +127,7 @@ func rebuild() -> void:
 			legend.push_color(Color(CoopSession.valid_color(row.get("color"))) if row.get("ranked", true) else Color(0.6, 0.6, 0.6))
 			legend.add_text("● " + str(row.name) + (" · " + tr("Unranked") if not row.get("ranked", true) else "") + "   ")
 			legend.pop()
+		legend.add_text("\n" + trend_text())
 		return
 	var selected := str(table.get_selected().get_metadata(0)) if table.get_selected() != null else ""
 	var scroll := table.get_scroll()
@@ -153,6 +162,8 @@ func rebuild() -> void:
 		if key in ["name", "city", "online"]:
 			continue
 		for row: Dictionary in rows:
+			if not row.get("ranked", true):
+				continue
 			var value: Variant = row.get(key)
 			if value == null:
 				continue
@@ -185,11 +196,11 @@ func rebuild() -> void:
 				if key == "name":
 					text += " · " + tr("Unranked")
 			item.set_text(index, text)
-			if leaders.has(key) and value == leaders[key]:
+			if row.get("ranked", true) and leaders.has(key) and value == leaders[key]:
 				item.set_icon(index, PixelArtTexture.wrap(CROWN))
 				item.set_icon_max_width(index, 16)
 			item.set_custom_bg_color(index, Color(1, 1, 1, 0.035) if row_index % 2 else Color(0, 0, 0, 0.08))
-			item.set_tooltip_text(index, tr(COLUMNS[key]) + ": " + text + "\n" + tooltip(key))
+			item.set_tooltip_text(index, tr(COLUMNS[key]) + ": " + text + "\n" + (MultiplayerGoal.score_breakdown(row) if key == "points" else tooltip(key)))
 		if row.id == selected:
 			item.select(0)
 	for child in table.get_children(true):
@@ -197,6 +208,65 @@ func rebuild() -> void:
 			child.set_deferred("value", scroll.x)
 		elif child is VScrollBar:
 			child.set_deferred("value", scroll.y)
+	if picker.get_meta("shared", false):
+		summary.text = tr("Statistics are host-confirmed. Select a column heading to sort.") + "\n" + trend_text()
+		if goal_kind == "timed_score" and picker.selected == 0:
+			for row: Dictionary in rows:
+				if row.id == self_id:
+					summary.text += "\n" + MultiplayerGoal.score_breakdown(row)
+
+
+static func trends(players: Array, samples: Dictionary) -> Dictionary:
+	# Compare exact common calendar months, never different city ages or invented zeros.
+	var dated := {}
+	var common: Array = []
+	for row: Dictionary in players:
+		if not row.get("ranked", true):
+			continue
+		var dates := {}
+		for sample: Dictionary in samples.get(row.id, []):
+			dates[int(sample.year) * 12 + int(sample.month)] = sample
+		common = dates.keys() if dated.is_empty() else common.filter(func(date: int) -> bool: return dates.has(date))
+		dated[row.id] = dates
+	if common.size() < 2:
+		return {}
+	common.sort()
+	var end: int = common.back()
+	var recent := common.filter(func(date: int) -> bool: return date >= end - 12)
+	if recent.size() < 2:
+		return {}
+	var begin: int = recent.front()
+	var result := {"months": end - begin, "rows": {}}
+	for id: String in dated:
+		var first: Dictionary = dated[id][begin]
+		var last: Dictionary = dated[id][end]
+		result.rows[id] = {"population": int(last.population) - int(first.population), "funds": int(last.funds) - int(first.funds)}
+		for metric: String in ["population", "wealth", "points"]:
+			var first_best := -9223372036854775807
+			var last_best := -9223372036854775807
+			var kind := "timed_score" if metric == "points" else metric
+			for other: String in dated:
+				first_best = maxi(first_best, MultiplayerGoalHud.value(dated[other][begin], kind))
+				last_best = maxi(last_best, MultiplayerGoalHud.value(dated[other][end], kind))
+			result.rows[id][metric + "_gap"] = (last_best - MultiplayerGoalHud.value(last, kind)) - (first_best - MultiplayerGoalHud.value(first, kind))
+	return result
+
+
+func trend_text() -> String:
+	var trend := trend_cache
+	if trend.is_empty() or not trend.rows.has(self_id):
+		return tr("Comparable monthly history is not available yet.")
+	var row: Dictionary = trend.rows[self_id]
+	var result := tr("Last %d common months · Your population %s · Funds %s") % [trend.months, signed_number(row.population), signed_number(row.funds, true)]
+	var metric := "points" if goal_kind == "timed_score" else "wealth" if goal_kind == "wealth" else "population"
+	var label := tr("Points") if metric == "points" else tr("Net wealth") if metric == "wealth" else tr("Population")
+	var change: int = row[metric + "_gap"]
+	result += "\n" + tr("Change in gap (%s): %s · Negative means catching up.") % [label, ("+" if change > 0 else "") + MultiplayerGoalHud.number(change, "timed_score" if metric == "points" else metric)]
+	return result
+
+
+static func signed_number(value: int, currency := false) -> String:
+	return ("+" if value > 0 else "") + (money(value) if currency else number(value))
 
 static func number(value: Variant) -> String:
 	var digits := str(absi(int(value)))

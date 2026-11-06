@@ -20,11 +20,15 @@ var notification: PanelContainer
 var notice_record: Dictionary = {}
 var active_record := ""
 var map_detail: PanelContainer
+var balance_label: Label
+var preview_record: Dictionary = {}
 
 func _init(owner: MultiplayerWindows) -> void:
 	windows_ref = weakref(owner)
 
 func refresh(state: Dictionary) -> void:
+	if is_instance_valid(balance_label) and not preview_record.is_empty():
+		balance_label.text = balance_text(preview_record)
 	var entries: Array = state.get("offers", []).duplicate(true)
 	entries.append_array(state.get("land_history", []))
 	var current := TranslationServer.get_locale() + JSON.stringify(entries)
@@ -33,15 +37,19 @@ func refresh(state: Dictionary) -> void:
 	signature = current
 	var identity := windows.coop.session.token.sha256_text()
 	for record: Dictionary in entries:
-		var key := str(record.id) + str(record.status)
+		var key := JSON.stringify([record.id, record.status, record.price, record.get("awaiting", "")])
 		if initialized and not known.has(key) and (identity in [record.seller, record.buyer] or record.buyer == ""):
 			unread += 1
 			if record.status == "Open" and (record.get("awaiting") == identity or (record.buyer == "" and record.seller != identity)):
 				notify_offer(record)
 		known[key] = true
+		if known.size() > 512:
+			known.erase(known.keys()[0])
 		if str(record.id) == active_record and record.status != "Open":
 			close_map()
 			windows.coop.show_message(tr(record.status))
+		if str(record.id) == str(notice_record.get("id", "")) and record.status != "Open" and is_instance_valid(notification):
+			notification.hide()
 	initialized = true
 	var popup := windows.menu.get_popup()
 	popup.set_item_text(popup.get_item_index(7), tr("Land trade") + (" · %d" % unread if unread > 0 else ""))
@@ -125,12 +133,12 @@ func review(record: Dictionary) -> void:
 	active_record = str(record.id)
 	var identity := windows.coop.session.token.sha256_text()
 	var receive: bool = identity == record.seller
-	var funds := windows.coop.app.document_state.city.funds()
 	var reserved: bool = record.get("reservation", false)
 	ApplicationMultiplayer.label(box, tr("%d tiles · %s: %s") % [record.count, tr("Payment to game") if reserved else tr("You receive") if receive else tr("You pay"), MultiplayerScoreboard.money(record.price)])
 	if reserved:
 		ApplicationMultiplayer.label(box, "Release only this parcel. The buyer pays the game; you receive no money.")
-	ApplicationMultiplayer.label(box, tr("Balance after transfer: %s") % MultiplayerScoreboard.money(funds + int(record.price) * (0 if receive and reserved else 1 if receive else -1)))
+	preview_record = record.duplicate(true)
+	balance_label = ApplicationMultiplayer.label(box, balance_text(record))
 	var actions := HFlowContainer.new()
 	box.add_child(actions)
 	if record.status == "Open":
@@ -163,7 +171,14 @@ func counter(record: Dictionary) -> void:
 	var price := SpinBox.new()
 	price.max_value = 2147483647
 	price.value = record.price
+	price.prefix = "$"
 	box.add_child(price)
+	ApplicationMultiplayer.label(box, parcel_counts(record.tiles))
+	var balance := ApplicationMultiplayer.label(box, balance_text(record))
+	price.value_changed.connect(func(value: float) -> void:
+		var proposed := record.duplicate(true)
+		proposed.price = int(value)
+		balance.text = balance_text(proposed))
 	add_action(box, tr("Send counteroffer"), func() -> void:
 		windows.coop.session.request({"kind": "land_counter", "offer": record.id, "price": int(price.value)})
 		dialog.queue_free()
@@ -175,6 +190,7 @@ func show_on_map(record: Dictionary) -> void:
 
 func close_map() -> void:
 	active_record = ""
+	preview_record.clear()
 	windows.map_overlay.highlight.clear()
 	if is_instance_valid(map_detail):
 		map_detail.queue_free()
@@ -227,8 +243,9 @@ func notify_offer(record: Dictionary) -> void:
 			notice_label.add_text(str(player.name) + "\n")
 			notice_label.pop()
 	notice_label.add_text(tr("Land trade: %d tiles · %s") % [record.count, MultiplayerScoreboard.money(record.price)])
+	notice_label.add_text("\n" + tr("Your response required"))
 	notification.show()
-	windows.play_cue("chat")
+	windows.play_cue("chat", true)
 
 func select_parcel(start: Vector2i, finish: Vector2i) -> void:
 	var state := windows.state
@@ -287,18 +304,36 @@ func open_parcel(owner: int, tiles: Array, start: Vector2i, finish: Vector2i) ->
 	var box := map_panel(tiles, tr("Offer land") if owner == windows.state.owner_ids.find(windows.coop.session.token.sha256_text()) + 1 else tr("Request land"))
 	ApplicationMultiplayer.label(box, name + " · " + parcel_counts(tiles))
 	ApplicationMultiplayer.label(box, "Payment to game" if owner < 0 else "Total price")
+	ApplicationMultiplayer.label(box, "You receive" if owner == own else "You pay")
 	var price := SpinBox.new()
 	price.max_value = 2147483647
 	price.value = tiles.size() * int(windows.state.get("land_price", 0))
 	price.prefix = "$"
 	price.editable = owner >= 0
 	box.add_child(price)
+	var proposed := {"seller": windows.coop.session.token.sha256_text() if owner == own else "", "price": int(price.value), "reservation": owner < 0}
+	var balance := ApplicationMultiplayer.label(box, balance_text(proposed))
+	price.value_changed.connect(func(value: float) -> void:
+		proposed.price = int(value)
+		balance.text = balance_text(proposed))
 	if owner < 0:
 		ApplicationMultiplayer.label(box, "The reserving player must approve. Payment goes to the game after approval.")
 	add_action(box, tr("Publish offer") if owner == windows.state.owner_ids.find(windows.coop.session.token.sha256_text()) + 1 else tr("Send request"), func() -> void:
 		windows.coop.session.request({"kind": "land_offer" if owner == windows.state.owner_ids.find(windows.coop.session.token.sha256_text()) + 1 else "land_request", "start": [start.x, start.y], "finish": [finish.x, finish.y], "tiles": tiles, "price": int(price.value)})
 		close_map())
 	add_action(box, tr("Cancel"), close_map)
+
+
+func balance_text(record: Dictionary) -> String:
+	var identity := windows.coop.session.token.sha256_text()
+	for player: Dictionary in windows.players:
+		if player.id != identity:
+			continue
+		var receive: bool = record.get("seller", "") == identity
+		var change := int(record.price) * (0 if receive and record.get("reservation", false) else 1 if receive else -1)
+		return tr("Balance after transfer: %s") % MultiplayerScoreboard.money(int(player.funds) + change)
+	return tr("Not available")
+
 static func tile_bounds(tiles: Array, size: int) -> Rect2i:
 	var result := Rect2i()
 	var first := true

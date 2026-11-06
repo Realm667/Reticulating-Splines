@@ -11,6 +11,8 @@ var visit_frame: Panel
 var rows: VBoxContainer
 var signature := ""
 var timer: Label
+var standing: Label
+var city_context: Label
 var row_controls: Dictionary = {}
 var row_order: Array = []
 var regional_rows := false
@@ -60,6 +62,10 @@ func _init(windows: MultiplayerWindows) -> void:
 	visit_frame.hide()
 	timer = ApplicationMultiplayer.label(body, "")
 	timer.hide()
+	standing = ApplicationMultiplayer.label(body, "")
+	standing.hide()
+	city_context = ApplicationMultiplayer.label(body, "")
+	city_context.hide()
 	title.clip_text = true
 	rows = VBoxContainer.new()
 	rows.add_theme_constant_override("separation", 3)
@@ -79,7 +85,7 @@ static func value(player: Dictionary, kind: String) -> int:
 		return int(player.get("points", MultiplayerGoal.score_units(int(player.get("population", 0)), int(player.get("funds", 0)) - int(player.get("debt", 0)))))
 	return int(player.get("population", 0)) if kind == "population" else int(player.get("funds", 0)) - int(player.get("debt", 0))
 
-func update(state: Dictionary, _actor: String) -> void:
+func update(state: Dictionary, actor: String) -> void:
 	home.visible = state.get("visiting", false)
 	visit_frame.visible = home.visible
 	panel.visible = state.get("mode") in ["shared", "region"] and not state.get("lobby", {}).get("waiting", false)
@@ -91,10 +97,23 @@ func update(state: Dictionary, _actor: String) -> void:
 	var visible_players: Array = []
 	for player: Dictionary in state.get("roster", []):
 		visible_players.append([player.id, player.name, player.get("city"), player.get("color"), player.get("ranked", true), value(player, kind)])
-	var key := JSON.stringify([goal, visible_players, state.get("mode"), state.get("view_owner"), TranslationServer.get_locale()])
+		if kind == "timed_score":
+			visible_players.back().append_array([player.get("population", 0), player.get("funds", 0), player.get("debt", 0)])
+	var key := JSON.stringify([goal, visible_players, actor, state.get("mode"), state.get("view_owner"), state.get("visiting", false), TranslationServer.get_locale()])
 	if key == signature:
 		return
 	signature = key
+	city_context.hide()
+	for player: Dictionary in state.get("roster", []):
+		if player.id == state.get("view_owner"):
+			city_context.text = tr("Viewing %s · %s · Read-only") % [str(player.city), str(player.name)] if home.visible else str(player.city) + " · " + str(player.name)
+			city_context.visible = state.get("mode") == "region"
+			city_context.add_theme_color_override("font_color", Color(CoopSession.valid_color(player.get("color"))).lerp(Color.WHITE, 0.25))
+			var glow := visit_frame.get_theme_stylebox("panel") as StyleBoxFlat
+			glow.border_color = Color(CoopSession.valid_color(player.get("color")), 0.55)
+			glow.shadow_color = Color(glow.border_color, 0.22)
+	standing.text = MultiplayerGoal.standing(goal, state.get("roster", []), actor)
+	standing.visible = not standing.text.is_empty()
 	title.text = tr("Endless game · no scoring") if goal.get("unscored", false) else tr("Endless game") if endless else "%s · %s" % [tr("Population") if kind == "population" else tr("Net wealth"), number(int(goal.get("target", 1)), kind)]
 	var timed := kind == "timed_score" and not endless
 	if timed:
@@ -171,7 +190,7 @@ func update(state: Dictionary, _actor: String) -> void:
 			status = tr("Below target") if current < target else tr("Target reached")
 		row.tooltip_text = status + "\n" + "%s: %s / %s\n%s" % [player.name, number(current, kind), number(target, kind), (tr("Leadership: %d / %d game days") if goal.get("rule", "continuous") == "leadership" else tr("Target held: %d / %d game days")) % [days, required] if ranked else tr("Unranked · city founded after the start")]
 		if timed:
-			row.tooltip_text = str(player.name) + ": " + tr("%s points") % MultiplayerGoal.points(current) + "\n" + tr("Bar relative to the leading positive score.")
+			row.tooltip_text = str(player.name) + ": " + tr("%s points") % MultiplayerGoal.points(current) + "\n" + MultiplayerGoal.score_breakdown(player) + "\n" + tr("Bar relative to the leading positive score.")
 		elif endless:
 			row.tooltip_text = str(player.name) + " · " + str(player.get("city", ""))
 	if endless:

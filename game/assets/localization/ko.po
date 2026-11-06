@@ -10648,3 +10648,59 @@ msgstr "근처의 교통, 사람, 물소리를 들을 수 있습니다. 화면�
 #: src/ui/settings/about_dialog.gd
 msgid "City ambience recordings — CC0"
 msgstr "도시 환경음 녹음 — CC0"
+
+#. Multiplayer clarity pass; supplementary AI-assisted translation.
+msgid "Leader: %s"
+msgstr "선두: %s"
+
+#. Multiplayer clarity pass; supplementary AI-assisted translation.
+msgid "Your gap: %s"
+msgstr "내 격차: %s"
+
+#. Multiplayer clarity pass; supplementary AI-assisted translation.
+msgid "Below target · no time earned"
+msgstr "목표 미달 · 시간 누적 없음"
+
+#. Multiplayer clarity pass; supplementary AI-assisted translation.
+msgid "Tied · leadership clock paused"
+msgstr "동점 · 선두 시간 일시 정지"
+
+#. Multiplayer clarity pass; supplementary AI-assisted translation.
+msgid "Sole lead · %d days remaining"
+msgstr "단독 선두 · %d일 남음"
+
+#. Multiplayer clarity pass; supplementary AI-assisted translation.
+msgid "Points: residents %s + funds %s − debt %s = %s"
+msgstr "점수: 주민 %s + 자금 %s − 부채 %s = %s"
+
+#. Multiplayer clarity pass; supplementary AI-assisted translation.
+msgid "Starting funds count. Land purchases reduce funds; sales increase funds. Land itself adds no points."
+msgstr "시작 자금도 포함됩니다. 토지 구입은 자금을 줄이고 판매는 늘립니다. 토지 자체는 점수를 주지 않습니다."
+
+#. Multiplayer clarity pass; supplementary AI-assisted translation.
+msgid "Comparable monthly history is not available yet."
+msgstr "아직 비교 가능한 월별 기록이 없습니다."
+
+#. Multiplayer clarity pass; supplementary AI-assisted translation.
+msgid "Last %d common months · Your population %s · Funds %s"
+msgstr "최근 공통 %d개월 · 내 인구 %s · 자금 %s"
+
+#. Multiplayer clarity pass; supplementary AI-assisted translation.
+msgid "Change in gap (%s): %s · Negative means catching up."
+msgstr "격차 변화(%s): %s · 음수는 격차가 줄었음을 뜻합니다."
+
+#. Multiplayer clarity pass; supplementary AI-assisted translation.
+msgid "Reconnecting…"
+msgstr "다시 연결 중…"
+
+#. Multiplayer clarity pass; supplementary AI-assisted translation.
+msgid "Synchronizing city…"
+msgstr "도시 동기화 중…"
+
+#. Multiplayer clarity pass; supplementary AI-assisted translation.
+msgid "Waiting for host confirmation…"
+msgstr "호스트 확인 대기 중…"
+
+#. Multiplayer clarity pass; supplementary AI-assisted translation.
+msgid "Viewing %s · %s · Read-only"
+msgstr "보기: %s · %s · 읽기 전용"

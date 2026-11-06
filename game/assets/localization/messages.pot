@@ -10980,3 +10980,59 @@ msgstr ""
 #: src/ui/settings/about_dialog.gd
 msgid "City ambience recordings — CC0"
 msgstr ""
+
+#. Multiplayer clarity pass; supplementary AI-assisted translation.
+msgid "Leader: %s"
+msgstr ""
+
+#. Multiplayer clarity pass; supplementary AI-assisted translation.
+msgid "Your gap: %s"
+msgstr ""
+
+#. Multiplayer clarity pass; supplementary AI-assisted translation.
+msgid "Below target · no time earned"
+msgstr ""
+
+#. Multiplayer clarity pass; supplementary AI-assisted translation.
+msgid "Tied · leadership clock paused"
+msgstr ""
+
+#. Multiplayer clarity pass; supplementary AI-assisted translation.
+msgid "Sole lead · %d days remaining"
+msgstr ""
+
+#. Multiplayer clarity pass; supplementary AI-assisted translation.
+msgid "Points: residents %s + funds %s − debt %s = %s"
+msgstr ""
+
+#. Multiplayer clarity pass; supplementary AI-assisted translation.
+msgid "Starting funds count. Land purchases reduce funds; sales increase funds. Land itself adds no points."
+msgstr ""
+
+#. Multiplayer clarity pass; supplementary AI-assisted translation.
+msgid "Comparable monthly history is not available yet."
+msgstr ""
+
+#. Multiplayer clarity pass; supplementary AI-assisted translation.
+msgid "Last %d common months · Your population %s · Funds %s"
+msgstr ""
+
+#. Multiplayer clarity pass; supplementary AI-assisted translation.
+msgid "Change in gap (%s): %s · Negative means catching up."
+msgstr ""
+
+#. Multiplayer clarity pass; supplementary AI-assisted translation.
+msgid "Reconnecting…"
+msgstr ""
+
+#. Multiplayer clarity pass; supplementary AI-assisted translation.
+msgid "Synchronizing city…"
+msgstr ""
+
+#. Multiplayer clarity pass; supplementary AI-assisted translation.
+msgid "Waiting for host confirmation…"
+msgstr ""
+
+#. Multiplayer clarity pass; supplementary AI-assisted translation.
+msgid "Viewing %s · %s · Read-only"
+msgstr ""

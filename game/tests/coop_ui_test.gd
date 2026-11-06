@@ -14,6 +14,48 @@ func check(condition: bool, message: String) -> void:
 		printerr("FAIL: " + message)
 
 
+func clarity(main: CityApplication) -> void:
+	var windows := main.coop.windows
+	var before := windows.chat_log.get_paragraph_count()
+	for index in 40:
+		windows.append_status("Repeated fixture notice")
+	check(windows.chat_log.get_paragraph_count() <= before + 2 and windows.status_count == 40, "routine duplicates share one bounded paragraph")
+	windows.receive_chat({"id": "clarity-fixture", "sender": main.coop.session.token.sha256_text(), "name": "Me", "text": "Preserve this chat"})
+	windows.append_status("Repeated fixture notice")
+	check(windows.chat_log.get_parsed_text().contains("Preserve this chat") and windows.status_count == 1, "status grouping never replaces player chat")
+	var saved := windows.players
+	var identity := main.coop.session.token.sha256_text()
+	windows.players = [{"id": identity, "funds": 1000}]
+	var record := {"seller": "other", "price": 250}
+	check(windows.market.balance_text(record).contains("750"), "trade uses own roster funds, not viewed document")
+	record.seller = identity
+	check(windows.market.balance_text(record).contains(MultiplayerScoreboard.money(1250)), "seller receives agreed price")
+	record.reservation = true
+	check(windows.market.balance_text(record).contains(MultiplayerScoreboard.money(1000)), "reservation approver does not receive buyer payment")
+	windows.players = saved
+	var session := main.coop.session
+	session.hosting = false
+	session.connected = false
+	session.reconnect_until = Time.get_ticks_msec() + 1000
+	windows.update_connection()
+	check(windows.connection_label.visible and windows.connection_key == "Reconnecting…", "reconnection state remains visible")
+	session.resync_requested = true
+	session.connected = true
+	windows.update_connection()
+	check(windows.connection_key == "Synchronizing city…", "connected resync is distinct from reconnect")
+	session.resync_requested = false
+	session.command_started[999] = Time.get_ticks_usec()
+	windows.update_connection()
+	windows.connection_since -= 1000
+	windows.update_connection()
+	check(windows.connection_label.visible and windows.connection_key == "Waiting for host confirmation…", "slow command shows confirmation state")
+	session.command_started.erase(999)
+	session.reconnect_until = 0
+	session.hosting = true
+	windows.update_connection()
+	check(not windows.connection_label.visible, "resolved connection status clears")
+
+
 func progress_updates(main: CityApplication) -> void:
 	var hud := main.coop.windows.goal_hud
 	var roster := [{"id": "own", "name": "Host", "city": "Home", "population": 1500, "color": "46b4ff"},
@@ -46,6 +88,11 @@ func progress_updates(main: CityApplication) -> void:
 	roster[1]["points"] = 400
 	hud.update(state, "own")
 	check(hud.timer.visible and hud.row_controls.other.amount.visible and not hud.row_controls.other.leadership.visible, "timed score restores values without stale leadership layer")
+	var old_tooltip: String = hud.row_controls.other.row.tooltip_text
+	roster[1]["funds"] = 1000
+	roster[1]["debt"] = 1000
+	hud.update(state, "own")
+	check(hud.row_controls.other.row.tooltip_text != old_tooltip, "score components refresh even with unchanged total")
 	state.mode = "shared"
 	hud.update(state, "own")
 	check(hud.rows.get_child(1).get_child_count() == 1, "mode switch removes region-only visit action")
@@ -94,6 +141,7 @@ func run() -> void:
 	main.coop.session.publish()
 	await process_frame
 	await progress_updates(main)
+	clarity(main)
 	var display_document := main.document_state.current_document
 	main.visual_environment.process(0.0)
 	main.visual_environment.weather.clock = 123.0

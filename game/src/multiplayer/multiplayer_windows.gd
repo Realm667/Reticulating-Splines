@@ -55,6 +55,14 @@ var alarm: AudioStreamPlayer
 var own_disaster := 0
 var decision_key := ""
 var decision_dialog: AcceptDialog
+var connection_label: Label
+var connection_since := 0
+var connection_key := ""
+var last_status := ""
+var status_count := 0
+var cue_times: Dictionary = {}
+var previous_lead := ""
+var lead_initialized := false
 
 
 func _init(owner: ApplicationMultiplayer) -> void:
@@ -62,6 +70,10 @@ func _init(owner: ApplicationMultiplayer) -> void:
 
 
 func setup() -> void:
+	connection_label = ApplicationMultiplayer.label(coop.app.map_view, "")
+	connection_label.z_index = 4
+	connection_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	connection_label.hide()
 	MultiplayerText.setup()
 	coop.session.command_sent.connect(func(id: int, command: Dictionary) -> void:
 		if command.get("kind") in ["build", "land_buy"] and command.get("start") is Array and command.get("finish") is Array:
@@ -327,7 +339,7 @@ func update_state(value: Dictionary) -> void:
 	for entry: Dictionary in value.get("admin_history", []):
 		if not admin_seen.has(entry.id):
 			admin_seen[entry.id] = true
-			var notice := tr("Administration · %s · %s: %s (%s → %s)") % [entry.name, entry.city, tr(entry.action), MultiplayerText.message(entry.before), MultiplayerText.message(entry.after)]
+			var notice := "%s · %s: %s" % [entry.city, tr(entry.action), MultiplayerText.message(entry.after)]
 			if entry.action == "Starting funds":
 				notice = tr("Host set starting funds for %s to %s.") % [entry.city, MultiplayerScoreboard.money(int(entry.after))]
 			elif entry.action == "Starting territory":
@@ -337,6 +349,19 @@ func update_state(value: Dictionary) -> void:
 	competition.update(value)
 	start_lobby.update(value)
 	goal_hud.update(value, coop.session.token.sha256_text())
+	var goal: Dictionary = value.get("goal", {})
+	var lead: String = str(goal.get("leader", ""))
+	if lead_initialized and lead != previous_lead and not lead.is_empty() and goal.get("winners", []).is_empty() and not value.get("lobby", {}).get("waiting", false):
+		for player: Dictionary in players:
+			if player.id == lead:
+				var notice := tr("Leader: %s") % str(player.name)
+				append_status(notice)
+				chat_preview.text = notice
+				preview_until = Time.get_ticks_msec() + 5000
+				chat.show()
+				play_cue("joined", true)
+	previous_lead = lead
+	lead_initialized = true
 	for id in [5, 6, 7, 11]:
 		menu.get_popup().set_item_disabled(menu.get_popup().get_item_index(id), value.get("mode") != "shared")
 	menu.get_popup().set_item_disabled(menu.get_popup().get_item_index(9), value.get("mode") != "region")
@@ -389,7 +414,7 @@ func update_state(value: Dictionary) -> void:
 
 
 func refresh_scores() -> void:
-	scores.update(players, state.get("mode") in ["shared", "region"], coop.session.token.sha256_text(), state.get("history", {}))
+	scores.update(players, state.get("mode") in ["shared", "region"], coop.session.token.sha256_text(), state.get("history", {}), str(state.get("goal", {}).get("kind", "population")))
 
 
 func open_chat() -> void:
@@ -405,6 +430,7 @@ func receive_chat(entry: Dictionary) -> void:
 	if not id.is_empty() and chat_seen.has(id):
 		return
 	chat_seen[id] = true
+	last_status = ""
 	if chat_seen.size() > 512:
 		chat_seen.erase(chat_seen.keys()[0])
 	if not entry.get("history", false) and entry.get("sender") != coop.session.token.sha256_text():
@@ -552,6 +578,11 @@ func open_annual_budget() -> void:
 		coop.app.budget.open_budget_dialog(BudgetPhase.funding_values(coop.app.document_state.city), true)
 
 func close() -> void:
+	connection_label.hide()
+	connection_key = ""
+	last_status = ""
+	lead_initialized = false
+	cue_times.clear()
 	menu.disabled = true
 	start_lobby.window.hide()
 	goal_hud.panel.hide()
@@ -643,6 +674,7 @@ func cancel_land() -> void:
 
 
 func tick() -> void:
+	update_connection()
 	if not coop.active() or not coop.mirrored:
 		return
 	var round_id := int(state.get("round", 1))
@@ -725,7 +757,12 @@ func receive_player_event(event: Dictionary) -> void:
 	play_cue("joined" if kind == "joined" else "left")
 
 
-func play_cue(kind: String) -> void:
+func play_cue(kind: String, important := false) -> void:
+	var now := Time.get_ticks_msec()
+	var key := kind + (":important" if important else "")
+	if now - int(cue_times.get(key, -10000)) < (500 if important else 1500):
+		return
+	cue_times[key] = now
 	var city := coop.app.document_state.city
 	if city == null or not city.sound_enabled():
 		return
@@ -793,6 +830,15 @@ func preview_land(start: Vector2i, finish: Vector2i) -> void:
 
 
 func append_status(text: String) -> void:
+	if text == last_status:
+		status_count += 1
+		# The trailing newline creates an empty paragraph after the status.
+		chat_log.remove_paragraph(maxi(0, chat_log.get_paragraph_count() - 2))
+	else:
+		last_status = text
+		status_count = 1
+	if status_count > 1:
+		text += " ×%d" % status_count
 	chat_log.push_font_size(13)
 	chat_log.push_color(Color(0.8, 0.82, 0.85))
 	chat_log.push_italics()
@@ -818,6 +864,28 @@ func append_status(text: String) -> void:
 	chat_log.pop()
 	chat_log.pop()
 	chat_log.pop()
+	while chat_log.get_paragraph_count() > 251:
+		chat_log.remove_paragraph(0)
+
+
+func update_connection() -> void:
+	var session := coop.session
+	var key := ""
+	if session.active and not session.hosting:
+		if not session.connected:
+			key = "Synchronizing city…" if session.decode_job != null or session.incoming_state != null else "Reconnecting…" if session.reconnect_until > Time.get_ticks_msec() else "Connecting to the host…" if not session.channels.is_empty() else "Disconnected"
+		elif session.resync_requested or coop.display_revision < 0 or (not coop.pending_display.is_empty() and coop.pending_display.get("view_owner") != state.get("view_owner")):
+			key = "Synchronizing city…"
+		elif not session.command_started.is_empty():
+			key = "Waiting for host confirmation…"
+	if key != connection_key:
+		connection_key = key
+		connection_since = Time.get_ticks_msec()
+	# Do not flash a warning for each normal acknowledgement.
+	connection_label.visible = not key.is_empty() and (key != "Waiting for host confirmation…" or Time.get_ticks_msec() - connection_since > 750)
+	connection_label.text = tr(key) if not key.is_empty() else ""
+	connection_label.position = coop.app.map_view.camera_view_rect.position + Vector2(12, 12)
+	connection_label.custom_minimum_size.x = maxf(0, coop.app.map_view.camera_view_rect.size.x - 24)
 
 func set_chat_collapsed(value: bool) -> void:
 	chat_collapsed = value

@@ -32443,3 +32443,59 @@ msgstr "Ouça o trânsito, as pessoas e a água por perto. Afaste a câmera para
 #: src/ui/settings/about_dialog.gd
 msgid "City ambience recordings — CC0"
 msgstr "Gravações de ambiente urbano — CC0"
+
+#. Multiplayer clarity pass; supplementary AI-assisted translation.
+msgid "Leader: %s"
+msgstr "Líder: %s"
+
+#. Multiplayer clarity pass; supplementary AI-assisted translation.
+msgid "Your gap: %s"
+msgstr "Sua diferença: %s"
+
+#. Multiplayer clarity pass; supplementary AI-assisted translation.
+msgid "Below target · no time earned"
+msgstr "Abaixo da meta · sem tempo acumulado"
+
+#. Multiplayer clarity pass; supplementary AI-assisted translation.
+msgid "Tied · leadership clock paused"
+msgstr "Empate · tempo de liderança pausado"
+
+#. Multiplayer clarity pass; supplementary AI-assisted translation.
+msgid "Sole lead · %d days remaining"
+msgstr "Liderança isolada · faltam %d dias"
+
+#. Multiplayer clarity pass; supplementary AI-assisted translation.
+msgid "Points: residents %s + funds %s − debt %s = %s"
+msgstr "Pontos: habitantes %s + fundos %s − dívida %s = %s"
+
+#. Multiplayer clarity pass; supplementary AI-assisted translation.
+msgid "Starting funds count. Land purchases reduce funds; sales increase funds. Land itself adds no points."
+msgstr "Os fundos iniciais contam. Comprar terreno reduz os fundos; vender aumenta. O terreno em si não dá pontos."
+
+#. Multiplayer clarity pass; supplementary AI-assisted translation.
+msgid "Comparable monthly history is not available yet."
+msgstr "Ainda não há histórico mensal comparável."
+
+#. Multiplayer clarity pass; supplementary AI-assisted translation.
+msgid "Last %d common months · Your population %s · Funds %s"
+msgstr "Últimos %d meses comuns · Sua população %s · Fundos %s"
+
+#. Multiplayer clarity pass; supplementary AI-assisted translation.
+msgid "Change in gap (%s): %s · Negative means catching up."
+msgstr "Variação da diferença (%s): %s · Negativo indica recuperação."
+
+#. Multiplayer clarity pass; supplementary AI-assisted translation.
+msgid "Reconnecting…"
+msgstr "Reconectando…"
+
+#. Multiplayer clarity pass; supplementary AI-assisted translation.
+msgid "Synchronizing city…"
+msgstr "Sincronizando cidade…"
+
+#. Multiplayer clarity pass; supplementary AI-assisted translation.
+msgid "Waiting for host confirmation…"
+msgstr "Aguardando confirmação do anfitrião…"
+
+#. Multiplayer clarity pass; supplementary AI-assisted translation.
+msgid "Viewing %s · %s · Read-only"
+msgstr "Vista: %s · %s · Somente leitura"

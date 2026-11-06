@@ -168,7 +168,7 @@ func refresh_language() -> void:
 	windows.refresh_chat_heading()
 	windows.update_land_tooltip()
 	var scores := windows.scores
-	scores.update(scores.rows, scores.picker.get_meta("shared", false), scores.self_id, scores.history)
+	scores.update(scores.rows, scores.picker.get_meta("shared", false), scores.self_id, scores.history, scores.goal_kind)
 	for column in 3:
 		windows.start_lobby.roster.set_column_title(column, tr(["Player", "City", "Status"][column]))
 	city_file.filters = PackedStringArray(["*.sc2x, *.sc2, *.SC2, *.sc2mp ; " + tr("Cities")])

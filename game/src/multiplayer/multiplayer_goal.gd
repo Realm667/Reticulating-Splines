@@ -70,6 +70,40 @@ static func score_help() -> String:
 	return TranslationServer.translate("1 point per 100 residents + 1 point per $1,000 net wealth (funds minus debt). Highest score at the deadline wins; ties share victory. Late cities are unranked.")
 
 
+static func standing(goal: Dictionary, players: Array, identity: String) -> String:
+	var kind: String = goal.get("kind", "endless")
+	if kind == "endless" or goal.get("unscored", false):
+		return ""
+	var ranked := players.filter(func(row: Dictionary) -> bool: return row.get("ranked", true))
+	if ranked.is_empty():
+		return ""
+	var best: int = MultiplayerGoalHud.value(ranked[0], kind)
+	for row: Dictionary in ranked:
+		best = maxi(best, MultiplayerGoalHud.value(row, kind))
+	var leaders := ranked.filter(func(row: Dictionary) -> bool: return MultiplayerGoalHud.value(row, kind) == best)
+	var text: String = TranslationServer.translate("Tied lead") if leaders.size() > 1 else TranslationServer.translate("Leader: %s") % str(leaders[0].name)
+	for row: Dictionary in ranked:
+		if row.id == identity and MultiplayerGoalHud.value(row, kind) < best:
+			text += " · " + TranslationServer.translate("Your gap: %s") % MultiplayerGoalHud.number(best - MultiplayerGoalHud.value(row, kind), kind)
+	if not goal.get("winners", []).is_empty() or kind == "timed_score":
+		return text
+	if best < int(goal.get("target", 1)):
+		return text + "\n" + TranslationServer.translate("Below target · no time earned")
+	if goal.get("rule", "continuous") == "leadership":
+		if leaders.size() > 1:
+			return text + "\n" + TranslationServer.translate("Tied · leadership clock paused")
+		var days := int(goal.get("holding", {}).get(leaders[0].id, {}).get("days", 0))
+		return text + "\n" + TranslationServer.translate("Sole lead · %d days remaining") % maxi(0, int(goal.get("hold_days", 0)) - days)
+	return text + "\n" + TranslationServer.translate("Target reached")
+
+
+static func score_breakdown(row: Dictionary) -> String:
+	var population := int(row.get("population", 0)) * 10
+	var funds := int(row.get("funds", 0))
+	var debt := int(row.get("debt", 0))
+	return TranslationServer.translate("Points: residents %s + funds %s − debt %s = %s") % [points(population), points(funds), points(debt), points(score_units(int(row.get("population", 0)), funds - debt))] + "\n" + TranslationServer.translate("Starting funds count. Land purchases reduce funds; sales increase funds. Land itself adds no points.")
+
+
 func blocked() -> bool:
 	return not winners.is_empty() and not unscored
 

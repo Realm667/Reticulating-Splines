@@ -208,6 +208,18 @@ multiplayer original is preserved and the copy has no active session identity.
 
 ## Limits and validation
 
+The goal display explains the current lead, your gap and whether leadership time
+can accrue. Timed-score statistics break down residents, funds and debt using the
+existing scoring formula; starting funds count and land itself earns no points.
+Trends use the last available common calendar months (up to twelve), never missing
+values treated as zero. A negative change in the gap means catching up.
+
+Repeated consecutive status notices share one chat entry. Trade requests and lead
+changes take priority over routine notification sounds, with short cooldowns.
+Trade previews use the acting player's funds even when another city is displayed.
+Connection feedback distinguishes reconnecting, synchronization and outstanding
+host confirmation. These are local presentation changes, not new match rules.
+
 TCP uses ordered bounded queues and checked streamed snapshots. Internet discovery
 and optional UPnP forwarding are available; direct game traffic has no transport
 encryption or automatic host migration. The HTTPS directory does not encrypt the

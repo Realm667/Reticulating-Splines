@@ -62,7 +62,7 @@ func update(state: Dictionary) -> void:
 	result_label.text = tr("Victory: %s. Leave or let the host continue without scoring.") % ", ".join(names)
 	continue_button.disabled = not windows.coop.session.hosting
 	rematch_button.disabled = not windows.coop.session.hosting
-	end_scores.update(windows.players, true, windows.coop.session.token.sha256_text(), state.get("history", {}))
+	end_scores.update(windows.players, true, windows.coop.session.token.sha256_text(), state.get("history", {}), str(goal.get("kind", "population")))
 	var key := JSON.stringify(winners)
 	if key != won_key:
 		won_key = key

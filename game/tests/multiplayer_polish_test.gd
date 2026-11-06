@@ -15,6 +15,7 @@ func command(world: SharedWorld, actor: String, request: Dictionary) -> Dictiona
 	return world.command(actor, request)
 
 func run() -> void:
+	insights()
 	var pointer := Image.create(2, 1, false, Image.FORMAT_RGBA8)
 	pointer.set_pixel(0, 0, Color.BLACK)
 	var cursor_record := DesktopGraphics.Cursor.new(pointer, Vector2i.ZERO)
@@ -110,12 +111,37 @@ func run() -> void:
 	other.funds = 123456
 	scores.update([row, other], true, "a")
 	check(scores.table.get_selected().get_text(scores.columns.find("funds")) == MultiplayerScoreboard.money(123456), "financial changes still refresh selected statistics")
+	other.ranked = false
+	scores.update([row, other], true, "a")
+	check(scores.table.get_selected().get_icon(scores.columns.find("funds")) == null, "unranked city cannot take competitive statistic crown")
+	other.funds = row.funds
+	scores.update([row, other], true, "a")
+	check(scores.table.get_selected().get_icon(scores.columns.find("funds")) == null, "unranked tie cannot receive a crown either")
 	scores.update([row, other], false, "a")
 	check(not scores.columns.has("funds") and scores.summary.text.contains("Shared city"), "Koop totals separated from personal contributions")
 	body.queue_free()
 	await network_events()
 	print("Multiplayer polish checks: %d failures" % failures)
 	quit(1 if failures else 0)
+
+
+func insights() -> void:
+	var players := [{"id": "a", "name": "A", "population": 1000, "funds": 10000, "debt": 500}, {"id": "b", "name": "B", "population": 2000, "funds": 8000, "debt": 0}]
+	var samples := {"a": [{"year": 1900, "month": 0, "population": 100, "funds": 1000, "debt": 0}, {"year": 1900, "month": 12, "population": 1000, "funds": 10000, "debt": 500}],
+		"b": [{"year": 1899, "month": 12, "population": 1000, "funds": 9000, "debt": 0}, {"year": 1899, "month": 24, "population": 1500, "funds": 8000, "debt": 0}]}
+	var trend := MultiplayerScoreboard.trends(players, samples)
+	check(trend.months == 12 and trend.rows.a.population == 900 and trend.rows.a.funds == 9000, "trend compares matching calendar dates across founding years")
+	check(trend.rows.a.population_gap == -400, "negative gap change indicates catching up")
+	check(trend.rows.a.points_gap == -13500, "score trend uses population and net wealth with exact units")
+	samples.b.remove_at(0)
+	check(MultiplayerScoreboard.trends(players, samples).is_empty(), "one shared date is not fabricated into a trend")
+	players[1].ranked = false
+	check(MultiplayerScoreboard.trends(players, samples).rows.size() == 1, "unranked cities excluded from competitive comparison")
+	var goal := {"kind": "population", "target": 1000, "rule": "leadership", "hold_days": 3000, "holding": {"a": {"days": 200}}}
+	var saved := goal.duplicate(true)
+	MultiplayerGoal.standing(goal, players, "a")
+	MultiplayerGoal.score_breakdown(players[0])
+	check(goal == saved and players[0].funds == 10000, "explanations never mutate score or funds")
 
 func network_events() -> void:
 	var host := CoopSession.new()
