@@ -1,5 +1,11 @@
 [
   {
+    "id": "annual_city_review_test",
+    "script": "tests/annual_city_review_test.gd",
+    "domain": "ui",
+    "lane": "product"
+  },
+  {
     "id": "simcity_classic_import_test",
     "script": "tests/simcity_classic_import_test.gd",
     "domain": "formats",

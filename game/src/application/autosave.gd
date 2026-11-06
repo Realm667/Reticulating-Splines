@@ -126,8 +126,8 @@ func _finish_job() -> void:
 # or a renamed city changes the signature too.
 static func _content_signature(document: Sc2File) -> Array:
 	var signature: Array = [document.get_instance_id(), document.city_name(), document.chunks.size()]
-	if document.sc2x_extra_entries.has(RegionCampaign.ENTRY):
-		signature.append(document.sc2x_extra_entries[RegionCampaign.ENTRY])
+	for entry in [RegionCampaign.ENTRY, AnnualCityReview.ENTRY]:
+		signature.append(document.sc2x_extra_entries.get(entry))
 
 	for chunk in document.chunks:
 		signature.append(chunk.mutation_revision)

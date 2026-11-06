@@ -34,6 +34,7 @@ const MENU_MUSIC := 0x8007
 const MENU_NO_DISASTERS := 0x800e
 const MENU_NEWSPAPER_SUBSCRIPTION := 0x8017
 const MENU_NEWSPAPER_EXTRAS := 0x8018
+const MENU_ANNUAL_REVIEW := 0x8019
 const MENU_VIEW_CITY_MAP := 0x8100
 const MENU_VIEW_BUILDINGS := 0x8101
 const MENU_VIEW_NETWORKS := 0x8102
@@ -432,12 +433,14 @@ func set_city_name(display_name: String, tooltip := "") -> void:
 
 # the original menu shows the two newspaper options above the available papers,
 # and marks the paper that the player opened last
-func set_newspapers(titles: PackedStringArray, subscribed := false, extras := false, selected := -1) -> void:
+func set_newspapers(titles: PackedStringArray, subscribed := false, extras := false, selected := -1, annual_review := false) -> void:
 	var popup := newspaper_menu.get_popup()
 	popup.clear()
-	newspaper_menu.disabled = titles.is_empty()
+	newspaper_menu.disabled = titles.is_empty() and not annual_review
 
 	if titles.is_empty():
+		if annual_review:
+			popup.add_item("Annual review", MENU_ANNUAL_REVIEW)
 		return
 
 	popup.add_check_item("Subscription", MENU_NEWSPAPER_SUBSCRIPTION)
@@ -449,6 +452,9 @@ func set_newspapers(titles: PackedStringArray, subscribed := false, extras := fa
 	for index in titles.size():
 		popup.add_radio_check_item(titles[index], index)
 		popup.set_item_checked(popup.get_item_index(index), index == selected)
+	if annual_review:
+		popup.add_separator()
+		popup.add_item("Annual review", MENU_ANNUAL_REVIEW)
 
 
 func set_population(display_value: String, available := true) -> void:

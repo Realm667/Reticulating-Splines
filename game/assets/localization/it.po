@@ -40825,3 +40825,51 @@ msgstr "Impossibile creare la cartella delle città."
 # Reticulating Splines SimCity Classic import
 msgid "Imported SimCity Classic city. Saved a new copy as %s."
 msgstr "Città di SimCity Classic importata. Una nuova copia è stata salvata come %s."
+
+# Reticulating Splines annual newspaper
+msgid "Annual review"
+msgstr "Rassegna annuale"
+
+# Reticulating Splines annual newspaper
+msgid "Annual review %d"
+msgstr "Rassegna annuale %d"
+
+# Reticulating Splines annual newspaper
+msgid "The city gained %s residents"
+msgstr "La città ha guadagnato %s abitanti"
+
+# Reticulating Splines annual newspaper
+msgid "The city lost %s residents"
+msgstr "La città ha perso %s abitanti"
+
+# Reticulating Splines annual newspaper
+msgid "Population: %s → %s"
+msgstr "Popolazione: %s → %s"
+
+# Reticulating Splines annual newspaper
+msgid "Year-end population: %s"
+msgstr "Popolazione a fine anno: %s"
+
+# Reticulating Splines annual newspaper
+msgid "Annual budget balance: %s"
+msgstr "Saldo del bilancio annuale: %s"
+
+# Reticulating Splines annual newspaper
+msgid "Some annual figures are unavailable."
+msgstr "Alcuni dati annuali non sono disponibili."
+
+# Reticulating Splines annual newspaper
+msgid "Events of the year"
+msgstr "Eventi dell’anno"
+
+# Reticulating Splines annual newspaper
+msgid "No events were recorded for this year."
+msgstr "Non sono stati registrati eventi per quest’anno."
+
+# Reticulating Splines annual newspaper
+msgid "%s: %s was built."
+msgstr "%s: Costruzione di %s."
+
+# Reticulating Splines annual newspaper
+msgid "%s: %s struck the city."
+msgstr "%s: %s ha colpito la città."

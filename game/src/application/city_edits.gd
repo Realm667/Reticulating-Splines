@@ -500,6 +500,8 @@ func _record_building(
 	building: BuildingEditResult, building_group: int, building_subtool: int, scurk_tool_mode: bool
 ) -> void:
 	var building_name: String = Tools.tool(building_group, building_subtool).name
+	if not scurk_tool_mode and app.reports.annual_review.city == app.document_state.city:
+		app.reports.annual_review.record_building(building)
 	app.tool_state.last_edit_command = building
 	_publish_utility_usage(building)
 	var stadium_team_pending := building.stadium_team_selection_required
@@ -673,6 +675,9 @@ func undo_last_edit() -> void:
 		app.interface.show_error(tr("Cannot undo the last edit: %s") % result.error)
 
 		return
+
+	if command is BuildingEditResult and app.reports.annual_review.city == app.document_state.city:
+		app.reports.annual_review.undo_building(command)
 
 	if command is DispatchEditResult:
 		var dispatch := command as DispatchEditResult

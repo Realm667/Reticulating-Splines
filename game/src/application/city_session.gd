@@ -59,6 +59,7 @@ func activate_document(
 	app.scurk_state.edit_history.clear()
 	app.budget.reset_pending_state()
 	app.document_state.city = loaded_city
+	app.reports.attach_annual_review(loaded_city)
 	app.map_view.pending_loaded_center = Vector2i(-1, -1)
 
 	if not document.source_path.is_empty() or not document.sc2x_converted_from.is_empty():
@@ -209,6 +210,7 @@ func finish_game() -> void:
 	app.simulation_state.speed_controller = null
 	app.simulation_state.simulation_engine = null
 	app.document_state.city = null
+	app.reports.attach_annual_review(null)
 	app.scripting.emit("city.closed")
 	document_state.current_document = null
 	document_state.current_save_path = ""

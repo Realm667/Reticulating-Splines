@@ -2,12 +2,15 @@ class_name CityStatusBar
 extends PanelContainer
 
 signal disaster_locate_requested
+signal annual_review_requested
 signal help_requested(topic: String)
 
 var message_label: Label
 var weather_label: Label
 var rci_graph: RciStatusControl
 var reports_label: Label
+var annual_review_button: Button
+var annual_review_seconds := 0.0
 var locate_disaster_button: Button
 var speed_label: Label
 var compass: StatusCompass
@@ -28,6 +31,15 @@ func _ready() -> void:
 	weather_label = $Metrics/Weather
 	rci_graph = $Metrics/RCI
 	reports_label = $Metrics/Reports
+	annual_review_button = Button.new()
+	annual_review_button.text = "Annual review"
+	annual_review_button.custom_minimum_size = reports_label.custom_minimum_size
+	annual_review_button.size_flags_horizontal = reports_label.size_flags_horizontal
+	annual_review_button.clip_text = true
+	annual_review_button.hide()
+	annual_review_button.pressed.connect(annual_review_requested.emit)
+	$Metrics.add_child(annual_review_button)
+	$Metrics.move_child(annual_review_button, reports_label.get_index())
 	locate_disaster_button = $Metrics/LocateDisaster
 	locate_disaster_button.pressed.connect(_on_locate_disaster_pressed)
 	speed_label = $Metrics/Speed
@@ -116,6 +128,10 @@ func set_speed(speed_name: String) -> void:
 
 
 func update_music_notice(delta: float) -> void:
+	if annual_review_seconds > 0.0:
+		annual_review_seconds = maxf(0.0, annual_review_seconds - delta)
+		if annual_review_seconds == 0.0:
+			_refresh_report_text()
 	if music_notice_seconds <= 0.0:
 		return
 
@@ -169,6 +185,8 @@ func set_city_status(engine: SimulationEngine, paused: bool) -> void:
 # city status, which can be blank. a music notice shows over the city status
 # for a few seconds
 func _refresh_report_text() -> void:
+	annual_review_button.visible = annual_review_seconds > 0.0 and not priority_status and music_notice_seconds <= 0.0
+	reports_label.visible = not annual_review_button.visible
 	reports_label.theme_type_variation = status_style
 
 	if music_notice_seconds > 0.0 and (not priority_status or bool(get_meta("notice_has_priority", false))):
@@ -205,6 +223,16 @@ func show_music_notice(message: String) -> void:
 	show_notice(message)
 
 
+func show_annual_review_notice() -> void:
+	annual_review_seconds = 20.0
+	_refresh_report_text()
+
+
+func clear_annual_review_notice() -> void:
+	annual_review_seconds = 0.0
+	_refresh_report_text()
+
+
 func show_notice(message: String, priority := false) -> void:
 	set_meta("notice_has_priority", priority)
 	music_notice = message
@@ -224,12 +252,15 @@ func _sync_dos_layout() -> void:
 	if dos:
 		message_label.reparent(dos_messages)
 		reports_label.reparent(dos_messages)
+		annual_review_button.reparent(dos_messages)
 		$Metrics.move_child(dos_messages, 0)
 	else:
 		message_label.reparent($Metrics)
 		$Metrics.move_child(message_label, 0)
 		reports_label.reparent($Metrics)
 		$Metrics.move_child(reports_label, $Metrics/LocateDisaster.get_index())
+		annual_review_button.reparent($Metrics)
+		$Metrics.move_child(annual_review_button, reports_label.get_index())
 	message_label.custom_minimum_size.y = 14 if dos else 22
 	reports_label.custom_minimum_size.y = 14 if dos else 20
 	message_label.theme_type_variation = "SectionHeading" if dos else ""

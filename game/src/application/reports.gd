@@ -28,6 +28,8 @@ var app: CityApplication
 var city_map: ApplicationCityMapReports
 var document_state: ActiveDocumentState
 var text_resources: OriginalTextResources
+var annual_review := AnnualCityReview.new()
+var annual_newspaper: AnnualNewspaperDialog
 # the string IDs of the notices that wait for the notice dialog
 var pending_notices := PackedInt32Array()
 var military_notice_pending := false
@@ -142,6 +144,8 @@ func start_disaster_at(id: int, point: Vector2i) -> DisasterReportResult:
 		result.effect_events, result.sound_events
 	)
 	app.disaster_effects.disaster_started(result)
+	if _annual_review_available():
+		annual_review.record_disaster(result, app.document_state.city.age_in_days())
 	if app.knowledge != null:
 		app.knowledge.disaster_started(result)
 	app.interface.refresh_status_summary()
@@ -265,11 +269,16 @@ func refresh_newspaper_menu() -> void:
 		city != null and city.newspaper_subscription_enabled(),
 		city != null and city.newspaper_extras_enabled(),
 		city.document.misc_u32(Sc2MiscLayout.NEWSPAPER_CHOICE) if city != null else -1,
+		_can_open_annual_review(),
 	)
 
 
 func on_newspaper_menu(id: int) -> void:
 	if app.document_state.city == null or document_state.current_document == null:
+		return
+
+	if id == CityMenuBarView.MENU_ANNUAL_REVIEW:
+		open_annual_review()
 		return
 
 	if id == CityMenuBarView.MENU_NEWSPAPER_SUBSCRIPTION or id == CityMenuBarView.MENU_NEWSPAPER_EXTRAS:
@@ -301,6 +310,48 @@ func on_newspaper_menu(id: int) -> void:
 		return
 
 	_open_newspaper(id, subject)
+
+
+func attach_annual_review(city: CityState) -> void:
+	if is_instance_valid(annual_newspaper):
+		annual_newspaper.hide()
+	if app.city_status_bar != null:
+		app.city_status_bar.clear_annual_review_notice()
+	annual_review.attach(city)
+
+
+func prepare_annual_review() -> void:
+	if _annual_review_available():
+		annual_review.prepare()
+
+
+func observe_annual_review(result: SimulationTickResult) -> void:
+	if _annual_review_available() and annual_review.observe(result):
+		app.city_status_bar.show_annual_review_notice()
+
+
+func _annual_review_available() -> bool:
+	return (annual_review.city != null and annual_review.city == app.document_state.city
+		and not app.coop.active() and not app.tool_state.landscape_editor)
+
+
+func _can_open_annual_review() -> bool:
+	return _annual_review_available() and annual_review.city.current_year() > annual_review.city.founding_year()
+
+
+func open_annual_review() -> void:
+	if not _can_open_annual_review():
+		return
+	if annual_newspaper == null:
+		annual_newspaper = AnnualNewspaperDialog.new()
+		app.add_child(annual_newspaper)
+		annual_newspaper.location_requested.connect(func(point: Vector2i) -> void:
+			if _annual_review_available() and point.x >= 0:
+				app.menus.select_view(CityViewMode.Mode.CITY)
+				app.camera_input.center_map_on_tile(point))
+	annual_newspaper.theme = AppUiTheme.current()
+	app.city_status_bar.clear_annual_review_notice()
+	annual_newspaper.open(annual_review)
 
 
 func _open_newspaper(id: int, opinion_subject: int) -> void:

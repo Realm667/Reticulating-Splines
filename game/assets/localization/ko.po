@@ -10720,3 +10720,51 @@ msgstr "도시 폴더를 만들 수 없습니다."
 # Reticulating Splines SimCity Classic import
 msgid "Imported SimCity Classic city. Saved a new copy as %s."
 msgstr "심시티 클래식 도시를 가져왔습니다. 새 복사본을 %s(으)로 저장했습니다."
+
+# Reticulating Splines annual newspaper
+msgid "Annual review"
+msgstr "연말 결산"
+
+# Reticulating Splines annual newspaper
+msgid "Annual review %d"
+msgstr "%d년 연말 결산"
+
+# Reticulating Splines annual newspaper
+msgid "The city gained %s residents"
+msgstr "도시 인구가 %s명 늘었습니다"
+
+# Reticulating Splines annual newspaper
+msgid "The city lost %s residents"
+msgstr "도시 인구가 %s명 줄었습니다"
+
+# Reticulating Splines annual newspaper
+msgid "Population: %s → %s"
+msgstr "인구: %s → %s"
+
+# Reticulating Splines annual newspaper
+msgid "Year-end population: %s"
+msgstr "연말 인구: %s"
+
+# Reticulating Splines annual newspaper
+msgid "Annual budget balance: %s"
+msgstr "연간 예산 수지: %s"
+
+# Reticulating Splines annual newspaper
+msgid "Some annual figures are unavailable."
+msgstr "일부 연간 수치를 확인할 수 없습니다."
+
+# Reticulating Splines annual newspaper
+msgid "Events of the year"
+msgstr "올해의 사건"
+
+# Reticulating Splines annual newspaper
+msgid "No events were recorded for this year."
+msgstr "이 해에 기록된 사건이 없습니다."
+
+# Reticulating Splines annual newspaper
+msgid "%s: %s was built."
+msgstr "%s: %s 건설 완료."
+
+# Reticulating Splines annual newspaper
+msgid "%s: %s struck the city."
+msgstr "%s: %s 발생."

@@ -225,6 +225,7 @@ func commit_budget() -> void:
 	var auto_budget := app.city_dialogs.budget_dialog.auto_budget_enabled()
 
 	if app.simulation_state.annual_budget_pending:
+		app.reports.prepare_annual_review()
 		var result := app.simulation_state.speed_controller.resolve_annual_budget(values, auto_budget)
 
 		if not result.ok:

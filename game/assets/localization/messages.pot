@@ -11052,3 +11052,51 @@ msgstr ""
 # Reticulating Splines SimCity Classic import
 msgid "Imported SimCity Classic city. Saved a new copy as %s."
 msgstr ""
+
+# Reticulating Splines annual newspaper
+msgid "Annual review"
+msgstr ""
+
+# Reticulating Splines annual newspaper
+msgid "Annual review %d"
+msgstr ""
+
+# Reticulating Splines annual newspaper
+msgid "The city gained %s residents"
+msgstr ""
+
+# Reticulating Splines annual newspaper
+msgid "The city lost %s residents"
+msgstr ""
+
+# Reticulating Splines annual newspaper
+msgid "Population: %s → %s"
+msgstr ""
+
+# Reticulating Splines annual newspaper
+msgid "Year-end population: %s"
+msgstr ""
+
+# Reticulating Splines annual newspaper
+msgid "Annual budget balance: %s"
+msgstr ""
+
+# Reticulating Splines annual newspaper
+msgid "Some annual figures are unavailable."
+msgstr ""
+
+# Reticulating Splines annual newspaper
+msgid "Events of the year"
+msgstr ""
+
+# Reticulating Splines annual newspaper
+msgid "No events were recorded for this year."
+msgstr ""
+
+# Reticulating Splines annual newspaper
+msgid "%s: %s was built."
+msgstr ""
+
+# Reticulating Splines annual newspaper
+msgid "%s: %s struck the city."
+msgstr ""

@@ -89,6 +89,7 @@ func build_interface(original_assets: OriginalGameAssets) -> void:
 	app.map_view.zoom_changed.connect(app.camera_input.on_city_zoom_changed)
 	app.map_view.viewport_changed.connect(app.reports.city_map.refresh_viewport)
 	app.city_status_bar = app.city_workspace.status_bar
+	app.city_status_bar.annual_review_requested.connect(app.reports.open_annual_review)
 	app.city_status_bar.disaster_locate_requested.connect(app.camera_input.center_map_on_disaster)
 	app.city_status_bar.help_requested.connect(show_button_help)
 	app.city_toolbar.help_requested.connect(show_button_help)

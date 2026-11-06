@@ -62,6 +62,7 @@ func process(delta: float) -> void:
 	var interaction_suspended := preparing or _simulation_suspended()
 	var result: SimulationTickResult
 	var previous_age := app.document_state.city.age_in_days()
+	app.reports.prepare_annual_review()
 
 	if app.simulation_state.frame_simulation != null:
 		app.simulation_state.frame_simulation.budget_usec = FrameSimulationRunner.budget_for_frame(delta)
@@ -125,6 +126,7 @@ func _advance_palette_animation(delta: float, suspended: bool) -> void:
 
 
 func consume_simulation_result(result: SimulationTickResult) -> void:
+	app.reports.observe_annual_review(result)
 	if app.knowledge != null:
 		app.knowledge.observe(result)
 	app.disaster_effects.observe_simulation_result(result)
