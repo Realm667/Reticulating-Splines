@@ -1,5 +1,12 @@
 [
   {
+    "id": "printed_paper_gpu_test",
+    "script": "tests/printed_paper_gpu_test.gd",
+    "domain": "ui",
+    "lane": "native",
+    "driver": "scene-batch"
+  },
+  {
     "id": "annual_city_review_test",
     "script": "tests/annual_city_review_test.gd",
     "domain": "ui",

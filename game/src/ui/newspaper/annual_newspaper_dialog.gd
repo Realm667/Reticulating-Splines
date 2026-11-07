@@ -4,9 +4,13 @@ extends Window
 
 signal location_requested(point: Vector2i)
 
-const INK := Color("#25363a")
-const PAPER := Color("#e6dfce")
-const ACCENT := Color("#796135")
+const INK := Color("#382719")
+const PAPER := Color("#f1e3c8")
+const ACCENT := Color("#712c27")
+const PAPER_ART = preload("res://assets/ui/charter/paper.png")
+const ENGRAVING_ART = preload("res://assets/ui/charter/engraving.png")
+const SEAL_ART = preload("res://assets/ui/charter/seal.png")
+const PRINT_SHADER = preload("res://src/ui/newspaper/paper_ink.gdshader")
 
 var _review: AnnualCityReview
 var _page: VBoxContainer
@@ -17,6 +21,9 @@ var _range: Label
 var _summary: Label
 var _previous: Button
 var _next: Button
+var _signature: Label
+var _left_view: TextureRect
+var _right_view: TextureRect
 var _editions: Array[Dictionary] = []
 
 
@@ -25,16 +32,19 @@ func _ready() -> void:
 	transient = true
 	exclusive = true
 	borderless = true
+	transparent = true
+	transparent_bg = true
 	visible = false
 	close_requested.connect(hide)
+	var background := _art(PAPER_ART, Rect2(36, 8, 1520, 976), Vector2.ZERO)
+	background.stretch_mode = TextureRect.STRETCH_SCALE
+	background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(background)
 	var paper := PanelContainer.new()
 	paper.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	var surface := StyleBoxFlat.new()
-	surface.bg_color = PAPER
-	surface.border_color = INK
-	surface.set_border_width_all(3)
+	var surface := StyleBoxEmpty.new()
 	for side in [SIDE_LEFT, SIDE_TOP, SIDE_RIGHT, SIDE_BOTTOM]:
-		surface.set_content_margin(side, 16)
+		surface.set_content_margin(side, 52 if side in [SIDE_LEFT, SIDE_RIGHT] else 24)
 	paper.add_theme_stylebox_override("panel", surface)
 	add_child(paper)
 	_page = VBoxContainer.new()
@@ -42,28 +52,43 @@ func _ready() -> void:
 	paper.add_child(_page)
 	var top := HBoxContainer.new()
 	_page.add_child(top)
-	var balance := Control.new()
-	balance.custom_minimum_size.x = 44
-	top.add_child(balance)
-	_heading = _label("The City Chronicle", 32, NewspaperFonts.masthead(0))
+	_left_view = _art(ENGRAVING_ART, Rect2(0, 80, 750, 320), Vector2(190, 82), true)
+	top.add_child(_left_view)
+	var masthead := VBoxContainer.new()
+	masthead.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	masthead.add_theme_constant_override("separation", 0)
+	top.add_child(masthead)
+	var crest := _art(ENGRAVING_ART, Rect2(780, 0, 610, 370), Vector2(76, 46), true)
+	crest.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	masthead.add_child(crest)
+	_heading = _label("The City Chronicle", 38, NewspaperFonts.masthead(0))
+	_heading.add_theme_color_override("font_color", ACCENT)
 	_heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	top.add_child(_heading)
-	var close := Button.new()
-	close.text = "×"
+	masthead.add_child(_heading)
+	_range = _label("", 13, NewspaperFonts.body_bold())
+	_range.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	masthead.add_child(_range)
+	_right_view = _art(ENGRAVING_ART, Rect2(1422, 80, 750, 320), Vector2(190, 82), true)
+	top.add_child(_right_view)
+	var close := _button("×", hide)
 	close.tooltip_text = "Close"
 	close.custom_minimum_size = Vector2(44, 38)
-	close.flat = true
-	close.add_theme_color_override("font_color", INK)
-	close.add_theme_color_override("font_hover_color", ACCENT)
-	close.pressed.connect(hide)
-	top.add_child(close)
-	_range = _label("", 13)
-	_range.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_page.add_child(_range)
+	close.add_theme_font_size_override("font_size", 20)
+	close.get_theme_stylebox("normal").bg_color = PAPER
+	var chrome := Control.new()
+	chrome.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	chrome.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(chrome)
+	chrome.add_child(close)
+	close.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	close.offset_left = -70
+	close.offset_right = -26
+	close.offset_top = 24
+	close.offset_bottom = 62
 	_rule(2)
 	var lead := HBoxContainer.new()
 	_page.add_child(lead)
-	var decade := _label("10", 32, NewspaperFonts.headline())
+	var decade := _label("10", 32, NewspaperFonts.body_italic())
 	decade.autowrap_mode = TextServer.AUTOWRAP_OFF
 	decade.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	lead.add_theme_constant_override("separation", 14)
@@ -73,7 +98,7 @@ func _ready() -> void:
 	caption.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	lead.add_child(caption)
 	caption.add_child(_label("YEARS OF CITY HISTORY", 11))
-	_summary = _label("", 17, NewspaperFonts.headline())
+	_summary = _label("", 17, NewspaperFonts.body_bold())
 	caption.add_child(_summary)
 	_rule(1)
 	var navigation := HBoxContainer.new()
@@ -85,6 +110,16 @@ func _ready() -> void:
 	_years.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_years.custom_minimum_size.y = 32
 	_style_button(_years)
+	var popup := _years.get_popup()
+	var popup_paper := StyleBoxFlat.new()
+	popup_paper.bg_color = PAPER
+	popup.add_theme_stylebox_override("panel", popup_paper)
+	var selected_year := StyleBoxFlat.new()
+	selected_year.bg_color = ACCENT
+	popup.add_theme_stylebox_override("hover", selected_year)
+	popup.add_theme_color_override("font_color", INK)
+	popup.add_theme_color_override("font_hover_color", PAPER)
+	popup.add_theme_font_override("font", NewspaperFonts.body())
 	_years.item_selected.connect(_select_year)
 	navigation.add_child(_years)
 	_next = _button("›", func() -> void: _select_year(_years.selected + 1))
@@ -99,9 +134,22 @@ func _ready() -> void:
 	_stories.add_theme_constant_override("separation", 6)
 	scroll.add_child(_stories)
 	_rule(1)
-	var note := _label("A record of the last ten completed years. Missing years are marked in the archive.", 12)
+	var footer := HBoxContainer.new()
+	footer.add_theme_constant_override("separation", 14)
+	_page.add_child(footer)
+	var footer_inset := Control.new()
+	footer_inset.custom_minimum_size.x = 12
+	footer.add_child(footer_inset)
+	var note := _label("A record of the last ten completed years. Missing years are marked in the archive.", 11, NewspaperFonts.body_italic())
 	note.add_theme_color_override("font_color", ACCENT)
-	_page.add_child(note)
+	footer.add_child(note)
+	_signature = _label("", 18, NewspaperFonts.body_italic())
+	_signature.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
+	_signature.custom_minimum_size.x = 120
+	_signature.size_flags_horizontal = Control.SIZE_SHRINK_END
+	_signature.tooltip_text = "Mayor"
+	footer.add_child(_signature)
+	footer.add_child(_art(SEAL_ART, Rect2(310, 70, 920, 920), Vector2(62, 62)))
 
 
 func open(review: AnnualCityReview) -> void:
@@ -113,7 +161,9 @@ func open(review: AnnualCityReview) -> void:
 
 func _fit() -> void:
 	var area := get_parent().get_viewport().get_visible_rect().size
-	size = Vector2i(mini(980, int(area.x * 0.9)), mini(560, int(area.y * 0.9)))
+	size = Vector2i(mini(1020, int(area.x * 0.94)), mini(640, int(area.y * 0.94)))
+	_left_view.visible = size.x >= 820
+	_right_view.visible = size.x >= 820
 
 
 func _notification(what: int) -> void:
@@ -133,6 +183,7 @@ func _rebuild() -> void:
 	for edition in _editions:
 		_years.add_item(str(edition.year))
 	_heading.text = tr("The City Chronicle")
+	_signature.text = _review.city.mayor_name() if not _review.city.mayor_name().is_empty() else tr("Mayor")
 	_range.text = _review.city.display_name() + ("  ·  %d – %d" % [_editions.front().year, _editions.back().year] if not _editions.is_empty() else "")
 	var first_population: int = _editions.front().start if not _editions.is_empty() else -1
 	var last_population: int = _editions.back().end if not _editions.is_empty() else -1
@@ -152,7 +203,9 @@ func _select_year(index: int) -> void:
 		_stories.remove_child(child)
 		child.queue_free()
 	var edition := _editions[index]
-	_stories.add_child(_label(tr("The year %d") % int(edition.year), 20, NewspaperFonts.headline()))
+	var year_heading := _label(tr("The year %d") % int(edition.year), 20, NewspaperFonts.body_italic())
+	year_heading.add_theme_color_override("font_color", ACCENT)
+	_stories.add_child(year_heading)
 	var figures := GridContainer.new()
 	figures.columns = 4 if size.x >= 820 else 3 if size.x >= 620 else 2 if size.x >= 440 else 1
 	figures.add_theme_constant_override("h_separation", 14)
@@ -200,7 +253,7 @@ func _figure(parent: GridContainer, caption: String, value: String, help := "") 
 	var title_label := _label(caption, 12)
 	title_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	block.add_child(title_label)
-	var amount := _label(value, 20, NewspaperFonts.headline())
+	var amount := _label(value, 19, NewspaperFonts.body_bold())
 	amount.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	block.add_child(amount)
 
@@ -210,7 +263,9 @@ func _event_section(parent: GridContainer, edition: Dictionary, kind: String, he
 	section.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	section.add_theme_constant_override("separation", 4)
 	parent.add_child(section)
-	section.add_child(_label(heading, 18, NewspaperFonts.headline()))
+	var title_label := _label(heading, 18, NewspaperFonts.body_italic())
+	title_label.add_theme_color_override("font_color", ACCENT)
+	section.add_child(title_label)
 	var found := false
 	for item: Dictionary in edition.events:
 		if item.kind != kind or (kind == "building" and item.id not in AnnualCityReview.FACILITIES):
@@ -226,7 +281,7 @@ func _event_section(parent: GridContainer, edition: Dictionary, kind: String, he
 
 func _rule(width: int) -> void:
 	var rule := ColorRect.new()
-	rule.color = INK
+	rule.color = ACCENT
 	rule.custom_minimum_size.y = width
 	rule.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_page.add_child(rule)
@@ -253,9 +308,11 @@ func _button(value: String, action: Callable) -> Button:
 
 
 func _style_button(button: Button) -> void:
+	button.add_theme_font_override("font", NewspaperFonts.body())
+	button.add_theme_font_size_override("font_size", 16)
 	for state in ["normal", "hover", "pressed", "focus", "disabled"]:
 		var style := StyleBoxFlat.new()
-		style.bg_color = Color("#d9cdb5") if state in ["hover", "pressed"] else PAPER
+		style.bg_color = Color("#d9c3a1") if state in ["hover", "pressed"] else Color.TRANSPARENT
 		style.border_color = ACCENT
 		style.set_border_width_all(1)
 		style.content_margin_left = 12
@@ -264,3 +321,20 @@ func _style_button(button: Button) -> void:
 	for color in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color"]:
 		button.add_theme_color_override(color, INK)
 	button.add_theme_color_override("font_disabled_color", Color("#8a8170"))
+
+
+func _art(texture: Texture2D, region: Rect2, minimum: Vector2, printed := false) -> TextureRect:
+	var image := TextureRect.new()
+	var atlas := AtlasTexture.new()
+	atlas.atlas = texture
+	atlas.region = region
+	image.texture = atlas
+	image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	image.custom_minimum_size = minimum
+	image.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if printed:
+		var print_ink := ShaderMaterial.new()
+		print_ink.shader = PRINT_SHADER
+		image.material = print_ink
+	return image

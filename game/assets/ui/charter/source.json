@@ -1,0 +1,7 @@
+{
+  "purpose": "Municipal charter skin selected for the city chronicle",
+  "origin": "Original Reticulating Splines concept, generated with OpenAI image generation and adapted through native UI atlas regions",
+  "assets": ["paper.png", "engraving.png", "seal.png"],
+  "contains_original_game_artwork": false,
+  "text": "All player names, dates, labels, statistics and chronicle entries are drawn by the game, not baked into these assets"
+}
