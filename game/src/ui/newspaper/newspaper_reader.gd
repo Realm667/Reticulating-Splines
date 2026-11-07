@@ -38,6 +38,18 @@ func _init() -> void:
 	style.set_border_width_all(1)
 	panel.add_theme_stylebox_override("panel", style)
 	add_child(panel)
+	var fibers := TextureRect.new()
+	fibers.texture = NewspaperPage.newsprint()
+	fibers.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	fibers.stretch_mode = TextureRect.STRETCH_SCALE
+	fibers.modulate = NewspaperPage.PAPER_TINT
+	fibers.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	panel.add_child(fibers)
+	fibers.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	fibers.offset_left = 1
+	fibers.offset_top = 1
+	fibers.offset_right = -1
+	fibers.offset_bottom = -1
 
 	title_label = Label.new()
 	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

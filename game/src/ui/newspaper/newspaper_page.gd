@@ -11,7 +11,10 @@ signal close_pressed
 signal cancel_pressed
 signal read_requested(title: String, text: String)
 
-const PAPER := Color("#d0cfc9")
+const PAPER := Color("#e6ddc7")
+const PAPER_GRAIN = preload("res://assets/ui/charter/paper.png")
+const PAPER_TINT := Color(0.94, 0.97, 1.0, 0.35)
+const PRINT_SHADER = preload("res://src/ui/newspaper/paper_ink.gdshader")
 const BORDER := Color("#666666")
 # a soft shadow like CSS box-shadow: 0 8px 40px. a StyleBoxFlat shadow is
 # denser than a CSS blur of the same size, so it uses a lighter color
@@ -101,6 +104,7 @@ var _header_height := 0.0
 var _banner_top := 0.0
 var _banner_height := 0.0
 var _tween: Tween
+static var _newsprint: AtlasTexture
 
 
 func _init() -> void:
@@ -154,6 +158,9 @@ func show_content(value: NewspaperContent, index: int) -> void:
 	if content.shows_picture():
 		photo = TextureRect.new()
 		photo.texture = grayscale(content.picture_texture)
+		var ink := ShaderMaterial.new()
+		ink.shader = PRINT_SHADER
+		photo.material = ink
 		photo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		photo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		photo.mouse_filter = Control.MOUSE_FILTER_STOP
@@ -292,6 +299,15 @@ static func grayscale(texture: Texture2D) -> Texture2D:
 			image.set_pixel(x, y, Color(light, light, light, color.a))
 
 	return ImageTexture.create_from_image(image)
+
+
+# Use only the unprinted paper fibers; the charter's ornamental border is outside this region.
+static func newsprint() -> Texture2D:
+	if _newsprint == null:
+		_newsprint = AtlasTexture.new()
+		_newsprint.atlas = PAPER_GRAIN
+		_newsprint.region = Rect2(220, 150, 1100, 690)
+	return _newsprint
 
 
 func all_stories() -> Array[NewspaperStory]:
@@ -549,6 +565,7 @@ func _draw() -> void:
 	shell.shadow_size = SHADOW_SIZE
 	shell.shadow_offset = SHADOW_OFFSET
 	draw_style_box(shell, Rect2(Vector2.ZERO, size))
+	draw_texture_rect(newsprint(), Rect2(Vector2.ONE, size - Vector2(2, 2)), false, PAPER_TINT)
 
 	if content == null or _masthead == null:
 		return

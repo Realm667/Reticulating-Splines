@@ -37,6 +37,16 @@ func _run() -> void:
 	assert(_distance(image.get_pixel(80, 16), Color.BLACK) < 0.025, "Black ink must darken the paper")
 	assert(_distance(image.get_pixel(112, 16), Color(0.4, 0.3, 0.2)) < 0.025, "Half-covered ink must retain half the paper light")
 	assert(image.get_pixel(16, 16).a > 0.99, "Printing must not punch holes through opaque paper")
+	photo.modulate = Color(1, 1, 1, 0)
+	for frame in 2:
+		await RenderingServer.frame_post_draw
+	image = viewport.get_texture().get_image()
+	assert(_distance(image.get_pixel(80, 16), paper.color) < 0.025, "Faded-out photos must not leave a dark rectangle")
+	photo.modulate = Color(1, 1, 1, 0.5)
+	for frame in 2:
+		await RenderingServer.frame_post_draw
+	image = viewport.get_texture().get_image()
+	assert(_distance(image.get_pixel(80, 16), Color(0.4, 0.3, 0.2)) < 0.025, "Photo ink must follow the newspaper opening fade")
 	viewport.free()
 	await process_frame
 	print("PASS: printed paper preserves alpha margins and grain, white highlights and black/soft ink")
