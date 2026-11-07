@@ -34,17 +34,20 @@ func _ready() -> void:
 	surface.border_color = INK
 	surface.set_border_width_all(3)
 	for side in [SIDE_LEFT, SIDE_TOP, SIDE_RIGHT, SIDE_BOTTOM]:
-		surface.set_content_margin(side, 22)
+		surface.set_content_margin(side, 16)
 	paper.add_theme_stylebox_override("panel", surface)
 	add_child(paper)
 	_page = VBoxContainer.new()
-	_page.add_theme_constant_override("separation", 9)
+	_page.add_theme_constant_override("separation", 6)
 	paper.add_child(_page)
 	var top := HBoxContainer.new()
 	_page.add_child(top)
-	var edition := _label("CITY ARCHIVE", 13)
-	edition.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	top.add_child(edition)
+	var balance := Control.new()
+	balance.custom_minimum_size.x = 44
+	top.add_child(balance)
+	_heading = _label("The City Chronicle", 32, NewspaperFonts.masthead(0))
+	_heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	top.add_child(_heading)
 	var close := Button.new()
 	close.text = "×"
 	close.tooltip_text = "Close"
@@ -54,26 +57,23 @@ func _ready() -> void:
 	close.add_theme_color_override("font_hover_color", ACCENT)
 	close.pressed.connect(hide)
 	top.add_child(close)
-	_heading = _label("The City Chronicle", 42, NewspaperFonts.masthead(0))
-	_heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_page.add_child(_heading)
-	_range = _label("", 16)
+	_range = _label("", 13)
 	_range.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_page.add_child(_range)
-	_rule(3)
+	_rule(2)
 	var lead := HBoxContainer.new()
 	_page.add_child(lead)
-	var decade := _label("10", 66, NewspaperFonts.headline())
+	var decade := _label("10", 32, NewspaperFonts.headline())
 	decade.autowrap_mode = TextServer.AUTOWRAP_OFF
 	decade.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	lead.add_theme_constant_override("separation", 24)
+	lead.add_theme_constant_override("separation", 14)
 	decade.add_theme_color_override("font_color", ACCENT)
 	lead.add_child(decade)
 	var caption := VBoxContainer.new()
 	caption.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	lead.add_child(caption)
-	caption.add_child(_label("YEARS OF CITY HISTORY", 15))
-	_summary = _label("", 23, NewspaperFonts.headline())
+	caption.add_child(_label("YEARS OF CITY HISTORY", 11))
+	_summary = _label("", 17, NewspaperFonts.headline())
 	caption.add_child(_summary)
 	_rule(1)
 	var navigation := HBoxContainer.new()
@@ -83,7 +83,7 @@ func _ready() -> void:
 	navigation.add_child(_previous)
 	_years = OptionButton.new()
 	_years.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_years.custom_minimum_size.y = 40
+	_years.custom_minimum_size.y = 32
 	_style_button(_years)
 	_years.item_selected.connect(_select_year)
 	navigation.add_child(_years)
@@ -96,10 +96,10 @@ func _ready() -> void:
 	_page.add_child(scroll)
 	_stories = VBoxContainer.new()
 	_stories.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_stories.add_theme_constant_override("separation", 12)
+	_stories.add_theme_constant_override("separation", 6)
 	scroll.add_child(_stories)
 	_rule(1)
-	var note := _label("A record of the last ten completed years. Missing years are marked in the archive.", 13)
+	var note := _label("A record of the last ten completed years. Missing years are marked in the archive.", 12)
 	note.add_theme_color_override("font_color", ACCENT)
 	_page.add_child(note)
 
@@ -113,7 +113,7 @@ func open(review: AnnualCityReview) -> void:
 
 func _fit() -> void:
 	var area := get_parent().get_viewport().get_visible_rect().size
-	size = Vector2i(mini(920, int(area.x * 0.9)), mini(740, int(area.y * 0.9)))
+	size = Vector2i(mini(980, int(area.x * 0.9)), mini(560, int(area.y * 0.9)))
 
 
 func _notification(what: int) -> void:
@@ -152,11 +152,11 @@ func _select_year(index: int) -> void:
 		_stories.remove_child(child)
 		child.queue_free()
 	var edition := _editions[index]
-	_stories.add_child(_label(tr("The year %d") % int(edition.year), 28, NewspaperFonts.headline()))
+	_stories.add_child(_label(tr("The year %d") % int(edition.year), 20, NewspaperFonts.headline()))
 	var figures := GridContainer.new()
-	figures.columns = 3 if size.x >= 700 else 2 if size.x >= 480 else 1
-	figures.add_theme_constant_override("h_separation", 18)
-	figures.add_theme_constant_override("v_separation", 12)
+	figures.columns = 4 if size.x >= 820 else 3 if size.x >= 620 else 2 if size.x >= 440 else 1
+	figures.add_theme_constant_override("h_separation", 14)
+	figures.add_theme_constant_override("v_separation", 6)
 	figures.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_stories.add_child(figures)
 	var unavailable := tr("Not available")
@@ -181,29 +181,36 @@ func _select_year(index: int) -> void:
 	_figure(figures, tr("Education"), str(statistics.education) if statistics.has("education") else unavailable)
 	_figure(figures, tr("Life expectancy"), tr("%s years") % str(statistics.life_expectancy) if statistics.has("life_expectancy") else unavailable)
 	_figure(figures, tr("Unemployment"), str(statistics.unemployment) + "%" if statistics.has("unemployment") else unavailable)
-	var note := _label(tr("Figures recorded at year end. Earlier statistics are not reconstructed."), 13)
-	note.add_theme_color_override("font_color", ACCENT)
-	_stories.add_child(note)
-	_event_section(edition, "disaster", tr("Disaster chronicle"), tr("No disasters recorded."))
-	_event_section(edition, "building", tr("Landmark buildings"), tr("No landmark buildings recorded."))
+	var chronicles := GridContainer.new()
+	chronicles.columns = 2 if size.x >= 620 else 1
+	chronicles.add_theme_constant_override("h_separation", 20)
+	chronicles.add_theme_constant_override("v_separation", 8)
+	_stories.add_child(chronicles)
+	_event_section(chronicles, edition, "disaster", tr("Disaster chronicle"), tr("No disasters recorded."))
+	_event_section(chronicles, edition, "building", tr("Landmark buildings"), tr("No landmark buildings recorded."))
 	(_stories.get_parent() as ScrollContainer).set_deferred("scroll_vertical", 0)
 
 
 func _figure(parent: GridContainer, caption: String, value: String, help := "") -> void:
 	var block := VBoxContainer.new()
+	block.add_theme_constant_override("separation", 0)
 	block.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	block.tooltip_text = help
+	block.tooltip_text = help if not help.is_empty() else tr("Figures recorded at year end. Earlier statistics are not reconstructed.")
 	parent.add_child(block)
-	var title_label := _label(caption, 14)
+	var title_label := _label(caption, 12)
 	title_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	block.add_child(title_label)
-	var amount := _label(value, 23, NewspaperFonts.headline())
+	var amount := _label(value, 20, NewspaperFonts.headline())
 	amount.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	block.add_child(amount)
 
 
-func _event_section(edition: Dictionary, kind: String, heading: String, empty: String) -> void:
-	_stories.add_child(_label(heading, 23, NewspaperFonts.headline()))
+func _event_section(parent: GridContainer, edition: Dictionary, kind: String, heading: String, empty: String) -> void:
+	var section := VBoxContainer.new()
+	section.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	section.add_theme_constant_override("separation", 4)
+	parent.add_child(section)
+	section.add_child(_label(heading, 18, NewspaperFonts.headline()))
 	var found := false
 	for item: Dictionary in edition.events:
 		if item.kind != kind or (kind == "building" and item.id not in AnnualCityReview.FACILITIES):
@@ -212,9 +219,9 @@ func _event_section(edition: Dictionary, kind: String, heading: String, empty: S
 		var month := tr(BudgetReport.MONTHS[item.month])
 		var headline := (tr("%s: %s was built.") % [month, tr(BuildingConstants.DEFAULT_MICROSIM_LABELS[item.id])]
 			if kind == "building" else tr("%s: %s struck the city.") % [month, tr(CityMenuBar.disaster_name(item.id))])
-		_stories.add_child(_label(headline, 17))
+		section.add_child(_label(headline, 15))
 	if not found:
-		_stories.add_child(_label(empty, 16))
+		section.add_child(_label(empty, 15))
 
 
 func _rule(width: int) -> void:
@@ -239,7 +246,7 @@ func _label(value: String, font_size: int, font: Font = null) -> Label:
 func _button(value: String, action: Callable) -> Button:
 	var button := Button.new()
 	button.text = value
-	button.custom_minimum_size = Vector2(44, 40)
+	button.custom_minimum_size = Vector2(44, 32)
 	button.pressed.connect(action)
 	_style_button(button)
 	return button

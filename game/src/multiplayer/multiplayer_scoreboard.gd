@@ -246,7 +246,7 @@ func rebuild() -> void:
 					text += " · " + tr("Unranked")
 			item.set_text(index, text)
 			if row.get("ranked", true) and leaders.has(key) and value == leaders[key]:
-				item.set_icon(index, PixelArtTexture.wrap(CROWN))
+				item.set_icon(index, CROWN)
 				item.set_icon_max_width(index, 16)
 			item.set_custom_bg_color(index, Color(1, 1, 1, 0.035) if row_index % 2 else Color(0, 0, 0, 0.08))
 			item.set_tooltip_text(index, tr(COLUMNS[key]) + ": " + text + "\n" + (MultiplayerGoal.score_breakdown(row) if key == "points" else tooltip(key)))
