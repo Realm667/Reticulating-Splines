@@ -1,7 +1,8 @@
 {
   "purpose": "Municipal charter skin selected for the city chronicle; unprinted center fibers reused for newspaper stock",
   "origin": "Original Reticulating Splines concept, generated with OpenAI image generation and adapted through native UI atlas regions",
-  "assets": ["paper.png", "engraving.png", "seal.png"],
+  "assets": ["paper.png", "engraving.png", "seal.png", "town-vignette.png"],
+  "town_vignette": "Standalone refinement of the original town engraving, generated with OpenAI image generation; full transparent canvas used without cropping, mirrored on the right. Connecting flourishes removed to avoid hard cut edges.",
   "contains_original_game_artwork": false,
   "text": "All player names, dates, labels, statistics and chronicle entries are drawn by the game, not baked into these assets"
 }

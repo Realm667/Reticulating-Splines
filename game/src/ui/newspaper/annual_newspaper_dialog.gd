@@ -9,6 +9,7 @@ const PAPER := Color("#f1e3c8")
 const ACCENT := Color("#712c27")
 const PAPER_ART = preload("res://assets/ui/charter/paper.png")
 const ENGRAVING_ART = preload("res://assets/ui/charter/engraving.png")
+const TOWN_ART = preload("res://assets/ui/charter/town-vignette.png")
 const SEAL_ART = preload("res://assets/ui/charter/seal.png")
 const PRINT_SHADER = preload("res://src/ui/newspaper/paper_ink.gdshader")
 
@@ -52,7 +53,7 @@ func _ready() -> void:
 	paper.add_child(_page)
 	var top := HBoxContainer.new()
 	_page.add_child(top)
-	_left_view = _art(ENGRAVING_ART, Rect2(0, 80, 750, 320), Vector2(190, 82), true)
+	_left_view = _art(TOWN_ART, Rect2(Vector2.ZERO, TOWN_ART.get_size()), Vector2(190, 82), true)
 	top.add_child(_left_view)
 	var masthead := VBoxContainer.new()
 	masthead.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -68,7 +69,8 @@ func _ready() -> void:
 	_range = _label("", 13, NewspaperFonts.body_bold())
 	_range.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	masthead.add_child(_range)
-	_right_view = _art(ENGRAVING_ART, Rect2(1422, 80, 750, 320), Vector2(190, 82), true)
+	_right_view = _art(TOWN_ART, Rect2(Vector2.ZERO, TOWN_ART.get_size()), Vector2(190, 82), true)
+	_right_view.flip_h = true
 	top.add_child(_right_view)
 	var close := _button("×", hide)
 	close.tooltip_text = "Close"
