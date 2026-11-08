@@ -4,6 +4,7 @@ extends CityMapConstants
 # Retain one mesh. The budget counts its source vertex and index arrays.
 # Driver and resource overhead are separate from this estimate.
 const RETAINED_GEOMETRY_BYTES := 64 * 1024 * 1024
+const COMPACT_SHADER := preload("res://src/view/map/palette_cycle_compact.gdshader")
 
 # the top of the underwater scale of the height legend
 const WATER_SCALE_TOP := 96
@@ -22,6 +23,11 @@ var _base_material: ShaderMaterial
 var dynamic_canvas: CityDynamicSpriteCanvas
 var _dynamic_material: ShaderMaterial
 var _palette_shader: Shader
+# Compatibility must fit the 16-unit OpenGL baseline, including on macOS.
+# Eight units are reserved by Godot; cached tables retain every visual feature.
+var compact_tables := RenderingServer.get_current_rendering_method() == "gl_compatibility"
+var _shader_tables := CityMapShaderTables.new()
+var _palette_tables: Texture2D
 var _foreground_palette_material: ShaderMaterial
 var _retained_data_mesh: ArrayMesh
 var _retained_data_signature: Array = []
@@ -35,7 +41,10 @@ var _environment := CityEnvironmentParameters.new()
 
 func set_environment(parameters: Dictionary) -> void:
 	environment_parameters = parameters
-	_environment.update(parameters)
+	var material_parameters := parameters.duplicate()
+	if compact_tables:
+		material_parameters.merge(_shader_tables.parameters(parameters), true)
+	_environment.update(material_parameters)
 	if water_layer != null:
 		water_layer.set_environment(parameters)
 	for material: ShaderMaterial in [_base_material, _dynamic_material]:
@@ -274,7 +283,7 @@ func _ensure_base_layer() -> void:
 	map.add_child(price_layer)
 	_foreground_palette_material = CityForegroundPalette.create_material(map.animated_palette_texture)
 	map.material = _foreground_palette_material
-	_palette_shader = PALETTE_CYCLE_SHADER
+	_palette_shader = COMPACT_SHADER if compact_tables else PALETTE_CYCLE_SHADER
 	_base_material = _new_palette_material()
 	base_layer.material = _base_material
 	map.add_child(base_layer)
@@ -505,6 +514,17 @@ func sync_artwork_animation() -> void:
 		material.set_shader_parameter("artwork_animation_seconds", map.artwork_animation_seconds)
 
 
+func set_palette_tables(texture: Texture2D) -> void:
+	if _palette_tables == texture:
+		return
+	_palette_tables = texture
+	if not compact_tables:
+		return
+	for material: ShaderMaterial in [_base_material, _dynamic_material] + _visual_materials.values():
+		if material != null:
+			material.set_shader_parameter("map_palettes", texture)
+
+
 func _sync_base_material() -> void:
 	if _foreground_palette_material != null:
 		_foreground_palette_material.set_shader_parameter("foreground_palette", map.animated_palette_texture)
@@ -512,6 +532,9 @@ func _sync_base_material() -> void:
 	if _base_material == null:
 		return
 
+	if compact_tables and _palette_tables == null and map.animated_palette_texture != null:
+		set_palette_tables(ImageTexture.create_from_image(CityMapShaderTables.palette_image(
+			map.animated_palette_texture.get_image(), map.dark_underground_palette_texture.get_image() if map.dark_underground_palette_texture != null else null)))
 	_base_material.set_shader_parameter("dark_underground", map.dark_underground)
 	_base_material.set_shader_parameter("dark_underground_palette", map.dark_underground_palette_texture)
 	_base_material.set_shader_parameter("palette_indices", map.palette_index_texture)
@@ -554,5 +577,7 @@ func _sync_dynamic_canvas() -> void:
 func _new_palette_material() -> ShaderMaterial:
 	var material := ShaderMaterial.new()
 	material.shader = _palette_shader
+	if compact_tables:
+		material.set_shader_parameter("map_palettes", _palette_tables)
 
 	return material

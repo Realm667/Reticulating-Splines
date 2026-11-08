@@ -5,13 +5,30 @@
 #include "res://src/view/environment/artwork_color.gdshaderinc"
 #include "res://src/view/environment/map_edges.gdshaderinc"
 
+#ifndef USE_PAGED_ATLAS
 uniform sampler2D palette_indices : filter_nearest, repeat_disable;
+#endif
+#ifdef CITY_COMPACT_TABLES
+uniform sampler2D map_palettes : source_color, filter_nearest, repeat_disable;
+#else
 uniform sampler2D animated_palette : source_color, filter_nearest, repeat_disable;
+#endif
 uniform bool palette_cycle_enabled = false;
 uniform bool palette_lookup_all = false;
 uniform bool dark_underground = false;
 #include "res://src/view/map/terrain_elevation.gdshaderinc"
+#ifndef CITY_COMPACT_TABLES
 uniform sampler2D dark_underground_palette : source_color, filter_nearest, repeat_disable;
+#endif
+
+vec4 map_palette_color(float index, bool underground) {
+#ifdef CITY_COMPACT_TABLES
+	return texture(map_palettes, vec2((index + 0.5) / 256.0, underground ? 0.75 : 0.25));
+#else
+	if (underground) { return texture(dark_underground_palette, vec2((index + 0.5) / 256.0, 0.5)); }
+	return texture(animated_palette, vec2((index + 0.5) / 256.0, 0.5));
+#endif
+}
 // Seconds of HD sprite animation. They stop while the game is paused.
 uniform float artwork_animation_seconds = 0.0;
 // Region geometry uses quarter/half/full-size logical pixels. Native masters
@@ -173,31 +190,8 @@ vec4 premultiplied(vec4 color) {
 	return vec4(color.rgb * color.a, color.a);
 }
 
-vec4 indexed_color(vec2 uv, vec4 base_color) {
-	vec4 result;
-	float encoded_index = (
-		palette_lookup_all ? base_color.r : texture(palette_indices, uv).r
-	);
-	int palette_index = int(round(encoded_index * 255.0));
-	bool animated_index =
-		(palette_index >= 171 && palette_index <= 198) ||
-		(palette_index >= 200 && palette_index <= 219) ||
-		(palette_index >= 224 && palette_index <= 239);
-	if (palette_cycle_enabled && (palette_lookup_all || animated_index)) {
-		vec2 palette_uv = vec2((float(palette_index) + 0.5) / 256.0, 0.5);
-		vec4 cycle_color = texture(animated_palette, palette_uv);
-		result = vec4(cycle_color.rgb, base_color.a);
-	} else {
-		result = base_color;
-	}
-	if (dark_underground) {
-		result.rgb = texture(dark_underground_palette, vec2((float(palette_index) + 0.5) / 256.0, 0.5)).rgb;
-	}
-	return result;
-}
-
 vec4 palette_color(int index) {
-	return texture(animated_palette, vec2((float(index) + 0.5) / 256.0, 0.5));
+	return map_palette_color(float(index), false);
 }
 
 bool animated_color(int index) {
@@ -313,9 +307,11 @@ void fragment() {
 #else
 		vec4 base_color = texture(TEXTURE, UV);
 #endif
-		float encoded_index = (
-			palette_lookup_all ? base_color.r : texture(palette_indices, UV).r
-		);
+#ifdef USE_PAGED_ATLAS
+		float encoded_index = base_color.r;
+#else
+		float encoded_index = palette_lookup_all ? base_color.r : texture(palette_indices, UV).r;
+#endif
 		int palette_index = int(round(encoded_index * 255.0));
 		// The auxiliary mask follows sprite silhouettes and painter occlusion.
 		// Blue carries water/edge material markers and the power-warning tag.
@@ -326,8 +322,7 @@ void fragment() {
 			(palette_index >= 200 && palette_index <= 219) ||
 			(palette_index >= 224 && palette_index <= 239);
 		if (literal_fire < 0.5 && palette_cycle_enabled && (palette_lookup_all || animated_index)) {
-			vec2 palette_uv = vec2((float(palette_index) + 0.5) / 256.0, 0.5);
-			vec4 cycle_color = texture(animated_palette, palette_uv);
+			vec4 cycle_color = map_palette_color(float(palette_index), false);
 			COLOR = vec4(cycle_color.rgb, base_color.a);
 		} else {
 			COLOR = base_color;
@@ -383,7 +378,7 @@ void fragment() {
 			COLOR = vec4(vec3(0.0), base_color.a);
 		} else if (indexed_emission_draw > 0.5) {
 			float index = round(base_color.r * 255.0);
-			vec3 light = texture(animated_palette, vec2((index + 0.5) / 256.0, 0.5)).rgb;
+			vec3 light = map_palette_color(index, false).rgb;
 			COLOR = vec4(light, base_color.a * environment_night * float(environment_enabled));
 		} else if (emission_draw > 0.5) {
 			COLOR = vec4(base_color.rgb, base_color.a * environment_night * float(environment_enabled));
@@ -396,7 +391,7 @@ void fragment() {
 			vec3 ambient = environment_color(cloud_shadow(gas, cloud_ground_grid), UV);
 			COLOR.rgb = mix(ambient, gas, float(environment_enabled) * clamp(environment_night, 0.0, 1.0));
 		} else if (dark_underground) {
-			COLOR.rgb = texture(dark_underground_palette, vec2((float(palette_index) + 0.5) / 256.0, 0.5)).rgb;
+			COLOR.rgb = map_palette_color(float(palette_index), true).rgb;
 		} else if (fullbright_draw < 0.5 && !indexed_power_warning) {
 			sediment_slope = map_edge_slope(natural_mask.b, terrain_elevation);
 			if (sediment_slope) { natural_mask.b = 0.4; }
@@ -511,7 +506,7 @@ void fragment() {
 		}
 
 		if (power_warning > 0.5 && artwork_frames.x < 1.5 && palette_cycle_enabled) {
-			vec3 phase = texture(animated_palette, vec2((POWER_WARNING_INDEX + 0.5) / 256.0, 0.5)).rgb;
+			vec3 phase = map_palette_color(POWER_WARNING_INDEX, false).rgb;
 			COLOR.rgb = mix(COLOR.rgb, phase, 0.3);
 		}
 	}

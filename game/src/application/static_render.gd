@@ -515,6 +515,7 @@ func update_palette_blending(force := false) -> void:
 	if not palette_clock.update_textures(app.asset_state.palette, fraction, true, force, water_fraction):
 		return
 	if app.map_view != null:
+		app.map_view.layers.set_palette_tables(palette_clock.map_palette_texture)
 		# Update texture contents in place; do not rebind every region each frame.
 		if app.map_view.animated_palette_texture != palette_clock.cycle_texture:
 			app.map_view.set_animated_palette(palette_clock.cycle_texture)

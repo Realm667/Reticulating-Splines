@@ -4,15 +4,22 @@ uniform float environment_saturation = 1.0;
 uniform float environment_night = 0.0;
 uniform float environment_ambient_night = 0.0;
 uniform float environment_ambient_lift = 0.0;
+#ifndef USE_PAGED_ATLAS
 uniform sampler2D environment_emission : source_color, filter_nearest, repeat_disable;
+#endif
 uniform bool environment_has_emission = false;
 // LUT pixels are numeric sRGB data. Never let the sampler gamma-decode them.
+#ifdef CITY_COMPACT_TABLES
+uniform sampler2D map_lut_tables : filter_linear, repeat_disable;
+uniform vec4 map_lut_rects[4];
+#else
 uniform sampler2D environment_lut : filter_linear, repeat_disable;
-uniform float environment_lut_size = 0.0;
-uniform bool environment_lut_linear_canvas = false;
 uniform sampler2D environment_day_luts : filter_linear, repeat_disable;
 uniform sampler2D environment_season_luts : filter_linear, repeat_disable;
 uniform sampler2D environment_weather_luts : filter_linear, repeat_disable;
+#endif
+uniform float environment_lut_size = 0.0;
+uniform bool environment_lut_linear_canvas = false;
 uniform vec4 environment_day_lut_weights = vec4(0.0);
 uniform vec4 environment_season_lut_weights = vec4(0.0);
 uniform vec4 environment_weather_lut_weights_a = vec4(0.0);
@@ -20,7 +27,9 @@ uniform vec3 environment_weather_lut_weights_b = vec3(0.0);
 uniform float environment_day_lut_strength = 0.0;
 uniform float environment_season_lut_strength = 0.0;
 uniform float environment_weather_lut_strength = 0.0;
+#ifndef USE_PAGED_ATLAS
 uniform sampler2D environment_season_mask : filter_nearest, repeat_disable;
+#endif
 
 vec4 environment_season_sample(vec2 uv) {
 #ifdef USE_PAGED_ATLAS
@@ -50,22 +59,31 @@ vec3 lut_linear(vec3 color) {
 	return mix(color / 12.92, pow((max(color, vec3(0.0)) + 0.055) / 1.055, vec3(2.4)), step(vec3(0.04045), color));
 }
 
-vec3 lut_sample(sampler2D table, vec3 color, float size, float row, float rows) {
+vec3 lut_sample(int profile, vec3 color, float size, float row, float rows) {
 	vec3 p = clamp(color, vec3(0.0), vec3(1.0)) * (size - 1.0);
 	float z = floor(p.b);
 	vec2 xy = vec2(p.r + 0.5, p.g + 0.5);
 	vec2 a = vec2((xy.x + z * size) / (size * size), (xy.y + row * size) / (size * rows));
 	vec2 b = vec2((xy.x + min(z + 1.0, size - 1.0) * size) / (size * size), a.y);
-	return mix(texture(table, a).rgb, texture(table, b).rgb, fract(p.b));
+	#ifdef CITY_COMPACT_TABLES
+	vec4 rect = map_lut_rects[profile];
+	return mix(texture(map_lut_tables, rect.xy + a * rect.zw).rgb,
+		texture(map_lut_tables, rect.xy + b * rect.zw).rgb, fract(p.b));
+#else
+	if (profile == 0) { return mix(texture(environment_day_luts, a).rgb, texture(environment_day_luts, b).rgb, fract(p.b)); }
+	if (profile == 1) { return mix(texture(environment_season_luts, a).rgb, texture(environment_season_luts, b).rgb, fract(p.b)); }
+	if (profile == 2) { return mix(texture(environment_weather_luts, a).rgb, texture(environment_weather_luts, b).rgb, fract(p.b)); }
+	return mix(texture(environment_lut, a).rgb, texture(environment_lut, b).rgb, fract(p.b));
+#endif
 }
 
-vec3 lut_four(sampler2D table, vec3 base, vec4 weights, float strength) {
+vec3 lut_four(int profile, vec3 base, vec4 weights, float strength) {
 	if (strength <= 0.0 || dot(weights, vec4(1.0)) <= 0.0) { return base; }
 	vec3 input_color = environment_lut_linear_canvas ? lut_srgb(base) : base;
 	vec3 output_color = input_color;
 	for (int i = 0; i < 4; i++) {
 		if (weights[i] > 0.0) {
-			output_color += (lut_sample(table, input_color, 32.0, float(i), 4.0) - input_color) * weights[i];
+			output_color += (lut_sample(profile, input_color, 32.0, float(i), 4.0) - input_color) * weights[i];
 		}
 	}
 	output_color = mix(input_color, output_color, strength);
@@ -79,7 +97,7 @@ vec3 lut_weather(vec3 base) {
 	for (int i = 0; i < 7; i++) {
 		float weight = i < 4 ? environment_weather_lut_weights_a[i] : environment_weather_lut_weights_b[i - 4];
 		if (weight > 0.0) {
-			output_color += (lut_sample(environment_weather_luts, input_color, 32.0, float(i), 7.0) - input_color) * weight;
+			output_color += (lut_sample(2, input_color, 32.0, float(i), 7.0) - input_color) * weight;
 		}
 	}
 	output_color = mix(input_color, output_color, environment_weather_lut_strength);
@@ -120,14 +138,14 @@ vec3 season_color(vec3 base, vec2 uv) {
 	}
 	vec3 colored = spring * environment_seasons.x + summer * environment_seasons.y + autumn * environment_seasons.z + winter * environment_seasons.w;
 	colored = mix(colored, winter, environment_frost);
-	colored = lut_four(environment_season_luts, colored, environment_season_lut_weights, environment_season_lut_strength);
+	colored = lut_four(1, colored, environment_season_lut_weights, environment_season_lut_strength);
 	return mix(base, colored, amount);
 }
 
 vec3 environment_custom_color(vec3 color) {
 	if (environment_lut_size >= 2.0) {
 		vec3 input_color = environment_lut_linear_canvas ? lut_srgb(color) : color;
-		color = lut_sample(environment_lut, input_color, environment_lut_size, 0.0, 1.0);
+		color = lut_sample(3, input_color, environment_lut_size, 0.0, 1.0);
 		if (environment_lut_linear_canvas) { color = lut_linear(color); }
 	}
 	return color;
@@ -136,7 +154,7 @@ vec3 environment_custom_color(vec3 color) {
 // Cloud art already receives the ambient light and weather tint via cloud_light.
 vec3 environment_cloud_color(vec3 base) {
 	if (!environment_enabled) { return base; }
-	return environment_custom_color(lut_weather(lut_four(environment_day_luts, base, environment_day_lut_weights, environment_day_lut_strength)));
+	return environment_custom_color(lut_weather(lut_four(0, base, environment_day_lut_weights, environment_day_lut_strength)));
 }
 
 // Shared by city art, moving art and the water surface. Emission is applied later.
@@ -144,7 +162,7 @@ vec3 environment_ambient_weather(vec3 base, float weather_amount) {
 	if (!environment_enabled) { return base; }
 	float luminance = dot(base, vec3(0.2126, 0.7152, 0.0722));
 	vec3 color = mix(vec3(luminance), base, environment_saturation) * environment_tint;
-	color = lut_four(environment_day_luts, color, environment_day_lut_weights, environment_day_lut_strength);
+	color = lut_four(0, color, environment_day_lut_weights, environment_day_lut_strength);
 	color = mix(environment_custom_color(color), environment_custom_color(lut_weather(color * environment_weather)), weather_amount);
 	// Recover the surface's own color, not a constant grey veil. Black stays
 	// black and existing bright pixels are never darkened by the fill light.

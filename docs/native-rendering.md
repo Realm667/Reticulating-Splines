@@ -11,6 +11,31 @@ Rust selects terrain and building sprites, calculates bounds and positions, appl
 traffic masks, packs the sprite atlas, clips draws, and builds mesh arrays. Godot
 uploads textures and meshes, runs shaders, and displays the city.
 
+## Compatibility canvas textures
+
+Both the GPU region mesh and CPU region raster use the city palette shader for
+final display. Switching the city renderer does not bypass that shader.
+Compatibility rendering uses `palette_cycle_compact` (and its paged variant)
+to stay within eight custom texture units. Godot reserves the other eight units
+on a 16-unit OpenGL device; binding more can overwrite palette samplers or fail
+to link, exposing the grey palette-address pixels instead of city colors.
+
+The compact path preserves the same effects: one animated two-row surface/
+underground palette, one numeric atlas for the four LUT groups, and the existing
+cached cloud-shadow field. LUT atlas subrectangles preserve texel centers and
+linear interpolation, including custom LUT sizes. Only profile replacement
+rebuilds that atlas. Palette colors update their small texture in place, so
+existing region materials keep animating without per-frame rebinding.
+Paged atlases omit the unused CPU index and 2D mask samplers. Full-color art,
+emission and season masks keep their separate color-space rules. The query
+neighborhood uses a dedicated one-sampler palette shader.
+
+`map_texture_budget_gpu_test` checks the compiled material sampler count and
+compares actual pixels with the original path: Vanilla color, day/weather and
+custom LUTs, season masks, shadows, underground colors, live palette updates,
+and indexed/literal paged quads. A Windows OpenGL pass validates the compact
+path but does not substitute for acceptance on the affected Mac hardware.
+
 ## Region results
 
 `CityGpuBuildContext` sends city snapshots to the builder and makes a

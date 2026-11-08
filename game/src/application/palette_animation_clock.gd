@@ -7,6 +7,8 @@ var cycle_ticks := 0
 var elapsed_msec := 0.0
 var cycle_texture: ImageTexture
 var underground_cycle_texture: ImageTexture
+# Surface and underground share one sampler on hardware with 16 texture units.
+var map_palette_texture: ImageTexture
 # the active palette with the current animation cycle applied, for toolbar icons
 var toolbar_palette: Sc2Palette
 var _source: Sc2Palette
@@ -61,6 +63,11 @@ func update_textures(palette: Sc2Palette, fraction: float, underground := true, 
 			underground_cycle_texture = ImageTexture.create_from_image(_dark_blended)
 		else:
 			underground_cycle_texture.update(_dark_blended)
+	var combined := CityMapShaderTables.palette_image(_blended, _dark_blended)
+	if map_palette_texture == null:
+		map_palette_texture = ImageTexture.create_from_image(combined)
+	else:
+		map_palette_texture.update(combined)
 	return true
 
 

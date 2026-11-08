@@ -33,7 +33,7 @@ vec3 water_season_color(vec3 base) {
 		+ autumn * environment_seasons.z + winter * environment_seasons.w;
 	vec3 colored = mix(input_color, clamp(seasonal, vec3(0.0), vec3(1.0)), water_season_strength);
 	if (environment_lut_linear_canvas) { colored = lut_linear(colored); }
-	return lut_four(environment_season_luts, colored, environment_season_lut_weights,
+	return lut_four(1, colored, environment_season_lut_weights,
 		environment_season_lut_strength * water_season_strength);
 }
 

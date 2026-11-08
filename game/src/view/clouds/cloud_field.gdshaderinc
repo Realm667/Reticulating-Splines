@@ -3,8 +3,10 @@
 uniform bool cloud_enabled = false;
 uniform bool cloud_cover_cached = false;
 uniform sampler2D cloud_cover_field : filter_linear, repeat_enable;
+#ifndef CITY_CACHED_CLOUD_SHADOWS
 uniform sampler2D cloud_field : source_color, filter_linear_mipmap, repeat_disable;
 uniform sampler2D cloud_field_next : source_color, filter_linear_mipmap, repeat_disable;
+#endif
 uniform float cloud_type_blend = 0.0;
 uniform vec4 cloud_appearance = vec4(0.0, 1.0, 1.0, 1.0);
 uniform mat3 cloud_canvas_to_grid = mat3(1.0);
@@ -38,6 +40,7 @@ float cloud_size(vec2 id) {
 	return mix(1.12, 1.35, variation);
 }
 
+#ifndef CITY_CACHED_CLOUD_SHADOWS
 vec4 cloud_sample(vec2 grid_position, float softness, float map_edge) {
 	// Compute the footprint before cell selection diverges between neighboring
 	// fragments. Implicit texture derivatives inside that search can select
@@ -124,19 +127,28 @@ float cloud_shadow_lod() {
 	return max(5.0 + log2(float(textureSize(cloud_field, 0).x) / 1254.0), 0.0);
 }
 
+#endif
+
 float cloud_cover(vec2 grid_position) {
 	// A prefiltered alpha gives diffuse shadow edges with one shared lookup
 	// per candidate instead of multiplying the full cloud search five times.
 	if (cloud_cover_cached) { return texture(cloud_cover_field, (grid_position - cloud_drift) / cloud_span).r; }
+#ifdef CITY_CACHED_CLOUD_SHADOWS
+	return 0.0;
+#else
 	return cloud_sample(grid_position, cloud_shadow_lod(), -1.0).a;
+#endif
 }
 
 // Air and water reflections use exactly the same authored volume and alpha.
+#ifndef CITY_CACHED_CLOUD_SHADOWS
 vec4 cloud_body(vec2 grid_position, float map_edge, float opacity, vec3 light) {
 	if (opacity <= 0.0) { return vec4(0.0); }
 	vec4 cloud = cloud_sample(grid_position, -1.0, map_edge);
 	return vec4(cloud.rgb * light, cloud.a * opacity);
 }
+
+#endif
 
 float cloud_mist(vec2 point) {
 	vec2 cell = floor(point);

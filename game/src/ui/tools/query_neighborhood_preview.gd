@@ -70,8 +70,6 @@ func configure_animation(source: Sc2Palette, start_ticks: int) -> void:
 	palette_clock.update_textures(source, 0.0, false)
 	palette_texture = palette_clock.cycle_texture
 	var lookup := ShaderMaterial.new()
-	lookup.shader = CityMapControl.PALETTE_CYCLE_SHADER
-	lookup.set_shader_parameter("animated_palette", palette_texture)
-	lookup.set_shader_parameter("palette_cycle_enabled", true)
-	lookup.set_shader_parameter("palette_lookup_all", true)
+	lookup.shader = preload("res://src/ui/tools/query_palette.gdshader")
+	lookup.set_shader_parameter("foreground_palette", palette_texture)
 	material = lookup
