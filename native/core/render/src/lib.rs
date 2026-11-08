@@ -74,6 +74,8 @@ pub struct City {
     pub traffic: Vec<u8>,
     // Sprite offsets of stationary dispatch objects, indexed by map cell.
     pub dispatch: HashMap<usize, i32>,
+    /// Every occupied cell maps to (kind, area, is_left_anchor).
+    pub expanded: HashMap<usize, [i32; 3]>,
 }
 
 impl City {
@@ -454,6 +456,13 @@ impl Builder {
             }
         }
 
+        if old.expanded != city.expanded {
+            for i in old.expanded.keys().chain(city.expanded.keys()) {
+                if old.expanded.get(i) != city.expanded.get(i) {
+                    changed[*i] = true;
+                }
+            }
+        }
         if old.dispatch != city.dispatch {
             for (i, sprite) in old.dispatch.iter().chain(city.dispatch.iter()) {
                 if old.dispatch.get(i) != Some(sprite) || city.dispatch.get(i) != Some(sprite) {

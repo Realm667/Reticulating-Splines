@@ -28,9 +28,12 @@ static func apply(city: CityState, counter_clockwise: bool) -> RotationEditResul
 		if not turned_signs.ok:
 			return RotationEditResult.rejected("sign data is invalid: %s" % turned_signs.error)
 
+	var payload_ids := REQUIRED_CHUNKS.duplicate()
+	if ExpandedRules.enabled(city.document):
+		payload_ids.append("XEXP")
 	var response := NativeSimulationBridge.run("rotation", city, null, null, null, {
 		"counter_clockwise": counter_clockwise,
-	}, REQUIRED_CHUNKS)
+	}, payload_ids)
 
 	if not response.ok or not response.failed_chunk.is_empty():
 		return RotationEditResult.rejected("cannot store rotated city data")
@@ -45,7 +48,7 @@ static func apply(city: CityState, counter_clockwise: bool) -> RotationEditResul
 	result.new_compass = response.result.new_compass
 	result.error = ""
 
-	for chunk_id in REQUIRED_CHUNKS:
+	for chunk_id in payload_ids:
 		if response.written.has(chunk_id):
 			result.changed_ids.append(chunk_id)
 

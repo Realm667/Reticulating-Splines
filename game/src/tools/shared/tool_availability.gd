@@ -23,7 +23,12 @@ static func inspect(city: CityState) -> Result:
 	if chunk == null or chunk.decoded_payload.size() != Sc2MiscLayout.SIZE:
 		return Result.failure("MISC is missing or has the wrong size")
 
-	return inspect_misc(chunk.decoded_payload)
+	var result := inspect_misc(chunk.decoded_payload)
+	if result.ok and ExpandedRules.enabled(city.document):
+		for kind in 8:
+			if ExpandedRules.available(city, kind):
+				result.group_masks[5] |= 1 << (ExpandedRules.FIRST_TOOL + kind)
+	return result
 
 
 static func inspect_misc(misc: PackedByteArray) -> Result:
@@ -48,6 +53,8 @@ static func is_dispatch_enabled(city: CityState) -> bool:
 
 
 static func is_available(city: CityState, group_index: int, subtool_index: int) -> bool:
+	if ExpandedRules.is_reward_tool(group_index, subtool_index):
+		return ExpandedRules.available(city, subtool_index - ExpandedRules.FIRST_TOOL)
 	var tool := ToolCatalog.tool(group_index, subtool_index)
 
 	if tool == null or not DebugMode.allows_tool(group_index, subtool_index):

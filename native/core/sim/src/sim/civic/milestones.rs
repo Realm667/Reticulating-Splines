@@ -47,6 +47,7 @@ pub fn rebuild_reward_mask(misc: &mut [u8]) -> i64 {
 
 /// MilestonePhase.run.
 pub fn run(city: &mut City) -> MilestoneResult {
+    crate::sim::expanded::unlock(city);
     if !city.misc.present || city.misc.data.len() as i64 != misc_layout::SIZE {
         return MilestoneResult::failed("MISC is missing or has the wrong size");
     }

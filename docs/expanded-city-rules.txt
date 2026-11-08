@@ -1,0 +1,72 @@
+Expanded city rules — initial balance (2026-11-08)
+
+Classic keeps the existing simulation. Founding offers Classic or Expanded.
+An existing Classic city can switch to Expanded once, through Options >
+Classic / Expanded. Conversion creates an independent SC2X working copy and
+opens Save As. A running multiplayer session must be stopped before conversion.
+There is no Expanded-to-Classic conversion.
+
+Reward                        Residents    Area  Build cost  Yearly upkeep
+National Museum                 150,000     4x4           0           120
+Opera House                     250,000     4x4           0           240
+Metropolitan Park               400,000     5x5           0           120
+International Convention Center 650,000     4x4      25,000           600
+University Hospital           1,000,000     4x4      40,000         1,200
+National Library              1,500,000     3x3           0           240
+International Research Center 2,500,000     5x5      60,000         1,200
+World Exhibition Grounds      4,000,000     6x6           0           600
+
+Population includes arcology residents, counted within this city. Unlocks are
+permanent even if population later falls. Each city may have one of each reward.
+The palette shows unlocked buildings and the next future milestone. Original
+rewards remain separate. Rebuilding uses the same construction price.
+
+Placement requires flat, clear, unzoned land inside the map boundary. All cells
+belong to one building. Demolition, undo, rotation and disaster cleanup preserve
+that identity. Other structural tools cannot overwrite a reward parcel.
+
+At each new calendar month, charge one twelfth of yearly upkeep. Newly placed
+buildings start paying at the next month boundary. A failed payment disables
+benefits until a later successful monthly payment. No debt or demolition is
+triggered by unpaid upkeep. Power is also required for benefits. The building
+query shows the operating state and upkeep; Budget shows a separate reward row.
+All eight together cost 4,320 per year, or 360 per full month.
+
+Effects use existing SC2K service and land-value equations:
+- Museum: +25 college capacity, plus local land value up to +8 within 10 tiles.
+- Opera: local land value up to +10 within 12 tiles.
+- Park: local land value up to +16 within 20 tiles.
+- Convention center: commercial land value up to +16 within 16 tiles.
+- Hospital: +100 health capacity, equivalent to four fully funded hospitals.
+- Library: +45 school capacity, equivalent to three fully funded schools.
+- Research center: +100 college capacity, equivalent to two fully funded colleges.
+- Exhibition: local land value up to +20 within 20 tiles.
+
+Land-value strength falls linearly with Chebyshev distance from the footprint.
+The strongest reward bonus applies; overlapping bonuses do not add or accumulate
+on prior map values. Industry receives no reward land-value bonus. Other local
+bonuses can benefit homes and commerce. These are bounded bonuses, not growth
+multipliers or guaranteed development. Service funding uses the reward upkeep;
+no additional edits to the original school/hospital budget controls are needed.
+
+Save contract
+SC2X required_features includes rs.expanded.v1. XEXP.bin contains EXP1 followed
+by big-endian u32 fields: population peak (4), settled absolute month (8), unlock
+mask (12), placement sequence counter (16), last monthly charge (20), year-to-date
+charge (24), accounting year (28). Eight 16-byte records start at byte32: sequence
+(0 means absent), x, y, funded flag. Total size160 bytes. Record order matches the
+table above. XBLD uses inert statue carriers with no corner flags or XMIC reward
+records; XEXP owns the actual identity. Older clients must reject the required
+feature. Classic saves have no XEXP block. Expanded state is included in host
+commands, snapshots, undo and region child documents; thresholds stay local.
+
+Graphics
+Eight GFX deliveries are shared by RS and SC2K; the latest opera geometry
+correction is included. Day images, brightmaps and palette-index data ship as
+built-in assets. Sprite bank4500000 holds the three views without using original
+building byte IDs. Both the GPU and CPU map paths use the native painter.
+SCURK MIF export retains only classic-compatible tiles. Asset hashes and authoring
+provenance are in game/assets/expanded/provenance.json. Building upgrades beyond
+these eight rewards are a separate future expansion feature.
+
+AI-assisted with Codex for implementation, supplementary translations and validation.

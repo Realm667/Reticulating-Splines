@@ -191,6 +191,8 @@ func _tool_button_icon(group_index: int, subtool_index: int) -> Texture2D:
 
 	var tile_id := BuildingSites.tile_for_tool(group_index, subtool_index)
 	var sprite_id := 1000 + tile_id if tile_id > BuildingTileIds.EMPTY else -1
+	if ExpandedRules.is_reward_tool(group_index, subtool_index):
+		sprite_id = ExpandedRules.FIRST_SPRITE + 1000 + subtool_index - ExpandedRules.FIRST_TOOL
 
 	if sprite_id < 0:
 		var table_index := group_index * Tools.MAX_SLOTS_PER_GROUP + subtool_index

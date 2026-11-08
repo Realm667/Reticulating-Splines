@@ -378,6 +378,8 @@ pub fn demolish_point(
         };
     }
 
+    // Expanded occupancy carriers have no Classic origin corners or reward slot.
+    let original_reward = !maps.expanded || tile != tiles::STATUE || maps.zones[i] & 0xf0 != 0;
     let area = building_area(tile);
     let site = find_building_site(maps.buildings, maps.zones, point, tile, area, rotation, edge);
 
@@ -420,7 +422,7 @@ pub fn demolish_point(
         underground::replace_underground(maps.underground, maps.zones, maps.misc, index, 0);
     }
 
-    if let Some(bit) = reward_bit(tile) {
+    if original_reward && let Some(bit) = reward_bit(tile) {
         let mask = read_u32_be(maps.misc, misc_layout::GRANTED_REWARDS);
         write_u32_be(maps.misc, misc_layout::GRANTED_REWARDS, mask | (1 << bit));
     }

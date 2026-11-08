@@ -8,6 +8,8 @@ const PAYLOAD_IDS: PackedStringArray = ["ALTM", "XBLD", "XTER", "XZON", "XUND", 
 
 
 static func supports_tool(group_index: int, subtool_index: int) -> bool:
+	if ExpandedRules.is_reward_tool(group_index, subtool_index):
+		return false
 	return NETWORK_TOOLS.has(group_index * ToolCatalog.MAX_SLOTS_PER_GROUP + subtool_index)
 
 

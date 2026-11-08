@@ -18,6 +18,38 @@ fn tools_map_to_zones_and_buildings() {
     assert_eq!(zone_type(group::ROADS, 0), -1);
     assert!(building_tile(group::POWER, 2).is_some());
     assert!(building_tile(group::POWER, 3).is_none());
+    for subtool in 9..17 {
+        assert!(building_tile(group::REWARDS, subtool).is_none());
+    }
+}
+
+#[test]
+fn metropolis_tools_do_not_alias_road_slots_and_undo_as_one_building() {
+    let Some(mut session) = session() else {
+        return;
+    };
+    session.city.xbld.data.fill(0);
+    session.city.xzon.data.fill(0);
+    session.city.xter.data.fill(0);
+    session.city.xbit.data.fill(0);
+    session.city.xtxt.data.fill(0);
+    session.city.altm.data.fill(0);
+    session.city.set_funds(1_000_000);
+    session
+        .city
+        .set_misc_u32(sc2k_sim::sim::ids::sc2misc_layout::NORMAL_POPULATION, 4_000_000);
+    sc2k_sim::sim::expanded::enable(&mut session.city);
+    for kind in 0..8 {
+        let point = Vec2i::new(8 + kind * 6, 12);
+        let selection = Selection::new(group::REWARDS, 9 + kind, point, point);
+        let outcome = apply(&mut session, &selection);
+        assert!(outcome.ok, "{}", outcome.message);
+        assert_eq!(outcome.kind, "building");
+        assert_eq!(sc2k_sim::sim::expanded::at(&session.city, point), Some(kind as usize));
+        let undo = session.undo.take().unwrap();
+        undo.apply(&mut session).unwrap();
+        assert!(sc2k_sim::sim::expanded::available(&session.city, kind as usize));
+    }
 }
 
 #[test]

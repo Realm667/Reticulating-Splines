@@ -1,14 +1,20 @@
 class_name BuildingSites
 extends BuildingConstants
+
+@warning_ignore_start("integer_division")
 ## The building of each tool and its footprint. The site rules run in the
 ## native simulation library; see native/core/sim/src/sim/tools/commands/building.rs.
 
 
 static func supports_tool(group_index: int, subtool_index: int) -> bool:
+	if ExpandedRules.is_reward_tool(group_index, subtool_index):
+		return true
 	return TILE_BY_TOOL.has(group_index * ToolCatalog.MAX_SLOTS_PER_GROUP + subtool_index)
 
 
 static func tile_for_tool(group_index: int, subtool_index: int) -> int:
+	if ExpandedRules.is_reward_tool(group_index, subtool_index):
+		return 256 + subtool_index - ExpandedRules.FIRST_TOOL
 	return int(TILE_BY_TOOL.get(
 		group_index * ToolCatalog.MAX_SLOTS_PER_GROUP + subtool_index, 0
 	))
@@ -16,13 +22,13 @@ static func tile_for_tool(group_index: int, subtool_index: int) -> int:
 
 # the pointer isn't the footprint origin for the bigger buildings
 static func footprint(selected: Vector2i, area: int) -> Rect2i:
-	if area < 1 or area > 4:
+	if area < 1 or area > 6:
 		return Rect2i()
 
 	var origin := selected
 
 	if area > 2:
-		origin -= Vector2i.ONE
+		origin -= Vector2i.ONE * int((area - 1) / 2)
 
 	return Rect2i(origin, Vector2i(area, area))
 

@@ -41,8 +41,19 @@ pub fn painter_city(city: &City, visible: i32) -> PainterCity {
             Vec::new()
         },
         dispatch: HashMap::new(),
+        expanded: HashMap::new(),
     };
 
+    for kind in 0..8 {
+        if let Some(site) = sc2k_sim::sim::expanded::site(city, kind) {
+            for index in sc2k_sim::sim::expanded::indices(city, site) {
+                let anchor = index == site.position.x * city.map_size + site.end().y - 1;
+                painter
+                    .expanded
+                    .insert(index as usize, [kind as i32, site.size.x as i32, i32::from(anchor)]);
+            }
+        }
+    }
     painter.set_dispatch(&chunk(city, "XTHG"));
 
     painter

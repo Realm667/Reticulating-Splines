@@ -28,6 +28,8 @@ use sc2k_sim::sim::value::{ToValue, Value};
 
 pub const OPERATIONS: &[&str] = &[
     "echo",
+    "expanded.validate",
+    "expanded.unlock",
     "query.inspect",
     "disaster.focus",
     "query.analysis",
@@ -146,7 +148,24 @@ pub fn run(request: &VarDictionary) -> VarDictionary {
     let mut randoms = convert::randoms(request);
     let budget = super::budgets::get(convert::int(request, "budget", 0));
     let tool = super::tool_ops::is_tool(&op);
-    let outcome = sc2k_sim::sim::budget::with_budget(budget, || {
+    let protected: Vec<(usize, u8, u8, i64, u8)> = if tool && op != "tool.demolish" {
+        (0..8)
+            .filter_map(|kind| sc2k_sim::sim::expanded::site(&city, kind))
+            .flat_map(|s| sc2k_sim::sim::expanded::indices(&city, s))
+            .map(|i| {
+                (
+                    i as usize,
+                    city.xbld.data[i as usize],
+                    city.xzon.data[i as usize],
+                    city.altitude_word(i),
+                    city.xter.data[i as usize],
+                )
+            })
+            .collect()
+    } else {
+        Vec::new()
+    };
+    let mut outcome = sc2k_sim::sim::budget::with_budget(budget, || {
         if tool {
             super::tool_ops::dispatch(&op, &args, &mut city, &mut randoms)
         } else if super::game::is_game(&op) {
@@ -156,6 +175,26 @@ pub fn run(request: &VarDictionary) -> VarDictionary {
         }
     });
 
+    if protected.iter().any(|&(i, b, z, a, t)| {
+        city.xbld.data[i] != b || city.xzon.data[i] != z || city.altitude_word(i as i64) != a || city.xter.data[i] != t
+    }) {
+        city = convert::city(request);
+        randoms = convert::randoms(request);
+        if let Value::Object(_, fields) = &mut outcome.result {
+            for (key, value) in fields {
+                if *key == "ok" {
+                    *value = Value::Bool(false);
+                } else if *key == "error" {
+                    *value = Value::Str("Demolish the metropolis reward first.".into());
+                }
+            }
+        }
+    }
+    if outcome.error.is_empty() && (op.starts_with("engine.") || op.starts_with("game.") || op == "milestones" || op == "budget.run_month")
+    {
+        sc2k_sim::sim::expanded::reconcile(&mut city);
+        sc2k_sim::sim::expanded::monthly(&mut city);
+    }
     if tool {
         super::tool_ops::mark_written(request, &mut city, &outcome.result);
     }
@@ -375,7 +414,14 @@ fn dispatch(op: &str, args: &VarDictionary, city: &mut City, randoms: &mut Rando
             }
         }
         "rotation" => {
-            Outcome::value(sc2k_sim::sim::tools::rotation::rotate(city, convert::boolean(args, "counter_clockwise", false)).to_value())
+            let ccw = convert::boolean(args, "counter_clockwise", false);
+            let result = sc2k_sim::sim::tools::rotation::rotate(city, ccw);
+            Outcome::value(result.to_value())
+        }
+        "expanded.validate" => Outcome::value(Value::Str(sc2k_sim::sim::expanded::validate(city).err().unwrap_or_default())),
+        "expanded.unlock" => {
+            sc2k_sim::sim::expanded::unlock(city);
+            Outcome::value(Value::Bool(true))
         }
         "tile_recount" => Outcome::value(Value::Int(sc2k_sim::sim::civic::mayor::recount_tiles(city))),
         "military.resolve" => {

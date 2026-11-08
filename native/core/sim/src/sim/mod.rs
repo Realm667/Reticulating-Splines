@@ -11,6 +11,7 @@ pub mod effect_packing;
 pub mod effect_sampling;
 pub mod engine;
 pub mod events;
+pub mod expanded;
 pub mod facility_sites;
 pub mod geom;
 pub mod grid;

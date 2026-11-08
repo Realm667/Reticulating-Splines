@@ -401,6 +401,8 @@ func _building_ghost(point: Vector2i) -> CityDynamicVisual:
 		return null
 	var tile := BuildingSites.tile_for_tool(app.tool_state.selected_group, app.tool_state.selected_subtool)
 	var id := 1000 + tile
+	if ExpandedRules.is_reward_tool(app.tool_state.selected_group, app.tool_state.selected_subtool):
+		id = ExpandedRules.FIRST_SPRITE + 1000 + app.tool_state.selected_subtool - ExpandedRules.FIRST_TOOL
 	var entry := sprites.find_sprite(id)
 	if entry == null:
 		return null

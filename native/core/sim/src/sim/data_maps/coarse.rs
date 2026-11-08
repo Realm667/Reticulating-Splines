@@ -292,6 +292,7 @@ pub fn run(city: &mut City) -> PollutionResult {
     let old_crime = &city.xcrm.data;
     let old_population = &city.xpop.data;
     let mut land_value = vec![0u8; half * half];
+    let influences = crate::sim::expanded::influences(city);
     let mut land_value_total = 0i64;
 
     for x in 0..half {
@@ -353,7 +354,7 @@ pub fn run(city: &mut City) -> PollutionResult {
             }
 
             // See LAND_VALUE_BASE. It replaces the original's uncleared scratch values.
-            value += LAND_VALUE_BASE;
+            value += LAND_VALUE_BASE + crate::sim::expanded::land_bonus(&influences, full_x as i64, (y * 2) as i64, zone_type);
 
             let building = buildings[full_index] as i64;
 

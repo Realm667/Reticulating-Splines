@@ -111,3 +111,7 @@ Technical checks do not replace native-speaker editorial review of every random
 phrase combination. Supplementary wording is identified for direct review.
 AI-assisted using Codex for extraction, supplementary translation,
 implementation and validation.
+
+The Classic/Expanded rules and eight metropolitan rewards use supplementary
+English source text and Codex-assisted translations into de, es, fr, it, ko
+and pt_BR. They are new expansion text, not extracted original-game strings.

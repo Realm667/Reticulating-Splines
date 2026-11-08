@@ -27,6 +27,7 @@ use super::moving::spawner::VehicleCaps;
 /// The tile maps that an edit reads and writes, borrowed from one city.
 pub struct Maps<'a> {
     pub map_edge: i64,
+    pub expanded: bool,
     pub altitude: &'a mut [u8],
     pub buildings: &'a mut [u8],
     pub terrain: &'a mut [u8],
@@ -50,6 +51,7 @@ impl City {
 
         Maps {
             map_edge: self.map_size,
+            expanded: crate::sim::expanded::enabled(self),
             altitude: &mut self.altm.data,
             buildings: &mut self.xbld.data,
             terrain: &mut self.xter.data,
@@ -80,6 +82,7 @@ impl City {
     /// Borrow the edit maps with XTHG, XTRF, XPLT, XVAL, and XCRM.
     pub fn parts(&mut self) -> CityParts<'_> {
         let wide_labels = self.large_version >= 4;
+        let expanded = crate::sim::expanded::enabled(self);
         let vehicle_caps = VehicleCaps::for_city(self);
         let City {
             map_size,
@@ -104,6 +107,7 @@ impl City {
         CityParts {
             maps: Maps {
                 map_edge: *map_size,
+                expanded,
                 altitude: &mut altm.data,
                 buildings: &mut xbld.data,
                 terrain: &mut xter.data,

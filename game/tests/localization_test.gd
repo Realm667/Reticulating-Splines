@@ -300,6 +300,10 @@ func _check_toolbar_layout() -> void:
 	pixels.fill(Color.WHITE)
 	var icon := ImageTexture.create_from_image(pixels)
 	var provider := func(_group: int, _tool: int) -> Texture2D: return icon
+	var expanded_document: Sc2File = Sc2xDocument.create_empty(64, "Palette fixture").document
+	expanded_document.set_misc_u32(Sc2MiscLayout.NORMAL_POPULATION, 4000000)
+	assert(ExpandedRules.enable(expanded_document).is_empty())
+	var expanded_city := CityState.from_document(expanded_document)
 	for theme_name in ["light", "dark"]:
 		row.theme = AppUiThemeDefinitions.build(theme_name)
 		for language in AppLocalization.codes():
@@ -307,7 +311,7 @@ func _check_toolbar_layout() -> void:
 			for ui_scale in AppUiScale.OPTIONS:
 				AppUiScale.apply(root, ui_scale)
 				for group in [CityToolIds.Group.POWER, CityToolIds.Group.WATER, CityToolIds.Group.REWARDS]:
-					toolbar.show_tool_group(group, null, provider)
+					toolbar.show_tool_group(group, expanded_city if group == CityToolIds.Group.REWARDS else null, provider)
 					toolbar.hold_menu.show_palette(0, Rect2(toolbar.get_global_rect().end.x, 40, 0, 32))
 					for frame in 6:
 						await process_frame

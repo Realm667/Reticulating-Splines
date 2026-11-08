@@ -96,6 +96,11 @@ static func _render_layers(city: CityState, point: Vector2i, palette: Sc2Palette
 
 		if found.has_area():
 			site = found
+	var reward := ExpandedRules.at(city, point)
+	if reward >= 0:
+		var records := ExpandedRules.data(city)
+		site = Rect2i(BinaryData.read_u32_be(records, 36 + reward * 16),
+			BinaryData.read_u32_be(records, 40 + reward * 16), ExpandedRules.AREAS[reward], ExpandedRules.AREAS[reward])
 
 	var first := (point - Vector2i.ONE * RADIUS).max(Vector2i.ZERO)
 	var last := (point + Vector2i.ONE * RADIUS).min(Vector2i.ONE * (city.map_size - 1))
@@ -159,6 +164,8 @@ static func frame_selection(image: Image, selected: Rect2i, factor := 1) -> Imag
 
 
 static func zoom_for_tile(tile_id: int) -> float:
+	if tile_id >= 256 and tile_id < 264:
+		return minf(3.0, 10.0 / ExpandedRules.AREAS[tile_id - 256])
 	if tile_id >= BuildingTileIds.PLYMOUTH_ARCOLOGY and tile_id <= BuildingTileIds.LAUNCH_ARCOLOGY:
 		return 2.0
 

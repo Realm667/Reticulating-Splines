@@ -4,6 +4,8 @@ extends Control
 const FADED_ALPHA := 0.25
 
 var zoom := 3.5
+# Expanded landmarks can be wider than the original four-tile buildings.
+var fit_width := 0.0
 var palette: Sc2Palette
 var palette_texture: ImageTexture
 var palette_clock := PaletteAnimationClock.new()
@@ -43,6 +45,9 @@ func _draw() -> void:
 	if texture != null:
 		# the zoom on whole screen pixels for each artwork pixel
 		var target := Vector2(ScreenPixels.art_length(texture.get_width(), zoom), ScreenPixels.art_length(texture.get_height(), zoom))
+		if fit_width > 0.0:
+			var fitted := ScreenPixels.fit_scale(minf(zoom, maxf(1.0, size.x - 16.0) / fit_width))
+			target = Vector2(texture.get_size()) * fitted
 		var rect := Rect2((size - target) * 0.5, target)
 
 		if selection_texture == null:

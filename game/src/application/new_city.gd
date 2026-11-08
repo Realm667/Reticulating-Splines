@@ -181,7 +181,7 @@ func create_new_city_unchecked() -> void:
 	var document: Sc2File = result.document
 
 	# a new city outside the original format uses SC2X version 4
-	if document.is_extended() and not document.is_sc2x():
+	if (document.is_extended() or setup.expanded) and not document.is_sc2x():
 		var converted := Sc2xDocument.from_new_city(document, setup.city_name, setup.mayor_name)
 
 		if not converted.ok:
@@ -190,6 +190,11 @@ func create_new_city_unchecked() -> void:
 			return
 
 		document = converted.document
+	if setup.expanded:
+		var expanded_error := ExpandedRules.enable(document)
+		if not expanded_error.is_empty():
+			app.interface.show_error(tr(expanded_error))
+			return
 	app.city_session.activate_document(
 		document,
 		null,

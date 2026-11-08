@@ -37,7 +37,8 @@ func show_palette(selected_subtool: int, anchor: Rect2) -> void:
 	var bounds := Rect2i(get_parent().get_viewport_rect())
 	var content_height := 40
 	for button: Button in palette.buttons.values():
-		content_height += ceili(button.get_combined_minimum_size().y) + 3
+		if button.visible:
+			content_height += ceili(button.get_combined_minimum_size().y) + 3
 	var width := maxi(300, ceili(palette.grid.get_combined_minimum_size().x) + 32)
 	var requested := Vector2i(mini(width, bounds.size.x), mini(content_height, int(bounds.size.y * 0.7)))
 	popup(fit_to_view(anchor, requested, bounds))
@@ -60,12 +61,12 @@ func _focus_selected(index: int) -> void:
 	if not visible:
 		return
 	var button := palette.buttons.get(index) as Button
-	if button == null or button.disabled:
+	if button == null or button.disabled or not button.visible:
 		for candidate: Button in palette.buttons.values():
-			if not candidate.disabled:
+			if candidate.visible and not candidate.disabled:
 				button = candidate
 				break
-	if button != null and not button.disabled:
+	if button != null and button.visible and not button.disabled:
 		button.grab_focus()
 		palette.scroll.ensure_control_visible(button)
 

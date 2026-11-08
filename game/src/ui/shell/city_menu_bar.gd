@@ -12,6 +12,7 @@ signal help_menu_requested(id: int)
 signal debug_menu_requested(id: int)
 
 const ShortcutMenu = preload("res://src/ui/scurk/scurk_context_menu.gd")
+const MENU_EXPANDED := 0x8310
 const MENU_SETTINGS := 0x8302
 const MENU_SCENARIO_GOALS := 8
 const MENU_SAVE_CITY := 7
@@ -153,6 +154,7 @@ func _ready() -> void:
 	options_menu.get_popup().add_item("Music box", MENU_MUSIC_BOX)
 	options_menu.get_popup().add_item("Photo mode", MENU_PHOTO_MODE)
 	options_menu.get_popup().add_separator()
+	options_menu.get_popup().add_item("Classic / Expanded", MENU_EXPANDED)
 	options_menu.get_popup().add_item("Settings", MENU_SETTINGS)
 	options_menu.disabled = true
 

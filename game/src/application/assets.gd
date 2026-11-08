@@ -395,6 +395,8 @@ func use_default_sprites() -> void:
 	building_variants.prepare_families(large, small_medium, mix)
 	app.asset_state.large_sprites = building_variants.apply_to(large if mixing else with_hd_sprites(large), mix)
 	app.asset_state.small_medium_sprites = building_variants.apply_to(small_medium if mixing else with_hd_sprites(small_medium), mix)
+	ExpandedGraphics.apply(app.asset_state.large_sprites)
+	ExpandedGraphics.apply(app.asset_state.small_medium_sprites)
 	use_dos_colors(corrections)
 
 
@@ -429,7 +431,9 @@ func set_building_mix(value: Dictionary) -> void:
 
 # `archive` with the art of the HD sprite pack, when HD graphics show.
 func with_hd_sprites(archive: Sc2SpriteArchive) -> Sc2SpriteArchive:
-	return app.asset_state.hd_pack.apply_to(archive) if app.asset_state.hd_active() else archive
+	var result := app.asset_state.hd_pack.apply_to(archive) if app.asset_state.hd_active() else archive
+	ExpandedGraphics.apply(result)
+	return result
 
 
 # The pack.json of the HD sprite pack. OPENSC2K_HD_PACK overrides the preference.

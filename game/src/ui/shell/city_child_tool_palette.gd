@@ -83,6 +83,8 @@ func show_tool_group(
 	var first_available_subtool := -1
 
 	for subtool_index in group.tools.size():
+		if ExpandedRules.is_reward_tool(group_index, subtool_index) and (city == null or not ExpandedRules.enabled(city.document)):
+			continue
 		if not free_landscape and LandscapeEditorCommand.supports_tool(
 			group_index,
 			subtool_index,
@@ -112,6 +114,8 @@ func show_tool_group(
 			available,
 			icon_provider,
 		)
+		if ExpandedRules.is_reward_tool(group_index, subtool_index):
+			button.visible = ExpandedRules.visible_reward(city, subtool_index - ExpandedRules.FIRST_TOOL)
 		grid.add_child(button)
 		buttons[subtool_index] = button
 
@@ -161,6 +165,9 @@ func refresh_availability(
 			city, shown_group, int(subtool_index)
 		)
 		var button: Button = buttons[subtool_index]
+
+		if ExpandedRules.is_reward_tool(shown_group, subtool_index):
+			button.visible = ExpandedRules.visible_reward(city, subtool_index - ExpandedRules.FIRST_TOOL)
 
 		if button.disabled == available:
 			button.disabled = not available
@@ -236,6 +243,9 @@ func tool_button_tooltip(
 
 	if FACILITY_DETAILS.has(str(tile_id)):
 		lines.append(tr(FACILITY_DETAILS[str(tile_id)]))
+
+	if ExpandedRules.is_reward_tool(group_index, subtool_index):
+		lines.append(ExpandedRules.details(subtool_index - ExpandedRules.FIRST_TOOL))
 
 	if not available:
 		lines.append(tr("Status: Not available in this city."))

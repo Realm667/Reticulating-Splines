@@ -48,6 +48,9 @@ static func from_archives(archives: Array[Sc2SpriteArchive]) -> ScurkMif:
 			return result
 
 		for entry in source.entries:
+			# Expanded objects have separate city identities and are not MIF tiles.
+			if entry.sprite_id >= ExpandedRules.FIRST_SPRITE and entry.sprite_id < ExpandedRules.FIRST_SPRITE + 1500:
+				continue
 			entries[entry.sprite_id] = entry
 
 	for sprite_id in entries:

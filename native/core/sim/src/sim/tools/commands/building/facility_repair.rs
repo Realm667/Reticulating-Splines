@@ -72,6 +72,9 @@ pub fn apply(city: &mut City) -> RepairResult {
     let mut rebuilt_shared = HashSet::new();
 
     for origin in facility_tiles(&city.xbld.data) {
+        if crate::sim::expanded::at(city, crate::sim::geom::Vec2i::new(origin / edge, origin % edge)).is_some() {
+            continue;
+        }
         let (x, y) = (origin / edge, origin % edge);
         let tile = city.xbld.data[origin as usize] as i64;
         let kind = microsim_type(tile);

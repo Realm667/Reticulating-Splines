@@ -79,6 +79,7 @@ static func static_visual_signature(city: CityState, view_size := VIEW_LARGE) ->
 		city.chunk_revision("ALTM"),
 		city.chunk_revision("XTER"),
 		city.chunk_revision("XBLD"),
+		city.chunk_revision("XEXP"),
 		city.chunk_revision("XZON"),
 		city.masked_tile_flag_signature(0xc6),
 		city.chunk_revision("XTRF"),

@@ -116,6 +116,10 @@ func _apply_selected_tool(
 	if _apply_landscape_brush(start, path, scurk_tool_mode, scurk_tool):
 		return
 
+	if ExpandedRules.is_reward_tool(tool.selected_group, tool.selected_subtool):
+		_apply_building_tool(finish, scurk_tool_mode)
+		return
+
 	if _apply_simple_edit(start, finish, path, scurk_tool_mode, scurk_tool):
 		return
 
@@ -512,7 +516,7 @@ func _record_building(
 	app.interface.refresh_details()
 	app.static_render.refresh_after_city_edit(building)
 
-	if building_group == CityToolIds.Group.REWARDS and building_subtool < CityToolIds.Rewards.ARCOLOGIES:
+	if building_group == CityToolIds.Group.REWARDS and (building_subtool < CityToolIds.Rewards.ARCOLOGIES or ExpandedRules.is_reward_tool(building_group, building_subtool)):
 		app.camera_input.choose_tool_group(CityToolIds.Group.CENTERING)
 
 	if building_group == CityToolIds.Group.RECREATION and app.document_state.city.music_enabled() and not stadium_team_pending:

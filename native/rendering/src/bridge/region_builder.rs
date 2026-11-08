@@ -186,8 +186,24 @@ fn city(d: &VarDictionary) -> Result<City, String> {
         objects: ints(d, "objects"),
         traffic: bytes(d, "traffic"),
         dispatch: HashMap::new(),
+        expanded: HashMap::new(),
     };
 
+    let records = ints(d, "expanded");
+    for record in records.chunks_exact(4) {
+        let (kind, x, y, area) = (record[0], record[1], record[2], record[3]);
+        if !(0..8).contains(&kind) || !(3..=6).contains(&area) || x < 0 || y < 0 || x + area > c.edge || y + area > c.edge {
+            return Err("Invalid Expanded footprint".into());
+        }
+        for dx in 0..area {
+            for dy in 0..area {
+                c.expanded.insert(
+                    ((x + dx) * c.edge + y + dy) as usize,
+                    [kind, area, i32::from(dx == 0 && dy == area - 1)],
+                );
+            }
+        }
+    }
     c.validate()?;
     c.set_dispatch(&bytes(d, "things"));
     Ok(c)

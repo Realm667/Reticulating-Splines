@@ -28,7 +28,9 @@
     "game/src/application/knowledge.gd",
     "game/src/ui/settings/building_mix_panel.gd",
     "game/src/assets/building_variants.gd",
-    "game/src/audio/sound_font_catalog.gd"
+    "game/src/audio/sound_font_catalog.gd",
+    "game/src/model/expanded_rules.gd",
+    "game/src/application/expanded_city.gd"
   ],
   "non_display_literals": {
     "ItemList": "Godot node class used to locate the native file browser control.",

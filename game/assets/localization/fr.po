@@ -41814,3 +41814,195 @@ msgstr "Eau peu profonde"
 #. Reticulating Splines report UI
 msgid "Deep water"
 msgstr "Eau profonde"
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "National Museum"
+msgstr "Musée national"
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "Opera House"
+msgstr "Opéra"
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "Metropolitan Park"
+msgstr "Parc métropolitain"
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "International Convention Center"
+msgstr "Centre international des congrès"
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "University Hospital"
+msgstr "Hôpital universitaire"
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "National Library"
+msgstr "Bibliothèque nationale"
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "International Research Center"
+msgstr "Centre international de recherche"
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "World Exhibition Grounds"
+msgstr "Site de l’Exposition universelle"
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "City rules"
+msgstr "Règles de la ville"
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "Expanded"
+msgstr "Expanded"
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "Classic / Expanded"
+msgstr "Classic / Expanded"
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "Metropolis rewards"
+msgstr "Récompenses métropolitaines"
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid ""
+"Expanded adds metropolis rewards. You can upgrade a Classic city later, but "
+"cannot switch back."
+msgstr ""
+"Expanded ajoute des récompenses métropolitaines. Une ville Classic peut "
+"évoluer plus tard, sans retour possible."
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "This city uses Expanded rules. It cannot return to Classic."
+msgstr ""
+"Cette ville utilise les règles Expanded. Elle ne peut pas revenir à Classic."
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "Change city rules before hosting a multiplayer game."
+msgstr "Modifiez les règles avant d’héberger une partie multijoueur."
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "Switch to Expanded?"
+msgstr "Passer à Expanded ?"
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "Switch to Expanded"
+msgstr "Passer à Expanded"
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid ""
+"Expanded adds eight metropolis rewards. This city cannot return to Classic. "
+"Save a separate SC2X copy to keep your Classic city."
+msgstr ""
+"Expanded ajoute huit récompenses métropolitaines. Cette ville ne pourra plus"
+" revenir à Classic. Enregistrez une copie SC2X distincte pour conserver "
+"votre ville Classic."
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "Expanded rules enabled."
+msgstr "Règles Expanded activées."
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "Adds 25 college capacity and improves nearby land value."
+msgstr ""
+"Ajoute 25 unités de capacité universitaire et améliore la valeur foncière "
+"alentour."
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "Improves nearby land value, benefiting homes and commerce."
+msgstr "Améliore la valeur foncière alentour pour les logements et commerces."
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "Improves nearby land value over a wide area."
+msgstr "Améliore la valeur foncière dans un large périmètre."
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "Improves nearby commercial land value."
+msgstr "Améliore la valeur foncière des commerces alentour."
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "Adds 100 health capacity, equivalent to four fully funded hospitals."
+msgstr ""
+"Ajoute 100 unités de capacité sanitaire, soit quatre hôpitaux entièrement "
+"financés."
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "Adds 45 school capacity, equivalent to three fully funded schools."
+msgstr ""
+"Ajoute 45 unités de capacité scolaire, soit trois écoles entièrement "
+"financées."
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "Adds 100 college capacity, equivalent to two fully funded colleges."
+msgstr ""
+"Ajoute 100 unités de capacité universitaire, soit deux universités "
+"entièrement financées."
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "Unlocks at %s residents, including arcologies."
+msgstr "Débloqué à %s habitants, arcologies comprises."
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "Annual upkeep: $%d (charged monthly)."
+msgstr "Entretien annuel : $%d (prélevé chaque mois)."
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid ""
+"Requires power and paid upkeep. One per city. Rebuilding keeps the same "
+"construction cost."
+msgstr ""
+"Nécessite électricité et entretien payé. Un par ville. Reconstruction au "
+"même coût."
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "Expanded requires an SC2X city."
+msgstr "Expanded nécessite une ville SC2X."
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "Expanded city capability is missing."
+msgstr "L’identifiant du format Expanded manque."
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "Expanded city data is missing."
+msgstr "Les données de ville Expanded manquent."
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "Unsupported Expanded city data."
+msgstr "Données de ville Expanded non prises en charge."
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "Invalid Expanded building footprint."
+msgstr "Emprise de bâtiment Expanded invalide."
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "Invalid Expanded building occupancy."
+msgstr "Occupation de bâtiment Expanded invalide."
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "This metropolis reward is not available."
+msgstr "Cette récompense métropolitaine est indisponible."
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "The building must fit inside the city."
+msgstr "Le bâtiment doit tenir entièrement dans la ville."
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "Metropolis rewards need clear, flat, unzoned land."
+msgstr ""
+"Les récompenses métropolitaines nécessitent un terrain libre, plat et sans "
+"zonage."
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "Demolish the metropolis reward first."
+msgstr "Démolissez d’abord la récompense métropolitaine."
+
+#: src/model/expanded_rules.gd
+msgid "Inactive: upkeep not paid."
+msgstr "Inactif : entretien non payé."
+
+#: src/model/expanded_rules.gd
+msgid "Operating: power and upkeep supplied."
+msgstr "En service : électricité et entretien assurés."
+
+#: src/model/expanded_rules.gd
+msgid "Inactive: no power."
+msgstr "Inactif : pas d’électricité."

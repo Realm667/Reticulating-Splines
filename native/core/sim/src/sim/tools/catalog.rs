@@ -112,6 +112,14 @@ pub const GROUPS: [Group; 18] = [
             entry("forest", "Forest Arcology", 120000, 4),
             entry("darco", "Darco Arcology", 150000, 4),
             entry("launch", "Launch Arcology", 200000, 4),
+            entry("nationalmuseum", "National Museum", 0, 4),
+            entry("opernhaus", "Opera House", 0, 4),
+            entry("metropolpark", "Metropolitan Park", 0, 5),
+            entry("kongresszentrum", "International Convention Center", 25000, 4),
+            entry("universitaetsklinikum", "University Hospital", 40000, 4),
+            entry("nationalbibliothek", "National Library", 0, 3),
+            entry("forschungszentrum", "International Research Center", 60000, 5),
+            entry("weltausstellung", "World Exhibition Grounds", 0, 6),
         ],
     },
     Group {
@@ -306,7 +314,12 @@ mod tests {
     #[test]
     fn the_catalog_follows_the_tool_ids() {
         assert_eq!(GROUPS.len(), group::COUNT);
-        assert!(GROUPS.iter().all(|group| group.tools.len() as i64 <= MAX_SLOTS_PER_GROUP));
+        assert!(
+            GROUPS
+                .iter()
+                .all(|group| group.tools.len() as i64 <= MAX_SLOTS_PER_GROUP || group.id == "rewards")
+        );
+        assert_eq!(GROUPS[group::REWARDS as usize].tools.len(), 17);
         assert_eq!(
             tool(group::POWER, power::COAL).map(|entry| (entry.cost, entry.area)),
             Some((4000, 4))

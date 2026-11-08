@@ -102,8 +102,21 @@ pub fn run(city: &mut City, random: &mut SimRandom) -> EducationHealthResult {
     span.mark("service capacities");
     let ordinance_flags = city.misc_u32(misc_layout::ORDINANCES);
     let mut health_capacity = ((tile_count(city, tiles::HOSPITAL) / 9) * budget_funding(city, sc2budget_layout::HEALTH) * 25) / 100;
-    let school_capacity = ((tile_count(city, tiles::SCHOOL) / 9) * budget_funding(city, sc2budget_layout::SCHOOL) * 15) / 100;
-    let college_capacity = ((tile_count(city, tiles::COLLEGE) / 16) * budget_funding(city, sc2budget_layout::COLLEGE) * 50) / 100;
+    let mut school_capacity = ((tile_count(city, tiles::SCHOOL) / 9) * budget_funding(city, sc2budget_layout::SCHOOL) * 15) / 100;
+    let mut college_capacity = ((tile_count(city, tiles::COLLEGE) / 16) * budget_funding(city, sc2budget_layout::COLLEGE) * 50) / 100;
+    // Expanded capacity uses the Classic service equations, funded by its own upkeep.
+    if crate::sim::expanded::operational(city, 0) {
+        college_capacity += 25;
+    }
+    if crate::sim::expanded::operational(city, 4) {
+        health_capacity += 100;
+    }
+    if crate::sim::expanded::operational(city, 5) {
+        school_capacity += 45;
+    }
+    if crate::sim::expanded::operational(city, 6) {
+        college_capacity += 100;
+    }
     let mut newborn_life_expectancy = 85;
 
     for mask in [

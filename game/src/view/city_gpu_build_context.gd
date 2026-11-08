@@ -130,7 +130,7 @@ func prepare(city: CityState, palette: Sc2Palette, sprites: Sc2SpriteArchive, vi
 		var artwork: Dictionary[int, Image] = {}
 
 		for id: int in sprites.entries_by_id:
-			if (id >= configuration.sprite_base and id < configuration.sprite_base + 500) or (id >= BuildingVariants.FIRST and id % BuildingVariants.SPAN / 500 == view):
+			if (id >= configuration.sprite_base and id < configuration.sprite_base + 500) or (id >= ExpandedRules.FIRST_SPRITE and id < ExpandedRules.FIRST_SPRITE + 1500 and (id - ExpandedRules.FIRST_SPRITE) / 500 == view) or (id >= BuildingVariants.FIRST and id % BuildingVariants.SPAN / 500 == view):
 				artwork[id] = CityIsometricRenderer.sprite_image(sprites, palette, images, id, false)
 		if (sprites.visual_nature_enabled or sprites.visual_terrain_enabled) and mode == CityViewMode.Mode.CITY:
 			for id: int in sprites.visual_nature:
@@ -355,7 +355,7 @@ static func _snapshot(city: CityState) -> Dictionary:
 	var things := city.document.find_chunk("XTHG")
 
 	return {"edge": city.map_size, "visible": city.visible_altitude_levels, "rotation": city.compass_rotation(),
-		"altitude": city.altitude_words, "terrain": city.terrain, "buildings": city.buildings,
+		"expanded": ExpandedRules.render_records(city), "altitude": city.altitude_words, "terrain": city.terrain, "buildings": city.buildings,
 		"zones": city.zones, "flags": city.tile_flags, "overlays": city.text_overlays, "underground": city.underground,
 		"ground": city.ground_overrides if city.ground_overrides.size() == cells else PackedInt32Array(),
 		"objects": city.object_altitude_overrides if city.object_altitude_overrides.size() == cells else PackedInt32Array(),

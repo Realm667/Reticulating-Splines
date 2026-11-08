@@ -192,6 +192,9 @@ pub fn run_schedule(
 ) -> (DayOutcome, EngineState, Option<Scenario>) {
     let mut span = TimingSpan::new();
 
+    crate::sim::expanded::reconcile(city);
+    crate::sim::expanded::monthly(city);
+
     // Extended cities correct their tile counts before the budget reads them.
     if schedule.month_day == 0 && city.is_extended() {
         span.mark("tile recount");

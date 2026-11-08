@@ -102,7 +102,7 @@ pub fn kind(group_index: i64, subtool: i64) -> Option<Kind> {
         return Some(Kind::Landscape);
     }
 
-    if building_tile(group_index, subtool).is_some() {
+    if building_tile(group_index, subtool).is_some() || (group_index == group::REWARDS && (9..17).contains(&subtool)) {
         return Some(Kind::Building);
     }
 

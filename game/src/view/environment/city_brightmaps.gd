@@ -14,6 +14,7 @@ static func fingerprint(entry: Sc2SpriteArchive.SpriteEntry) -> String:
 static func load_archive(archive: Sc2SpriteArchive, folder: String, group: String) -> void:
 	archive.visual_emission.clear()
 	archive.visual_emission_artwork.clear()
+	ExpandedGraphics.lights(archive)
 	# A master pack owns its light masks. Original catalog files remain optional.
 	for id: int in archive.high_resolution:
 		var hd := archive.high_resolution[id]

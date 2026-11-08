@@ -140,6 +140,7 @@ pub fn generate(city: &mut City, landform: &Landform, random: &mut SimRandom) ->
         let mut underground = [];
         let mut maps = Maps {
             map_edge,
+            expanded: false,
             altitude: &mut altitude,
             buildings: &mut buildings,
             terrain: &mut terrain,

@@ -289,6 +289,7 @@ pub fn run_land_value_and_crime(city: &mut City) -> PollutionResult {
     let old_growth = &city.xrog.data;
     let old_population = &city.xpop.data;
     let old_crime = &city.xcrm.data;
+    let influences = crate::sim::expanded::influences(city);
     let mut land_sum = 0i64;
     let mut land = vec![0u8; count];
     let mut growth = vec![0u8; count];
@@ -328,7 +329,7 @@ pub fn run_land_value_and_crime(city: &mut City) -> PollutionResult {
             }
 
             // See LAND_VALUE_BASE. This keeps SC2X land values at the coarse level.
-            value += LAND_VALUE_BASE;
+            value += LAND_VALUE_BASE + crate::sim::expanded::land_bonus(&influences, x as i64, y as i64, zone_type);
 
             if land_value_halved(building) {
                 value -= value / 2;

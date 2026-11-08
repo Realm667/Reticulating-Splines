@@ -83,6 +83,14 @@ pub fn dispatch(op: &str, args: &VarDictionary, city: &mut City, randoms: &mut R
         "tool.subway_to_rail" => {
             subway_to_rail::apply(city, &tool, point(args, "point"), convert::boolean(args, "preview_only", false)).to_value()
         }
+        "tool.building" if tool.group == 5 && (9..17).contains(&tool.subtool) => sc2k_sim::sim::expanded::place(
+            city,
+            (tool.subtool - 9) as usize,
+            point(args, "point"),
+            randoms.random.state,
+            randoms.lfsr.state,
+        )
+        .to_value(),
         "tool.building" => {
             let placement = building_placement(args);
 
@@ -95,6 +103,9 @@ pub fn dispatch(op: &str, args: &VarDictionary, city: &mut City, randoms: &mut R
                 &mut randoms.random,
             )
             .to_value()
+        }
+        "tool.building_preview" if tool.group == 5 && (9..17).contains(&tool.subtool) => {
+            Value::Str(sc2k_sim::sim::expanded::preview(city, (tool.subtool - 9) as usize, point(args, "point")).into())
         }
         "tool.building_preview" => {
             let placement = building_placement(args);

@@ -13,6 +13,15 @@ static func inspect(city: CityState, point: Vector2i) -> QueryResult:
 	if not result.ok:
 		return result
 
+	var reward := ExpandedRules.at(city, point)
+	if reward >= 0:
+		result.kind = "expanded"
+		result.title = ExpandedRules.NAMES[reward]
+		result.tile_id = 256 + reward
+		result.sprite_id = ExpandedRules.FIRST_SPRITE + 1000 + reward
+		result.lines = PackedStringArray([ExpandedRules.operating_status(city, reward), ExpandedRules.details(reward)])
+		result.action = ""
+		return result
 	result.sprite_id = Presentation.sprite_id(city, result)
 
 	for thing in result.things:

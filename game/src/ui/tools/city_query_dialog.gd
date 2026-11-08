@@ -81,6 +81,9 @@ func show_query(
 	tabs.current_tab = 0
 	neighborhood_view.configure_animation(animation_palette, animation_ticks)
 	neighborhood_view.zoom = QueryNeighborhood.zoom_for_tile(info.tile_id if info != null else 0)
+	neighborhood_view.fit_width = 0.0
+	if info != null and info.tile_id >= 256 and info.tile_id < 264:
+		neighborhood_view.fit_width = ExpandedRules.AREAS[info.tile_id - 256] * 32.0
 	neighborhood_view.texture = neighborhood_texture
 	neighborhood_view.selection_texture = selection_texture
 	neighborhood_view.visible = neighborhood_texture != null

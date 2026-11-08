@@ -30,7 +30,7 @@ const LEGACY_FIRE_TIMER_KEY := "fire_elapsed_msec"
 # left. Files without it have no launch in progress.
 const LAUNCH_ACTIVE_KEY := "arcology_launch_active"
 # additional capabilities that this version supports. File version 4 itself needs none.
-const SUPPORTED_FEATURES: PackedStringArray = []
+const SUPPORTED_FEATURES: PackedStringArray = ["rs.expanded.v1"]
 
 var map_size := 128
 var city_name := ""

@@ -11147,3 +11147,179 @@ msgstr "얕은 물"
 #. Reticulating Splines report UI
 msgid "Deep water"
 msgstr "깊은 물"
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "National Museum"
+msgstr "국립박물관"
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "Opera House"
+msgstr "오페라 극장"
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "Metropolitan Park"
+msgstr "대도시 공원"
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "International Convention Center"
+msgstr "국제 컨벤션 센터"
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "University Hospital"
+msgstr "대학병원"
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "National Library"
+msgstr "국립도서관"
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "International Research Center"
+msgstr "국제 연구 센터"
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "World Exhibition Grounds"
+msgstr "세계박람회장"
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "City rules"
+msgstr "도시 규칙"
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "Expanded"
+msgstr "Expanded"
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "Classic / Expanded"
+msgstr "Classic / Expanded"
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "Metropolis rewards"
+msgstr "대도시 보상"
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid ""
+"Expanded adds metropolis rewards. You can upgrade a Classic city later, but "
+"cannot switch back."
+msgstr "Expanded는 대도시 보상을 추가합니다. Classic 도시는 나중에 전환할 수 있지만 되돌릴 수 없습니다."
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "This city uses Expanded rules. It cannot return to Classic."
+msgstr "이 도시는 Expanded 규칙을 사용합니다. Classic으로 되돌릴 수 없습니다."
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "Change city rules before hosting a multiplayer game."
+msgstr "멀티플레이 게임을 호스팅하기 전에 도시 규칙을 변경하세요."
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "Switch to Expanded?"
+msgstr "Expanded로 전환할까요?"
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "Switch to Expanded"
+msgstr "Expanded로 전환"
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid ""
+"Expanded adds eight metropolis rewards. This city cannot return to Classic. "
+"Save a separate SC2X copy to keep your Classic city."
+msgstr ""
+"Expanded는 대도시 보상 8개를 추가합니다. 이 도시는 Classic으로 되돌릴 수 없습니다. Classic 도시를 보존하려면 "
+"별도의 SC2X 사본을 저장하세요."
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "Expanded rules enabled."
+msgstr "Expanded 규칙이 활성화되었습니다."
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "Adds 25 college capacity and improves nearby land value."
+msgstr "대학 수용량을 25 늘리고 주변 지가를 높입니다."
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "Improves nearby land value, benefiting homes and commerce."
+msgstr "주변 주거 및 상업 지역의 지가를 높입니다."
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "Improves nearby land value over a wide area."
+msgstr "넓은 주변 지역의 지가를 높입니다."
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "Improves nearby commercial land value."
+msgstr "주변 상업 지역의 지가를 높입니다."
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "Adds 100 health capacity, equivalent to four fully funded hospitals."
+msgstr "의료 수용량을 100 늘립니다. 예산이 전액 지원되는 병원 4개에 해당합니다."
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "Adds 45 school capacity, equivalent to three fully funded schools."
+msgstr "학교 수용량을 45 늘립니다. 예산이 전액 지원되는 학교 3개에 해당합니다."
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "Adds 100 college capacity, equivalent to two fully funded colleges."
+msgstr "대학 수용량을 100 늘립니다. 예산이 전액 지원되는 대학 2개에 해당합니다."
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "Unlocks at %s residents, including arcologies."
+msgstr "아르콜로지 인구를 포함하여 주민 %s명에 잠금 해제됩니다."
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "Annual upkeep: $%d (charged monthly)."
+msgstr "연간 유지비: $%d (매월 청구)."
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid ""
+"Requires power and paid upkeep. One per city. Rebuilding keeps the same "
+"construction cost."
+msgstr "전력과 유지비 납부가 필요합니다. 도시당 하나만 건설할 수 있습니다. 재건 비용은 동일합니다."
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "Expanded requires an SC2X city."
+msgstr "Expanded에는 SC2X 도시가 필요합니다."
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "Expanded city capability is missing."
+msgstr "Expanded 형식 식별자가 없습니다."
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "Expanded city data is missing."
+msgstr "Expanded 도시 데이터가 없습니다."
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "Unsupported Expanded city data."
+msgstr "지원되지 않는 Expanded 도시 데이터입니다."
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "Invalid Expanded building footprint."
+msgstr "Expanded 건물 부지가 올바르지 않습니다."
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "Invalid Expanded building occupancy."
+msgstr "Expanded 건물 점유 데이터가 올바르지 않습니다."
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "This metropolis reward is not available."
+msgstr "이 대도시 보상은 사용할 수 없습니다."
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "The building must fit inside the city."
+msgstr "건물 전체가 도시 경계 안에 있어야 합니다."
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "Metropolis rewards need clear, flat, unzoned land."
+msgstr "대도시 보상에는 용도가 지정되지 않은 빈 평지가 필요합니다."
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "Demolish the metropolis reward first."
+msgstr "먼저 대도시 보상을 철거하세요."
+
+#: src/model/expanded_rules.gd
+msgid "Inactive: upkeep not paid."
+msgstr "비활성: 유지비 미납."
+
+#: src/model/expanded_rules.gd
+msgid "Operating: power and upkeep supplied."
+msgstr "운영 중: 전력 공급 및 유지비 납부 완료."
+
+#: src/model/expanded_rules.gd
+msgid "Inactive: no power."
+msgstr "비활성: 전력 없음."

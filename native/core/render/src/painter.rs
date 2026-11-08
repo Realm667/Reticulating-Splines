@@ -240,136 +240,145 @@ impl Builder {
             }
         }
 
-        let composite = (tiles::HIGHWAY_SLOPE_1..=tiles::REINFORCED_HIGHWAY_BRIDGE).contains(&b);
-        let developed = b >= tiles::DEVELOPED_FIRST;
-        // Dam sprites contain the concrete structure, not the water around it.
-        // Unlike ordinary developed parcels they still need their terrain below.
-        let hydro = matches!(b, tiles::HYDRO_POWER_1 | tiles::HYDRO_POWER_2);
-
-        if (!developed && !composite) || hydro {
-            let ground = self.ground(i, t);
-            if ground == WATER_SIDE_SPRITE && (hydro || (c.effects & effects::WATERFALL != 0 && t == terrain::WATERFALL)) {
-                // The original waterfall omits a few cap-edge pixels. A real
-                // water diamond below it closes pinholes between adjacent falls
-                // without changing imported artwork or extending the curtains.
-                // Unenhanced falls remain byte-exact; dams need this terrain
-                // in both modes, including the older coastal waterfall code.
-                self.add(&mut draws, c.base() + WATER_SPRITE, false, sx, base - c.step())?;
+        if let Some(&[kind, area, anchor]) = self.city.expanded.get(&i) {
+            if anchor != 0 {
+                let sprite = 4500000 + c.view * 500 + kind;
+                let baseline = flat - self.city.object(i) * c.step() + (area - 1) * c.hh();
+                self.add(&mut draws, sprite, self.city.rotation & 1 != 0, sx, baseline)?;
+                draws.last_mut().expect("reward draw").emission_disabled = self.city.flags[i] & flags::POWERED == 0;
             }
-            self.add(&mut draws, self.nature_ground(c.base() + ground), false, sx, base)?;
-            let draw = draws.last_mut().expect("the ground draw was added");
+        } else {
+            let composite = (tiles::HIGHWAY_SLOPE_1..=tiles::REINFORCED_HIGHWAY_BRIDGE).contains(&b);
+            let developed = b >= tiles::DEVELOPED_FIRST;
+            // Dam sprites contain the concrete structure, not the water around it.
+            // Unlike ordinary developed parcels they still need their terrain below.
+            let hydro = matches!(b, tiles::HYDRO_POWER_1 | tiles::HYDRO_POWER_2);
 
-            if SHORE_SPRITES.iter().any(|range| range.contains(&ground)) {
-                surface_grid::mark_shore(draw, x, y, self.city.edge);
-            } else if t <= terrain::LAND_DRAW_LAST {
-                surface_grid::mark(draw, t, x, y, self.city.edge);
-            }
-        }
+            if (!developed && !composite) || hydro {
+                let ground = self.ground(i, t);
+                if ground == WATER_SIDE_SPRITE && (hydro || (c.effects & effects::WATERFALL != 0 && t == terrain::WATERFALL)) {
+                    // The original waterfall omits a few cap-edge pixels. A real
+                    // water diamond below it closes pinholes between adjacent falls
+                    // without changing imported artwork or extending the curtains.
+                    // Unenhanced falls remain byte-exact; dams need this terrain
+                    // in both modes, including the older coastal waterfall code.
+                    self.add(&mut draws, c.base() + WATER_SPRITE, false, sx, base - c.step())?;
+                }
+                self.add(&mut draws, self.nature_ground(c.base() + ground), false, sx, base)?;
+                let draw = draws.last_mut().expect("the ground draw was added");
 
-        // Composite highways and buildings draw from one compass-selected corner.
-        let anchor = b <= tiles::HIGHWAY_ONRAMP_4
-            || (tiles::RAIL_SUBWAY_ENTRANCE_1..=tiles::RAIL_SUBWAY_ENTRANCE_4).contains(&b)
-            || self.city.zones[i] & ANCHOR_CORNERS[self.city.rotation] != 0;
-        if b != tiles::EMPTY && anchor {
-            if composite && (c.view != 0 || c.redraw_ground) {
-                for (dx, dy, px, py) in [
-                    (0, 0, 0, 0),
-                    (0, -1, c.hw(), -c.hh()),
-                    (1, -1, c.hw() * 2, 0),
-                    (1, 0, c.hw(), c.hh()),
-                ] {
-                    let (nx, ny) = (x + dx, y + dy);
-
-                    if nx >= 0 && ny >= 0 && nx < self.city.edge && ny < self.city.edge {
-                        let n = self.city.index(nx, ny);
-                        let id = c.base() + terrain_sprite(self.city.terrain[n], self.city.wet(n));
-                        self.add(&mut draws, id, false, sx + px, base + py)?;
-                    }
+                if SHORE_SPRITES.iter().any(|range| range.contains(&ground)) {
+                    surface_grid::mark_shore(draw, x, y, self.city.edge);
+                } else if t <= terrain::LAND_DRAW_LAST {
+                    surface_grid::mark(draw, t, x, y, self.city.edge);
                 }
             }
 
-            // An odd compass rotation mirrors buildings, not networks.
-            let flip =
-                sprite < crate::nature::FIRST && ((self.city.flags[i] & flags::FLIPPED != 0) ^ (developed && self.city.rotation & 1 != 0));
-            let sprite = self.building_variant(x, y, sprite);
-            let image = self.sprites.get(sprite, flip)?;
-            let width = self.sprites.footprint_width(image);
-            if developed && c.building_ground && !hydro {
-                // Paint the whole footprint before its one anchored building.
-                // Per-cell draws can cover the building's front in later tiles.
-                let area = (width / (c.hw() * 2)).max(1);
-                let mut footprint = Vec::new();
-                for dx in 0..area {
-                    for dy in 0..area {
-                        let (nx, ny) = (x + dx, y - dy);
+            // Composite highways and buildings draw from one compass-selected corner.
+            let anchor = b <= tiles::HIGHWAY_ONRAMP_4
+                || (tiles::RAIL_SUBWAY_ENTRANCE_1..=tiles::RAIL_SUBWAY_ENTRANCE_4).contains(&b)
+                || self.city.zones[i] & ANCHOR_CORNERS[self.city.rotation] != 0;
+            if b != tiles::EMPTY && anchor {
+                if composite && (c.view != 0 || c.redraw_ground) {
+                    for (dx, dy, px, py) in [
+                        (0, 0, 0, 0),
+                        (0, -1, c.hw(), -c.hh()),
+                        (1, -1, c.hw() * 2, 0),
+                        (1, 0, c.hw(), c.hh()),
+                    ] {
+                        let (nx, ny) = (x + dx, y + dy);
+
                         if nx >= 0 && ny >= 0 && nx < self.city.edge && ny < self.city.edge {
-                            footprint.push((nx, ny));
+                            let n = self.city.index(nx, ny);
+                            let id = c.base() + terrain_sprite(self.city.terrain[n], self.city.wet(n));
+                            self.add(&mut draws, id, false, sx + px, base + py)?;
                         }
                     }
                 }
-                footprint.sort_by_key(|&(nx, ny)| (nx + ny, nx));
-                for (nx, ny) in footprint {
-                    let n = self.city.index(nx, ny);
-                    let terrain = self.city.surface(nx, ny);
-                    let ground = self.ground(n, terrain);
-                    let level = if terrain >= terrain::DEEP_WATER_FIRST {
-                        self.city.water(n)
-                    } else {
-                        self.city.land(n)
-                    };
+
+                // An odd compass rotation mirrors buildings, not networks.
+                let flip = sprite < crate::nature::FIRST
+                    && ((self.city.flags[i] & flags::FLIPPED != 0) ^ (developed && self.city.rotation & 1 != 0));
+                let sprite = self.building_variant(x, y, sprite);
+                let image = self.sprites.get(sprite, flip)?;
+                let width = self.sprites.footprint_width(image);
+                if developed && c.building_ground && !hydro {
+                    // Paint the whole footprint before its one anchored building.
+                    // Per-cell draws can cover the building's front in later tiles.
+                    let area = (width / (c.hw() * 2)).max(1);
+                    let mut footprint = Vec::new();
+                    for dx in 0..area {
+                        for dy in 0..area {
+                            let (nx, ny) = (x + dx, y - dy);
+                            if nx >= 0 && ny >= 0 && nx < self.city.edge && ny < self.city.edge {
+                                footprint.push((nx, ny));
+                            }
+                        }
+                    }
+                    footprint.sort_by_key(|&(nx, ny)| (nx + ny, nx));
+                    for (nx, ny) in footprint {
+                        let n = self.city.index(nx, ny);
+                        let terrain = self.city.surface(nx, ny);
+                        let ground = self.ground(n, terrain);
+                        let level = if terrain >= terrain::DEEP_WATER_FIRST {
+                            self.city.water(n)
+                        } else {
+                            self.city.land(n)
+                        };
+                        self.add(
+                            &mut draws,
+                            self.nature_ground(c.base() + ground),
+                            false,
+                            c.side() + (self.city.edge + nx - ny) * c.hw(),
+                            c.top() + (nx + ny) * c.hh() + c.height() - level * c.step(),
+                        )?;
+                    }
+                }
+                let offset = if composite {
+                    c.hh()
+                } else if developed {
+                    width / 4 - c.hh()
+                } else if t == terrain::RAISED {
+                    -c.step()
+                } else {
+                    0
+                };
+
+                let baseline = flat - self.city.object(i) * c.step() + offset;
+                if developed && let Some(&parcel) = self.sprites.parcels.get(&(image & !1)) {
+                    self.add(&mut draws, parcel, false, sx, baseline)?;
+                    // Ground does not emit, cast a building reflection or mask figures.
+                    draws.last_mut().expect("parcel draw was added").sprite = -1;
+                }
+                self.add(&mut draws, sprite, flip, sx, baseline)?;
+                draws.last_mut().expect("building draw was added").emission_disabled =
+                    developed && self.city.flags[i] & flags::POWERED == 0;
+
+                if let Some((id, traffic_flip)) = self.traffic_sprite(x, y, b) {
+                    let traffic = self.sprites.get(id, traffic_flip)?;
+                    let masked = self.sprites.traffic(traffic, image);
+                    let sprite = &self.sprites.images[&masked];
+                    let mut draw = Draw::new(masked, Rect::new(sx, baseline - sprite.h, sprite.w, sprite.h));
+
+                    // The masked traffic draw names its sprite but is no foreground.
+                    draw.sprite = id;
+                    draw.flip = traffic_flip;
+                    draws.push(draw);
+                }
+
+                if developed && self.city.flags[i] & flags::POWER_MASK == UNPOWERED {
+                    let key = self.sprites.get(c.base() + POWER_MARKER_SPRITE, false)?;
+                    let marker_width = self.sprites.images[&key].w;
                     self.add(
                         &mut draws,
-                        self.nature_ground(c.base() + ground),
+                        c.base() + POWER_MARKER_SPRITE,
                         false,
-                        c.side() + (self.city.edge + nx - ny) * c.hw(),
-                        c.top() + (nx + ny) * c.hh() + c.height() - level * c.step(),
+                        sx + width / 2 - marker_width / 2,
+                        baseline,
                     )?;
                 }
             }
-            let offset = if composite {
-                c.hh()
-            } else if developed {
-                width / 4 - c.hh()
-            } else if t == terrain::RAISED {
-                -c.step()
-            } else {
-                0
-            };
-
-            let baseline = flat - self.city.object(i) * c.step() + offset;
-            if developed && let Some(&parcel) = self.sprites.parcels.get(&(image & !1)) {
-                self.add(&mut draws, parcel, false, sx, baseline)?;
-                // Ground does not emit, cast a building reflection or mask figures.
-                draws.last_mut().expect("parcel draw was added").sprite = -1;
-            }
-            self.add(&mut draws, sprite, flip, sx, baseline)?;
-            draws.last_mut().expect("building draw was added").emission_disabled = developed && self.city.flags[i] & flags::POWERED == 0;
-
-            if let Some((id, traffic_flip)) = self.traffic_sprite(x, y, b) {
-                let traffic = self.sprites.get(id, traffic_flip)?;
-                let masked = self.sprites.traffic(traffic, image);
-                let sprite = &self.sprites.images[&masked];
-                let mut draw = Draw::new(masked, Rect::new(sx, baseline - sprite.h, sprite.w, sprite.h));
-
-                // The masked traffic draw names its sprite but is no foreground.
-                draw.sprite = id;
-                draw.flip = traffic_flip;
-                draws.push(draw);
-            }
-
-            if developed && self.city.flags[i] & flags::POWER_MASK == UNPOWERED {
-                let key = self.sprites.get(c.base() + POWER_MARKER_SPRITE, false)?;
-                let marker_width = self.sprites.images[&key].w;
-                self.add(
-                    &mut draws,
-                    c.base() + POWER_MARKER_SPRITE,
-                    false,
-                    sx + width / 2 - marker_width / 2,
-                    baseline,
-                )?;
-            }
         }
-
         if let Some(&offset) = self.city.dispatch.get(&i) {
             let key = self.sprites.get(c.base() + offset, false)?;
             let width = self.sprites.images[&key].w;

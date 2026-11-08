@@ -99,6 +99,16 @@ pub fn apply(
             continue;
         }
 
+        if !underground_view && let Some(kind) = crate::sim::expanded::at(city, point) {
+            for index in crate::sim::expanded::remove(city, kind) {
+                if seen.insert(index) {
+                    changed.push(index as i32);
+                }
+            }
+            action_count += 1;
+            total_cost += per_action;
+            continue;
+        }
         let mut maps = city.maps();
         let result = if underground_view {
             demolish_underground_point(&mut maps, point, random, rotation, scurk_mode)

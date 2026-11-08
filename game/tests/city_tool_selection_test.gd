@@ -42,7 +42,8 @@ func _catalog_indices() -> void:
 	]
 	for row: Array in groups:
 		var subtools: Dictionary = row[1]
-		assert(ToolCatalog.group(row[0]).tools.size() == row[3])
+		var expanded_count := 8 if row[0] == CityToolIds.Group.REWARDS else 0
+		assert(ToolCatalog.group(row[0]).tools.size() == row[3] + expanded_count)
 		assert(subtools.size() == row[3])
 		var slot := 0
 		for subtool: int in subtools.values():

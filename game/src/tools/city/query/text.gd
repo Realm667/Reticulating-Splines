@@ -5,7 +5,12 @@ extends QueryConstants
 
 
 static func format_text(info: QueryResult) -> String:
-	return NativeCityTools.query_text(info)
+	var text: String = NativeCityTools.query_text(info)
+	if info.kind == "expanded":
+		var split := text.find("Advanced tile data")
+		text = text.left(split) if split >= 0 else text
+		text += "\n" + "\n".join(info.lines)
+	return text
 
 
 static func specific_sound_events(tile_id: int, statistic_0: int) -> Array[int]:
@@ -30,4 +35,7 @@ static func tile_name(city: CityState, point: Vector2i, building := -1) -> Strin
 	if city == null or city.index_of(point.x, point.y) < 0:
 		return ""
 
+	var reward := ExpandedRules.at(city, point)
+	if reward >= 0:
+		return ExpandedRules.NAMES[reward]
 	return NativeSimulationBridge.run("query.tile_name", city, null, null, null, {"point": point, "building": building}).result

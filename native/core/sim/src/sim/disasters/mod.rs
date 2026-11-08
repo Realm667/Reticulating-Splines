@@ -100,6 +100,7 @@ impl City {
     pub fn disaster_maps(&mut self) -> DisasterMaps<'_> {
         let rotation = self.compass_rotation();
         let wide_labels = self.large_version >= 4;
+        let expanded = crate::sim::expanded::enabled(self);
         let vehicle_caps = crate::sim::moving::spawner::VehicleCaps::for_city(self);
         let City {
             map_size,
@@ -124,6 +125,7 @@ impl City {
         DisasterMaps {
             maps: Maps {
                 map_edge: *map_size,
+                expanded,
                 altitude: &mut altm.data,
                 buildings: &mut xbld.data,
                 terrain: &mut xter.data,

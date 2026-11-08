@@ -108,6 +108,13 @@ static func from_document(source: Sc2File) -> CityState:
 	city.underground = source.find_chunk("XUND").decoded_payload.duplicate()
 	city.text_overlays = source.find_chunk("XTXT").decoded_payload.duplicate()
 	city.tile_flags = source.find_chunk("XBIT").decoded_payload.duplicate()
+	if ExpandedRules.enabled(source):
+		if source.sc2x_metadata == null or ExpandedRules.FEATURE not in source.sc2x_metadata.required_features:
+			city.load_error = "Expanded city capability is missing."
+		else:
+			city.load_error = NativeSimulationBridge.run("expanded.validate", city, null, null, null).result
+	elif source.sc2x_metadata != null and ExpandedRules.FEATURE in source.sc2x_metadata.required_features:
+		city.load_error = "Expanded city data is missing."
 
 	return city
 

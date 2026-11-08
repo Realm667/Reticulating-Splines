@@ -100,6 +100,10 @@ func offer(position: Vector2i) -> Dictionary:
 			if not converted.ok:
 				return failure(converted.error)
 			document = converted.document
+		if ExpandedRules.enabled(template):
+			var expanded_error := ExpandedRules.enable(document)
+			if not expanded_error.is_empty():
+				return failure(expanded_error)
 		offers[id] = document
 		revision += 1
 	var report := terrain_price(offers[id])

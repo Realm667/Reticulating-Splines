@@ -166,12 +166,18 @@ pub fn zone_type(group: i64, subtool: i64) -> i64 {
 
 /// The building that a tool places, or `None`.
 pub fn building_tile(group: i64, subtool: i64) -> Option<i64> {
+    if group == group::REWARDS && (9..17).contains(&subtool) {
+        return None;
+    }
     let slot = group * MAX_SLOTS_PER_GROUP + subtool;
 
     TILE_BY_TOOL.iter().find(|(known, _)| *known == slot).map(|(_, tile)| *tile)
 }
 
 pub fn is_available(session: &Session, group: i64, subtool: i64) -> bool {
+    if group == group::REWARDS && (9..17).contains(&subtool) {
+        return sc2k_sim::sim::expanded::available(&session.city, (subtool - 9) as usize);
+    }
     let misc_data = session.city.chunk("MISC").map(|chunk| chunk.data.as_slice()).unwrap_or_default();
 
     availability::is_available(misc_data, session.city.city_mode(), group, subtool)
@@ -208,7 +214,30 @@ pub fn apply(session: &mut Session, selection: &Selection) -> Outcome {
     let before = Undo::capture(session);
     let slot = selection.slot();
     let args = tool_args(group, subtool, false);
+    let protected = (slot != DEMOLISH_SLOT && sc2k_sim::sim::expanded::enabled(&session.city)).then(|| {
+        (
+            session.city.clone(),
+            [session.randoms.random.state, session.randoms.lfsr.state, session.randoms.game.state],
+        )
+    });
     let (kind, result) = run(session, selection, slot, &args);
+    if let Some((previous, randoms)) = protected {
+        let changed = (0..8)
+            .filter_map(|n| sc2k_sim::sim::expanded::site(&previous, n))
+            .flat_map(|s| sc2k_sim::sim::expanded::indices(&previous, s))
+            .any(|i| {
+                let n = i as usize;
+                previous.xbld.data[n] != session.city.xbld.data[n]
+                    || previous.xzon.data[n] != session.city.xzon.data[n]
+                    || previous.altitude_word(i) != session.city.altitude_word(i)
+                    || previous.xter.data[n] != session.city.xter.data[n]
+            });
+        if changed {
+            session.city = previous;
+            [session.randoms.random.state, session.randoms.lfsr.state, session.randoms.game.state] = randoms;
+            return failure("Demolish the metropolis reward first.", Vec::new());
+        }
+    }
     let ok = crate::values::boolean(&result, "ok");
 
     if !ok {
@@ -306,6 +335,20 @@ fn run(session: &mut Session, selection: &Selection, slot: i64, args: &ToolArgs)
     let city = &mut session.city;
     let randoms = &mut session.randoms;
     let (group, subtool) = (selection.group, selection.subtool);
+
+    if group == group::REWARDS && (9..17).contains(&subtool) {
+        return (
+            "building",
+            sc2k_sim::sim::expanded::place(
+                city,
+                (subtool - 9) as usize,
+                selection.finish,
+                randoms.random.state,
+                randoms.lfsr.state,
+            )
+            .to_value(),
+        );
+    }
 
     if group == group::LANDSCAPE && LANDSCAPE_SUBTOOLS.contains(&subtool) {
         return (

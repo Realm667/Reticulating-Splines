@@ -1,5 +1,24 @@
 [
   {
+    "lane": "product",
+    "id": "expanded_city_test",
+    "script": "tests/expanded_city_test.gd",
+    "domain": "simulation"
+  },
+  {
+    "id": "expanded_graphics_gpu_test",
+    "script": "tests/expanded_graphics_gpu_test.gd",
+    "domain": "rendering",
+    "lane": "native",
+    "driver": "scene-batch"
+  },
+  {
+    "id": "expanded_ui_test",
+    "script": "tests/expanded_ui_test.gd",
+    "domain": "ui",
+    "lane": "product"
+  },
+  {
     "id": "printed_paper_gpu_test",
     "script": "tests/printed_paper_gpu_test.gd",
     "domain": "ui",
