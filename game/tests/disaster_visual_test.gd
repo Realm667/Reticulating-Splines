@@ -106,9 +106,24 @@ func _run() -> void:
 	effects.disaster_started(source)
 	assert(effects.pulses.size() == 2)
 	assert(effects.pulses[1].age < 0.0, "Microwave display follows completed damage points with bounded delays")
+	var beam := effects.pulses[0]
+	assert(float(beam.material.get_shader_parameter("progress")) == 0.0, "A microwave strike must start its fade-in on the first visible frame")
+	beam.age = 0.1
+	effects._sync_microwave_flash()
+	assert(effects.microwave_flash.canvas.visible)
+	beam.age = 0.0
+	var contact := CityDisasterEffects.ground_point(city, beam.tile)
+	for zoom in [0.5, 1.0, 3.0]:
+		app.map_view.zoom_factor = zoom
+		effects._update_material(beam)
+		var anchor: Vector2 = beam.material.get_shader_parameter("microwave_anchor")
+		var extent: Vector2 = beam.material.get_shader_parameter("microwave_extent")
+		assert(beam.sprite.position + anchor == contact, "The microwave contact must retain its world position during zoom")
+		assert(beam.sprite.position.y <= app.map_view.visible_source_rect().position.y and extent.x <= CityDisasterEffects.EXTENT.x)
 	app.preferences.visual_enhancements.disaster_enabled = false
 	effects.process(0.0)
 	assert(effects.pulses.is_empty() and effects.markers.is_empty())
+	assert(not effects.microwave_flash.canvas.visible, "Disabling disaster effects must also clear the full-screen exposure")
 	assert(effects.consume_effects(events, false) == events, "Disabled effects must preserve classic dust")
 	assert(not effects.observe_command(CityDynamicCommand.new()))
 	assert(DocumentState.capture(city.document) == before, "Visual effects wrote city data")

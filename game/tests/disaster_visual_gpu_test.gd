@@ -87,11 +87,99 @@ func _run() -> void:
 	await _check_quake_blur()
 	await _check_storm()
 	await _check_riot_boundary()
+	await _check_microwave()
+	await _check_microwave_flash()
 	await _check_beam_glow()
 	await _check_road_fixture_occlusion()
 	await process_frame
 	print("PASS: GPU disaster effects, tile boundaries, transparent surroundings, foreground occlusion and dust lifetime")
 	quit()
+
+
+func _check_microwave() -> void:
+	var viewport := SubViewport.new()
+	viewport.size = Vector2i(96, 336)
+	viewport.transparent_bg = true
+	viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	root.add_child(viewport)
+	var sprite := ColorRect.new()
+	sprite.size = viewport.size
+	var material := ShaderMaterial.new()
+	material.shader = CityDisasterEffects.SHADER
+	material.set_shader_parameter("effect_kind", CityDisasterEffects.MICROWAVE)
+	material.set_shader_parameter("microwave_extent", Vector2(viewport.size))
+	material.set_shader_parameter("microwave_anchor", Vector2(48, 320))
+	material.set_shader_parameter("effect_time", 0.7)
+	sprite.material = material
+	viewport.add_child(sprite)
+	await RenderingServer.frame_post_draw
+	var original := viewport.get_texture().get_image()
+	var core := original.get_pixel(48, 16)
+	assert(core.a > 0.7 and core.r > 0.7 and core.b > 0.9, "Blue-white microwave core must reach the top of a tall viewport")
+	assert(original.get_pixel(0, 16).a < 0.01 and original.get_pixel(53, 16).a > 0.01, "The beam needs a bounded soft halo")
+	assert(original.get_pixel(60, 320).a > original.get_pixel(48, 332).a + 0.05, "The contact light must be wider along the isometric ground plane")
+	material.set_shader_parameter("environment_enabled", true)
+	material.set_shader_parameter("environment_tint", Vector3(0.1, 0.15, 0.2))
+	material.set_shader_parameter("environment_night", 1.0)
+	await RenderingServer.frame_post_draw
+	assert(viewport.get_texture().get_image().get_data() == original.get_data(), "Microwave emission must remain bright at night")
+	material.set_shader_parameter("effect_time", 0.9)
+	await RenderingServer.frame_post_draw
+	assert(viewport.get_texture().get_image().get_data() != original.get_data(), "Beam pulses and contact sparks must animate")
+	var foreground := Image.create(96, 336, false, Image.FORMAT_RGBA8)
+	foreground.fill_rect(Rect2i(0, 280, 96, 56), Color.WHITE)
+	material.set_shader_parameter("foreground", ImageTexture.create_from_image(foreground))
+	material.set_shader_parameter("has_foreground", true)
+	await RenderingServer.frame_post_draw
+	var covered := viewport.get_texture().get_image()
+	assert(covered.get_pixel(48, 320).a == 0.0 and covered.get_pixel(48, 16).a > 0.7, "Foreground buildings must cover only the intersecting part of the strike")
+	material.set_shader_parameter("progress", 1.0)
+	await RenderingServer.frame_post_draw
+	assert(viewport.get_texture().get_image().is_invisible(), "Completed microwave pulses must fully disappear")
+	material.set_shader_parameter("has_foreground", false)
+	material.set_shader_parameter("progress", 0.0)
+	await RenderingServer.frame_post_draw
+	assert(viewport.get_texture().get_image().is_invisible(), "The strike must fade in instead of flashing at full brightness on its first frame")
+	viewport.queue_free()
+	await process_frame
+
+
+func _check_microwave_flash() -> void:
+	var viewport := SubViewport.new()
+	viewport.size = Vector2i(64, 32)
+	viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	root.add_child(viewport)
+	var background := ColorRect.new()
+	background.size = viewport.size
+	background.color = Color(0.45, 0.35, 0.2)
+	viewport.add_child(background)
+	var interface_patch := ColorRect.new()
+	interface_patch.position = Vector2(2, 2)
+	interface_patch.size = Vector2(10, 6)
+	interface_patch.color = Color(0.6, 0.6, 0.6)
+	viewport.add_child(interface_patch)
+	var flash := CityMicrowaveFlash.new()
+	flash.update(viewport, 0.0)
+	assert(flash.canvas == null)
+	await RenderingServer.frame_post_draw
+	var original := viewport.get_texture().get_image()
+	flash.update(viewport, 1.0)
+	await RenderingServer.frame_post_draw
+	var lit := viewport.get_texture().get_image()
+	assert(lit.get_pixel(30, 16).b > original.get_pixel(30, 16).b + 0.1, "Microwave exposure must brighten and blue-shift the full scene")
+	assert(lit.get_pixel(4, 4).b > lit.get_pixel(4, 4).r, "The exposure must cover the complete viewport, including the interface")
+	viewport.size = Vector2i(96, 48)
+	flash.update(viewport, 1.0)
+	await RenderingServer.frame_post_draw
+	assert(viewport.get_texture().get_image().get_pixel(80, 40).b > 0.1, "Full-screen exposure must follow window resizing")
+	viewport.size = Vector2i(64, 32)
+	assert(CityMicrowaveFlash.envelope(0.0) == 0.0 and CityMicrowaveFlash.envelope(0.1) == 1.0 and CityMicrowaveFlash.envelope(0.35) == 0.0)
+	flash.update(viewport, 0.0)
+	assert(not flash.canvas.visible and flash.copy.copy_mode == BackBufferCopy.COPY_MODE_DISABLED)
+	await RenderingServer.frame_post_draw
+	assert(viewport.get_texture().get_image().get_data() == original.get_data(), "A completed exposure must restore the original pixels and stop copying the screen")
+	viewport.queue_free()
+	await process_frame
 
 
 func _check_riot_boundary() -> void:

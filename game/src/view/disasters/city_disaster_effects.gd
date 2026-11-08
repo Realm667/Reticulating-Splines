@@ -8,6 +8,7 @@ extends RefCounted
 const SHADER := preload("res://src/view/disasters/disaster_effect.gdshader")
 const EXTENT := Vector2i(96, 144)
 const ANCHOR := Vector2(48, 128)
+const MICROWAVE_WIDTH := 48
 const MAX_MARKERS := 512
 const MAX_PULSES := 96
 const FRAME_SECONDS := 1.0 / 15.0
@@ -40,6 +41,7 @@ var _people: ImageTexture
 var _elapsed := 0.0
 var storm_gusts := CityStormGusts.new()
 var riot_boundaries: CityRiotBoundaries
+var microwave_flash := CityMicrowaveFlash.new()
 var _trails: Dictionary[int, Vector2] = {}
 var _shake_remaining := 0.0
 var lighting := CityDisasterLighting.new()
@@ -121,6 +123,7 @@ func process(delta: float) -> void:
 		canvas.show()
 		_sync_lighting(scale_value)
 	_sync_riot_boundaries()
+	_sync_microwave_flash()
 
 
 func _sync_city() -> void:
@@ -154,6 +157,7 @@ func _clear() -> void:
 	_trails.clear()
 	_tornado_sites.clear()
 	lighting.clear()
+	microwave_flash.update(app, 0.0)
 	if is_instance_valid(riot_boundaries):
 		riot_boundaries.hide()
 	if canvas != null:
@@ -396,8 +400,9 @@ func _sync_lighting(scale_value: float) -> void:
 			fade *= 1.0 - smoothstep(0.45, 1.0, visual.age / visual.duration)
 		if visual.kind == EXPLOSION:
 			fade *= 1.0 - float(visual.material.get_shader_parameter("impact_phase")) * 0.55
-		sources.append({"position": visual.sprite.position + ANCHOR, "color": tint, "fade": fade,
-			"heat": 1.0 if visual.kind == FIRE else (0.3 if visual.kind == TOXIC else 0.0), "seed": float(visual.tile.x * 7 + visual.tile.y * 3)})
+		var location := ground_point(app.document_state.city, visual.tile) if visual.kind == MICROWAVE else visual.sprite.position + ANCHOR
+		sources.append({"position": location, "color": tint, "fade": fade,
+			"heat": 1.0 if visual.kind == FIRE else (0.3 if visual.kind == TOXIC else (0.12 if visual.kind == MICROWAVE else 0.0)), "seed": float(visual.tile.x * 7 + visual.tile.y * 3)})
 	lighting.update(sources, canvas.position, scale_value, clock, app.preferences.visual_enhancements.disaster_lights)
 
 
@@ -454,6 +459,14 @@ func _visible(tile: Vector2i, location: Vector2) -> bool:
 
 func _update_material(visual: Visual) -> void:
 	var material := visual.material
+	if visual.kind == MICROWAVE:
+		var location := ground_point(app.document_state.city, visual.tile)
+		var top := floorf(minf(app.map_view.visible_source_rect().position.y - 16.0, location.y - ANCHOR.y))
+		var height := ceilf(location.y - top + EXTENT.y - ANCHOR.y)
+		visual.sprite.position = Vector2(location.x - MICROWAVE_WIDTH / 2, top)
+		visual.sprite.scale = Vector2(float(MICROWAVE_WIDTH) / EXTENT.x, height / EXTENT.y)
+		material.set_shader_parameter("microwave_extent", Vector2(MICROWAVE_WIDTH, height))
+		material.set_shader_parameter("microwave_anchor", Vector2(MICROWAVE_WIDTH / 2, location.y - top))
 	if visual.record >= 0:
 		var track: CityTrafficMotion.Track = app.moving_sprites.traffic_motion.tracks.get(visual.record)
 		var offset := Vector2.ZERO if track == null else Vector2(track.current.x - track.target.x, track.current.y - track.target.y)
@@ -500,11 +513,11 @@ func _pulse(kind: int, tile: Vector2i, location: Vector2, duration: float, delay
 	var visual := _create(kind, tile, location)
 	visual.sprite.scale = size_scale
 	visual.sprite.position = (location - ANCHOR * size_scale).round()
-	_update_material(visual)
 	visual.duration = duration
 	visual.age = -delay
 	visual.user_action = user_action
 	visual.sprite.visible = delay <= 0.0
+	_update_material(visual)
 	pulses.append(visual)
 	return true
 
@@ -606,6 +619,15 @@ func _sync_riot_boundaries() -> void:
 		app.map_view.add_child(riot_boundaries)
 	if is_instance_valid(riot_boundaries):
 		riot_boundaries.show_markers(app.map_view, points)
+
+
+func _sync_microwave_flash() -> void:
+	var amount := 0.0
+	for pulse in pulses:
+		if pulse.kind == MICROWAVE and pulse.sprite.visible:
+			amount = maxf(amount, CityMicrowaveFlash.envelope(pulse.age))
+	var options := app.preferences.visual_enhancements
+	microwave_flash.update(app, amount * options.disaster_strength * options.disaster_lights * 1.5)
 
 
 static func ground_point(city: CityState, tile: Vector2i, altitude := -1) -> Vector2:

@@ -21,6 +21,8 @@ uniform bool has_foreground = false;
 uniform vec2 foreground_scale = vec2(1.0);
 uniform vec2 foreground_offset = vec2(0.0);
 uniform sampler2D people : source_color, filter_nearest, repeat_disable;
+uniform vec2 microwave_extent = vec2(96.0, 144.0);
+uniform vec2 microwave_anchor = vec2(48.0, 128.0);
 
 float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 float noise(vec2 p) {
@@ -33,6 +35,41 @@ vec4 over(vec4 base, vec3 color, float alpha) {
 	float a = clamp(alpha, 0.0, 1.0);
 	float total = a + base.a * (1.0 - a);
 	return vec4((color * a + base.rgb * base.a * (1.0 - a)) / max(total, 0.001), total);
+}
+
+vec4 microwave(vec2 uv, float t) {
+	vec2 p = uv * microwave_extent - microwave_anchor;
+	float pulse = 0.86 + 0.09 * sin(t * 12.0) + 0.05 * sin(t * 21.7);
+	float irregularity = sin(p.y * 0.17 + t * 7.0) * 0.16;
+	float x = abs(p.x - irregularity);
+	float shaft = 1.0 - smoothstep(0.0, 2.0, p.y);
+	float grain = 0.90 + 0.10 * sin(floor(p.y) * 1.7 + t * 15.0);
+	float halo = exp(-x * x / 48.0) * 0.19 * shaft * pulse;
+	vec4 light = vec4(0.025, 0.48, 1.0, halo);
+	light = over(light, vec3(0.08, 0.78, 1.0), exp(-x * x / 6.0) * 0.68 * shaft * pulse);
+	// A narrow pixel-stepped core stays legible inside the softer halo.
+	float core = 1.0 - smoothstep(0.55, 1.15, abs(floor(p.x) + 0.5 - irregularity));
+	light = over(light, vec3(0.85, 0.98, 1.0), core * shaft * grain * pulse);
+	for (int i = 0; i < 3; i++) {
+		float at = -microwave_anchor.y * (float(i) + 1.0) * 0.25 + sin(t * 3.0 + float(i) * 2.4) * 3.0;
+		float node = exp(-pow((p.y - at) / 3.2, 2.0) - p.x * p.x / 8.0);
+		light = over(light, vec3(0.72, 0.96, 1.0), node * 0.8 * pulse);
+	}
+	// The contact light lies in the same 2:1 ground plane as the tile.
+	float ground = dot(p / vec2(16.0, 7.0), p / vec2(16.0, 7.0));
+	light = over(light, vec3(0.02, 0.55, 1.0), exp(-ground * 1.8) * 0.43 * pulse);
+	float contact = dot(p / vec2(4.0, 1.8), p / vec2(4.0, 1.8));
+	light = over(light, vec3(0.70, 0.96, 1.0), exp(-contact) * 0.95 * pulse);
+	for (int i = 0; i < 5; i++) {
+		float id = float(i);
+		float f = fract(t * 2.1 + id * 0.21);
+		float a = id * 2.4;
+		vec2 at = vec2(cos(a) * (3.0 + f * 10.0), sin(a) * (1.5 + f * 4.0) - sin(f * 3.14159) * 4.0);
+		vec2 d = floor(p) + vec2(0.5) - at;
+		float spark = 1.0 - smoothstep(0.4, 1.1, length(d));
+		light = over(light, vec3(0.32, 0.88, 1.0), spark * sin(f * 3.14159) * 0.85);
+	}
+	return light;
 }
 
 vec4 effect_frame(vec2 uv, float sample_time) {
@@ -111,11 +148,8 @@ vec4 effect_frame(vec2 uv, float sample_time) {
 			ink = over(ink, vec3(0.41, 0.37, 0.28), step(length(q - chip), 1.0) * fade * 0.65);
 		}
 	} else if (effect_kind == 6) {
-		// Stepped pixel core and a narrow blue halo fit the original raster artwork.
-		float core = step(abs(q.x), 1.5);
-		float halo = 1.0 - smoothstep(1.5, 5.0, abs(q.x));
-		ink = vec4(mix(vec3(0.025, 0.28, 1.0), vec3(0.22, 0.66, 1.0), core), q.y < 0.0 ? (core * 0.95 + halo * 0.28) : 0.0);
-		ink = over(ink, vec3(0.12, 0.56, 1.0), puff(q, vec2(0.0, -1.0), vec2(9.0, 4.0)) * 0.85);
+		ink = microwave(uv, t);
+		if (progress >= 0.0) { ink.a *= smoothstep(0.0, 0.15, progress); }
 		emission = 1.0;
 	} else if (effect_kind == 13) {
 		// Roof fragments and masonry only follow confirmed structure destruction.
