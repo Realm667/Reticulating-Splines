@@ -171,3 +171,5 @@ start, no existing Maxis Man, and an available moving-object record. A demolishe
 base is not a declined proposal. The tip does not promise guaranteed rescue or
 change the military/disaster rules. Its title, summary and explanation are in all
 six central locale catalogs.
+The player-facing explanation describes a chance of intervention without an
+exact probability or moving-object allocation details.
