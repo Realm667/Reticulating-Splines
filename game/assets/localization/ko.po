@@ -10990,6 +10990,101 @@ msgid "Change in the distance to the leading player, measured by the agreed obje
 msgstr "합의된 목표를 기준으로 측정한 선두 플레이어와의 격차 변화입니다."
 
 #. Reticulating Splines report UI
+msgid "Monthly amounts"
+msgstr "월별 금액"
+
+#. Reticulating Splines report UI
+msgid "National population"
+msgstr "전국 인구"
+
+#. Reticulating Splines report UI
+msgid "Structures"
+msgstr "건물"
+
+#. Reticulating Splines report UI
+msgid "Rate of Growth"
+msgstr "성장률"
+
+#. Reticulating Splines report UI
+msgid "Police Power"
+msgstr "경찰 보호"
+
+#. Reticulating Splines report UI
+msgid "Fire Power"
+msgstr "소방 보호"
+
+#. Reticulating Splines report UI
+msgid "Police Depts"
+msgstr "경찰서"
+
+#. Reticulating Splines report UI
+msgid "Fire Depts"
+msgstr "소방서"
+
+#. Reticulating Splines city save list, AI-assisted translation.
+#: game/src/ui/shared/city_save_list.gd:1
+msgid "Date modified"
+msgstr "수정한 날짜"
+
+#. Reticulating Splines city save list, AI-assisted translation.
+#: game/src/ui/shared/city_save_list.gd:1
+msgid "Multi-region"
+msgstr "다중 지역 도시"
+
+#. Reticulating Splines city save list, AI-assisted translation.
+#: game/src/ui/shared/city_save_list.gd:1
+msgid "Single-player"
+msgstr "싱글 플레이"
+
+#. Reticulating Splines city save list, AI-assisted translation.
+#: game/src/ui/shared/city_save_list.gd:1
+msgid "Unknown"
+msgstr "알 수 없음"
+
+#. Reticulating Splines city save list, AI-assisted translation.
+#: game/src/ui/shared/city_save_list.gd:1
+msgid "Cloud availability refers to the linked save in the current account."
+msgstr "클라우드 사용 가능 여부는 현재 계정에 연결된 저장 파일을 기준으로 합니다."
+
+#. Reticulating Splines report UI
+msgid "Give Maxis Man a chance to help"
+msgstr "맥시스맨이 도울 기회를 주세요"
+
+#. Reticulating Splines report UI
+msgid ""
+"Decline the military base proposal if you want Maxis Man to have a chance to"
+" intervene when a disaster starts. His help is not guaranteed."
+msgstr "재난이 시작될 때 맥시스맨이 개입할 기회를 주려면 군사 기지 제안을 거절하세요. 도움을 반드시 받을 수 있는 것은 아닙니다."
+
+#. Reticulating Splines report UI
+msgid ""
+"After a declined or unsuccessful military base proposal, there is a chance "
+"that Maxis Man will intervene when a disaster starts. Demolishing an "
+"existing base does not replace declining the proposal."
+msgstr ""
+"군사 기지 제안을 거절했거나 기지 건설이 실패한 경우, 재난이 시작될 때 맥시스맨이 개입할 가능성이 있습니다. 기존 기지를 철거하는 것은"
+" 제안 거절을 대신하지 못합니다."
+
+#. Reticulating Splines report UI
+msgid "City celebration"
+msgstr "도시 축제"
+
+#. Reticulating Splines report UI
+msgid "Emergency assistance"
+msgstr "긴급 지원"
+
+#. Reticulating Splines report UI
+msgid "Your citizens have organized a spontaneous parade in your honor."
+msgstr "시민들이 시장님을 기리는 자발적인 행진을 마련했습니다."
+
+#. Reticulating Splines report UI
+msgid ""
+"The National Guard has been deployed because your city has no police or "
+"firefighters."
+msgstr "도시에 경찰과 소방관이 없어 주방위군이 파견되었습니다."
+
+
+#. Reticulating Splines report UI
 msgid "Transit"
 msgstr "교통"
 
@@ -11052,97 +11147,3 @@ msgstr "얕은 물"
 #. Reticulating Splines report UI
 msgid "Deep water"
 msgstr "깊은 물"
-
-#. Reticulating Splines report UI
-msgid "Give Maxis Man a chance to help"
-msgstr "맥시스맨이 도울 기회를 주세요"
-
-#. Reticulating Splines report UI
-msgid ""
-"Decline the military base proposal if you want Maxis Man to have a chance to"
-" intervene when a disaster starts. His help is not guaranteed."
-msgstr "재난이 시작될 때 맥시스맨이 개입할 기회를 주려면 군사 기지 제안을 거절하세요. 도움을 반드시 받을 수 있는 것은 아닙니다."
-
-#. Reticulating Splines report UI
-msgid ""
-"After a declined or unsuccessful military base proposal, there is a chance "
-"that Maxis Man will intervene when a disaster starts. Demolishing an "
-"existing base does not replace declining the proposal."
-msgstr ""
-"군사 기지 제안을 거절했거나 기지 건설이 실패한 경우, 재난이 시작될 때 맥시스맨이 개입할 가능성이 있습니다. 기존 기지를 철거하는 것은"
-" 제안 거절을 대신하지 못합니다."
-
-#. Reticulating Splines report UI
-msgid "City celebration"
-msgstr "도시 축제"
-
-#. Reticulating Splines report UI
-msgid "Emergency assistance"
-msgstr "긴급 지원"
-
-#. Reticulating Splines report UI
-msgid "Your citizens have organized a spontaneous parade in your honor."
-msgstr "시민들이 시장님을 기리는 자발적인 행진을 마련했습니다."
-
-#. Reticulating Splines report UI
-msgid ""
-"The National Guard has been deployed because your city has no police or "
-"firefighters."
-msgstr "도시에 경찰과 소방관이 없어 주방위군이 파견되었습니다."
-
-#. Reticulating Splines report UI
-msgid "Monthly amounts"
-msgstr "월별 금액"
-
-#. Reticulating Splines report UI
-msgid "National population"
-msgstr "전국 인구"
-
-#. Reticulating Splines report UI
-msgid "Structures"
-msgstr "건물"
-
-#. Reticulating Splines report UI
-msgid "Rate of Growth"
-msgstr "성장률"
-
-#. Reticulating Splines report UI
-msgid "Police Power"
-msgstr "경찰 보호"
-
-#. Reticulating Splines report UI
-msgid "Fire Power"
-msgstr "소방 보호"
-
-#. Reticulating Splines report UI
-msgid "Police Depts"
-msgstr "경찰서"
-
-#. Reticulating Splines report UI
-msgid "Fire Depts"
-msgstr "소방서"
-
-#. Reticulating Splines city save list, AI-assisted translation.
-#: game/src/ui/shared/city_save_list.gd:1
-msgid "Date modified"
-msgstr "수정한 날짜"
-
-#. Reticulating Splines city save list, AI-assisted translation.
-#: game/src/ui/shared/city_save_list.gd:1
-msgid "Multi-region"
-msgstr "다중 지역 도시"
-
-#. Reticulating Splines city save list, AI-assisted translation.
-#: game/src/ui/shared/city_save_list.gd:1
-msgid "Single-player"
-msgstr "싱글 플레이"
-
-#. Reticulating Splines city save list, AI-assisted translation.
-#: game/src/ui/shared/city_save_list.gd:1
-msgid "Unknown"
-msgstr "알 수 없음"
-
-#. Reticulating Splines city save list, AI-assisted translation.
-#: game/src/ui/shared/city_save_list.gd:1
-msgid "Cloud availability refers to the linked save in the current account."
-msgstr "클라우드 사용 가능 여부는 현재 계정에 연결된 저장 파일을 기준으로 합니다."

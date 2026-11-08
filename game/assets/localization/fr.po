@@ -41649,6 +41649,109 @@ msgid "Change in the distance to the leading player, measured by the agreed obje
 msgstr "Variation de l’écart avec le joueur en tête, selon l’objectif convenu."
 
 #. Reticulating Splines report UI
+msgid "Monthly amounts"
+msgstr "Montants mensuels"
+
+#. Reticulating Splines report UI
+msgid "National population"
+msgstr "Population nationale"
+
+#. Reticulating Splines report UI
+msgid "Structures"
+msgstr "Bâtiments"
+
+#. Reticulating Splines report UI
+msgid "Rate of Growth"
+msgstr "Taux de croissance"
+
+#. Reticulating Splines report UI
+msgid "Police Power"
+msgstr "Couverture policière"
+
+#. Reticulating Splines report UI
+msgid "Fire Power"
+msgstr "Couverture incendie"
+
+#. Reticulating Splines report UI
+msgid "Police Depts"
+msgstr "Commissariats"
+
+#. Reticulating Splines report UI
+msgid "Fire Depts"
+msgstr "Casernes de pompiers"
+
+#. Reticulating Splines city save list, AI-assisted translation.
+#: game/src/ui/shared/city_save_list.gd:1
+msgid "Date modified"
+msgstr "Date de modification"
+
+#. Reticulating Splines city save list, AI-assisted translation.
+#: game/src/ui/shared/city_save_list.gd:1
+msgid "Multi-region"
+msgstr "Ville multirégion"
+
+#. Reticulating Splines city save list, AI-assisted translation.
+#: game/src/ui/shared/city_save_list.gd:1
+msgid "Single-player"
+msgstr "Solo"
+
+#. Reticulating Splines city save list, AI-assisted translation.
+#: game/src/ui/shared/city_save_list.gd:1
+msgid "Unknown"
+msgstr "Inconnu"
+
+#. Reticulating Splines city save list, AI-assisted translation.
+#: game/src/ui/shared/city_save_list.gd:1
+msgid "Cloud availability refers to the linked save in the current account."
+msgstr ""
+"La disponibilité dans le cloud concerne la sauvegarde associée au compte "
+"actuel."
+
+#. Reticulating Splines report UI
+msgid "Give Maxis Man a chance to help"
+msgstr "Donnez à Maxis Man une chance de vous aider"
+
+#. Reticulating Splines report UI
+msgid ""
+"Decline the military base proposal if you want Maxis Man to have a chance to"
+" intervene when a disaster starts. His help is not guaranteed."
+msgstr ""
+"Refusez la proposition de base militaire pour que Maxis Man ait une chance "
+"d’intervenir au début d’une catastrophe. Son aide n’est pas garantie."
+
+#. Reticulating Splines report UI
+msgid ""
+"After a declined or unsuccessful military base proposal, there is a chance "
+"that Maxis Man will intervene when a disaster starts. Demolishing an "
+"existing base does not replace declining the proposal."
+msgstr ""
+"Après une proposition de base militaire refusée ou échouée, il existe une "
+"chance que Maxis Man intervienne au début d’une catastrophe. Démolir une "
+"base existante ne remplace pas le refus de la proposition."
+
+#. Reticulating Splines report UI
+msgid "City celebration"
+msgstr "Fête de la ville"
+
+#. Reticulating Splines report UI
+msgid "Emergency assistance"
+msgstr "Aide d’urgence"
+
+#. Reticulating Splines report UI
+msgid "Your citizens have organized a spontaneous parade in your honor."
+msgstr ""
+"Les habitants de votre ville ont organisé un défilé spontané en votre "
+"honneur."
+
+#. Reticulating Splines report UI
+msgid ""
+"The National Guard has been deployed because your city has no police or "
+"firefighters."
+msgstr ""
+"La Garde nationale a été déployée car votre ville n’a ni police ni pompiers."
+
+
+#. Reticulating Splines report UI
 msgid "Transit"
 msgstr "Transports"
 
@@ -41711,105 +41814,3 @@ msgstr "Eau peu profonde"
 #. Reticulating Splines report UI
 msgid "Deep water"
 msgstr "Eau profonde"
-
-#. Reticulating Splines report UI
-msgid "Give Maxis Man a chance to help"
-msgstr "Donnez à Maxis Man une chance de vous aider"
-
-#. Reticulating Splines report UI
-msgid ""
-"Decline the military base proposal if you want Maxis Man to have a chance to"
-" intervene when a disaster starts. His help is not guaranteed."
-msgstr ""
-"Refusez la proposition de base militaire pour que Maxis Man ait une chance "
-"d’intervenir au début d’une catastrophe. Son aide n’est pas garantie."
-
-#. Reticulating Splines report UI
-msgid ""
-"After a declined or unsuccessful military base proposal, there is a chance "
-"that Maxis Man will intervene when a disaster starts. Demolishing an "
-"existing base does not replace declining the proposal."
-msgstr ""
-"Après une proposition de base militaire refusée ou échouée, il existe une "
-"chance que Maxis Man intervienne au début d’une catastrophe. Démolir une "
-"base existante ne remplace pas le refus de la proposition."
-
-#. Reticulating Splines report UI
-msgid "City celebration"
-msgstr "Fête de la ville"
-
-#. Reticulating Splines report UI
-msgid "Emergency assistance"
-msgstr "Aide d’urgence"
-
-#. Reticulating Splines report UI
-msgid "Your citizens have organized a spontaneous parade in your honor."
-msgstr ""
-"Les habitants de votre ville ont organisé un défilé spontané en votre "
-"honneur."
-
-#. Reticulating Splines report UI
-msgid ""
-"The National Guard has been deployed because your city has no police or "
-"firefighters."
-msgstr ""
-"La Garde nationale a été déployée car votre ville n’a ni police ni pompiers."
-
-#. Reticulating Splines report UI
-msgid "Monthly amounts"
-msgstr "Montants mensuels"
-
-#. Reticulating Splines report UI
-msgid "National population"
-msgstr "Population nationale"
-
-#. Reticulating Splines report UI
-msgid "Structures"
-msgstr "Bâtiments"
-
-#. Reticulating Splines report UI
-msgid "Rate of Growth"
-msgstr "Taux de croissance"
-
-#. Reticulating Splines report UI
-msgid "Police Power"
-msgstr "Couverture policière"
-
-#. Reticulating Splines report UI
-msgid "Fire Power"
-msgstr "Couverture incendie"
-
-#. Reticulating Splines report UI
-msgid "Police Depts"
-msgstr "Commissariats"
-
-#. Reticulating Splines report UI
-msgid "Fire Depts"
-msgstr "Casernes de pompiers"
-
-#. Reticulating Splines city save list, AI-assisted translation.
-#: game/src/ui/shared/city_save_list.gd:1
-msgid "Date modified"
-msgstr "Date de modification"
-
-#. Reticulating Splines city save list, AI-assisted translation.
-#: game/src/ui/shared/city_save_list.gd:1
-msgid "Multi-region"
-msgstr "Ville multirégion"
-
-#. Reticulating Splines city save list, AI-assisted translation.
-#: game/src/ui/shared/city_save_list.gd:1
-msgid "Single-player"
-msgstr "Solo"
-
-#. Reticulating Splines city save list, AI-assisted translation.
-#: game/src/ui/shared/city_save_list.gd:1
-msgid "Unknown"
-msgstr "Inconnu"
-
-#. Reticulating Splines city save list, AI-assisted translation.
-#: game/src/ui/shared/city_save_list.gd:1
-msgid "Cloud availability refers to the linked save in the current account."
-msgstr ""
-"La disponibilité dans le cloud concerne la sauvegarde associée au compte "
-"actuel."
