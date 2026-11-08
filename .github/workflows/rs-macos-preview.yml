@@ -12,9 +12,18 @@ on:
         description: Internal version, such as 0.3.0-rs.9-dev.8
         required: true
         type: string
+      reuse_native_run:
+        description: Optional successful preview run with identical native build inputs
+        required: false
+        type: string
+      reuse_native_sha256:
+        description: Independently verified SHA256 of that run's DMG
+        required: false
+        type: string
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
   build:
@@ -25,6 +34,7 @@ jobs:
         with:
           ref: ${{ inputs.source_commit }}
           path: source
+          fetch-depth: 0
           persist-credentials: false
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -37,11 +47,21 @@ jobs:
         with:
           python-version: '3.13'
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6
+        if: inputs.reuse_native_run == ''
         with:
           workspaces: source/native
       - name: Build current universal native libraries
+        if: inputs.reuse_native_run == ''
         working-directory: source
         run: python tools/build_native.py --package
+      - name: Download previous data-free native package
+        if: inputs.reuse_native_run != ''
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: rs-macos-preview-packages
+          path: native-reuse
+          run-id: ${{ inputs.reuse_native_run }}
+          github-token: ${{ github.token }}
       - name: Install pinned Godot and export templates
         working-directory: source
         run: bash tools/setup_godot_ci.sh
@@ -53,7 +73,14 @@ jobs:
         env:
           SOURCE_COMMIT: ${{ inputs.source_commit }}
           PREVIEW_VERSION: ${{ inputs.version }}
-        run: python ../control/tools/build_macos_preview.py --source . --commit "$SOURCE_COMMIT" --version "$PREVIEW_VERSION" --output local/packages
+          REUSE_NATIVE_RUN: ${{ inputs.reuse_native_run }}
+          REUSE_NATIVE_SHA256: ${{ inputs.reuse_native_sha256 }}
+        run: |
+          extra=()
+          if [ -n "$REUSE_NATIVE_RUN" ]; then
+            extra=(--reuse-native-packages ../native-reuse --reuse-native-sha256 "$REUSE_NATIVE_SHA256")
+          fi
+          python ../control/tools/build_macos_preview.py --source . --commit "$SOURCE_COMMIT" --version "$PREVIEW_VERSION" --output local/packages "${extra[@]}"
       - name: Save data-free Mac packages
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
