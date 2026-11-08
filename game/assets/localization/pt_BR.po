@@ -32921,3 +32921,29 @@ msgstr "Delegacias"
 #. Reticulating Splines report UI
 msgid "Fire Depts"
 msgstr "Quartéis de bombeiros"
+
+#. Reticulating Splines city save list, AI-assisted translation.
+#: game/src/ui/shared/city_save_list.gd:1
+msgid "Date modified"
+msgstr "Data de modificação"
+
+#. Reticulating Splines city save list, AI-assisted translation.
+#: game/src/ui/shared/city_save_list.gd:1
+msgid "Multi-region"
+msgstr "Cidade multirregião"
+
+#. Reticulating Splines city save list, AI-assisted translation.
+#: game/src/ui/shared/city_save_list.gd:1
+msgid "Single-player"
+msgstr "Um jogador"
+
+#. Reticulating Splines city save list, AI-assisted translation.
+#: game/src/ui/shared/city_save_list.gd:1
+msgid "Unknown"
+msgstr "Desconhecido"
+
+#. Reticulating Splines city save list, AI-assisted translation.
+#: game/src/ui/shared/city_save_list.gd:1
+msgid "Cloud availability refers to the linked save in the current account."
+msgstr ""
+"A disponibilidade na nuvem refere-se ao jogo salvo vinculado à conta atual."

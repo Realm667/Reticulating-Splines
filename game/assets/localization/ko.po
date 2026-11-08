@@ -11121,3 +11121,28 @@ msgstr "경찰서"
 #. Reticulating Splines report UI
 msgid "Fire Depts"
 msgstr "소방서"
+
+#. Reticulating Splines city save list, AI-assisted translation.
+#: game/src/ui/shared/city_save_list.gd:1
+msgid "Date modified"
+msgstr "수정한 날짜"
+
+#. Reticulating Splines city save list, AI-assisted translation.
+#: game/src/ui/shared/city_save_list.gd:1
+msgid "Multi-region"
+msgstr "다중 지역 도시"
+
+#. Reticulating Splines city save list, AI-assisted translation.
+#: game/src/ui/shared/city_save_list.gd:1
+msgid "Single-player"
+msgstr "싱글 플레이"
+
+#. Reticulating Splines city save list, AI-assisted translation.
+#: game/src/ui/shared/city_save_list.gd:1
+msgid "Unknown"
+msgstr "알 수 없음"
+
+#. Reticulating Splines city save list, AI-assisted translation.
+#: game/src/ui/shared/city_save_list.gd:1
+msgid "Cloud availability refers to the linked save in the current account."
+msgstr "클라우드 사용 가능 여부는 현재 계정에 연결된 저장 파일을 기준으로 합니다."

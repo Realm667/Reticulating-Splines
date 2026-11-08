@@ -218,6 +218,20 @@ func is_enabled(path: String) -> bool:
 	return queue != null and queue.state.bindings.get(_local_path(path), {}).get("enabled", false)
 
 
+## -1 means the account's current availability cannot be established locally.
+func local_availability(path: String) -> int:
+	if account.is_empty() or queue == null:
+		return -1
+	var binding: Dictionary = queue.state.bindings.get(_local_path(path), {})
+	var save_id := str(binding.get("save_id", ""))
+	if status == "connected":
+		for save: Dictionary in saves:
+			if str(save.get("id", "")) == save_id and save.get("deleted_at") == null:
+				return 1
+		return 0
+	return 1 if not save_id.is_empty() and not str(binding.get("revision", "")).is_empty() else -1
+
+
 func saved(path: String, bytes: PackedByteArray, metadata: Dictionary = {}) -> Dictionary:
 	path = _local_path(path)
 	if not is_enabled(path):

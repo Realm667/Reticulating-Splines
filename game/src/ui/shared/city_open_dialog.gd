@@ -19,12 +19,16 @@ var _body: BoxContainer
 var sources: TabBar
 var cloud_panel: CloudPanel
 var _local_controls: Array[Control] = []
+var save_list: CitySaveList
 
 
 func _ready() -> void:
 	use_native_dialog = false
 	mode_overrides_title = false
 	title = "Open City"
+	display_mode = FileDialog.DISPLAY_LIST
+	save_list = CitySaveList.new()
+	save_list.configure(self)
 	var navigation: HSplitContainer
 	for child in get_vbox().get_children():
 		if child is HSplitContainer:
@@ -113,6 +117,8 @@ func _build_sources() -> void:
 
 func bind_cloud(service: Node) -> void:
 	cloud_panel.bind(service)
+	if save_list != null:
+		save_list.bind_cloud(service)
 
 
 func select_source(index: int) -> void:

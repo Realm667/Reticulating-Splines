@@ -188,6 +188,7 @@ func _run() -> void:
 	dialog.queue_free()
 	memory.queue_free()
 	await process_frame
+	await _check_save_list()
 	print("PASS: bounded city previews, optional SC2X thumbnail, unchanged original saves, cache invalidation and cancellation")
 	quit()
 
@@ -262,3 +263,93 @@ func _write_header_archive(path: String, members: Dictionary) -> void:
 		assert(zip.write_file(members[name]) == OK)
 		assert(zip.close_file() == OK)
 	assert(zip.close() == OK)
+
+
+func _check_save_list() -> void:
+	var directory := OS.get_temp_dir().path_join("city-save-list-%d" % OS.get_process_id())
+	assert(DirAccess.make_dir_recursive_absolute(directory.path_join("nested")) == OK)
+	var paths: Array[String] = []
+	for kind in ["city", "region", "multiplayer", "legacy"]:
+		var document: Sc2File = EmptyCityTemplate.create(128) if kind == "legacy" else Sc2xDocument.create_empty(32, kind).document
+		if kind == "region":
+			document.sc2x_extra_entries[RegionCampaign.ENTRY] = "{}".to_utf8_buffer()
+		if kind == "multiplayer":
+			document.sc2x_extra_entries[CityPreviewInfo.MULTIPLAYER_ENTRY] = JSON.stringify({
+				"version": 1, "members": {"host": {}}, "shared": {"mode": "region"},
+			}).to_utf8_buffer()
+		var path := directory.path_join(kind + ".sc2x")
+		assert(CityFileStore.write_verified(path, document.serialize().data).ok)
+		paths.append(path)
+	var cloud := CloudSync.new()
+	root.add_child(cloud)
+	cloud.account = {"id": "test"}
+	cloud.queue = CloudQueue.new()
+	cloud.status = "connected"
+	cloud.saves = [{"id": "cloud-city", "deleted_at": null}]
+	cloud.queue.state.bindings[paths[0]] = {"enabled": true, "save_id": "cloud-city", "revision": "1"}
+	assert(cloud.local_availability(paths[0]) == 1 and cloud.local_availability(paths[1]) == 0)
+	cloud.saves[0].deleted_at = "2026-11-08"
+	assert(cloud.local_availability(paths[0]) == 0)
+	cloud.saves[0].deleted_at = null
+	cloud.status = "offline"
+	assert(cloud.local_availability(paths[0]) == 1 and cloud.local_availability(paths[1]) == -1)
+	cloud.status = "connected"
+	var dialog := FileDialogFactory.city_open() as CityOpenDialog
+	root.gui_embed_subwindows = true
+	root.add_child(dialog)
+	dialog.bind_cloud(cloud)
+	assert(dialog.display_mode == FileDialog.DISPLAY_LIST and dialog.save_list.native_list != null)
+	dialog.current_dir = directory
+	dialog.popup_centered(Vector2i(1200, 720))
+	var list := dialog.save_list
+	var deadline := Time.get_ticks_msec() + 10000
+	while (list._rows.size() < 5 or list._task >= 0 or not list._rows.any(func(row: Dictionary) -> bool: return row.has("region"))) and Time.get_ticks_msec() < deadline:
+		list._process(0.2)
+		await process_frame
+	assert(list._task < 0 and list._rows.size() >= 5, "Detailed list metadata did not finish")
+	for row in list._rows:
+		if row.directory:
+			continue
+		assert(row.modified > 0)
+		assert(row.multiplayer == (row.name == "multiplayer.sc2x"))
+		assert(row.region == (row.name in ["region.sc2x", "multiplayer.sc2x"]))
+	var first := list.get_root().get_first_child()
+	assert(DirAccess.dir_exists_absolute(directory.path_join(first.get_text(0))), "Folders stay above files")
+	var item := first
+	while item != null and item.get_text(0) != "city.sc2x":
+		item = item.get_next()
+	assert(item != null and item.get_text(4) == list.tr("Yes"))
+	item.select(0)
+	list._selected()
+	assert(dialog.current_file == "city.sc2x", "The detailed list must select the native file, not a sorted row index")
+	list._sort(1, MOUSE_BUTTON_LEFT)
+	assert(dialog.current_file == "city.sc2x")
+	dialog.display_mode = FileDialog.DISPLAY_THUMBNAILS
+	list._process(0.2)
+	assert(not list.visible and list.native_list.visible, "Thumbnail browsing remains available")
+	dialog.display_mode = FileDialog.DISPLAY_LIST
+	list._process(0.2)
+	var folder := list.get_root().get_first_child()
+	while folder != null and folder.get_text(0) != "nested":
+		folder = folder.get_next()
+	assert(folder != null)
+	folder.select(0)
+	list._selected()
+	list._activated()
+	assert(dialog.current_dir.trim_suffix("/") == directory.path_join("nested"), "Double-click must retain native folder navigation")
+	cloud.account = {}
+	cloud.changed.emit()
+	assert(cloud.local_availability(paths[0]) == -1, "Signing out clears account-specific availability")
+	for locale in ["de", "es", "fr", "it", "ko", "pt_BR", "en"]:
+		AppLocalization.select(locale)
+		list._translate()
+		assert(list.get_column_title(1) == list.tr("Date modified"))
+	dialog.hide()
+	dialog.queue_free()
+	cloud.queue_free()
+	await process_frame
+	for path in paths:
+		DirAccess.remove_absolute(path)
+	DirAccess.remove_absolute(directory.path_join("nested"))
+	DirAccess.remove_absolute(directory)
+	print("PASS: detailed city file list, legacy saves, region/multiplayer metadata, native selection, dates and account-scoped cloud availability")

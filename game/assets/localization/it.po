@@ -41231,3 +41231,30 @@ msgstr "Stazioni di polizia"
 #. Reticulating Splines report UI
 msgid "Fire Depts"
 msgstr "Caserme dei pompieri"
+
+#. Reticulating Splines city save list, AI-assisted translation.
+#: game/src/ui/shared/city_save_list.gd:1
+msgid "Date modified"
+msgstr "Data di modifica"
+
+#. Reticulating Splines city save list, AI-assisted translation.
+#: game/src/ui/shared/city_save_list.gd:1
+msgid "Multi-region"
+msgstr "Città multiregione"
+
+#. Reticulating Splines city save list, AI-assisted translation.
+#: game/src/ui/shared/city_save_list.gd:1
+msgid "Single-player"
+msgstr "Giocatore singolo"
+
+#. Reticulating Splines city save list, AI-assisted translation.
+#: game/src/ui/shared/city_save_list.gd:1
+msgid "Unknown"
+msgstr "Sconosciuto"
+
+#. Reticulating Splines city save list, AI-assisted translation.
+#: game/src/ui/shared/city_save_list.gd:1
+msgid "Cloud availability refers to the linked save in the current account."
+msgstr ""
+"La disponibilità nel cloud si riferisce al salvataggio collegato all’account"
+" attuale."

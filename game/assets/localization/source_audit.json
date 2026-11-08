@@ -18,6 +18,7 @@
     "game/src/ui/startup/startup_loading.gd",
     "game/src/ui/settings/controls_binding_list.gd",
     "game/src/ui/shared/city_open_dialog.gd",
+    "game/src/ui/shared/city_save_list.gd",
     "game/src/ui/shared/city_save_dialog.gd",
     "game/src/ui/shared/busy_overlay.gd",
     "game/src/formats/city_save_backup.gd",
@@ -30,6 +31,7 @@
     "game/src/audio/sound_font_catalog.gd"
   ],
   "non_display_literals": {
+    "ItemList": "Godot node class used to locate the native file browser control.",
     "AcceptDialog": "Godot theme class used to measure the file dialog's content margins.",
     "FloatingPanel": "Internal Godot theme variation.",
     "Page": "Internal workspace node path.",
