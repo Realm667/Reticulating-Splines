@@ -33,8 +33,9 @@ func _run() -> void:
 	assert(city.set_building_id(road.x, road.y, BuildingTileIds.ROAD_STRAIGHT_1))
 	map.zoom_factor = 1.0
 	map.source_center = CityAmbience._tile_position(city, falls)
+	app.preferences.city_ambience_enabled = false
 	mix.process(0.4, false)
-	assert(mix.root == null, "Existing installations opt into the additional audio")
+	assert(mix.root == null, "Disabled ambience must stay silent")
 	var snapshot := DocumentState.capture(city.document)
 	var engine := app.simulation_state.simulation_engine
 	var rng := [engine.random.state, engine.lfsr_random.state, engine.game_random.state]
@@ -106,7 +107,14 @@ func _run() -> void:
 	assert([engine.random.state, engine.lfsr_random.state, engine.game_random.state] == rng)
 
 	var path := "user://city-ambience-test.cfg"
+	assert(Settings.load_values(path).city_ambience_enabled, "New profiles enable ambience")
+	assert(AppPreferences.new().city_ambience_enabled)
+	assert(Settings.save_values(0.8, 0.8, false, path) == OK)
+	assert(Settings.load_values(path).city_ambience_enabled, "Older profiles without an ambience key enable it")
 	var options := Settings.SaveOptions.new()
+	options.city_ambience_enabled = false
+	assert(Settings.save_values(0.8, 0.8, false, path, options) == OK)
+	assert(not Settings.load_values(path).city_ambience_enabled, "A saved off choice takes precedence")
 	options.city_ambience_enabled = true
 	options.city_ambience_volume = 0.23
 	assert(Settings.save_values(0.8, 0.8, false, path, options) == OK)

@@ -308,6 +308,7 @@ layout_mode = 2
 unique_name_in_owner = true
 layout_mode = 2
 custom_minimum_size = Vector2(0, 32)
+button_pressed = true
 text = "Spatial city ambience"
 tooltip_text = "Hear nearby traffic, people and water. Zoom out to hear wind and distant city sounds."
 
@@ -320,7 +321,6 @@ unique_name_in_owner = true
 custom_minimum_size = Vector2(250, 32)
 layout_mode = 2
 value = 55.0
-editable = false
 
 [node name="ShuffleSpacer" type="Label" parent="Tabs/Audio/Content/PackFields"]
 custom_minimum_size = Vector2(150, 32)
