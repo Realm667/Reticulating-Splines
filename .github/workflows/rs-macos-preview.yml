@@ -1,0 +1,94 @@
+name: Reticulating Splines macOS preview
+run-name: macOS preview ${{ inputs.version }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_commit:
+        description: Immutable source commit for the preview
+        required: true
+        type: string
+      version:
+        description: Internal version, such as 0.3.0-rs.9-dev.8
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 70
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ inputs.source_commit }}
+          path: source
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          path: control
+          sparse-checkout: tools/build_macos_preview.py
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: '3.13'
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6
+        with:
+          workspaces: source/native
+      - name: Build current universal native libraries
+        working-directory: source
+        run: python tools/build_native.py --package
+      - name: Install pinned Godot and export templates
+        working-directory: source
+        run: bash tools/setup_godot_ci.sh
+      - name: Check existing release helpers
+        working-directory: source
+        run: python -m unittest discover -s tools -p test_rs_release.py
+      - name: Build internal Universal preview
+        working-directory: source
+        env:
+          SOURCE_COMMIT: ${{ inputs.source_commit }}
+          PREVIEW_VERSION: ${{ inputs.version }}
+        run: python ../control/tools/build_macos_preview.py --source . --commit "$SOURCE_COMMIT" --version "$PREVIEW_VERSION" --output local/packages
+      - name: Save data-free Mac packages
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: rs-macos-preview-packages
+          path: source/local/packages/*
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0
+
+  smoke:
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [macos-15, macos-15-intel]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ inputs.source_commit }}
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: '3.13'
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: rs-macos-preview-packages
+          path: local/packages
+      - name: Start actual Mac package with isolated profile and Dummy audio
+        run: python tools/smoke_rs_package.py --packages local/packages --platform macos-universal --output local/smoke
+      - name: Save startup and inventory evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: rs-macos-preview-smoke-${{ matrix.runner }}
+          path: local/smoke/*
+          retention-days: 7
