@@ -54,7 +54,7 @@ def install_reused_native(source, dmg):
             hashes = {}
             for name, module in entries:
                 library = frameworks / name
-                subprocess.run(['lipo', '-verify_arch', 'x86_64', 'arm64', str(library)], check=True)
+                subprocess.run(['lipo', str(library), '-verify_arch', 'x86_64', 'arm64'], check=True)
                 target = source / f'game/bin/opensc2k_{module}/macos' / name
                 target.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(library, target)
