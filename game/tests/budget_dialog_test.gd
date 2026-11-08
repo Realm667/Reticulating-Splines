@@ -59,6 +59,7 @@ func _run() -> void:
 	before = city.document.serialize().data
 	dialog.open_budget(values, false, false)
 	await process_frame
+	_test_history_chart(dialog)
 	assert(dialog.funding_values() == values)
 	assert(sounds.is_empty(), "Opening the budget played a tax-change sound")
 	dialog.size = Vector2i(940, 660)
@@ -151,6 +152,38 @@ func _run() -> void:
 	print("PASS: Budget reports, mixed rates, group edits, history, bond controls, annual state and advisors")
 	await _check_window_stability()
 	quit()
+
+
+func _test_history_chart(dialog: BudgetDialog) -> void:
+	var saved := city.document.serialize().data
+	for group in BudgetReport.GROUPS.size():
+		dialog.history_category.select(group)
+		dialog.history_chart_mode.select(0)
+		dialog._refresh_history()
+		var chart := dialog.history_chart
+		assert(chart.series.size() == BudgetReport.GROUPS[group].size())
+		for index in chart.series.size():
+			assert(chart.series[index] == dialog.report.history[BudgetReport.GROUPS[group][index]])
+		assert(chart.recorded == dialog.report.actual_months)
+		dialog.history_chart_mode.select(1)
+		dialog._refresh_history()
+		var total := 0
+		for month in 12:
+			for id: int in BudgetReport.GROUPS[group]:
+				total += dialog.report.history[id][month]
+			assert(chart.series[0][month] == total, "The plotted running total must match each table row")
+	var large := BudgetReport.new()
+	large.actual_months = 3
+	for id in 16:
+		large.history.append(PackedInt64Array([3000000000, -4000000000, 5000000000, 0, 0, 0, 0, 0, 0, 0, 0, 0]))
+	dialog.history_chart.show_report(large, 0, true)
+	assert(dialog.history_chart.series[0][2] == 12000000000, "Chart totals must retain 64-bit signed amounts")
+	assert(dialog.history_chart.month_detail(2).contains(tr("Recorded")))
+	assert(dialog.history_chart.month_detail(3).contains(tr("Projected")))
+	assert(city.document.serialize().data == saved, "Chart/category switches must never edit the city")
+	dialog.history_category.select(0)
+	dialog.history_chart_mode.select(0)
+	dialog._refresh_history()
 
 
 func _set_budget(id: int, field: int, value: int) -> void:

@@ -36,7 +36,7 @@ func toggle_city(
 
 	map_control.set_city(value, palette)
 	map_control.refresh_viewport(viewport_outline)
-	popup_centered(Vector2i(420, 530))
+	popup_centered(Vector2i(420, 530) if AppUiTheme.is_classic() else Vector2i(600, 650))
 
 
 func refresh_city(

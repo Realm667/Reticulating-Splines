@@ -128,7 +128,7 @@ func _draw() -> void:
 			))
 
 		if points.size() >= 2:
-			draw_polyline(points, _series_color(series), 1.0, false)
+			draw_polyline(points, series_color(series), 1.0, false)
 
 		endpoints.append(Endpoint.new(
 			series, points[points.size() - 1], history[history.size() - 1]
@@ -331,7 +331,7 @@ func _draw_endpoint_labels(
 		var point: Vector2 = endpoint.point
 		var label_y := label_positions[index]
 		var series: int = endpoint.series
-		var color: Color = _series_color(series)
+		var color: Color = series_color(series)
 		var label := "%s %s" % [
 			SERIES_MARKERS[series], format_value(series, int(endpoint.value)),
 		]
@@ -368,7 +368,7 @@ func _value_y(plot: Rect2, value: int, maximum: int) -> float:
 	return plot.end.y - plot.size.y * fraction
 
 
-func _series_color(series: int) -> Color:
+func series_color(series: int) -> Color:
 	var original: Color = SERIES_COLORS[series]
 	return original.lerp(Color.WHITE, 0.5) if AppUiTheme.selected == "dark" else original
 

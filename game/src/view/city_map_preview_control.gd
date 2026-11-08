@@ -14,6 +14,7 @@ var viewport_outline := PackedVector2Array()
 var center_marker := Vector2i(-1, -1)
 var center_marker_map_size := MAP_SIZE
 var center_marker_color := Color.BLACK
+var modern := false
 
 
 func _ready() -> void:
@@ -50,8 +51,16 @@ func _draw() -> void:
 		local.append(target.position + point / float(map_edge) * target.size)
 
 	local.append(local[0])
-	draw_polyline(local, Color("202020"), 3.0, false)
-	draw_polyline(local, Color("ffffff"), 1.0, false)
+	var outlines: Array[PackedVector2Array] = [local]
+	if modern:
+		outlines = Geometry2D.intersect_polygons(local, PackedVector2Array([
+			target.position, Vector2(target.end.x, target.position.y), target.end, Vector2(target.position.x, target.end.y)]))
+	for outline in outlines:
+		if outline.size() < 2:
+			continue
+		outline.append(outline[0])
+		draw_polyline(outline, Color("202020"), 3.0, modern)
+		draw_polyline(outline, Color("ffffff"), 1.0, modern)
 
 
 func set_map(image: Image) -> void:
@@ -93,7 +102,8 @@ func map_rect() -> Rect2:
 	# leave room for the border inside the control, which clips its contents
 	var edge := maxf(0.0, minf(size.x, size.y) - BORDER * 2.0)
 	# give each map pixel the same whole number of screen pixels
-	edge = ScreenPixels.whole_cells(edge, map_texture.get_width() if map_texture != null else MAP_SIZE)
+	if not modern:
+		edge = ScreenPixels.whole_cells(edge, map_texture.get_width() if map_texture != null else MAP_SIZE)
 
 	return Rect2(ScreenPixels.snap(self, (size - Vector2(edge, edge)) * 0.5), Vector2(edge, edge))
 

@@ -61,6 +61,23 @@ func _run() -> void:
 	map.queue_redraw()
 	await _frames()
 	assert(not map._legend.visible, "Normal city view must hide the legend")
+	# A map in a separate viewport can have a fallback theme with black text.
+	# Its dark legend must keep the dedicated legend theme, including its draw canvas.
+	map.theme = Theme.new()
+	map.theme.set_color("font_color", "MapLegend", Color.BLACK)
+	map.data_view_mesh = ArrayMesh.new()
+	map.data_view_mode = CityViewMode.Mode.CRIME
+	AppUiTheme.select("dark", false)
+	map.queue_redraw()
+	await _frames()
+	var pixels := viewport.get_texture().get_image()
+	var bright := 0
+	for x in range(12, 240):
+		for y in range(5, 30):
+			if pixels.get_pixelv(Vector2i(map._legend.position) + Vector2i(x, y)).get_luminance() > 0.6:
+				bright += 1
+	assert(bright > 30, "The legend title must render light text over the dark panel, even in an unthemed map")
+	map.theme = AppUiTheme.current()
 	await _test_data_tooltips(map, viewport, background)
 	viewport.free()
 	print("PASS: data and trip legend blur, all data hover tooltips, live backgrounds, both themes and opaque fallback")

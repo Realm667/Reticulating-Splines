@@ -62,6 +62,8 @@ var city: CityState
 var palette: Sc2Palette
 var icon_sheet: Image
 var tab_bar: TabBar
+var modern_tabs: HFlowContainer
+var tab_buttons: Array[Button] = []
 var preview: CityMapPreviewControl
 var preview_frame: AspectRatioContainer
 var mode_grid: GridContainer
@@ -83,6 +85,10 @@ func _ready() -> void:
 	tab_bar.tab_changed.connect(_on_tab_changed)
 	tab_bar.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	add_child(tab_bar)
+	modern_tabs = HFlowContainer.new()
+	modern_tabs.add_theme_constant_override("h_separation", 6)
+	modern_tabs.add_theme_constant_override("v_separation", 6)
+	add_child(modern_tabs)
 
 	preview = Preview.new()
 	preview.name = "CityMapPreview"
@@ -139,9 +145,11 @@ func refresh(points := PackedVector2Array()) -> void:
 		return
 
 	var signature := _image_signature()
+	preview.modern = not AppUiTheme.is_classic()
+	preview.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR if preview.modern else CanvasItem.TEXTURE_FILTER_NEAREST
 
 	if signature != image_signature:
-		preview.set_map(Minimap.create_image(city, palette, current_mode()))
+		preview.set_map(Minimap.create_image(city, palette, current_mode(), not AppUiTheme.is_classic()))
 		image_signature = signature
 
 	preview.set_viewport_outline(points)
@@ -184,11 +192,19 @@ func _rebuild_tabs() -> void:
 
 	refreshing = true
 	tab_bar.clear_tabs()
+	tab_bar.visible = AppUiTheme.is_classic()
+	modern_tabs.visible = not AppUiTheme.is_classic()
+	for button in tab_buttons:
+		modern_tabs.remove_child(button)
+		button.queue_free()
+	tab_buttons.clear()
 
 	for index in TAB_NAMES.size():
 		var icon: Texture2D
 
-		if (
+		if not AppUiTheme.is_classic():
+			icon = ReportIcons.MAP[index]
+		elif (
 			icon_sheet != null
 			and not icon_sheet.is_empty()
 			and icon_sheet.get_width() >= (index + 1) * 26
@@ -197,8 +213,17 @@ func _rebuild_tabs() -> void:
 			var region := icon_sheet.get_region(Rect2i(index * 26 * scale, 0, 26 * scale, 20 * scale))
 			icon = HdArtworkTexture.create(region, Vector2i(26, 20)) if scale > 1 else PixelArtTexture.wrap(ImageTexture.create_from_image(region))
 
-		tab_bar.add_tab("", icon)
-		tab_bar.set_tab_tooltip(index, TAB_NAMES[index])
+		tab_bar.add_tab("" if AppUiTheme.is_classic() else tr(TAB_NAMES[index]), icon)
+		tab_bar.set_tab_tooltip(index, tr(TAB_NAMES[index]))
+		var button := Button.new()
+		button.text = TAB_NAMES[index]
+		button.icon = ReportIcons.MAP[index]
+		button.toggle_mode = true
+		button.set_pressed_no_signal(index == selected_tab)
+		button.add_theme_constant_override("icon_max_width", 20)
+		button.pressed.connect(func() -> void: tab_bar.current_tab = index)
+		modern_tabs.add_child(button)
+		tab_buttons.append(button)
 
 	tab_bar.current_tab = selected_tab
 	refreshing = false
@@ -238,6 +263,8 @@ func _on_tab_changed(tab: int) -> void:
 		return
 
 	selected_tab = clampi(tab, 0, TAB_MODES.size() - 1)
+	for index in tab_buttons.size():
+		tab_buttons[index].set_pressed_no_signal(index == selected_tab)
 	selected_item = 0
 	_rebuild_modes()
 	refresh()
@@ -317,4 +344,11 @@ func _image_signature() -> Array:
 	if not chunk_id.is_empty():
 		chunk_ids.append(chunk_id)
 
-	return [mode, city.mirror_signature(chunk_ids)]
+	return [mode, AppUiTheme.selected, city.mirror_signature(chunk_ids)]
+
+
+func _notification(what: int) -> void:
+	if is_node_ready() and what in [NOTIFICATION_TRANSLATION_CHANGED, NOTIFICATION_THEME_CHANGED]:
+		_rebuild_tabs()
+		_rebuild_modes()
+		refresh()

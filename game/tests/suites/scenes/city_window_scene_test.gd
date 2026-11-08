@@ -38,7 +38,18 @@ func run() -> void:
 	assert(tax_changes.size() == 1, "Unchanged tax does not emit a change")
 	industry.free()
 	var graph := preload("res://src/ui/city_windows/city_graph_window.tscn").instantiate() as CityGraphWindow
+	graph.theme = AppUiTheme.current()
 	root.add_child(graph)
+	await process_frame
+	for theme_name in ["dark", "light"]:
+		AppUiTheme.select(theme_name)
+		await process_frame
+		for series in graph.series_buttons.size():
+			var icon := graph.series_buttons[series].get_theme_icon("checked")
+			var pixel := icon.get_image().get_pixel(10, 3)
+			var line := graph.graph_control.series_color(series)
+			assert(absf(pixel.r - line.r) < 0.01 and absf(pixel.g - line.g) < 0.01 and absf(pixel.b - line.b) < 0.01,
+				"Checked series markers must match their line after a live theme switch")
 	assert(graph.series_buttons.size() == 16)
 	graph.series_buttons[0].toggled.emit(false)
 	assert((graph.graph_control.selected_mask & 1) == 0)

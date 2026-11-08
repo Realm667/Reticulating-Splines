@@ -4,19 +4,18 @@
 
 [node name="PictureNoticeDialog" type="AcceptDialog"]
 visible = true
-min_size = Vector2i(520, 230)
+min_size = Vector2i(440, 220)
 exclusive = true
 script = ExtResource("1_notice")
 
 [node name="Layout" type="HBoxContainer" parent="."]
-custom_minimum_size = Vector2(470, 130)
-theme_override_constants/separation = 14
+custom_minimum_size = Vector2(400, 130)
+theme_override_constants/separation = 24
 
 [node name="PictureFrame" type="PanelContainer" parent="Layout"]
-custom_minimum_size = Vector2(171, 116)
+custom_minimum_size = Vector2(155, 110)
 layout_mode = 2
-size_flags_vertical = 0
-theme_type_variation = "PanelPadding5_3_5_3"
+size_flags_vertical = 4
 
 [node name="Picture" type="TextureRect" parent="Layout/PictureFrame"]
 texture_filter = 1
@@ -26,7 +25,7 @@ expand_mode = 1
 stretch_mode = 5
 
 [node name="Message" type="Label" parent="Layout"]
-custom_minimum_size = Vector2(280, 100)
+custom_minimum_size = Vector2(230, 110)
 layout_mode = 2
 size_flags_horizontal = 3
 vertical_alignment = 1

@@ -7,7 +7,7 @@ const STEP_SECONDS := GameSpeedController.BASE_TICK_MSEC / 1000.0
 # presentation slack for asynchronous publications, without predicting a route.
 const TRAIN_BLEND_SECONDS := STEP_SECONDS * 1.5
 const OPTION_BY_TYPE := {1: "traffic_vehicles_enabled", 2: "traffic_vehicles_enabled", 3: "traffic_vehicles_enabled", 9: "traffic_vehicles_enabled",
-	10: "traffic_vehicles_enabled", 11: "traffic_vehicles_enabled", 15: "disaster_motion"}
+	10: "traffic_vehicles_enabled", 11: "traffic_vehicles_enabled", 15: "disaster_motion", 16: "traffic_vehicles_enabled"}
 
 var tracks: Dictionary[int, Track] = {}
 var _signature: Array = []
@@ -36,7 +36,7 @@ func observe(city: CityState, options: Dictionary, vehicles_visible := true) -> 
 		var thing := city.thing(record)
 		if thing == null or not OPTION_BY_TYPE.has(thing.type) or not options[OPTION_BY_TYPE[thing.type]]:
 			continue
-		if not vehicles_visible and thing.type != 15:
+		if not vehicles_visible and thing.type not in [15, 16]:
 			continue
 		if thing.type == 15 and not options.disaster_enabled:
 			continue

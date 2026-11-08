@@ -11320,3 +11320,135 @@ msgstr ""
 #. Reticulating Splines chronicle and multiplayer insights
 msgid "Change in the distance to the leading player, measured by the agreed objective."
 msgstr ""
+
+#. Reticulating Splines report UI
+msgid "Transit"
+msgstr ""
+
+#. Reticulating Splines report UI
+msgid "Land Value"
+msgstr ""
+
+#. Reticulating Splines report UI
+msgid "Services"
+msgstr ""
+
+#. Reticulating Splines report UI
+msgid "Crime Rate"
+msgstr ""
+
+#. Reticulating Splines report UI
+msgid "Density"
+msgstr ""
+
+#. Reticulating Splines report UI
+msgid "Heightmap"
+msgstr ""
+
+#. Reticulating Splines report UI
+msgid "Schools"
+msgstr ""
+
+#. Reticulating Splines report UI
+msgid "Colleges"
+msgstr ""
+
+#. Reticulating Splines report UI
+msgid "Steady"
+msgstr ""
+
+#. Reticulating Splines report UI
+msgid "Land level 1"
+msgstr ""
+
+#. Reticulating Splines report UI
+msgid "Land level 32"
+msgstr ""
+
+#. Reticulating Splines report UI
+msgid "Very low"
+msgstr ""
+
+#. Reticulating Splines report UI
+msgid "Very high"
+msgstr ""
+
+#. Reticulating Splines report UI
+msgid "Moderate"
+msgstr ""
+
+#. Reticulating Splines report UI
+msgid "Shallow water"
+msgstr ""
+
+#. Reticulating Splines report UI
+msgid "Deep water"
+msgstr ""
+
+#. Reticulating Splines report UI
+msgid "Give Maxis Man a chance to help"
+msgstr ""
+
+#. Reticulating Splines report UI
+msgid ""
+"Decline the military base proposal if you want Maxis Man to have a chance to"
+" intervene when a disaster starts. His help is not guaranteed."
+msgstr ""
+
+#. Reticulating Splines report UI
+msgid ""
+"A declined or unsuccessful base proposal enables a one-in-four arrival check"
+" at disaster start. Maxis Man also needs a free moving-object slot, and only"
+" one can be active. Demolishing an existing base does not replace declining "
+"the proposal."
+msgstr ""
+
+#. Reticulating Splines report UI
+msgid "City celebration"
+msgstr ""
+
+#. Reticulating Splines report UI
+msgid "Emergency assistance"
+msgstr ""
+
+#. Reticulating Splines report UI
+msgid "Your citizens have organized a spontaneous parade in your honor."
+msgstr ""
+
+#. Reticulating Splines report UI
+msgid ""
+"The National Guard has been deployed because your city has no police or "
+"firefighters."
+msgstr ""
+
+#. Reticulating Splines report UI
+msgid "Monthly amounts"
+msgstr ""
+
+#. Reticulating Splines report UI
+msgid "National population"
+msgstr ""
+
+#. Reticulating Splines report UI
+msgid "Structures"
+msgstr ""
+
+#. Reticulating Splines report UI
+msgid "Rate of Growth"
+msgstr ""
+
+#. Reticulating Splines report UI
+msgid "Police Power"
+msgstr ""
+
+#. Reticulating Splines report UI
+msgid "Fire Power"
+msgstr ""
+
+#. Reticulating Splines report UI
+msgid "Police Depts"
+msgstr ""
+
+#. Reticulating Splines report UI
+msgid "Fire Depts"
+msgstr ""

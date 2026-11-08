@@ -19,7 +19,7 @@ var _snapshot_started_msec := 0
 var _switch_command := -1
 var heading: Label
 var context_hint: Label
-var neighbor_details: Label
+var neighbor_details: RegionOverviewDetails
 var create_button: Button
 var return_button: Button
 var details: Label
@@ -139,7 +139,7 @@ func open_overview() -> void:
 	details.text = tr("Select a city area.")
 	refresh()
 	window.theme = AppUiTheme.current()
-	_popup_fitted(window, Vector2i(620, 620))
+	_popup_fitted(window, Vector2i(720, 760))
 
 
 func open() -> void:
@@ -178,9 +178,14 @@ func _build_window() -> void:
 	window.column.add_child(preview)
 	details = window.label("Select a city area.")
 	details.custom_minimum_size.x = 0
+	var selection_panel := PanelContainer.new()
+	selection_panel.theme_type_variation = &"InformationPanel"
+	window.column.remove_child(details)
+	window.column.add_child(selection_panel)
+	selection_panel.add_child(details)
 	window.column.add_child(HSeparator.new())
-	neighbor_details = window.label("")
-	neighbor_details.custom_minimum_size.x = 0
+	neighbor_details = RegionOverviewDetails.new()
+	window.column.add_child(neighbor_details)
 	var actions := HFlowContainer.new()
 	frame.add_child(actions)
 	buy_button = window.button(actions, "Buy city area", _confirm_purchase)
@@ -249,7 +254,7 @@ func refresh() -> void:
 
 
 func _show_city(item: Dictionary) -> void:
-	details.text = str(item.get("name", "")) + "\n" + tr("Population: %d") % int(item.get("population", 0))
+	details.text = str(item.get("name", "")) + "\n" + tr("Population") + ": " + DisplayNumberFormat.format(int(item.get("population", 0)))
 	if item.has("region"):
 		details.text = tr("Region %d") % int(item.region) + " · " + details.text
 	if item.has("player"):
@@ -257,20 +262,7 @@ func _show_city(item: Dictionary) -> void:
 
 
 func _refresh_neighbors() -> void:
-	var city := app.document_state.city
-	var data := SimNationWindowControl.snapshot(city)
-	if not data.ok:
-		neighbor_details.text = ""
-		return
-	# Keep the original national and city population (including arcologies), and
-	# the four named neighbors of the currently viewed city, even while visiting.
-	var lines: Array[String] = [data.city_name + " · " + tr("Population: %d") % data.display_population,
-		tr(SimNationWindowControl.NATIONAL_POPULATION) % data.national_population, tr("Neighbors")]
-	var order := SimNationWindowControl.display_neighbor_indices(city.compass_rotation())
-	for index in order.size():
-		var neighbor: SimNationWindowControl.Neighbor = data.neighbors[order[index]]
-		lines.append(["↖", "↗", "↘", "↙"][index] + " " + CityNeighbors.city_name(city, neighbor.index) + " · " + tr("Population: %d") % neighbor.population)
-	neighbor_details.text = "\n".join(lines)
+	neighbor_details.show_city(app.document_state.city)
 
 
 func _sync_navigation() -> void:

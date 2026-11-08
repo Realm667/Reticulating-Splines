@@ -10,6 +10,8 @@ var _content: Control
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# The map can live in a SubViewport without the main window's theme.
+	theme = AppUiTheme.current()
 	theme_type_variation = &"MapLegend"
 	var glass := ShaderMaterial.new()
 	glass.shader = GlassShader
@@ -22,6 +24,7 @@ func _ready() -> void:
 	_content.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_content.draw.connect(_draw_content)
 	add_child(_content)
+	theme_changed.connect(_content.queue_redraw)
 	hide()
 
 

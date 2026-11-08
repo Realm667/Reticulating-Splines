@@ -29,7 +29,7 @@ func _run() -> void:
 
 func _check_motion() -> void:
 	var options := VisualEnhancementOptions.normalize({})
-	for type in [1, 2, 3, 9]:
+	for type in [1, 2, 3, 9, 16]:
 		for direction in 8:
 			var city := fixture(type)
 			var motion := CityTrafficMotion.new()
@@ -96,6 +96,14 @@ func _check_lifecycle() -> void:
 	var city := fixture(1)
 	var motion := CityTrafficMotion.new()
 	var options := VisualEnhancementOptions.normalize({})
+	var hero := fixture(16)
+	var hero_motion := CityTrafficMotion.new()
+	hero_motion.observe(hero, options, false)
+	assert(hero_motion.tracks.has(1), "Hiding vehicles must not disable the disaster hero's interpolation")
+	options.traffic_vehicles_enabled = false
+	hero_motion.observe(hero, options)
+	assert(hero_motion.tracks.is_empty(), "Maxis Man follows the same smooth movement switch as aircraft")
+	options.traffic_vehicles_enabled = true
 	motion.observe(city, options)
 	write_thing(city, 1, {"px": 12})
 	motion.observe(city, options)

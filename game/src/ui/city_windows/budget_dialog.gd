@@ -42,6 +42,9 @@ var detail_toggle: CheckBox
 var tabs: TabContainer
 var history_category: OptionButton
 var history_table: Tree
+var history_chart: BudgetHistoryChart
+var history_chart_mode: OptionButton
+var history_legend: HFlowContainer
 var bond_table: Tree
 var ordinance_control: OrdinanceWindowControl
 var advisor_dialog: AcceptDialog
@@ -70,6 +73,12 @@ func _ready() -> void:
 	advisor_dialog = $Advisor
 	history_category = $"Margin/Content/Tabs/Monthly history/Category"
 	history_table = $"Margin/Content/Tabs/Monthly history/Table"
+	history_chart = $"Margin/Content/Tabs/Monthly history/Chart"
+	history_chart_mode = $"Margin/Content/Tabs/Monthly history/ChartOptions/Mode"
+	history_legend = $"Margin/Content/Tabs/Monthly history/ChartOptions/Legend"
+	history_chart_mode.add_item(tr("Monthly amounts"))
+	history_chart_mode.add_item(tr("Running total"))
+	history_chart_mode.item_selected.connect(func(_index: int) -> void: _refresh_history())
 	bond_table = $Margin/Content/Tabs/Bonds/Table
 	ordinance_control = $Margin/Content/Tabs/Ordinances/OrdinanceWindowControl
 	ordinance_control.ordinances_changed.connect(_ordinances_changed)
@@ -381,6 +390,19 @@ func _refresh_history() -> void:
 		return
 	var group := history_category.selected
 	var ids: Array = BudgetReport.GROUPS[group]
+	history_chart.show_report(report, group, history_chart_mode.selected == 1)
+	for child in history_legend.get_children():
+		history_legend.remove_child(child)
+		child.queue_free()
+	for index in history_chart.names.size():
+		var item := HBoxContainer.new()
+		var swatch := ColorRect.new()
+		swatch.color = history_chart.series_color(index)
+		swatch.custom_minimum_size = Vector2(16, 3)
+		swatch.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		item.add_child(swatch)
+		item.add_child(_label(history_chart.names[index]))
+		history_legend.add_child(item)
 	var titles: Array = ["Month", "Status"]
 	if group == 2:
 		titles.append_array(["Principal", "Rate", "Interest"])
@@ -527,11 +549,14 @@ func _budget_text(text: String) -> String:
 # Keep contextual service names and composed headings current after a language change.
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_TRANSLATION_CHANGED and is_node_ready():
+		history_chart_mode.set_item_text(0, tr("Monthly amounts"))
+		history_chart_mode.set_item_text(1, tr("Running total"))
 		for label in budget_labels:
 			label.text = str(label.get_meta("budget_prefix")) + _budget_text(str(label.get_meta("budget_source")))
 		for index in history_category.item_count:
 			history_category.set_item_text(index, _budget_text(BudgetReport.GROUP_NAMES[index]))
 		_refresh_heading()
+		_refresh_history()
 
 
 func _budget_label(source: String, prefix := "") -> Label:

@@ -15,6 +15,17 @@ func _run() -> void:
 	var previous := TranslationServer.get_locale()
 	_check_placeholders()
 	_check_feature_messages()
+	var workforce := PopulationWindowControl.Snapshot.new()
+	workforce.workforce_percent = 51
+	workforce.workforce_life_expectancy = 69
+	workforce.workforce_education_quotient = 102
+	for language in AppLocalization.codes():
+		AppLocalization.select(language)
+		for mode in 3:
+			var text := PopulationWindowControl.indicator_text(workforce, mode)
+			assert(not "%d" in text and (language == "en" or not "Work Force" in text),
+				"Translate workforce templates before substituting the numbers")
+	AppLocalization.select(previous)
 
 	AppLocalization.select("ko")
 	assert(TranslationServer.get_locale() == "ko")

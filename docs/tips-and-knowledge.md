@@ -157,7 +157,17 @@ muting, the normal cooldown and once-per-city-session delivery. These cards do n
 infer insolvency or hidden city conditions. Region actions require an available
 overview; budget actions are suppressed when visiting another player's city.
 
-All thirteen entries use the central English template and six locale catalogs.
+All thirteen region entries use the central English template and six locale catalogs.
 Fee amounts remain in the authoritative purchase/budget UI rather than being copied
 into editorial prose. Pure-context and category tests cover old games, single cities,
 co-op, competition, endless goals and regional feature availability.
+
+## Maxis Man
+
+The `maxis_man` collection entry follows `maxis_man_response` in
+`native/core/sim/src/sim/disasters/end.rs`: military-base state 1 (declined or
+unsuccessful proposal), a zero result from the two-bit LFSR gate at disaster
+start, no existing Maxis Man, and an available moving-object record. A demolished
+base is not a declined proposal. The tip does not promise guaranteed rescue or
+change the military/disaster rules. Its title, summary and explanation are in all
+six central locale catalogs.

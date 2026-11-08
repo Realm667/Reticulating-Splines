@@ -23,6 +23,18 @@ func _ready() -> void:
 		if child is CheckBox:
 			child.pressed.connect(_on_time_scale_selected.bind(scale_index))
 			scale_index += 1
+	graph_control.theme_changed.connect(_refresh_series_icons)
+	_refresh_series_icons.call_deferred()
+
+
+func _refresh_series_icons() -> void:
+	for series in series_buttons.size():
+		var color := graph_control.series_color(series)
+		var ink := "#182028" if color.get_luminance() > 0.4 else "#ffffff"
+		var source := '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><rect x="1" y="1" width="18" height="18" rx="3" fill="#%s"/><path d="m5 10 3 3 7-7" fill="none" stroke="%s" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>' % [color.to_html(false), ink]
+		var image := Image.new()
+		if image.load_svg_from_string(source) == OK:
+			series_buttons[series].add_theme_icon_override("checked", ImageTexture.create_from_image(image))
 
 
 func show_city(value: CityState) -> void:

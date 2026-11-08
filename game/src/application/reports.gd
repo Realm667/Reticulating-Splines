@@ -542,6 +542,12 @@ func _show_next_notice() -> void:
 	var notice_id := pending_notices[0]
 	pending_notices.remove_at(0)
 	var text: String = NOTICE_TEXT[notice_id]
+	# These two picture notices are supplementary localized prose. Remove the
+	# original fixed-width wrapping before the responsive dialog lays it out.
+	if notice_id == 284:
+		text = tr("Your citizens have organized a spontaneous parade in your honor.")
+	elif notice_id == NATIONAL_GUARD_NOTICE:
+		text = tr("The National Guard has been deployed because your city has no police or firefighters.")
 	var picture := _notice_picture(notice_id)
 
 	if notice_id == NATIONAL_GUARD_NOTICE:
@@ -554,6 +560,7 @@ func _show_next_notice() -> void:
 		return
 
 	app.city_dialogs.picture_notice_dialog.set_picture(picture)
+	app.city_dialogs.picture_notice_dialog.title = tr("City celebration" if notice_id == 284 else "Emergency assistance")
 	app.city_dialogs.picture_notice_dialog.show_message(text, true)
 
 

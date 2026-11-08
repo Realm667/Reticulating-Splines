@@ -74,7 +74,8 @@ func _draw() -> void:
 
 	var plot := _plot_rect()
 	# the icon strip keeps whole screen pixels for each artwork pixel
-	var icon_width := ScreenPixels.whole_cells(48.0, icon_strip.get_width()) if icon_strip != null else 48.0
+	var classic := AppUiTheme.is_classic()
+	var icon_width := ScreenPixels.whole_cells(48.0, icon_strip.get_width()) if classic and icon_strip != null else 32.0
 	var names_right := plot.position.x - icon_width - 8.0
 	var icons := Rect2(names_right + 5.0, plot.position.y, icon_width, plot.size.y)
 	var row_height := plot.size.y / float(INDUSTRY_COUNT)
@@ -86,6 +87,10 @@ func _draw() -> void:
 
 	for industry in INDUSTRY_COUNT:
 		var center_y := plot.position.y + row_height * (float(industry) + 0.5)
+		if not classic:
+			var edge := minf(row_height - 3, 28)
+			draw_texture_rect(ReportIcons.INDUSTRY[industry], Rect2(icons.position.x + (icon_width - edge) * 0.5,
+				center_y - edge * 0.5, edge, edge), false)
 		var label := tr(INDUSTRY_NAMES[industry])
 		var label_width := font.get_string_size(
 			label, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size
@@ -99,14 +104,15 @@ func _draw() -> void:
 			font_size,
 			get_theme_color("ink", "AppPalette"),
 		)
-		draw_line(
-			Vector2(names_right + 2, center_y),
-			Vector2(plot.position.x, center_y),
-			Color("808080"),
-			1.0,
-		)
+		if classic:
+			draw_line(
+				Vector2(names_right + 2, center_y),
+				Vector2(plot.position.x, center_y),
+				Color("808080"),
+				1.0,
+			)
 
-	if icon_strip != null:
+	if classic and icon_strip != null:
 		draw_texture_rect(icon_strip, icons, false)
 
 	var values := values_for_mode(data, mode)

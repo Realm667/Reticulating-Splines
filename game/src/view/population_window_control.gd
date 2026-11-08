@@ -25,6 +25,11 @@ func _init() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_TRANSLATION_CHANGED:
+		queue_redraw()
+
+
 func _draw() -> void:
 	draw_rect(Rect2(Vector2.ZERO, size), get_theme_color("paper", "AppPalette"), true)
 	draw_rect(Rect2(Vector2.ZERO, size), get_theme_color("border", "AppPalette"), false, 1.0)
@@ -104,8 +109,11 @@ func _draw() -> void:
 		Vector2(bracket_center, bracket_y), Vector2(bracket_center, plot.position.y - 16),
 		Vector2(bracket_center + 6, plot.position.y - 16),
 	]), workforce_color, 1.0)
+	var workforce_text := indicator_text(data, mode)
+	var workforce_width := font.get_string_size(workforce_text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
+	var workforce_x := maxf(plot.position.x, minf(bracket_center + 12, size.x - workforce_width - 12))
 	draw_string(
-		font, Vector2(bracket_center + 12, plot.position.y - 12), indicator_text(data, mode),
+		font, Vector2(workforce_x, plot.position.y - 12), workforce_text,
 		HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, workforce_color
 	)
 	var age_title := tr("Resident Age")
@@ -217,12 +225,12 @@ static func indicator_value(data: Snapshot, selected_mode: int) -> int:
 
 static func indicator_text(data: Snapshot, selected_mode: int) -> String:
 	if selected_mode == Mode.POPULATION:
-		return "Work Force %% = %d" % int(data.workforce_percent)
+		return String(TranslationServer.translate("Work Force %% = %d")) % int(data.workforce_percent)
 
 	if selected_mode == Mode.HEALTH:
-		return "Work Force LE = %d" % int(data.workforce_life_expectancy)
+		return String(TranslationServer.translate("Work Force LE = %d")) % int(data.workforce_life_expectancy)
 
-	return "Work Force EQ = %d" % int(data.workforce_education_quotient)
+	return String(TranslationServer.translate("Work Force EQ = %d")) % int(data.workforce_education_quotient)
 
 
 static func y_axis_label(selected_mode: int, step: int) -> String:
@@ -230,9 +238,9 @@ static func y_axis_label(selected_mode: int, step: int) -> String:
 		return "%d%%" % ((step * 5) / 2) if step % 2 == 0 else ""
 
 	if selected_mode == Mode.HEALTH:
-		return "%d yrs" % (step * 15)
+		return String(TranslationServer.translate("%d yrs")) % (step * 15)
 
-	return "%d eq" % (step * 25)
+	return String(TranslationServer.translate("%d eq")) % (step * 25)
 
 
 func _draw_centered_message(message: String) -> void:

@@ -32783,3 +32783,143 @@ msgstr "Sem alteração"
 #. Reticulating Splines chronicle and multiplayer insights
 msgid "Change in the distance to the leading player, measured by the agreed objective."
 msgstr "Variação da distância para o jogador líder, medida pelo objetivo combinado."
+
+#. Reticulating Splines report UI
+msgid "Transit"
+msgstr "Transportes"
+
+#. Reticulating Splines report UI
+msgid "Land Value"
+msgstr "Valor do terreno"
+
+#. Reticulating Splines report UI
+msgid "Services"
+msgstr "Serviços"
+
+#. Reticulating Splines report UI
+msgid "Crime Rate"
+msgstr "Taxa de criminalidade"
+
+#. Reticulating Splines report UI
+msgid "Density"
+msgstr "Densidade"
+
+#. Reticulating Splines report UI
+msgid "Heightmap"
+msgstr "Mapa de elevação"
+
+#. Reticulating Splines report UI
+msgid "Schools"
+msgstr "Escolas"
+
+#. Reticulating Splines report UI
+msgid "Colleges"
+msgstr "Universidades"
+
+#. Reticulating Splines report UI
+msgid "Steady"
+msgstr "Estável"
+
+#. Reticulating Splines report UI
+msgid "Land level 1"
+msgstr "Nível do terreno 1"
+
+#. Reticulating Splines report UI
+msgid "Land level 32"
+msgstr "Nível do terreno 32"
+
+#. Reticulating Splines report UI
+msgid "Very low"
+msgstr "Muito baixo"
+
+#. Reticulating Splines report UI
+msgid "Very high"
+msgstr "Muito alto"
+
+#. Reticulating Splines report UI
+msgid "Moderate"
+msgstr "Moderado"
+
+#. Reticulating Splines report UI
+msgid "Shallow water"
+msgstr "Águas rasas"
+
+#. Reticulating Splines report UI
+msgid "Deep water"
+msgstr "Águas profundas"
+
+#. Reticulating Splines report UI
+msgid "Give Maxis Man a chance to help"
+msgstr "Dê ao Maxis Man a chance de ajudar"
+
+#. Reticulating Splines report UI
+msgid ""
+"Decline the military base proposal if you want Maxis Man to have a chance to"
+" intervene when a disaster starts. His help is not guaranteed."
+msgstr ""
+"Recuse a proposta de base militar para que Maxis Man tenha uma chance de "
+"intervir quando um desastre começar. A ajuda dele não é garantida."
+
+#. Reticulating Splines report UI
+msgid ""
+"A declined or unsuccessful base proposal enables a one-in-four arrival check"
+" at disaster start. Maxis Man also needs a free moving-object slot, and only"
+" one can be active. Demolishing an existing base does not replace declining "
+"the proposal."
+msgstr ""
+"Uma proposta recusada ou malsucedida permite uma verificação de chegada com "
+"uma chance em quatro no início do desastre. Também é necessário um espaço "
+"livre para objeto móvel, e só pode haver um Maxis Man ativo. Demolir uma "
+"base existente não substitui a recusa da proposta."
+
+#. Reticulating Splines report UI
+msgid "City celebration"
+msgstr "Festa da cidade"
+
+#. Reticulating Splines report UI
+msgid "Emergency assistance"
+msgstr "Assistência de emergência"
+
+#. Reticulating Splines report UI
+msgid "Your citizens have organized a spontaneous parade in your honor."
+msgstr "Os cidadãos organizaram um desfile espontâneo em sua homenagem."
+
+#. Reticulating Splines report UI
+msgid ""
+"The National Guard has been deployed because your city has no police or "
+"firefighters."
+msgstr ""
+"A Guarda Nacional foi enviada porque sua cidade não tem policiais nem "
+"bombeiros."
+
+#. Reticulating Splines report UI
+msgid "Monthly amounts"
+msgstr "Valores mensais"
+
+#. Reticulating Splines report UI
+msgid "National population"
+msgstr "População nacional"
+
+#. Reticulating Splines report UI
+msgid "Structures"
+msgstr "Edificações"
+
+#. Reticulating Splines report UI
+msgid "Rate of Growth"
+msgstr "Taxa de crescimento"
+
+#. Reticulating Splines report UI
+msgid "Police Power"
+msgstr "Cobertura policial"
+
+#. Reticulating Splines report UI
+msgid "Fire Power"
+msgstr "Cobertura dos bombeiros"
+
+#. Reticulating Splines report UI
+msgid "Police Depts"
+msgstr "Delegacias"
+
+#. Reticulating Splines report UI
+msgid "Fire Depts"
+msgstr "Quartéis de bombeiros"
