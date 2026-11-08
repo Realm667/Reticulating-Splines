@@ -11397,10 +11397,9 @@ msgstr ""
 
 #. Reticulating Splines report UI
 msgid ""
-"A declined or unsuccessful base proposal enables a one-in-four arrival check"
-" at disaster start. Maxis Man also needs a free moving-object slot, and only"
-" one can be active. Demolishing an existing base does not replace declining "
-"the proposal."
+"After a declined or unsuccessful military base proposal, there is a chance "
+"that Maxis Man will intervene when a disaster starts. Demolishing an "
+"existing base does not replace declining the proposal."
 msgstr ""
 
 #. Reticulating Splines report UI

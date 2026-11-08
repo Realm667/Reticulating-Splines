@@ -11065,13 +11065,12 @@ msgstr "재난이 시작될 때 맥시스맨이 개입할 기회를 주려면 �
 
 #. Reticulating Splines report UI
 msgid ""
-"A declined or unsuccessful base proposal enables a one-in-four arrival check"
-" at disaster start. Maxis Man also needs a free moving-object slot, and only"
-" one can be active. Demolishing an existing base does not replace declining "
-"the proposal."
+"After a declined or unsuccessful military base proposal, there is a chance "
+"that Maxis Man will intervene when a disaster starts. Demolishing an "
+"existing base does not replace declining the proposal."
 msgstr ""
-"기지 제안을 거절했거나 기지 건설이 실패한 경우, 재난 시작 시 4분의 1 확률로 등장 여부를 확인합니다. 이동 객체 슬롯이 비어 있어야"
-" 하며 맥시스맨은 한 번에 한 명만 활동할 수 있습니다. 기존 기지를 철거하는 것은 제안 거절을 대신하지 못합니다."
+"군사 기지 제안을 거절했거나 기지 건설이 실패한 경우, 재난이 시작될 때 맥시스맨이 개입할 가능성이 있습니다. 기존 기지를 철거하는 것은"
+" 제안 거절을 대신하지 못합니다."
 
 #. Reticulating Splines report UI
 msgid "City celebration"

@@ -41726,15 +41726,13 @@ msgstr ""
 
 #. Reticulating Splines report UI
 msgid ""
-"A declined or unsuccessful base proposal enables a one-in-four arrival check"
-" at disaster start. Maxis Man also needs a free moving-object slot, and only"
-" one can be active. Demolishing an existing base does not replace declining "
-"the proposal."
+"After a declined or unsuccessful military base proposal, there is a chance "
+"that Maxis Man will intervene when a disaster starts. Demolishing an "
+"existing base does not replace declining the proposal."
 msgstr ""
-"Une proposition refusée ou échouée permet un test d’arrivée avec une chance "
-"sur quatre au début d’une catastrophe. Un emplacement d’objet mobile doit "
-"être libre et un seul Maxis Man peut être actif. Démolir une base existante "
-"ne remplace pas le refus de la proposition."
+"Après une proposition de base militaire refusée ou échouée, il existe une "
+"chance que Maxis Man intervienne au début d’une catastrophe. Démolir une "
+"base existante ne remplace pas le refus de la proposition."
 
 #. Reticulating Splines report UI
 msgid "City celebration"
