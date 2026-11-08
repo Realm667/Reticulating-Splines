@@ -38,7 +38,8 @@ var _settings_signature: Array = []
 var _texture: ImageTexture
 var _people: ImageTexture
 var _elapsed := 0.0
-var _storm: Visual
+var storm_gusts := CityStormGusts.new()
+var riot_boundaries: CityRiotBoundaries
 var _trails: Dictionary[int, Vector2] = {}
 var _shake_remaining := 0.0
 var lighting := CityDisasterLighting.new()
@@ -112,14 +113,14 @@ func process(delta: float) -> void:
 	for pulse in pulses:
 		if update_all or options.disaster_blending:
 			_update_material(pulse)
-	if update_all:
-		_sync_storm()
+	_sync_storm()
 	if canvas != null:
 		var scale_value := app.map_view.camera._view_scale()
 		canvas.position = app.map_view.camera._draw_offset(scale_value)
 		canvas.scale = Vector2.ONE * scale_value
 		canvas.show()
 		_sync_lighting(scale_value)
+	_sync_riot_boundaries()
 
 
 func _sync_city() -> void:
@@ -142,6 +143,8 @@ func _clear() -> void:
 	_shake_remaining = 0.0
 	if app.map_view != null:
 		earthquake_blur.update(app.map_view, 0.0)
+		storm_gusts.update(app.map_view, 0.0, clock)
+	app.visual_environment.weather.set_hurricane(0.0, clock)
 	for visual in markers.values():
 		visual.sprite.queue_free()
 	markers.clear()
@@ -151,9 +154,8 @@ func _clear() -> void:
 	_trails.clear()
 	_tornado_sites.clear()
 	lighting.clear()
-	if _storm != null:
-		_storm.sprite.queue_free()
-		_storm = null
+	if is_instance_valid(riot_boundaries):
+		riot_boundaries.hide()
 	if canvas != null:
 		canvas.hide()
 
@@ -585,18 +587,25 @@ func disaster_started(result: DisasterStartResult) -> void:
 
 func _sync_storm() -> void:
 	var engine := app.simulation_state.simulation_engine
-	var hurricane := engine != null and engine.active_disaster_type == 16 and engine.disaster_hurricane_counter > 0
-	if not hurricane:
-		if _storm != null:
-			_storm.sprite.queue_free()
-			_storm = null
-		return
-	if _storm == null:
-		_storm = _create(HURRICANE, Vector2i.ZERO, Vector2.ZERO)
-	var bounds := app.map_view.visible_source_rect()
-	_storm.sprite.position = bounds.position
-	_storm.sprite.scale = bounds.size / Vector2(EXTENT)
-	_update_material(_storm)
+	var options := app.preferences.visual_enhancements
+	var hurricane := engine != null and engine.active_disaster_type == DisasterStartConstants.DISASTER_HURRICANE and engine.disaster_hurricane_counter > 0
+	var strength: float = options.disaster_strength if hurricane else 0.0
+	app.visual_environment.weather.set_hurricane(strength, clock)
+	storm_gusts.update(app.map_view, strength if options.disaster_motion else 0.0, clock)
+
+
+func _sync_riot_boundaries() -> void:
+	var points: Array[Vector3] = []
+	for key: String in markers:
+		var visual := markers[key]
+		if visual.kind == RIOT and key.begins_with("tile:"):
+			var at := ground_point(app.document_state.city, visual.tile)
+			points.append(Vector3(at.x, at.y, _opacity(visual)))
+	if not points.is_empty() and not is_instance_valid(riot_boundaries):
+		riot_boundaries = CityRiotBoundaries.new()
+		app.map_view.add_child(riot_boundaries)
+	if is_instance_valid(riot_boundaries):
+		riot_boundaries.show_markers(app.map_view, points)
 
 
 static func ground_point(city: CityState, tile: Vector2i, altitude := -1) -> Vector2:

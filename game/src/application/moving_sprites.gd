@@ -107,7 +107,9 @@ func refresh_moving_things(view_size := -1) -> void:
 
 		var aircraft_shadow: bool = command.shadow and command.record >= 0 \
 			and app.document_state.city.thing(command.record).type in [1, 2]
-		var transparent_shadow: bool = aircraft_shadow and app.preferences.visual_enhancements.traffic_shadows_enabled
+		var monster_shadow: bool = command.shadow and command.record >= 0 \
+			and app.document_state.city.thing(command.record).type == Sc2ThingLayout.Type.MONSTER
+		var transparent_shadow: bool = monster_shadow or (aircraft_shadow and app.preferences.visual_enhancements.traffic_shadows_enabled)
 		var hazard := hazard_animation.observe(command, sprite_archive, view_size)
 		if hazard != null:
 			visuals.append(hazard)

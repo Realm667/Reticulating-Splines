@@ -6,6 +6,8 @@ uniform float clock = 0.0;
 uniform float rain = 0.0;
 uniform float snow = 0.0;
 uniform float flash = 0.0;
+uniform float storm = 0.0;
+uniform float gust = 0.0;
 uniform float particle_scale = 1.0;
 uniform vec2 camera_pan = vec2(0.0);
 uniform vec2 flash_origin = vec2(0.5, -0.15);
@@ -18,13 +20,16 @@ float rain_layer(vec2 pixel, float depth) {
 	// Sparse, soft foreground drops pass a denser, fine distant curtain.
 	float near_plane = depth * 0.5;
 	vec2 spacing = vec2(18.0 + depth * depth * 10.0, 32.0 + depth * depth * 19.0);
-	float speed = mix(190.0, 510.0, near_plane);
-	vec2 moving = vec2(pixel.x + pixel.y * 0.21 - clock * (22.0 + depth * 17.0), pixel.y - clock * speed);
+	spacing *= mix(1.0, 0.68, storm);
+	float speed = mix(190.0, 510.0, near_plane) * (1.0 + storm * 0.55);
+	float wind = 0.21 + storm * (0.55 + gust * 0.35);
+	vec2 moving = vec2(pixel.x + pixel.y * wind - clock * (22.0 + depth * 17.0) * (1.0 + storm * 2.5), pixel.y - clock * speed);
 	vec2 cell = floor(moving / spacing);
 	vec2 id = cell + vec2(depth * 137.0, depth * 83.0);
 	if (random(id + vec2(57.3, 19.8)) > rain * mix(0.85, 0.6, near_plane)) { return 0.0; }
 	float shape = random(id + vec2(89.2, 7.6));
 	float half_length = (2.5 + depth * depth * 2.0 + rain * 1.5) * mix(0.75, 1.25, shape);
+	half_length *= 1.0 + storm * 0.35;
 	float width = mix(0.35, 1.25, near_plane) * mix(0.8, 1.2, shape);
 	float softness = max(0.45 / particle_scale, mix(0.25, 1.1, near_plane * near_plane));
 	vec2 margin = vec2(width + softness + 0.5, half_length + width + softness + 0.5);

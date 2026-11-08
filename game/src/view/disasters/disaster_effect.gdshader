@@ -117,12 +117,6 @@ vec4 effect_frame(vec2 uv, float sample_time) {
 		ink = vec4(mix(vec3(0.025, 0.28, 1.0), vec3(0.22, 0.66, 1.0), core), q.y < 0.0 ? (core * 0.95 + halo * 0.28) : 0.0);
 		ink = over(ink, vec3(0.12, 0.56, 1.0), puff(q, vec2(0.0, -1.0), vec2(9.0, 4.0)) * 0.85);
 		emission = 1.0;
-	} else if (effect_kind == 10) {
-		float lane = fract(uv.x * 149.0 + uv.y * 48.0);
-		float drop = fract(uv.y * 42.0 - sample_time * 3.0 + floor(uv.x * 149.0 + uv.y * 48.0) * 0.37);
-		bool rain = lane > 0.94 && drop > 0.66;
-		ink = rain ? vec4(0.68, 0.77, 0.84, 0.40) : vec4(0.13, 0.20, 0.29, 0.14);
-		ink.a *= strength;
 	} else if (effect_kind == 13) {
 		// Roof fragments and masonry only follow confirmed structure destruction.
 		float f = clamp(progress, 0.0, 1.0);
@@ -139,10 +133,6 @@ vec4 effect_frame(vec2 uv, float sample_time) {
 	}
 	ink.rgb = mix(environment_color(ink.rgb, uv), ink.rgb, clamp(emission, 0.0, 1.0));
 	if (progress >= 0.0 && effect_kind != 5) { ink.a *= 1.0 - smoothstep(0.65, 1.0, progress); }
-	// Only real treatment tiles receive an edge; foreground covers it like the crowd.
-	if (effect_kind == 3 && !sparse_crowd && diamond > 0.82 && diamond < 1.0) {
-		ink = over(ink, vec3(0.92, 0.64, 0.24), 0.58);
-	}
 	if (has_foreground) { ink.a *= 1.0 - texture(foreground, uv * foreground_scale + foreground_offset).a; }
 	// Replacement artwork remains identifiable; strength controls surrounding atmosphere.
 	return vec4(ink.rgb, clamp(ink.a, 0.0, 1.0));

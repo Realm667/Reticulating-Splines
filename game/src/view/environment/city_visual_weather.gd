@@ -34,6 +34,8 @@ var thunder_sequence := 0
 var received_thunder := -1
 var remote_clock := -1.0
 var _preview_signature: Array = []
+var hurricane_strength := 0.0
+var hurricane_clock := 0.0
 
 
 func _init(application: CityApplication) -> void:
@@ -71,6 +73,8 @@ func reset() -> void:
 	camera_pan = Vector2.ZERO
 	last_camera_zoom = 0.0
 	_preview_signature.clear()
+	hurricane_strength = 0.0
+	hurricane_clock = 0.0
 
 
 func process(delta: float, phase_elapsed: float, active: bool, season: float, paused := false) -> void:
@@ -184,7 +188,7 @@ func _process_remote(delta: float, enabled: bool, paused: bool) -> void:
 
 
 func _sync_layer(enabled: bool) -> void:
-	var visible := enabled and (rain > 0.001 or snow > 0.001 or flash > 0.001)
+	var visible := hurricane_strength > 0.001 or (enabled and (rain > 0.001 or snow > 0.001 or flash > 0.001))
 	if not visible:
 		if layer != null:
 			layer.hide()
@@ -218,9 +222,11 @@ func _sync_layer(enabled: bool) -> void:
 	material.set_shader_parameter("camera_pan", camera_pan)
 	# Partial zoom scaling keeps precipitation legible in the city overview.
 	material.set_shader_parameter("particle_scale", maxf(0.45, sqrt(app.map_view.zoom_factor)))
-	material.set_shader_parameter("clock", clock)
-	material.set_shader_parameter("rain", rain)
-	material.set_shader_parameter("snow", snow)
+	material.set_shader_parameter("clock", hurricane_clock if hurricane_strength > 0.0 else clock)
+	material.set_shader_parameter("rain", maxf(rain if enabled else 0.0, hurricane_strength * 1.3))
+	material.set_shader_parameter("snow", snow if enabled and hurricane_strength <= 0.0 else 0.0)
+	material.set_shader_parameter("storm", hurricane_strength)
+	material.set_shader_parameter("gust", CityStormGusts.strength_at(hurricane_clock) * hurricane_strength)
 	material.set_shader_parameter("flash", flash)
 
 	material.set_shader_parameter("flash_origin", lightning.origin)
@@ -228,10 +234,18 @@ func _sync_layer(enabled: bool) -> void:
 	material.set_shader_parameter("flash_color", Vector3(lightning.color.r, lightning.color.g, lightning.color.b))
 
 
+func set_hurricane(strength: float, time: float) -> void:
+	if hurricane_strength <= 0.0 and strength <= 0.0:
+		return
+	hurricane_strength = clampf(strength, 0.0, 1.0)
+	hurricane_clock = time
+	_sync_layer(app.preferences.visual_enhancements.weather_enabled)
+
+
 func set_cloud_cover(readiness: float) -> void:
 	# Called after the cloud front advances; wet effects cannot lead its cover.
 	if material == null or layer == null or not layer.visible:
 		return
-	material.set_shader_parameter("rain", rain * readiness)
-	material.set_shader_parameter("snow", snow * readiness)
+	material.set_shader_parameter("rain", maxf(rain * readiness, hurricane_strength * 1.3))
+	material.set_shader_parameter("snow", snow * readiness if hurricane_strength <= 0.0 else 0.0)
 	material.set_shader_parameter("flash", flash * readiness)

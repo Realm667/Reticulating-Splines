@@ -24,7 +24,7 @@ func _run() -> void:
 	viewport.add_child(sprite)
 	await process_frame
 	for kind in 14:
-		if kind == CityDisasterEffects.MONSTER:
+		if kind in [CityDisasterEffects.MONSTER, CityDisasterEffects.HURRICANE]:
 			continue
 		material.set_shader_parameter("effect_kind", kind)
 		material.set_shader_parameter("progress", 0.2 if kind in [CityDisasterEffects.DUST, CityDisasterEffects.DEBRIS] else -1.0)
@@ -68,7 +68,7 @@ func _run() -> void:
 	assert(viewport.get_texture().get_image().is_invisible(), "Foreground silhouettes must fully hide effects")
 	material.set_shader_parameter("effect_kind", CityDisasterEffects.RIOT)
 	await RenderingServer.frame_post_draw
-	assert(viewport.get_texture().get_image().is_invisible(), "Foreground must hide riot tile edges and people together")
+	assert(viewport.get_texture().get_image().is_invisible(), "Foreground must still hide the crowd")
 	material.set_shader_parameter("sparse_crowd", true)
 	await RenderingServer.frame_post_draw
 	assert(viewport.get_texture().get_image().is_invisible(), "Cosmetic crowds must not add false treatment markers")
@@ -85,11 +85,110 @@ func _run() -> void:
 	await _check_procedural_blending()
 	await _check_tornado_mask()
 	await _check_quake_blur()
+	await _check_storm()
+	await _check_riot_boundary()
 	await _check_beam_glow()
 	await _check_road_fixture_occlusion()
 	await process_frame
 	print("PASS: GPU disaster effects, tile boundaries, transparent surroundings, foreground occlusion and dust lifetime")
 	quit()
+
+
+func _check_riot_boundary() -> void:
+	var viewport := SubViewport.new()
+	viewport.size = Vector2i(64, 40)
+	viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	root.add_child(viewport)
+	var map := CityMapControl.new()
+	map.size = viewport.size
+	viewport.add_child(map)
+	map.set_process(false)
+	var building := ColorRect.new()
+	building.size = viewport.size
+	building.color = Color.BLUE
+	map.add_child(building)
+	map.move_child(building, 0)
+	var boundary := CityRiotBoundaries.new()
+	map.add_child(boundary)
+	boundary.show_markers(map, [Vector3(32, 20, 1)])
+	# This fixture uses viewport coordinates instead of a full city camera.
+	boundary.position = Vector2.ZERO
+	boundary.scale = Vector2.ONE
+	await RenderingServer.frame_post_draw
+	var frame := viewport.get_texture().get_image()
+	assert(frame.get_pixel(32, 12).r > 0.5, "The riot marker must overlay an opaque foreground building")
+	assert(frame.get_pixel(32, 20).b > 0.99, "The boundary must not paint the building interior")
+	var selection := ColorRect.new()
+	selection.position = Vector2(30, 10)
+	selection.size = Vector2(4, 4)
+	selection.color = Color.RED
+	map.layers.overlay_layer.add_child(selection)
+	await RenderingServer.frame_post_draw
+	assert(viewport.get_texture().get_image().get_pixel(32, 12).g < 0.01, "Tool selections must stay above riot markers")
+	viewport.queue_free()
+	await process_frame
+
+
+func _check_storm() -> void:
+	var viewport := SubViewport.new()
+	viewport.size = Vector2i(320, 180)
+	viewport.transparent_bg = true
+	viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	root.add_child(viewport)
+	var rain := ColorRect.new()
+	rain.size = viewport.size
+	var material := ShaderMaterial.new()
+	material.shader = CityVisualWeather.PARTICLES
+	material.set_shader_parameter("extent", Vector2(viewport.size))
+	material.set_shader_parameter("clock", 2.0)
+	material.set_shader_parameter("rain", 1.0)
+	rain.material = material
+	viewport.add_child(rain)
+	await RenderingServer.frame_post_draw
+	var normal := viewport.get_texture().get_image()
+	material.set_shader_parameter("storm", 1.0)
+	material.set_shader_parameter("rain", 1.3)
+	await RenderingServer.frame_post_draw
+	var storm := viewport.get_texture().get_image()
+	var normal_alpha := 0.0
+	var storm_alpha := 0.0
+	for y in viewport.size.y:
+		for x in viewport.size.x:
+			normal_alpha += normal.get_pixel(x, y).a
+			storm_alpha += storm.get_pixel(x, y).a
+	assert(storm_alpha > normal_alpha * 1.3, "Hurricane rain must be visibly denser than ordinary heavy rain")
+	material.set_shader_parameter("clock", 2.2)
+	await RenderingServer.frame_post_draw
+	assert(viewport.get_texture().get_image().get_data() != storm.get_data(), "Storm rain must animate")
+	rain.hide()
+	var map := CityMapControl.new()
+	map.size = viewport.size
+	viewport.add_child(map)
+	map.set_process(false)
+	var background := ColorRect.new()
+	background.size = viewport.size
+	background.color = Color.BLACK
+	map.add_child(background)
+	map.move_child(background, 0)
+	var stripe := ColorRect.new()
+	stripe.position.x = 160
+	stripe.size = Vector2(160, 180)
+	background.add_child(stripe)
+	var gusts := CityStormGusts.new()
+	gusts.update(map, 1.0, 0.0)
+	assert(gusts.canvas == null, "Calm intervals need no screen copy")
+	await RenderingServer.frame_post_draw
+	var original := viewport.get_texture().get_image()
+	gusts.update(map, 1.0, 2.0)
+	assert(gusts.canvas.visible and gusts.copy.copy_mode == BackBufferCopy.COPY_MODE_VIEWPORT)
+	await RenderingServer.frame_post_draw
+	assert(viewport.get_texture().get_image().get_data() != original.get_data(), "Wind gusts must briefly distort the map")
+	gusts.update(map, 0.0, 2.0)
+	assert(not gusts.canvas.visible and gusts.copy.copy_mode == BackBufferCopy.COPY_MODE_DISABLED)
+	await RenderingServer.frame_post_draw
+	assert(viewport.get_texture().get_image().get_data() == original.get_data(), "Ended storms must restore sharp pixels")
+	viewport.queue_free()
+	await process_frame
 
 
 func _check_road_fixture_occlusion() -> void:

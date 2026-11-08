@@ -119,10 +119,65 @@ func _run() -> void:
 	_check_dispatch_occlusion(app)
 	_check_hazard_transitions(app)
 	_check_cloud_styles(app)
+	await _check_monster_shadow(app)
+	_check_hurricane(app)
 	app.queue_free()
 	await process_frame
 	print("PASS: disaster marker replacement, dispatch layering, retained nodes, event deduplication, pause, fallback and unchanged city/RNG")
 	quit()
+
+
+func _check_monster_shadow(app: CityApplication) -> void:
+	var support := load("res://tests/traffic_motion_test.gd")
+	var city: CityState = support.fixture(Sc2ThingLayout.Type.MONSTER)
+	city.set_terrain_id(64, 64, TerrainTileIds.DEEP_WATER_FLAT)
+	city.set_tile_flag(64, 64, Sc2TileFlags.WATER, true)
+	assert(app.city_session.activate_document(city.document))
+	app.map_view.center_on_tile(Vector2i(64, 64))
+	var deadline := Time.get_ticks_msec() + 15000
+	while not app.visual_preparation.ready and Time.get_ticks_msec() < deadline:
+		app.frame.process(0.0)
+		await process_frame
+	app.preferences.visual_enhancements.traffic_shadows_enabled = false
+	app.moving_sprites.refresh_moving_things()
+	var count := 0
+	for visual in app.map_view.dynamic_sprites:
+		if visual.shadow and not visual.hidden:
+			count += 1
+			assert(visual.transparent_shadow and not visual.samples_static,
+				"Monster shadows must blend with current water independently of traffic shadows")
+			var data := visual.image.get_data()
+			for i in range(0, data.size(), 4):
+				assert(data[i] == 0 and data[i + 1] == 0 and data[i + 2] == 0)
+	assert(count > 0, "Expected visible monster shadow layers")
+
+
+func _check_hurricane(app: CityApplication) -> void:
+	var effects := app.disaster_effects
+	var weather := app.visual_environment.weather
+	var engine := app.simulation_state.simulation_engine
+	app.preferences.visual_enhancements.disaster_enabled = true
+	app.preferences.visual_enhancements.weather_enabled = false
+	engine.active_disaster_type = DisasterStartConstants.DISASTER_HURRICANE
+	engine.disaster_hurricane_counter = 10
+	var before := DocumentState.capture(app.document_state.city.document)
+	var random_before := [engine.random.state, engine.lfsr_random.state, engine.game_random.state]
+	effects.clock = 2.0
+	effects._sync_storm()
+	assert(weather.hurricane_strength > 0.0 and weather.layer.visible,
+		"Confirmed hurricane rain remains available when ordinary weather is off")
+	weather.set_cloud_cover(0.0)
+	assert(float(weather.material.get_shader_parameter("rain")) > 0.0,
+		"Ordinary cloud readiness must not hide confirmed hurricane rain")
+	assert(effects.storm_gusts.canvas.visible)
+	app.preferences.visual_enhancements.disaster_motion = false
+	effects._sync_storm()
+	assert(not effects.storm_gusts.canvas.visible and weather.layer.visible)
+	assert(DocumentState.capture(app.document_state.city.document) == before)
+	assert([engine.random.state, engine.lfsr_random.state, engine.game_random.state] == random_before)
+	engine.disaster_hurricane_counter = 0
+	effects._sync_storm()
+	assert(weather.hurricane_strength == 0.0 and not weather.layer.visible)
 
 
 func _check_dispatch_occlusion(app: CityApplication) -> void:
