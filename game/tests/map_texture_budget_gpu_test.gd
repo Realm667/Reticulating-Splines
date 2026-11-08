@@ -20,6 +20,9 @@ func _initialize() -> void:
 
 func _run() -> void:
 	for shader in [COMPACT, PAGED]:
+		var varyings := _varying_count(shader.resource_path, {})
+		assert(varyings <= 16, "Compatibility supports at most sixteen custom varyings, got %d" % varyings)
+		print("MAP_VARYING_BUDGET ", shader.resource_path, " custom_varyings=", varyings)
 		var samplers := 0
 		for uniform in shader.get_shader_uniform_list():
 			if uniform.type == TYPE_OBJECT:
@@ -154,3 +157,21 @@ func _compare(label: String) -> void:
 			var b := image.get_pixel(x + 8, y)
 			assert(maxf(absf(a.r - b.r), maxf(absf(a.g - b.g), absf(a.b - b.b))) < 0.012 and absf(a.a - b.a) < 0.005,
 				"%s differs at %d/%d: %s vs %s" % [label, x, y, a, b])
+
+
+# Shader.get_code retains #include directives. Count declarations in the actual
+# shared source graph, so this hardware limit fails on Windows as well as Mac.
+func _varying_count(path: String, seen: Dictionary) -> int:
+	if seen.has(path):
+		return 0
+	seen[path] = true
+	var source := FileAccess.get_file_as_string(path)
+	assert(not source.is_empty(), "Missing shader source: " + path)
+	var declaration := RegEx.new()
+	assert(declaration.compile("(?m)^\\s*varying\\s+") == OK)
+	var total := declaration.search_all(source).size()
+	var include := RegEx.new()
+	assert(include.compile('(?m)^\\s*#include\\s+"([^"\\r\\n]+)"') == OK)
+	for match in include.search_all(source):
+		total += _varying_count(match.get_string(1), seen)
+	return total

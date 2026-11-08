@@ -26,6 +26,12 @@ cached cloud-shadow field. LUT atlas subrectangles preserve texel centers and
 linear interpolation, including custom LUT sizes. Only profile replacement
 rebuilds that atlas. Palette colors update their small texture in place, so
 existing region materials keep animating without per-frame rebinding.
+The same materials must stay within sixteen custom varying declarations on
+Compatibility devices. City draw flags are packed into twelve flat/interpolated
+vectors in total, preserving each field's original interpolation. The guard
+counts the actual shared include graph on every test host; a large desktop GPU
+must not hide a failure that the Apple M3 rejects before drawing.
+
 Paged atlases omit the unused CPU index and 2D mask samplers. Full-color art,
 emission and season masks keep their separate color-space rules. The query
 neighborhood uses a dedicated one-sampler palette shader.

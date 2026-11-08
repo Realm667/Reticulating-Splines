@@ -57,9 +57,13 @@ const float PARCEL_BORDER_TAG = 55.0;
 const float TREE_SHADOW_TAG = 56.0;
 uniform bool tree_shadows_enabled = true;
 // Share one varying location so Vulkan stays below the 32-location limit.
-varying flat vec2 ground_effects;
+// Keep well below the sixteen-varying Compatibility limit. Flat flags share
+// vectors; no values are interpolated or quantized differently.
+varying flat vec4 ground_effects;
 #define tree_shadow ground_effects.x
 #define parcel_border ground_effects.y
+#define toxic_draw ground_effects.z
+#define warm_cloud_draw ground_effects.w
 const vec3 GRID_COLOR = vec3(0.22, 0.19, 0.10);
 const float GRID_OPACITY = 0.36;
 const float GRID_WIDTH = 0.45;
@@ -75,18 +79,20 @@ const float MAX_FOOTPRINT = 4.0;
 
 // 0: indexed sprite. 1: full-color art. 2: full-color traffic with a road mask.
 // 3: grid line. 4: palette animation over art. 5: water in underground pipes.
-varying flat float artwork_kind;
-varying flat float building_emission;
-varying flat float grid_width;
+varying flat vec4 artwork_flags;
+#define artwork_kind artwork_flags.x
+#define building_emission artwork_flags.y
+#define grid_width artwork_flags.z
+#define waterfall_view artwork_flags.w
 // The view of waterfall art, or -1, and the position in its sprite in large
 // view pixels.
-varying flat float waterfall_view;
 varying vec2 waterfall_local;
 // The position in the city, in large view pixels.
 varying vec2 world_position;
-varying flat float power_warning;
-// The frame count, the frames each second, and the frame stride in texels.
-varying flat vec3 artwork_frames;
+// Warning flag, frame count, frames/second and frame stride in texels.
+varying flat vec4 animation_flags;
+#define power_warning animation_flags.x
+#define artwork_frames animation_flags.yzw
 // The texel of the record of a masked traffic quad.
 varying flat vec2 traffic_record;
 
@@ -105,9 +111,6 @@ varying flat vec4 light_draw_flags;
 #define indexed_emission_draw light_draw_flags.y
 #define transparent_shadow_draw light_draw_flags.z
 #define fullbright_draw light_draw_flags.w
-varying flat vec2 effect_color_flags;
-#define toxic_draw effect_color_flags.x
-#define warm_cloud_draw effect_color_flags.y
 varying vec2 cloud_ground_grid;
 varying flat vec4 hazard_style;
 #define hazard_draw hazard_style.x
