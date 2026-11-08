@@ -61,7 +61,9 @@ func _test_zoom_transition() -> void:
 	var source := (point - map.camera._draw_offset(1.0))
 	assert(map.zoom_in(point) and map.zoom_factor == 2.0)
 	assert(map.camera._view_scale() == 1.0, "A discrete step starts from the visible scale")
+	assert(map.camera.zoom_blur_amount() == 0.0)
 	map.camera.advance_zoom(CityMapCamera.ZOOM_TRANSITION_SECONDS * 0.5)
+	assert(map.camera.zoom_blur_amount() > 0.0 and map.camera.zoom_anchor() == point)
 	var scale := map.camera._view_scale()
 	assert(scale > 1.0 and scale < 2.0)
 	var anchored := (point - map.camera._draw_offset(scale)) / scale
@@ -79,10 +81,14 @@ func _test_zoom_transition() -> void:
 	assert(is_equal_approx(map.camera._view_scale(), scale), "Fast consecutive steps retarget without jumping")
 	map.camera.advance_zoom(CityMapCamera.ZOOM_TRANSITION_SECONDS)
 	assert(map.camera._view_scale() == 3.0)
+	assert(map.camera.zoom_blur_amount() == 0.0, "The completed view must be sharp")
 	assert(map.zoom_out(point) and map.zoom_factor == 2.0)
+	map.camera.advance_zoom(CityMapCamera.ZOOM_TRANSITION_SECONDS * 0.5)
+	assert(map.camera.zoom_blur_amount() > 0.0, "Zooming out also blurs during motion")
 	map.camera.advance_zoom(CityMapCamera.ZOOM_TRANSITION_SECONDS)
 	assert(map.camera._view_scale() == 2.0)
 	map.zoom_factor = 1.0
+	assert(map.camera.zoom_blur_amount() == 0.0)
 	assert(map.camera._view_scale() == 1.0, "Loaded and explicit zoom values cancel a pending animation")
 	_reset()
 

@@ -154,6 +154,7 @@ var hover_tile := Vector2i(-1, -1)
 var dynamic_sprites: Array[CityDynamicVisual] = []
 var layers: CityMapLayers = CityMapLayers.new(self)
 var signs: CityMapSigns = CityMapSigns.new(self)
+var zoom_blur := CityZoomBlur.new()
 var camera: CityMapCamera = CityMapCamera.new(self)
 var presentation: CityMapPresentation = CityMapPresentation.new(self)
 var selection: CityMapSelection = CityMapSelection.new(self)
@@ -222,6 +223,7 @@ func _process(delta: float) -> void:
 	region_backdrop.advance(delta)
 	# Appearance transitions finish in real time, including a simulation pause.
 	layers.tree_fade.advance(delta)
+	zoom_blur.update(self)
 
 
 func set_data_view(value: CityState, mode: CityViewMode.Mode) -> void:
