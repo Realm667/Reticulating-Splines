@@ -11450,8 +11450,8 @@ msgstr "Expanded 추가 기능"
 
 #. Supplementary Expanded founding dialog text; translated from the English source.
 #: src/ui/startup/new_city_terrain_dialog.tscn
-msgid "• Ten-year city chronicle"
-msgstr "• 10년 도시 연대기"
+msgid "Ten-year city chronicle"
+msgstr "10년 도시 연대기"
 
 #. Supplementary Expanded founding dialog text; translated from the English source.
 #: src/ui/startup/new_city_terrain_dialog.tscn
@@ -11460,8 +11460,8 @@ msgstr "최근 완료된 10개 연도의 인구, 재정, 연간 통계, 주요 �
 
 #. Supplementary Expanded founding dialog text; translated from the English source.
 #: src/ui/startup/new_city_terrain_dialog.tscn
-msgid "• Eight metropolis rewards"
-msgstr "• 대도시 보상 건물 8종"
+msgid "Eight metropolis rewards"
+msgstr "대도시 보상 건물 8종"
 
 #. Supplementary Expanded founding dialog text; translated from the English source.
 #: src/ui/startup/new_city_terrain_dialog.tscn
@@ -11470,8 +11470,8 @@ msgstr "최고 인구가 15만 명에서 400만 명까지 늘어나면 국립 �
 
 #. Supplementary Expanded founding dialog text; translated from the English source.
 #: src/ui/startup/new_city_terrain_dialog.tscn
-msgid "• Two building upgrade stages"
-msgstr "• 건물 확장 2단계"
+msgid "Two building upgrade stages"
+msgstr "건물 확장 2단계"
 
 #. Supplementary Expanded founding dialog text; translated from the English source.
 #: src/ui/startup/new_city_terrain_dialog.tscn

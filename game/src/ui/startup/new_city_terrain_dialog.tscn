@@ -5,6 +5,49 @@
 
 [ext_resource type="Script" path="res://src/ui/shared/refresh_icon_button.gd" id="3_refresh"]
 
+[ext_resource type="Texture2D" path="res://assets/ui/expanded/chronicle.svg" id="4_chronicle"]
+[ext_resource type="Texture2D" path="res://assets/ui/expanded/rewards.svg" id="4_rewards"]
+[ext_resource type="Texture2D" path="res://assets/ui/expanded/upgrades.svg" id="4_upgrades"]
+
+[sub_resource type="StyleBoxFlat" id="Style_chronicle"]
+content_margin_left = 10.0
+content_margin_top = 5.0
+content_margin_right = 10.0
+content_margin_bottom = 5.0
+bg_color = Color(0.10, 0.12, 0.14, 0.16)
+border_width_left = 3
+border_color = Color(0.75, 0.56, 0.30, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_left = 3
+corner_radius_bottom_right = 3
+
+[sub_resource type="StyleBoxFlat" id="Style_rewards"]
+content_margin_left = 10.0
+content_margin_top = 5.0
+content_margin_right = 10.0
+content_margin_bottom = 5.0
+bg_color = Color(0.10, 0.12, 0.14, 0.16)
+border_width_left = 3
+border_color = Color(0.72, 0.64, 0.32, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_left = 3
+corner_radius_bottom_right = 3
+
+[sub_resource type="StyleBoxFlat" id="Style_upgrades"]
+content_margin_left = 10.0
+content_margin_top = 5.0
+content_margin_right = 10.0
+content_margin_bottom = 5.0
+bg_color = Color(0.10, 0.12, 0.14, 0.16)
+border_width_left = 3
+border_color = Color(0.35, 0.61, 0.66, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_left = 3
+corner_radius_bottom_right = 3
+
 [node name="NewCityOverlay" type="ColorRect"]
 visible = true
 z_index = 910
@@ -351,29 +394,89 @@ layout_mode = 2
 text = "Expanded features"
 autowrap_mode = 3
 
-[node name="Chronicle" type="Label" parent="Center/NewCityDialog/Content/Body/Preview/ExpandedFeatures"]
+[node name="Chronicle" type="PanelContainer" parent="Center/NewCityDialog/Content/Body/Preview/ExpandedFeatures"]
 layout_mode = 2
-text = "• Ten-year city chronicle"
-autowrap_mode = 3
 mouse_filter = 0
 mouse_default_cursor_shape = 16
 tooltip_text = "Review the last ten completed years of your city: population, finances, annual statistics, major buildings and disasters. Available in single-player cities and regions after the first completed year."
+theme_override_styles/panel = SubResource("Style_chronicle")
 
-[node name="Rewards" type="Label" parent="Center/NewCityDialog/Content/Body/Preview/ExpandedFeatures"]
+[node name="Content" type="HBoxContainer" parent="Center/NewCityDialog/Content/Body/Preview/ExpandedFeatures/Chronicle"]
 layout_mode = 2
-text = "• Eight metropolis rewards"
+mouse_filter = 2
+theme_override_constants/separation = 10
+
+[node name="Icon" type="TextureRect" parent="Center/NewCityDialog/Content/Body/Preview/ExpandedFeatures/Chronicle/Content"]
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("4_chronicle")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Title" type="Label" parent="Center/NewCityDialog/Content/Body/Preview/ExpandedFeatures/Chronicle/Content"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+text = "Ten-year city chronicle"
 autowrap_mode = 3
+
+
+[node name="Rewards" type="PanelContainer" parent="Center/NewCityDialog/Content/Body/Preview/ExpandedFeatures"]
+layout_mode = 2
 mouse_filter = 0
 mouse_default_cursor_shape = 16
 tooltip_text = "Eight unique buildings unlock as your population record rises from 150,000 to 4 million residents, including the National Museum, Opera House and World Exhibition Grounds. They provide benefits when powered and have upkeep costs."
+theme_override_styles/panel = SubResource("Style_rewards")
 
-[node name="Upgrades" type="Label" parent="Center/NewCityDialog/Content/Body/Preview/ExpandedFeatures"]
+[node name="Content" type="HBoxContainer" parent="Center/NewCityDialog/Content/Body/Preview/ExpandedFeatures/Rewards"]
 layout_mode = 2
-text = "• Two building upgrade stages"
+mouse_filter = 2
+theme_override_constants/separation = 10
+
+[node name="Icon" type="TextureRect" parent="Center/NewCityDialog/Content/Body/Preview/ExpandedFeatures/Rewards/Content"]
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("4_rewards")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Title" type="Label" parent="Center/NewCityDialog/Content/Body/Preview/ExpandedFeatures/Rewards/Content"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+text = "Eight metropolis rewards"
 autowrap_mode = 3
+
+
+[node name="Upgrades" type="PanelContainer" parent="Center/NewCityDialog/Content/Body/Preview/ExpandedFeatures"]
+layout_mode = 2
 mouse_filter = 0
 mouse_default_cursor_shape = 16
 tooltip_text = "Upgrade eligible facilities through the building query. Stage 1 requires a population record of 25,000 and the year 1920; stage 2 requires 100,000 and 1950. Construction takes time, keeps the existing service running and increases capacity and, where applicable, upkeep."
+theme_override_styles/panel = SubResource("Style_upgrades")
+
+[node name="Content" type="HBoxContainer" parent="Center/NewCityDialog/Content/Body/Preview/ExpandedFeatures/Upgrades"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 10
+
+[node name="Icon" type="TextureRect" parent="Center/NewCityDialog/Content/Body/Preview/ExpandedFeatures/Upgrades/Content"]
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("4_upgrades")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Title" type="Label" parent="Center/NewCityDialog/Content/Body/Preview/ExpandedFeatures/Upgrades/Content"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+text = "Two building upgrade stages"
+autowrap_mode = 3
+
 
 [node name="Buttons" type="HBoxContainer" parent="Center/NewCityDialog/Content"]
 layout_mode = 2

@@ -30310,8 +30310,8 @@ msgstr "Zusätzlich in Expanded"
 
 #. Supplementary Expanded founding dialog text; translated from the English source.
 #: src/ui/startup/new_city_terrain_dialog.tscn
-msgid "• Ten-year city chronicle"
-msgstr "• Zehnjährige Stadtchronik"
+msgid "Ten-year city chronicle"
+msgstr "Zehnjährige Stadtchronik"
 
 #. Supplementary Expanded founding dialog text; translated from the English source.
 #: src/ui/startup/new_city_terrain_dialog.tscn
@@ -30320,8 +30320,8 @@ msgstr "Blicke auf die letzten zehn abgeschlossenen Stadtjahre zurück: Bevölke
 
 #. Supplementary Expanded founding dialog text; translated from the English source.
 #: src/ui/startup/new_city_terrain_dialog.tscn
-msgid "• Eight metropolis rewards"
-msgstr "• Acht Metropolenbelohnungen"
+msgid "Eight metropolis rewards"
+msgstr "Acht Metropolenbelohnungen"
 
 #. Supplementary Expanded founding dialog text; translated from the English source.
 #: src/ui/startup/new_city_terrain_dialog.tscn
@@ -30330,8 +30330,8 @@ msgstr "Acht einzigartige Gebäude werden bei Bevölkerungshöchstständen von 1
 
 #. Supplementary Expanded founding dialog text; translated from the English source.
 #: src/ui/startup/new_city_terrain_dialog.tscn
-msgid "• Two building upgrade stages"
-msgstr "• Zwei Gebäudeausbaustufen"
+msgid "Two building upgrade stages"
+msgstr "Zwei Gebäudeausbaustufen"
 
 #. Supplementary Expanded founding dialog text; translated from the English source.
 #: src/ui/startup/new_city_terrain_dialog.tscn

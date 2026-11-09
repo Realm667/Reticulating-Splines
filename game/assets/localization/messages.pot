@@ -11780,7 +11780,7 @@ msgstr ""
 
 #. Supplementary Expanded founding dialog text; translated from the English source.
 #: src/ui/startup/new_city_terrain_dialog.tscn
-msgid "• Ten-year city chronicle"
+msgid "Ten-year city chronicle"
 msgstr ""
 
 #. Supplementary Expanded founding dialog text; translated from the English source.
@@ -11790,7 +11790,7 @@ msgstr ""
 
 #. Supplementary Expanded founding dialog text; translated from the English source.
 #: src/ui/startup/new_city_terrain_dialog.tscn
-msgid "• Eight metropolis rewards"
+msgid "Eight metropolis rewards"
 msgstr ""
 
 #. Supplementary Expanded founding dialog text; translated from the English source.
@@ -11800,7 +11800,7 @@ msgstr ""
 
 #. Supplementary Expanded founding dialog text; translated from the English source.
 #: src/ui/startup/new_city_terrain_dialog.tscn
-msgid "• Two building upgrade stages"
+msgid "Two building upgrade stages"
 msgstr ""
 
 #. Supplementary Expanded founding dialog text; translated from the English source.

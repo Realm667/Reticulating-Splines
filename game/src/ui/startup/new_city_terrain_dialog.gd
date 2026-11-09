@@ -299,6 +299,7 @@ func _rules_changed(index: int) -> void:
 	size_input.visible = expanded
 	classic_size.visible = not expanded
 	$Center/NewCityDialog/Content/Body/Preview/ExpandedFeatures.visible = expanded
+	preview_view.get_parent().custom_minimum_size.y = 272 if expanded else 320
 	mayor_name_input.visible = expanded
 	$Center/NewCityDialog/Content/Body/Fields/CityFields/MayorNameLabel.visible = expanded
 	$Center/NewCityDialog/Content/Body/Fields/CityFields/CityNameRow/RandomName.visible = expanded
