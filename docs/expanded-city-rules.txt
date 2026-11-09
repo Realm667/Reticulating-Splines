@@ -66,7 +66,88 @@ correction is included. Day images, brightmaps and palette-index data ship as
 built-in assets. Sprite bank4500000 holds the three views without using original
 building byte IDs. Both the GPU and CPU map paths use the native painter.
 SCURK MIF export retains only classic-compatible tiles. Asset hashes and authoring
-provenance are in game/assets/expanded/provenance.json. Building upgrades beyond
-these eight rewards are a separate future expansion feature.
+provenance are in game/assets/expanded/provenance.json. Facility upgrades are
+described below and preserve the existing building graphics.
 
 AI-assisted with Codex for implementation, supplementary translations and validation.
+
+
+BUILDING UPGRADES (Expanded only; initial balance, 2026-11-09)
+
+Use Query > Upgrade building on an existing eligible facility. Each building
+keeps its footprint, artwork, brightmaps, name and original microsimulation.
+Gold stars show completed stages; a gray star shows construction. The marker
+works with both graphics sets, rotation, zoom and night lighting.
+
+Stage 1: local population peak 25,000 including arcologies, year 1920;
+175% of the base construction price (rounded up), 75 game days (3 months).
+Stage 2: peak 100,000, year 1950; another 250% of the base price, 150 days.
+The city pays the full construction price when work starts. Completed output
+remains in service during work. Work completes on the normal simulation clock.
+There is no free upgrade, cancellation refund or third stage. Immediate Undo
+uses the normal unchanged-city checks. Population decline does not relock a
+stage already unlocked. Original invention dates and plant aging still apply.
+
+Eligible facilities and effects:
+- All power plants except wind: 150% / 200% of the existing generation formula.
+  Hydroelectric plants are individual one-tile facilities and are eligible.
+  Variable solar output uses the same random draws. Plant age is never reset;
+  expiry and automatic replacement remove the upgrade. Query shows remaining life.
+- Water towers: 150% / 200% storage; desalination: 150% / 200% production;
+  water treatment: 150% / 200% treatment capacity. Water pumps are excluded.
+  Expanded tank cells store 150 / 200 units. A component with upgraded tanks
+  fills only complete cells. Commissioning empties the enlarged tank, which
+  refills from actual surplus; enlarging stored-water bits cannot create water.
+  Components without upgraded tanks retain the original storage rounding.
+- Police/fire stations: 150% / 200% coverage strength using the existing kernel,
+  footprint and funding/power penalties. No doubled radius. Coverage still caps
+  at the original data-map maximum.
+- Hospitals, schools, colleges: 150% / 200% service capacity, with the original
+  funding controls. Integer capacity is rounded down at the existing boundary.
+- Prisons: 150% / 200% prisoner capacity and corresponding crowding thresholds.
+- Libraries: +5 / +10 school capacity; museums: +5 / +10 college capacity,
+  each controlled by the corresponding existing school/college funding slider.
+  These additions deliberately affect education, not just annual query counters.
+- Stadiums and zoos: 150% / 200% of their existing residential growth allowance.
+- Bus depots, rail stations and subway stations: station traversal/transfer
+  cost falls from 4 to 3 to 2 in actual trip finding and reach analysis.
+  This is a transport improvement, not a fictitious passenger capacity meter.
+
+There are no upgrades for wind, pumps, grown zones, network tiles, automatic
+port/airport pieces, legacy rewards or the eight metropolis rewards.
+
+The original building upkeep remains in the existing budget categories.
+Additional upkeep is 50% / 100% of the original annual amount, at current
+funding. No operating charge is invented for a building with no original charge.
+Fully funded annual base amounts: police/fire 100, hospital 50, school 25,
+college 100, bus depot 25, rail station 1.60, subway station 0.40 dollars.
+The extra is charged monthly with per-building fractional carry. A completed
+stage starts its new rate the next month. The budget has a separate Building
+upgrades row for the extra cost; its forecast includes fractional carry and
+scheduled construction completions. If the extra charge cannot be paid, only the
+extra benefit stops until the next affordable monthly charge; the base service
+continues and no debt or arrears are silently created. Funding still controls
+the underlying service. Demolition/destruction loses work and stars without a
+refund. A newly constructed building on the same parcel starts at stage zero.
+
+Coop commands are checked and applied by the host. Shared additionally checks
+the complete parcel and pays from the acting municipality. A complete land
+sale transfers stage, construction and fractional carry to the new owner with
+new local identities. Foreign stars are display metadata and never enter the
+viewer's upkeep. Region accepts upgrades only in the player's own active city.
+Repeated and stale commands cannot charge twice. Original Classic cities have
+no upgrade data or effects. Existing Expanded cities gain the capability when
+opened; saving then requires a client that supports rs.upgrades.v1.
+
+XUPG persistence (all integer fields unsigned big-endian u32):
+Required feature: rs.upgrades.v1, in addition to rs.expanded.v1.
+Header: 24 bytes: UPG1, last identity, settled month, last monthly extra charge,
+year-to-date extra charge, accounting year (age in days / 300).
+Each 40-byte record: identity, origin X, origin Y, original tile ID, completed
+stage, target stage (0 = idle), completion day (0 = idle), paid flag, fractional
+charge carry (1/12000 dollar), original facility overlay ID (0 without one).
+Records must have unique identities and valid, non-overlapping complete
+footprints matching the original building and facility. Unsupported capability,
+missing chunks, malformed data and stale identities are rejected. The original
+map occupancy and microsimulation remain authoritative. Rotation updates origin
+and directional hydro tile ID. Undo restores the complete relevant chunks.

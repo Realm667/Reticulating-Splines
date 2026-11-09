@@ -141,6 +141,7 @@ func build_interface(original_assets: OriginalGameAssets) -> void:
 	app.city_dialogs.tunnel_dialog.canceled.connect(app.route_edits.cancel_tunnel)
 	app.city_dialogs.query_dialog.close_requested.connect(app.query_choices.close_query)
 	app.city_dialogs.query_dialog.action_requested.connect(app.query_choices.run_query_action)
+	app.city_dialogs.query_dialog.upgrade_requested.connect(app.query_choices.run_upgrade)
 	app.city_dialogs.industry_window.tax_rates_changed.connect(app.reports.on_industry_tax_rates_changed)
 	app.city_dialogs.city_map_window.mode_changed.connect(app.reports.city_map.on_mode_changed)
 	app.city_dialogs.city_map_window.center_requested.connect(app.reports.city_map.on_center_requested)

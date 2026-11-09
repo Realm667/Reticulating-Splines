@@ -594,6 +594,7 @@ pub fn inspect(city: &City, clicked: Vec2i) -> ReachResult {
     }
 
     let maps = TripMaps {
+        upgrades: &city.xupg.data,
         buildings: &city.xbld.data,
         zones: &city.xzon.data,
         underground: &city.xund.data,
@@ -673,6 +674,7 @@ pub fn run_trip(
 
     let mut traffic = city.xtrf.data.clone();
     let maps = TripMaps {
+        upgrades: &city.xupg.data,
         buildings: &city.xbld.data,
         zones: &city.xzon.data,
         underground: &city.xund.data,

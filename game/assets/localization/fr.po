@@ -42006,3 +42006,111 @@ msgstr "En service : électricité et entretien assurés."
 #: src/model/expanded_rules.gd
 msgid "Inactive: no power."
 msgstr "Inactif : pas d’électricité."
+
+#. Expanded building upgrades; supplementary AI-assisted translation.
+msgid "Building upgrades"
+msgstr "Agrandissements des bâtiments"
+
+#. Expanded building upgrades; supplementary AI-assisted translation.
+msgid "Upgrade building"
+msgstr "Agrandir le bâtiment"
+
+#. Expanded building upgrades; supplementary AI-assisted translation.
+msgid "Building upgrade undone."
+msgstr "Agrandissement du bâtiment annulé."
+
+#. Expanded building upgrades; supplementary AI-assisted translation.
+msgid "Upgrade level: %d / 2"
+msgstr "Niveau d’agrandissement : %d / 2"
+
+#. Expanded building upgrades; supplementary AI-assisted translation.
+msgid "Output and capacity"
+msgstr "Production et capacité"
+
+#. Expanded building upgrades; supplementary AI-assisted translation.
+msgid "Service coverage strength"
+msgstr "Intensité de la couverture du service"
+
+#. Expanded building upgrades; supplementary AI-assisted translation.
+msgid "Residential growth allowance"
+msgstr "Marge de croissance résidentielle"
+
+#. Expanded building upgrades; supplementary AI-assisted translation.
+msgid "Station transfer cost"
+msgstr "Coût de correspondance de la station"
+
+#. Expanded building upgrades; supplementary AI-assisted translation.
+msgid "Additional school capacity"
+msgstr "Capacité scolaire supplémentaire"
+
+#. Expanded building upgrades; supplementary AI-assisted translation.
+msgid "Additional college capacity"
+msgstr "Capacité universitaire supplémentaire"
+
+#. Expanded building upgrades; supplementary AI-assisted translation.
+msgid "%s: %s"
+msgstr "%s : %s"
+
+#. Expanded building upgrades; supplementary AI-assisted translation.
+msgid "Annual upkeep at current funding: $%.2f"
+msgstr "Entretien annuel au financement actuel : $%.2f"
+
+#. Expanded building upgrades; supplementary AI-assisted translation.
+msgid "Upgrade inactive: additional upkeep was not paid."
+msgstr "Agrandissement inactif : entretien supplémentaire impayé."
+
+#. Expanded building upgrades; supplementary AI-assisted translation.
+msgid "Construction: level %d, %d days remaining."
+msgstr "Travaux : niveau %d, encore %d jours."
+
+#. Expanded building upgrades; supplementary AI-assisted translation.
+msgid "Next level: %s; cost $%d; %d months."
+msgstr "Niveau suivant : %s ; coût $%d ; %d mois."
+
+#. Expanded building upgrades; supplementary AI-assisted translation.
+msgid "Annual upkeep after completion: $%.2f"
+msgstr "Entretien annuel après achèvement : $%.2f"
+
+#. Expanded building upgrades; supplementary AI-assisted translation.
+msgid "Requires a population peak of %s and year %d."
+msgstr "Nécessite un pic de population de %s et l’année %d."
+
+#. Expanded building upgrades; supplementary AI-assisted translation.
+msgid "Existing service continues during construction. Power plant age is unchanged."
+msgstr "Le service continue pendant les travaux. L’âge de la centrale reste inchangé."
+
+#. Expanded building upgrades; supplementary AI-assisted translation.
+msgid "This building cannot be upgraded."
+msgstr "Ce bâtiment ne peut pas être agrandi."
+
+#. Expanded building upgrades; supplementary AI-assisted translation.
+msgid "Building upgrades require Expanded rules."
+msgstr "Les agrandissements nécessitent les règles Expanded."
+
+#. Expanded building upgrades; supplementary AI-assisted translation.
+msgid "The building changed. Reopen its query."
+msgstr "Le bâtiment a changé. Rouvrez sa fiche."
+
+#. Expanded building upgrades; supplementary AI-assisted translation.
+msgid "This upgrade is not unlocked."
+msgstr "Cet agrandissement n’est pas débloqué."
+
+#. Expanded building upgrades; supplementary AI-assisted translation.
+msgid "Invalid building upgrade data."
+msgstr "Données d’agrandissement invalides."
+
+#. Expanded building upgrades; supplementary AI-assisted translation.
+msgid "Invalid building upgrade identity."
+msgstr "Identité d’agrandissement invalide."
+
+#. Expanded building upgrades; supplementary AI-assisted translation.
+msgid "Building upgrade capability is missing."
+msgstr "La capacité d’agrandissement des bâtiments est absente."
+
+#. Expanded building upgrades; supplementary AI-assisted translation.
+msgid "Building upgrade data is missing."
+msgstr "Les données d’agrandissement sont absentes."
+
+#. Expanded building upgrades; supplementary AI-assisted translation.
+msgid "Remaining power plant life: %d years; an upgrade does not extend it."
+msgstr "Durée de vie restante de la centrale : %d ans ; l’agrandissement ne la prolonge pas."

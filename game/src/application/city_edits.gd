@@ -649,6 +649,8 @@ func undo_last_edit() -> void:
 		result = Signs.undo(app.document_state.city, command as SignEditResult)
 	elif command_type == "landscape":
 		result = Landscapes.undo(app.document_state.city, command as LandscapeEditResult, app.tool_state.tool_random)
+	elif command_type == "upgrade":
+		result = NativeToolEdit.undo(app.document_state.city, command, "upgrade", "upgrade", command.tile_indices.size())
 	elif command_type == "building":
 		result = Buildings.undo(
 			app.document_state.city, command as BuildingEditResult, app.simulation_state.simulation_engine.lfsr_random,
@@ -702,6 +704,8 @@ func undo_last_edit() -> void:
 		app.status_label.text = "Restored the previous sign."
 	elif command_type == "landscape":
 		app.status_label.text = tr("Restored %d landscape actions and the previous funds value.") % result.restored_tiles
+	elif command_type == "upgrade":
+		app.status_label.text = "Building upgrade undone."
 	elif command_type == "building":
 		app.status_label.text = tr("Removed the last building and restored %d tiles.") % result.restored_tiles
 	elif command_type == "network":

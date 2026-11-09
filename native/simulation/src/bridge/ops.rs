@@ -28,6 +28,8 @@ use sc2k_sim::sim::value::{ToValue, Value};
 
 pub const OPERATIONS: &[&str] = &[
     "echo",
+    "upgrades.info",
+    "upgrades.budget",
     "expanded.validate",
     "expanded.unlock",
     "query.inspect",
@@ -194,6 +196,7 @@ pub fn run(request: &VarDictionary) -> VarDictionary {
     {
         sc2k_sim::sim::expanded::reconcile(&mut city);
         sc2k_sim::sim::expanded::monthly(&mut city);
+        sc2k_sim::sim::upgrades::advance(&mut city);
     }
     if tool {
         super::tool_ops::mark_written(request, &mut city, &outcome.result);
@@ -418,7 +421,17 @@ fn dispatch(op: &str, args: &VarDictionary, city: &mut City, randoms: &mut Rando
             let result = sc2k_sim::sim::tools::rotation::rotate(city, ccw);
             Outcome::value(result.to_value())
         }
-        "expanded.validate" => Outcome::value(Value::Str(sc2k_sim::sim::expanded::validate(city).err().unwrap_or_default())),
+        "upgrades.info" => Outcome::value(sc2k_sim::sim::upgrades::info(
+            city,
+            convert::point(args, "point", sc2k_sim::sim::geom::Vec2i::NONE),
+        )),
+        "upgrades.budget" => Outcome::value(sc2k_sim::sim::upgrades::budget_info(city)),
+        "expanded.validate" => Outcome::value(Value::Str(
+            sc2k_sim::sim::expanded::validate(city)
+                .and_then(|()| sc2k_sim::sim::upgrades::validate(city))
+                .err()
+                .unwrap_or_default(),
+        )),
         "expanded.unlock" => {
             sc2k_sim::sim::expanded::unlock(city);
             Outcome::value(Value::Bool(true))
@@ -546,6 +559,7 @@ fn dispatch(op: &str, args: &VarDictionary, city: &mut City, randoms: &mut Rando
         "trip.advance" | "trip.trace" => {
             let edge = city.map_size;
             let maps = sc2k_sim::sim::trip::TripMaps {
+                upgrades: &city.xupg.data,
                 buildings: &city.xbld.data,
                 zones: &city.xzon.data,
                 underground: &city.xund.data,

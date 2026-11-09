@@ -204,7 +204,9 @@ func command(actor: String, request: Dictionary) -> Dictionary:
 		revision += 1
 		tile_versions.fill(revision)
 		return accepted("Your last edit was undone.")
-	if kind != "build" and kind != "sign":
+	if kind == "upgrade" and int(request.revision) != revision:
+		return rejected("The city view is out of date. Wait for synchronization.")
+	if kind != "build" and kind != "sign" and kind != "upgrade":
 		return policy_command(request)
 	return build(actor, request)
 
@@ -226,7 +228,11 @@ func build(actor: String, request: Dictionary) -> Dictionary:
 	var random := SimRandom.new(engine.random.state)
 	var lfsr := SimLfsrRandom.new(engine.lfsr_random.state)
 	var edit: EditCommandResult
-	if request.kind == "sign":
+	if request.kind == "upgrade":
+		if not whole_number(request.get("identity"), 0, 4294967295) or not whole_number(request.get("level"), 0, 2):
+			return rejected("Invalid command.")
+		edit = BuildingUpgrades.apply(candidate, finish, int(request.identity), int(request.level))
+	elif request.kind == "sign":
 		if not request.get("text") is String or request.text.length() > 120:
 			return rejected("A sign can contain at most 120 characters.")
 		edit = SignCommand.set_sign(candidate, finish, request.text)

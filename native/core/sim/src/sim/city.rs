@@ -50,9 +50,9 @@ impl Chunk {
 }
 
 /// Chunk identifiers that the simulation uses. Other chunks stay in GDScript.
-pub const CHUNK_IDS: [&str; 26] = [
+pub const CHUNK_IDS: [&str; 27] = [
     "CNAM", "MISC", "ALTM", "XTER", "XBLD", "XZON", "XUND", "XTXT", "XLAB", "XMIC", "XTHG", "XBIT", "XTRF", "XPLT", "XVAL", "XCRM", "XPLC",
-    "XFIR", "XPOP", "XROG", "XGRP", "SCEN", "TEXT", "PICT", "TMPL", "XEXP",
+    "XFIR", "XPOP", "XROG", "XGRP", "SCEN", "TEXT", "PICT", "TMPL", "XEXP", "XUPG",
 ];
 
 #[derive(Clone, Debug, Default)]
@@ -85,6 +85,7 @@ pub struct City {
     pub pict: Chunk,
     pub tmpl: Chunk,
     pub xexp: Chunk,
+    pub xupg: Chunk,
     /// Runtime only. The most important building class that disaster damage reached.
     pub disaster_damage_class: i64,
     /// Region campaigns supply actual paired transport connections. None keeps
@@ -130,6 +131,7 @@ impl City {
             "PICT" => &self.pict,
             "TMPL" => &self.tmpl,
             "XEXP" => &self.xexp,
+            "XUPG" => &self.xupg,
             _ => return None,
         };
 
@@ -165,6 +167,7 @@ impl City {
             "PICT" => &mut self.pict,
             "TMPL" => &mut self.tmpl,
             "XEXP" => &mut self.xexp,
+            "XUPG" => &mut self.xupg,
             _ => return None,
         };
 

@@ -27,6 +27,7 @@ func _init(application: CityApplication) -> void:
 
 
 func refresh_after_city_edit(command: EditCommandResult) -> void:
+	app.map_view.presentation.set_upgrade_city(app.document_state.city)
 	app.assets.refresh_scurk_artwork()
 
 	if command.command_type == "scurk_artwork":

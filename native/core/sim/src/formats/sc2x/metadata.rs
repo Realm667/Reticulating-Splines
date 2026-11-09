@@ -89,7 +89,7 @@ pub const LEGACY_FIRE_TIMER_KEY: &str = "fire_elapsed_msec";
 pub const LAUNCH_ACTIVE_KEY: &str = "arcology_launch_active";
 
 /// Additional capabilities that this version supports. File version 4 itself needs none.
-pub const SUPPORTED_FEATURES: [&str; 1] = ["rs.expanded.v1"];
+pub const SUPPORTED_FEATURES: [&str; 2] = ["rs.expanded.v1", "rs.upgrades.v1"];
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Metadata {

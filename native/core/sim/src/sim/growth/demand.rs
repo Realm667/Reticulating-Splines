@@ -168,7 +168,9 @@ pub fn rci_demand(city: &mut City) -> RciDemandResult {
         + tile_count(city, tiles::STADIUM)
         + tile_count(city, tiles::ZOO)
         + 10
-        + tile_count(city, tiles::MARINA);
+        + tile_count(city, tiles::MARINA)
+        + crate::sim::upgrades::extra_units(city, tiles::STADIUM, 16)
+        + crate::sim::upgrades::extra_units(city, tiles::ZOO, 16);
     residential_target = residential_target.min((amenities * 150) as f64);
     residential_target = residential_target.min((tax_population[1] * 4 + 500) as f64);
     let industrial_population = tax_population[2] as f64;

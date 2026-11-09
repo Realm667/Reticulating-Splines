@@ -1,5 +1,17 @@
 [
   {
+    "id": "building_upgrades_ui_test",
+    "script": "tests/building_upgrades_ui_test.gd",
+    "domain": "ui",
+    "lane": "product"
+  },
+  {
+    "id": "building_upgrades_test",
+    "script": "tests/building_upgrades_test.gd",
+    "domain": "simulation",
+    "lane": "product"
+  },
+  {
     "lane": "product",
     "id": "expanded_city_test",
     "script": "tests/expanded_city_test.gd",

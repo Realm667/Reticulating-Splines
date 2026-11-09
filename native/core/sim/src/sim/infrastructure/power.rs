@@ -35,7 +35,7 @@ fn is_plant(building: i64) -> bool {
 }
 
 fn plant_capacity(city: &City, building: i64, x: i64, y: i64, random: &mut SimRandom) -> i64 {
-    match building {
+    let base = match building {
         tiles::HYDRO_POWER_1 | tiles::HYDRO_POWER_2 => 40,
         tiles::WIND_POWER => {
             let wind = city.misc_u32(misc_layout::WEATHER_WIND) & 0xff;
@@ -55,7 +55,8 @@ fn plant_capacity(city: &City, building: i64, x: i64, y: i64, random: &mut SimRa
         tiles::FUSION_POWER => 555,
         tiles::COAL_POWER => 44,
         _ => 0,
-    }
+    };
+    base * (2 + crate::sim::upgrades::level_at(&city.xupg.data, crate::sim::geom::Vec2i::new(x, y))) / 2
 }
 
 /// PowerPhase.run.

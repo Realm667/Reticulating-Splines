@@ -207,6 +207,7 @@ pub fn apply(
     result.base.tracks_random = true;
     result.base.random_state_before = random_before;
     result.base.random_state_after = random.state;
+    crate::sim::upgrades::reconcile(city);
 
     result
 }

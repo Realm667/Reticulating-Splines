@@ -17,8 +17,9 @@ static func run(
 	lfsr_random: SimLfsrRandom = null,
 ) -> Variant:
 	payload_ids = payload_ids.duplicate()
-	if city.document.find_chunk("XEXP") != null and not payload_ids.has("XEXP"):
-		payload_ids.append("XEXP")
+	for id in ["XEXP", "XUPG"]:
+		if city.document.find_chunk(id) != null and not payload_ids.has(id):
+			payload_ids.append(id)
 	var before: Dictionary[String, PackedByteArray] = {}
 
 	for chunk_id in payload_ids:

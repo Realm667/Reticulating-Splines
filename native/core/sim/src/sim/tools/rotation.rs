@@ -137,6 +137,7 @@ pub fn rotate(city: &mut City, counter_clockwise: bool) -> RotationResult {
     city.misc.commit_if_changed(&original_misc);
 
     crate::sim::expanded::rotate(city, !counter_clockwise);
+    crate::sim::upgrades::rotate(city, !counter_clockwise);
     RotationResult { old_compass, new_compass }
 }
 

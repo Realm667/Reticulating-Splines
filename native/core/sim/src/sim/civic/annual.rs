@@ -496,9 +496,10 @@ impl Annual<'_, '_> {
     }
 
     fn store_prison_and_school_totals(&mut self, city: &mut City) {
+        let extra_prison = crate::sim::upgrades::extra_units(city, tiles::PRISON, 100);
         let misc = &mut city.misc.data;
         write_u32_be(misc, misc_layout::OLD_ARRESTS, self.old_arrests);
-        let bonus = if self.prison_count < 1 || self.prison_population / self.prison_count > 79 {
+        let bonus = if self.prison_count < 1 || self.prison_population * 100 / (self.prison_count * 100 + extra_prison) > 79 {
             0
         } else {
             1
@@ -603,6 +604,7 @@ impl Annual<'_, '_> {
             let location = find_microsim_location(&city.xtxt.data, record, self.map_edge);
 
             if location.x >= 0 {
+                crate::sim::upgrades::remove_at(city, location);
                 let plant_cost = match tile {
                     tiles::GAS_POWER => 2000,
                     tiles::OIL_POWER => 6600,
@@ -947,6 +949,12 @@ impl Annual<'_, '_> {
     }
 
     fn update_prison(&mut self, city: &mut City, offset: i64) {
+        let scale = if city.xupg.present {
+            let position = find_microsim_location(&city.xtxt.data, offset / sc2microsim_layout::RECORD_SIZE, self.map_edge);
+            2 + crate::sim::upgrades::level_at(&city.xupg.data, position)
+        } else {
+            2
+        };
         let Some(random) = self.inputs.random.as_deref_mut() else {
             self.random_records_pending += 1;
             return;
@@ -958,8 +966,8 @@ impl Annual<'_, '_> {
         let stored = read_u16_be(microsims, offset + 2);
         let mut prisoners = stored - stored / 4 + read_u32_be(misc, misc_layout::OLD_ARRESTS) / divisor;
 
-        if prisoners > 10000 {
-            prisoners = (random.next_u15() & 0x3ff) + 10000;
+        if prisoners > 10000 * scale / 2 {
+            prisoners = (random.next_u15() & 0x3ff) + 10000 * scale / 2;
         }
 
         write_u16_be(microsims, offset + 2, population_cap(misc, to_i16(prisoners), 20, self.map_edge));
@@ -978,14 +986,14 @@ impl Annual<'_, '_> {
         }
 
         // More than 105 hundred prisoners is only possible after the 10,000 limit.
-        if prison_stat > 105 {
+        if prison_stat * 2 > 105 * scale {
             self.prison_overcrowded = true;
         }
 
-        if prison_stat < 91 {
+        if prison_stat * 2 < 91 * scale {
             microsims[offset as usize + 1] = 0;
         } else {
-            let range = prison_stat - 90 + (100 - police_funding) / 10;
+            let range = prison_stat * 2 / scale - 90 + (100 - police_funding) / 10;
             microsims[offset as usize + 1] = remainder(random.next_u15(), range) as u8;
         }
 

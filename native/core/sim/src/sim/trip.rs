@@ -136,6 +136,7 @@ impl TripResult {
 
 /// The maps that a trip reads. `altitude` is the ALTM payload.
 pub struct TripMaps<'a> {
+    pub upgrades: &'a [u8],
     pub buildings: &'a [u8],
     pub zones: &'a [u8],
     pub underground: &'a [u8],
@@ -619,15 +620,15 @@ pub fn advance(maps: &TripMaps, current: Vec2i, next_point: Vec2i, current_index
             }
 
             if tile == tiles::BUS_DEPOT {
-                return moved(BUS_STOP_MODE, 4);
+                return moved(BUS_STOP_MODE, 4 - crate::sim::upgrades::level_at(maps.upgrades, next_point));
             }
 
             if tile == tiles::RAIL_STATION {
-                return moved(RAIL_STATION_MODE, 4);
+                return moved(RAIL_STATION_MODE, 4 - crate::sim::upgrades::level_at(maps.upgrades, next_point));
             }
 
             if tile == tiles::SUBWAY_STATION {
-                return moved(SUBWAY_STATION_MODE, 4);
+                return moved(SUBWAY_STATION_MODE, 4 - crate::sim::upgrades::level_at(maps.upgrades, next_point));
             }
         }
         HIGHWAY_MODE => {
@@ -679,15 +680,15 @@ pub fn advance(maps: &TripMaps, current: Vec2i, next_point: Vec2i, current_index
             }
 
             if tile == tiles::BUS_DEPOT {
-                return moved(BUS_RAIL_MODE, 4);
+                return moved(BUS_RAIL_MODE, 4 - crate::sim::upgrades::level_at(maps.upgrades, next_point));
             }
 
             if tile == tiles::RAIL_STATION {
-                return moved(RAIL_STATION_MODE, 4);
+                return moved(RAIL_STATION_MODE, 4 - crate::sim::upgrades::level_at(maps.upgrades, next_point));
             }
 
             if tile == tiles::SUBWAY_STATION {
-                return moved(SUBWAY_STATION_MODE, 4);
+                return moved(SUBWAY_STATION_MODE, 4 - crate::sim::upgrades::level_at(maps.upgrades, next_point));
             }
         }
         BUS_HIGHWAY_MODE => {
@@ -723,7 +724,7 @@ pub fn advance(maps: &TripMaps, current: Vec2i, next_point: Vec2i, current_index
             }
 
             if tile == tiles::BUS_DEPOT {
-                return moved(BUS_STOP_MODE, 4);
+                return moved(BUS_STOP_MODE, 4 - crate::sim::upgrades::level_at(maps.upgrades, next_point));
             }
 
             if road {
@@ -736,7 +737,7 @@ pub fn advance(maps: &TripMaps, current: Vec2i, next_point: Vec2i, current_index
             }
 
             if tile == tiles::BUS_DEPOT || tile == tiles::RAIL_STATION {
-                return moved(BUS_RAIL_MODE, 4);
+                return moved(BUS_RAIL_MODE, 4 - crate::sim::upgrades::level_at(maps.upgrades, next_point));
             }
 
             if road {
@@ -745,7 +746,7 @@ pub fn advance(maps: &TripMaps, current: Vec2i, next_point: Vec2i, current_index
         }
         RAIL_STATION_MODE => {
             if tile == tiles::RAIL_STATION {
-                return moved(RAIL_STATION_MODE, 4);
+                return moved(RAIL_STATION_MODE, 4 - crate::sim::upgrades::level_at(maps.upgrades, next_point));
             }
 
             if network::rail(tile) {
@@ -759,7 +760,7 @@ pub fn advance(maps: &TripMaps, current: Vec2i, next_point: Vec2i, current_index
         }
         RAIL_MODE => {
             if tile == tiles::RAIL_STATION {
-                return moved(BUS_RAIL_MODE, 4);
+                return moved(BUS_RAIL_MODE, 4 - crate::sim::upgrades::level_at(maps.upgrades, next_point));
             }
 
             if network::rail(tile) {
@@ -772,7 +773,7 @@ pub fn advance(maps: &TripMaps, current: Vec2i, next_point: Vec2i, current_index
         }
         SUBWAY_MODE => {
             if tile == tiles::SUBWAY_STATION {
-                return moved(BUS_RAIL_MODE, 4);
+                return moved(BUS_RAIL_MODE, 4 - crate::sim::upgrades::level_at(maps.upgrades, next_point));
             }
 
             if network::subway(maps.underground[index as usize] as i64) {
@@ -913,6 +914,7 @@ mod tests {
 
     fn trip_maps(city: &crate::sim::city::City) -> TripMaps<'_> {
         TripMaps {
+            upgrades: &[],
             buildings: &city.xbld.data,
             zones: &city.xzon.data,
             underground: &city.xund.data,

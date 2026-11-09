@@ -36,9 +36,9 @@ const ZIP_SIGNATURE: u32 = 0x0403_4b50;
 const EMPTY_ZIP_SIGNATURE: u32 = 0x0605_4b50;
 
 /// The entry order after metadata. Missing optional entries are skipped.
-pub const ENTRY_ORDER: [&str; 27] = [
+pub const ENTRY_ORDER: [&str; 28] = [
     "MISC", "ALTM", "XTER", "XBLD", "XZON", "XUND", "XTXT", "XLAB", "XMIC", "XTHG", "XBIT", "XTRF", "XPLT", "XVAL", "XCRM", "XPLC", "XFIR",
-    "XPOP", "XROG", "XGRP", "XSGN", "SCEN", "TEXT", "PICT", "TMPL", "XEXP", "CUNK",
+    "XPOP", "XROG", "XGRP", "XSGN", "SCEN", "TEXT", "PICT", "TMPL", "XEXP", "XUPG", "CUNK",
 ];
 pub const REQUIRED_ENTRIES: [&str; 21] = [
     "MISC", "ALTM", "XTER", "XBLD", "XZON", "XUND", "XTXT", "XLAB", "XMIC", "XTHG", "XBIT", "XTRF", "XPLT", "XVAL", "XCRM", "XPLC", "XFIR",
@@ -69,9 +69,9 @@ const DENSE_ENTRIES: [(&str, i64); 15] = [
 
 /// Known structures that a working document keeps as one chunk. Repeated TEXT
 /// chunks are the one exception.
-const SINGLETONS: [&str; 25] = [
+const SINGLETONS: [&str; 26] = [
     "CNAM", "MISC", "ALTM", "XTER", "XBLD", "XZON", "XUND", "XTXT", "XLAB", "XMIC", "XTHG", "XBIT", "XTRF", "XPLT", "XVAL", "XCRM", "XPLC",
-    "XFIR", "XPOP", "XROG", "XGRP", "SCEN", "PICT", "TMPL", "XEXP",
+    "XFIR", "XPOP", "XROG", "XGRP", "SCEN", "PICT", "TMPL", "XEXP", "XUPG",
 ];
 
 pub const FRESH_LABEL_TABLE_SIZE: usize = sc2label_layout::ORIGINAL_SIZE as usize;
@@ -245,7 +245,7 @@ pub fn load(bytes: &[u8]) -> Result<Document, String> {
         }
     }
 
-    for id in ["PICT", "TMPL", "XEXP"] {
+    for id in ["PICT", "TMPL", "XEXP", "XUPG"] {
         if let Some(data) = entry(id) {
             document.chunks.push(Chunk::new(id, data.to_vec(), -1));
         }
@@ -374,7 +374,7 @@ pub fn entries(document: &mut Document) -> Result<Entries, String> {
         result.add(&entry_name(TEXT_ID), framing::encode_text(&occurrences));
     }
 
-    for id in ["PICT", "TMPL", "XEXP"] {
+    for id in ["PICT", "TMPL", "XEXP", "XUPG"] {
         if let Some(data) = payload(id) {
             result.add(&entry_name(id), data);
         }

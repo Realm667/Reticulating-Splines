@@ -32,5 +32,6 @@ pub mod testing;
 pub mod things;
 pub mod tools;
 pub mod trip;
+pub mod upgrades;
 #[macro_use]
 pub mod value;

@@ -23,6 +23,7 @@ use sc2k_sim::sim::tools::commands::{
 use sc2k_sim::sim::value::{ToValue, Value};
 
 pub const OPERATIONS: &[&str] = &[
+    "tool.upgrade",
     "tool.route",
     "tool.highway_preview",
     "tool.tunnel",
@@ -67,6 +68,13 @@ pub fn dispatch(op: &str, args: &VarDictionary, city: &mut City, randoms: &mut R
     let tool = tool_args(args);
 
     let result: Value = match op {
+        "tool.upgrade" => sc2k_sim::sim::upgrades::apply(
+            city,
+            point(args, "point"),
+            convert::int(args, "identity", -1),
+            convert::int(args, "level", -1),
+        )
+        .to_value(),
         "tool.route" => {
             let choices = RouteChoices {
                 bridge: convert::int(args, "bridge", -1),

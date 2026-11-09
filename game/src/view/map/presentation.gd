@@ -10,6 +10,8 @@ var _effect_generation := 0
 var _effect_sequences: Array[TransientEffectSequence] = []
 var _shake_generation := 0
 var shake_offset := Vector2.ZERO
+var upgrade_signature: Array = []
+var upgrade_markers: Array = []
 
 
 func _init(control: CityMapControl) -> void:
@@ -69,6 +71,7 @@ func _draw_overlay() -> void:
 	var valid := (map.selection.query_preview_active() or not map.placement_validator.is_valid()
 		or bool(map.placement_validator.call(pending if pending.x >= 0 else map.selection_end if map.selection_end.x >= 0 else map.hover_tile)))
 
+	_draw_upgrade_stars(canvas, scale, offset)
 	map.selection._draw_selection_preview(canvas, scale, offset, valid)
 
 	if map.placement_ghost_provider.is_valid() and map.edit_enabled and ghost_tile.x >= 0:
@@ -364,3 +367,47 @@ class TransientEffectSequence extends RefCounted:
 
 	func current() -> Array:
 		return frames[frame] if frame < frames.size() else []
+
+
+func set_upgrade_city(city: CityState) -> void:
+	# Shared snapshots retain CityState and local chunk revisions, but replace metadata.
+	var signature: Array = [city, city.chunk_revision("XUPG"), city.document.sc2x_metadata] if city != null else []
+	if signature == upgrade_signature:
+		return
+	upgrade_signature = signature
+	upgrade_markers.clear()
+	if city != null and city.document.find_chunk("XUPG") != null:
+		var bytes := city.document.find_chunk("XUPG").decoded_payload
+		for record in range(24, bytes.size(), 40):
+			upgrade_markers.append([BinaryData.read_u32_be(bytes, record + 4), BinaryData.read_u32_be(bytes, record + 8), BinaryData.read_u32_be(bytes, record + 12), BinaryData.read_u32_be(bytes, record + 16), BinaryData.read_u32_be(bytes, record + 20)])
+		upgrade_markers.append_array(BuildingUpgrades.view_markers(city))
+	if map.layers.overlay_layer != null:
+		map.layers.overlay_layer.queue_redraw()
+
+
+func _draw_upgrade_stars(canvas: CanvasItem, scale: float, offset: Vector2) -> void:
+	if map.city == null or map.dark_underground or map.data_view_mode != CityViewMode.Mode.NONE:
+		return
+	for record: Array in upgrade_markers:
+		var x := int(record[0])
+		var y := int(record[1])
+		var level := int(record[3])
+		var target := int(record[4])
+		if level == 0 and target == 0:
+			continue
+		if map.city.building_id(x, y) != int(record[2]) or not map.city.tile_is_visible(x, y):
+			continue
+		var polygon := Renderer.tile_polygon(map.city, x, y)
+		if polygon.size() != 4:
+			continue
+		var anchor: Vector2 = offset + polygon[0] * scale
+		var size := maxf(1.0, scale)
+		for star in maxi(level, target):
+			var points := PackedVector2Array()
+			for corner in 10:
+				var angle := -PI / 2.0 + corner * PI / 5.0
+				var radius := 4.0 if corner % 2 == 0 else 1.8
+				points.append(anchor + Vector2(star * 10.0, -5.0) * size + Vector2(cos(angle), sin(angle)) * radius * size)
+			canvas.draw_colored_polygon(points, Color("ffce4b") if star < level else Color("8f8f8f"))
+			points.append(points[0])
+			canvas.draw_polyline(points, Color("3b3020"), size)

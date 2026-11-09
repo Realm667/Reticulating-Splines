@@ -249,7 +249,9 @@ func command(actor: String, request: Dictionary) -> Dictionary:
 			return rejected("The regional treasury exceeds the supported balance.")
 		if funds != child.city.funds():
 			child.undo_document = null
-	if request.get("kind") in ["build", "sign"]:
+	if request.get("kind") == "upgrade" and int(request.revision) != revision:
+		return rejected("The city view is out of date. Wait for synchronization.")
+	if request.get("kind") in ["build", "sign", "upgrade"]:
 		if not point_valid(request.get("start")) or not point_valid(request.get("finish")):
 			return rejected("Invalid map position.")
 		var versions: PackedInt64Array = region_versions[actor]

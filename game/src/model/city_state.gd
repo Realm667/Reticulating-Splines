@@ -66,6 +66,7 @@ static func from_document(source: Sc2File) -> CityState:
 
 	if source != null and source.is_valid():
 		source.upgrade_large_limits()
+		BuildingUpgrades.ensure(source)
 
 	city.document = source
 	city.map_size = source.map_size if source != null else 128
@@ -115,6 +116,13 @@ static func from_document(source: Sc2File) -> CityState:
 			city.load_error = NativeSimulationBridge.run("expanded.validate", city, null, null, null).result
 	elif source.sc2x_metadata != null and ExpandedRules.FEATURE in source.sc2x_metadata.required_features:
 		city.load_error = "Expanded city data is missing."
+
+	if source.find_chunk("XUPG") != null and (source.sc2x_metadata == null or BuildingUpgrades.FEATURE not in source.sc2x_metadata.required_features):
+		city.load_error = "Building upgrade capability is missing."
+	elif source.sc2x_metadata != null and BuildingUpgrades.FEATURE in source.sc2x_metadata.required_features and source.find_chunk("XUPG") == null:
+		city.load_error = "Building upgrade data is missing."
+	elif source.find_chunk("XUPG") != null and not ExpandedRules.enabled(source):
+		city.load_error = "Building upgrades require Expanded rules."
 
 	return city
 

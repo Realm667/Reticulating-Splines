@@ -9,6 +9,11 @@ const Music = preload("res://src/audio/music_director.gd")
 
 var app: CityApplication
 var text_resources: OriginalTextResources
+var upgrade_query := {}
+var upgrade_document: Sc2File
+var upgrade_buildings_revision := -1
+var upgrade_revision := -1
+var upgrade_mp_revision := -1
 
 
 func _init(application: CityApplication) -> void:
@@ -220,6 +225,11 @@ func open_query(point: Vector2i) -> void:
 	):
 		result.title = app.asset_state.active_scurk_tile_set.names[int(result.tile_id)]
 
+	upgrade_query = BuildingUpgrades.info(app.document_state.city, point)
+	upgrade_mp_revision = app.coop.session.local_revision if app.coop.session != null else -1
+	upgrade_document = app.document_state.city.document
+	upgrade_buildings_revision = upgrade_document.find_chunk("XBLD").mutation_revision
+	upgrade_revision = upgrade_document.find_chunk("XUPG").mutation_revision if upgrade_document.find_chunk("XUPG") != null else -1
 	app.tool_state.active_query_result = result
 	var is_specific: bool = result.kind == "specific" and not app.coop.active()
 	var action := "" if app.coop.active() else str(result.action)
@@ -253,11 +263,16 @@ func open_query(point: Vector2i) -> void:
 		animation_palette = app.asset_state.palette
 	app.city_dialogs.query_dialog.neighborhood_view.blending_enabled = app.preferences.visual_enhancements.disaster_blending
 	app.city_dialogs.query_dialog.set_max_length(app.document_state.city.document.name_limit())
+	var query_text := QueryText.format_text(result)
+	if not upgrade_query.is_empty():
+		var advanced := query_text.find("Advanced tile data")
+		query_text = query_text.left(advanced) if advanced >= 0 else query_text
+		query_text += BuildingUpgrades.details(upgrade_query)
 	app.city_dialogs.query_dialog.show_query(
 		str(result.title),
 		str(result.title) if is_specific else "",
 		is_specific,
-		QueryText.format_text(result),
+		query_text,
 		action_text,
 		result,
 		neighborhood_texture,
@@ -265,6 +280,8 @@ func open_query(point: Vector2i) -> void:
 		app.palette_clock.cycle_ticks,
 		selection_texture,
 	)
+	app.city_dialogs.query_dialog.upgrade_button.visible = not upgrade_query.is_empty() and int(upgrade_query.level) < 2
+	app.city_dialogs.query_dialog.upgrade_button.disabled = not upgrade_query.get("available", false)
 	app.effects_audio.play_sound_ids(result.sound_events)
 
 
@@ -324,3 +341,25 @@ func run_query_action() -> void:
 			app.city_dialogs.library_windows.show_texts(
 				display_texts, Vector2i(app.get_viewport_rect().size)
 			)
+
+
+func run_upgrade() -> void:
+	var city := app.document_state.city
+	if city == null or upgrade_query.is_empty() or app.tool_state.active_query_result == null:
+		return
+	var point: Vector2i = app.tool_state.active_query_result.point
+	if city.document != upgrade_document or city.document.find_chunk("XBLD").mutation_revision != upgrade_buildings_revision or city.document.find_chunk("XUPG").mutation_revision != upgrade_revision:
+		app.interface.show_error(tr("The building changed. Reopen its query."))
+		return
+	if app.coop.active():
+		app.coop.session.request({"kind": "upgrade", "revision": upgrade_mp_revision, "start": [point.x, point.y], "finish": [point.x, point.y], "identity": upgrade_query.identity, "level": upgrade_query.level})
+		close_query(false)
+		return
+	var edit := BuildingUpgrades.apply(city, point, int(upgrade_query.identity), int(upgrade_query.level))
+	if not edit.ok:
+		app.interface.show_error(tr(edit.error))
+		return
+	app.tool_state.last_edit_command = edit
+	app.interface.refresh_details()
+	app.static_render.refresh_after_city_edit(edit)
+	open_query(point)

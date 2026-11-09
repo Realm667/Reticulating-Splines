@@ -194,6 +194,7 @@ pub fn run_schedule(
 
     crate::sim::expanded::reconcile(city);
     crate::sim::expanded::monthly(city);
+    crate::sim::upgrades::advance(city);
 
     // Extended cities correct their tile counts before the budget reads them.
     if schedule.month_day == 0 && city.is_extended() {

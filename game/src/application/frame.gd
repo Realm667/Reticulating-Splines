@@ -16,6 +16,8 @@ func _init(application: CityApplication) -> void:
 
 
 func process(delta: float) -> void:
+	if app.map_view != null:
+		app.map_view.presentation.set_upgrade_city(app.document_state.city)
 	if app.knowledge != null:
 		app.knowledge.invalidate_edits()
 	app.visual_preparation.work_budget.begin_frame(delta)

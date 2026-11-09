@@ -30,12 +30,14 @@ struct Component {
     supply: i64,
     consumers: i64,
     tower_capacity: i64,
+    upgraded_storage: bool,
 }
 
 /// Water that a component still has to give out in its second pass.
 struct Distribution {
     served: i64,
     towers_to_fill: i64,
+    upgraded: bool,
 }
 
 /// WaterPhase.run.
@@ -72,7 +74,7 @@ pub fn run(city: &mut City) -> WaterResult {
         let component = if bounded_queue {
             trace_bounded_component(city, &mut flags, index, pump_base_supply)
         } else {
-            trace_component(&city.xbld.data, &mut flags, &mut queue, index, pump_base_supply, map_edge)
+            trace_component(city, &mut flags, &mut queue, index, pump_base_supply, map_edge)
         };
 
         span.mark("capacity and tower allocation");
@@ -80,7 +82,12 @@ pub fn run(city: &mut City) -> WaterResult {
         let stored_units = (component.supply - served).min(component.tower_capacity);
         let mut distribution = Distribution {
             served,
-            towers_to_fill: (stored_units + 50) / 100,
+            towers_to_fill: if component.upgraded_storage {
+                stored_units
+            } else {
+                (stored_units + 50) / 100
+            },
+            upgraded: component.upgraded_storage,
         };
         total_supply += component.supply;
         total_consumers += component.consumers;
@@ -94,7 +101,7 @@ pub fn run(city: &mut City) -> WaterResult {
         }
 
         for &tile in &queue[..component.size] {
-            water_tile(&city.xbld.data, &mut flags, tile, &mut distribution);
+            water_tile(city, &mut flags, tile, &mut distribution);
             flags[tile as usize] = (flags[tile as usize] as i64 & !FLAG_MARK & 0xff) as u8;
         }
 
@@ -119,7 +126,7 @@ pub fn run(city: &mut City) -> WaterResult {
         }
     }
 
-    let treatment_capacity = (treatment_tiles / 4) * 2000;
+    let treatment_capacity = (treatment_tiles / 4) * 2000 + crate::sim::upgrades::extra_units(city, tiles::WATER_TREATMENT, 2000);
     let treatment_sufficient = watered_consumers <= treatment_capacity;
     city.set_misc_u32(misc_layout::TREATMENT_SUFFICIENT, treatment_sufficient as i64);
 
@@ -137,7 +144,7 @@ pub fn run(city: &mut City) -> WaterResult {
     result
 }
 
-fn trace_component(buildings: &[u8], flags: &mut [u8], queue: &mut [i64], start: i64, pump_base_supply: i64, map_edge: i64) -> Component {
+fn trace_component(city: &City, flags: &mut [u8], queue: &mut [i64], start: i64, pump_base_supply: i64, map_edge: i64) -> Component {
     let mut result = Component::default();
 
     if flags[start as usize] as i64 & FLAG_PIPED == 0 {
@@ -160,16 +167,7 @@ fn trace_component(buildings: &[u8], flags: &mut [u8], queue: &mut [i64], start:
         let index = queue[head];
         head += 1;
         let y = index % map_edge;
-        count_tile(
-            buildings,
-            flags,
-            index,
-            index / map_edge,
-            y,
-            pump_base_supply,
-            map_edge,
-            &mut result,
-        );
+        count_tile(city, flags, index, index / map_edge, y, pump_base_supply, map_edge, &mut result);
 
         // Neighbors in the original order: y - 1, x - 1, y + 1, x + 1.
         for (valid, neighbor) in [
@@ -214,7 +212,7 @@ fn trace_bounded_component(city: &City, flags: &mut [u8], start: i64, pump_base_
 
         let x = index / map_edge;
         let y = index % map_edge;
-        count_tile(&city.xbld.data, flags, index, x, y, pump_base_supply, map_edge, &mut result);
+        count_tile(city, flags, index, x, y, pump_base_supply, map_edge, &mut result);
         flags[index as usize] = (flags[index as usize] as i64 | FLAG_MARK) as u8;
         queue_neighbors(flags, &mut queue, x, y, 0, map_edge);
     }
@@ -242,7 +240,7 @@ fn distribute_bounded(city: &City, flags: &mut [u8], start: i64, distribution: &
             continue;
         }
 
-        water_tile(&city.xbld.data, flags, index, distribution);
+        water_tile(city, flags, index, distribution);
         flags[index as usize] = (flags[index as usize] as i64 & !FLAG_MARK & 0xff) as u8;
         queue_neighbors(flags, &mut queue, index / map_edge, index % map_edge, FLAG_MARK, map_edge);
     }
@@ -250,18 +248,9 @@ fn distribute_bounded(city: &City, flags: &mut [u8], start: i64, distribution: &
 
 /// Add one traced tile to the component supply, consumers, and tower capacity.
 #[allow(clippy::too_many_arguments)]
-fn count_tile(
-    buildings: &[u8],
-    flags: &mut [u8],
-    index: i64,
-    x: i64,
-    y: i64,
-    pump_base_supply: i64,
-    map_edge: i64,
-    component: &mut Component,
-) {
+fn count_tile(city: &City, flags: &mut [u8], index: i64, x: i64, y: i64, pump_base_supply: i64, map_edge: i64, component: &mut Component) {
     let i = index as usize;
-    let building = buildings[i] as i64;
+    let building = city.xbld.data[i] as i64;
 
     if building < tiles::DEVELOPED_FIRST {
         return;
@@ -274,16 +263,20 @@ fn count_tile(
             component.supply += neighbor_supply(flags, x, y, map_edge, flag_bits::WATER, 10) + pump_base_supply;
         }
     } else if building == tiles::WATER_TOWER {
-        component.tower_capacity += 100;
+        let capacity = 100 + 50 * crate::sim::upgrades::level_at(&city.xupg.data, crate::sim::geom::Vec2i::new(x, y));
+        component.tower_capacity += capacity;
+        component.upgraded_storage |= capacity > 100;
 
         if flag & FLAG_WATERED != 0 {
-            component.supply += 100;
+            component.supply += capacity;
         }
 
         flags[i] = (flag & !FLAG_WATERED & 0xff) as u8;
     } else if building == tiles::DESALINIZATION {
         if flag & FLAG_POWERED != 0 {
-            component.supply += neighbor_supply(flags, x, y, map_edge, flag_bits::SALT_WATER | flag_bits::WATER, 20);
+            component.supply += neighbor_supply(flags, x, y, map_edge, flag_bits::SALT_WATER | flag_bits::WATER, 20)
+                * (2 + crate::sim::upgrades::level_at(&city.xupg.data, crate::sim::geom::Vec2i::new(x, y)))
+                / 2;
         }
     } else if building != tiles::WATER_TREATMENT {
         component.consumers += 1;
@@ -308,9 +301,9 @@ fn neighbor_supply(flags: &[u8], x: i64, y: i64, map_edge: i64, wanted: i64, amo
 }
 
 /// Second-pass water for one tile of a component.
-fn water_tile(buildings: &[u8], flags: &mut [u8], tile: i64, distribution: &mut Distribution) {
+fn water_tile(city: &City, flags: &mut [u8], tile: i64, distribution: &mut Distribution) {
     let i = tile as usize;
-    let building = buildings[i] as i64;
+    let building = city.xbld.data[i] as i64;
     let flag = flags[i] as i64;
 
     if building < tiles::DEVELOPED_FIRST {
@@ -322,9 +315,18 @@ fn water_tile(buildings: &[u8], flags: &mut [u8], tile: i64, distribution: &mut 
             flags[i] = (flag | FLAG_WATERED) as u8;
         }
     } else if building == tiles::WATER_TOWER {
-        if flag & FLAG_POWERED != 0 && distribution.towers_to_fill != 0 {
+        let capacity = if distribution.upgraded {
+            100 + 50
+                * crate::sim::upgrades::level_at(
+                    &city.xupg.data,
+                    crate::sim::geom::Vec2i::new(tile / city.map_size, tile % city.map_size),
+                )
+        } else {
+            1
+        };
+        if flag & FLAG_POWERED != 0 && distribution.towers_to_fill >= capacity {
             flags[i] = (flag | FLAG_WATERED) as u8;
-            distribution.towers_to_fill -= 1;
+            distribution.towers_to_fill -= capacity;
         }
     } else if distribution.served != 0 {
         flags[i] = (flag | FLAG_WATERED) as u8;

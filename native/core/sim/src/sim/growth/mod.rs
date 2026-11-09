@@ -205,6 +205,7 @@ pub fn run(city: &mut City, randoms: &mut Randoms, step: i64, substep: i64, deta
 
     {
         let maps = TripMaps {
+            upgrades: &city.xupg.data,
             buildings: &city.xbld.data,
             zones: &city.xzon.data,
             underground: &city.xund.data,
@@ -476,6 +477,7 @@ impl TileScan {
             }
 
             let maps = TripMaps {
+                upgrades: &city.xupg.data,
                 buildings: &city.xbld.data,
                 zones: &city.xzon.data,
                 underground: &city.xund.data,
@@ -992,6 +994,7 @@ mod tests {
                         let point = Vec2i::new(x, y);
                         let start = (trip::ROAD_MODE << trip::point_shift(edge)) | (x * edge + y);
                         let maps = TripMaps {
+                            upgrades: &city.xupg.data,
                             buildings: &city.xbld.data,
                             zones: &city.xzon.data,
                             underground: &city.xund.data,

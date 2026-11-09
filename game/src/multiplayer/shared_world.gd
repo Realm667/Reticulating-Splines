@@ -70,6 +70,10 @@ func add_player(actor: String) -> String:
 		document.find_chunk("XBLD").set_decoded_payload(natural)
 		for field in [Sc2MiscLayout.START_YEAR, Sc2MiscLayout.DIFFICULTY, Sc2MiscLayout.NO_DISASTERS]:
 			document.set_misc_u32(field, template.misc_u32(field))
+	if ExpandedRules.enabled(template):
+		var expanded_error := ExpandedRules.enable(document)
+		if not expanded_error.is_empty():
+			return expanded_error
 	CityActivityIdentity.ensure(document)
 	var child := CoopWorld.new()
 	if not child.open(document):
@@ -205,10 +209,20 @@ func command(actor: String, request: Dictionary) -> Dictionary:
 			return rejected("Manual disasters can only be started in your own municipality.")
 	if request.get("kind") == "build" and request.get("group") == CityToolIds.Group.DISPATCH:
 		return help_disaster(actor, request)
-	if request.get("kind") in ["build", "sign"]:
+	if request.get("kind") == "upgrade" and int(request.revision) != revision:
+		return rejected("The city view is out of date. Wait for synchronization.")
+	if request.get("kind") in ["build", "sign", "upgrade"]:
 		if not point_valid(request.get("start")) or not point_valid(request.get("finish")):
 			return rejected("Invalid map position.")
 		var area := selected_tiles(request)
+		if request.get("kind") == "upgrade":
+			var info := BuildingUpgrades.info(child.city, point(request.finish))
+			if info.is_empty():
+				return rejected("This building cannot be upgraded.")
+			var site: Rect2i = info.site
+			for x in range(site.position.x, site.end.x):
+				for y in range(site.position.y, site.end.y):
+					area.append(child.city.index_of(x, y))
 		var owner := actors.find(actor) + 1
 		var public_network: bool = request.get("kind") == "build" and request.get("tool") == 0 and request.get("group") in [CityToolIds.Group.ROADS, CityToolIds.Group.POWER]
 		for tile: int in area:
@@ -617,6 +631,7 @@ func snapshot_for(actor: String, live := false) -> Dictionary:
 		for id: String in record_cache[actor]:
 			document.find_chunk(id).expected_decoded_size = record_cache[actor][id].size()
 			document.find_chunk(id).set_decoded_payload(record_cache[actor][id])
+	compose_upgrades(document, actor)
 	if live:
 		if not live_documents.has(actor):
 			live_documents[actor] = MultiplayerDocument.new()
@@ -964,3 +979,21 @@ func share_public_network(source: CoopWorld, changed: PackedInt32Array) -> void:
 		child.revision += 1
 		child.undo_document = null
 	snapshot_cache.clear()
+
+
+func compose_upgrades(document: Sc2File, viewer: String) -> void:
+	# Foreign stars are presentation metadata, never this municipality's bills or capabilities.
+	var markers: Array = []
+	for actor: String in actors:
+		if actor == viewer:
+			continue
+		var other: Sc2Chunk = municipalities[actor].city.document.find_chunk("XUPG")
+		if other == null:
+			continue
+		for offset in range(24, other.decoded_payload.size(), 40):
+			var bytes := other.decoded_payload
+			var x := BinaryData.read_u32_be(bytes, offset + 4)
+			var y := BinaryData.read_u32_be(bytes, offset + 8)
+			if owners[city.index_of(x, y)] == actors.find(actor) + 1:
+				markers.append([x, y, BinaryData.read_u32_be(bytes, offset + 12), BinaryData.read_u32_be(bytes, offset + 16), BinaryData.read_u32_be(bytes, offset + 20)])
+	document.sc2x_metadata.extensions["upgrade_view_markers"] = markers

@@ -77,6 +77,9 @@ static func stage(seller: CityState, buyer: CityState, tiles: Array) -> Dictiona
 		var chunk: Sc2Chunk = entry[0].find_chunk(entry[1])
 		chunk.expected_decoded_size = entry[2].size()
 		chunk.set_decoded_payload(entry[2])
+	var upgrade_error := transfer_upgrades(from, to, selected, facilities)
+	if not upgrade_error.is_empty():
+		return {"error": upgrade_error}
 	var from_city := CityState.from_document(from)
 	var to_city := CityState.from_document(to)
 	# Counts are immediately available to budget/dispatch, before the next census.
@@ -88,3 +91,36 @@ static func stage(seller: CityState, buyer: CityState, tiles: Array) -> Dictiona
 		for building in counts.size():
 			municipality.document.set_misc_u32(Sc2MiscLayout.TILE_COUNTS + building * 4, counts[building])
 	return {"error": "", "seller": from_city, "buyer": to_city}
+
+
+static func transfer_upgrades(source: Sc2File, target: Sc2File, selected: Dictionary, facilities: Dictionary) -> String:
+	var from := source.find_chunk("XUPG")
+	if from == null:
+		return ""
+	var to := target.find_chunk("XUPG")
+	var kept := from.decoded_payload.slice(0, 24)
+	var received := to.decoded_payload.duplicate() if to != null else PackedByteArray()
+	for offset in range(24, from.decoded_payload.size(), 40):
+		var record := from.decoded_payload.slice(offset, offset + 40)
+		var x := BinaryData.read_u32_be(record, 4)
+		var y := BinaryData.read_u32_be(record, 8)
+		if not selected.has(x * source.map_size + y):
+			kept.append_array(record)
+			continue
+		if to == null:
+			return "Building upgrades require Expanded rules."
+		var next := BinaryData.read_u32_be(received, 4) + 1
+		if next > 4294967295:
+			return "Invalid building upgrade identity."
+		BinaryData.write_u32_be(received, 4, next)
+		BinaryData.write_u32_be(record, 0, next)
+		var facility := BinaryData.read_u32_be(record, 36)
+		if OverlayData.is_facility(facility):
+			BinaryData.write_u32_be(record, 36, OverlayData.facility_id(int(facilities[OverlayData.facility_record(facility)])))
+		received.append_array(record)
+	from.expected_decoded_size = -1
+	from.set_decoded_payload(kept)
+	if to != null:
+		to.expected_decoded_size = -1
+		to.set_decoded_payload(received)
+	return ""

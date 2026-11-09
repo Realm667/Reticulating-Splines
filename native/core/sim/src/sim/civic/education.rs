@@ -104,6 +104,15 @@ pub fn run(city: &mut City, random: &mut SimRandom) -> EducationHealthResult {
     let mut health_capacity = ((tile_count(city, tiles::HOSPITAL) / 9) * budget_funding(city, sc2budget_layout::HEALTH) * 25) / 100;
     let mut school_capacity = ((tile_count(city, tiles::SCHOOL) / 9) * budget_funding(city, sc2budget_layout::SCHOOL) * 15) / 100;
     let mut college_capacity = ((tile_count(city, tiles::COLLEGE) / 16) * budget_funding(city, sc2budget_layout::COLLEGE) * 50) / 100;
+    health_capacity += crate::sim::upgrades::extra_units(city, tiles::HOSPITAL, 25) * budget_funding(city, sc2budget_layout::HEALTH) / 100;
+    school_capacity += (crate::sim::upgrades::extra_units(city, tiles::SCHOOL, 15)
+        + crate::sim::upgrades::extra_units(city, tiles::LIBRARY, 10))
+        * budget_funding(city, sc2budget_layout::SCHOOL)
+        / 100;
+    college_capacity += (crate::sim::upgrades::extra_units(city, tiles::COLLEGE, 50)
+        + crate::sim::upgrades::extra_units(city, tiles::MUSEUM, 10))
+        * budget_funding(city, sc2budget_layout::COLLEGE)
+        / 100;
     // Expanded capacity uses the Classic service equations, funded by its own upkeep.
     if crate::sim::expanded::operational(city, 0) {
         college_capacity += 25;

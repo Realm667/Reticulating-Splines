@@ -209,7 +209,13 @@ fn add_stations(city: &City, police: &mut [u8], fire: &mut [u8]) {
         };
         let target = if police_station { &mut *police } else { &mut *fire };
         let index = index as i64;
-        grid_math::apply_service_pattern(target, edge, index / edge, index % edge, &patterns[position].1);
+        let level = crate::sim::upgrades::level_at(&city.xupg.data, crate::sim::geom::Vec2i::new(index / edge, index % edge));
+        if level == 0 {
+            grid_math::apply_service_pattern(target, edge, index / edge, index % edge, &patterns[position].1);
+        } else {
+            let scaled: Vec<i64> = patterns[position].1.iter().map(|v| v * (2 + level) / 2).collect();
+            grid_math::apply_service_pattern(target, edge, index / edge, index % edge, &scaled);
+        }
     }
 }
 

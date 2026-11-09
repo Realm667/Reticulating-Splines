@@ -2,6 +2,7 @@ class_name CityQueryDialog
 extends ColorRect
 
 signal close_requested(commit_rename: bool)
+signal upgrade_requested
 signal action_requested
 signal growth_requested
 
@@ -18,6 +19,7 @@ var rename_button: Button
 var action_button: Button
 var ok_button: Button
 var growth_button: Button
+var upgrade_button: Button
 
 
 func _ready() -> void:
@@ -41,6 +43,12 @@ func _ready() -> void:
 	growth_button.pressed.connect(growth_requested.emit)
 	ok_button.get_parent().add_child(growth_button)
 	ok_button.get_parent().move_child(growth_button, 0)
+	upgrade_button = Button.new()
+	upgrade_button.text = "Upgrade building"
+	upgrade_button.pressed.connect(upgrade_requested.emit)
+	ok_button.get_parent().add_child(upgrade_button)
+	ok_button.get_parent().move_child(upgrade_button, 0)
+	upgrade_button.hide()
 	resized.connect(_fit)
 	rename_button.pressed.connect(_enable_rename)
 	action_button.pressed.connect(action_requested.emit)
