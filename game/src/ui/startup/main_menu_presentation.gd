@@ -64,6 +64,7 @@ static func copy_graphics(source: Sc2SpriteArchive) -> Sc2SpriteArchive:
 	copy.visual_nature_enabled = source.visual_nature_enabled
 	copy.visual_terrain_enabled = source.visual_terrain_enabled
 	copy.visual_revision = source.visual_revision
+	CityNetworkModels.copy_state(source, copy)
 	copy.water_reflections = source.water_reflections
 	copy.water_indices = source.water_indices
 	copy.visual_city_life_traffic = source.visual_city_life_traffic

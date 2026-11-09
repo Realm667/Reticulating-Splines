@@ -61,7 +61,8 @@ func prepare_graphics_key() -> void:
 	hash.start(HashingContext.HASH_SHA256)
 	hash.update(palette.to_rgba_bytes())
 	hash.update(var_to_bytes([sprites.draw_building_ground, sprites.redraw_small_highway_ground,
-		sprites.visual_registration, sprites.parcel_styles, sprites.visual_nature_enabled, sprites.visual_terrain_enabled]))
+		sprites.visual_registration, sprites.parcel_styles, sprites.visual_nature_enabled, sprites.visual_terrain_enabled,
+		sprites.visual_models_enabled, sprites.network_model_signature]))
 	var entries := sprites.entries_by_id.duplicate()
 	entries.merge(sprites.visual_nature)
 	var ids := entries.keys()

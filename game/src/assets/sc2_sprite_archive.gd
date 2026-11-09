@@ -15,6 +15,12 @@ var visual_nature_masks: Dictionary[int, Image] = {}
 var visual_nature_enabled := false
 var visual_tree_shadows_enabled := true
 var visual_terrain_enabled := false
+var visual_models_enabled := false
+var network_model_entries: Dictionary[int, SpriteEntry] = {}
+var network_model_heights: Dictionary[int, PackedFloat32Array] = {}
+var network_model_signature := ""
+var network_model_revision := 0
+var network_model_meshes := 0
 var visual_revision := 0
 var water_reflections := false
 var water_indices := PackedByteArray()
@@ -95,6 +101,10 @@ static func combine(archives: Array[Sc2SpriteArchive]) -> Sc2SpriteArchive:
 func parse(bytes: PackedByteArray) -> bool:
 	entries.clear()
 	entries_by_id.clear()
+	network_model_entries.clear()
+	network_model_heights.clear()
+	network_model_signature = ""
+	network_model_revision += 1
 	visual_nature.clear()
 	visual_nature_masks.clear()
 	visual_season_artwork.clear()
@@ -157,6 +167,8 @@ func is_valid() -> bool:
 
 
 func find_sprite(sprite_id: int) -> SpriteEntry:
+	if visual_models_enabled and network_model_entries.has(sprite_id):
+		return network_model_entries[sprite_id]
 	return visual_nature.get(sprite_id, entries_by_id.get(sprite_id)) as SpriteEntry
 
 

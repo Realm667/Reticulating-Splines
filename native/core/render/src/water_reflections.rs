@@ -19,6 +19,12 @@ pub fn mirrored_row(row: i32, contact: i32, object_altitude: i32, water_altitude
     2 * (contact + (object_altitude - water_altitude) * step) - row - 1
 }
 
+fn model_contact(draw: &Draw, sprite: &Sprite, heights: &[f32], x: i32, y: i32) -> Option<i32> {
+    let source_x = if draw.flip { sprite.w - 1 - x } else { x };
+    let z = *heights.get((y * sprite.w + source_x) as usize)?;
+    z.is_finite().then(|| 2 * (draw.rect.y + y) + 1 + (2.0 * z).round() as i32)
+}
+
 fn cell(city: &City, depth: i64) -> Option<usize> {
     if depth < 0 {
         return None;
@@ -406,14 +412,25 @@ impl Builder {
                 })
                 .collect();
             let projection = bridge(building).then(|| BridgeProjection::new(draw, &footprint, sprite, seasons, self.config.step()));
-            let lowest = projection.as_ref().map_or_else(
+            let model = self.model_heights.get(&draw.sprite).filter(|_| bridge(building));
+            let mut lowest = projection.as_ref().map_or_else(
                 || contacts.iter().map(|v| v.0.min(v.1)).min().unwrap(),
                 |p| p.columns.iter().map(|c| 2 * c[0].min(c[2])).min().unwrap(),
             );
-            let highest = projection.as_ref().map_or_else(
+            let mut highest = projection.as_ref().map_or_else(
                 || contacts.iter().map(|v| v.0.max(v.1)).max().unwrap(),
                 |p| p.columns.iter().map(|c| 2 * c[1].max(c[2]) + 1).max().unwrap(),
             );
+            if let Some(heights) = model {
+                for y in 0..sprite.h {
+                    for x in 0..sprite.w {
+                        if let Some(contact) = model_contact(draw, sprite, heights, x, y) {
+                            lowest = lowest.min(contact);
+                            highest = highest.max(contact);
+                        }
+                    }
+                }
+            }
             for (level, present) in levels.iter().enumerate() {
                 if !present || altitude < level as i32 {
                     continue;
@@ -440,9 +457,13 @@ impl Builder {
                         if facade_column.is_some_and(|(top, foot, _)| (sy as f32 + 0.5) < top || sy as f32 + 0.5 >= foot) {
                             continue;
                         }
-                        let contact = projection
-                            .as_ref()
-                            .map_or(if sy >= pier { foot } else { axis }, |p| p.contact(sx, draw.rect.y + sy));
+                        let contact = model
+                            .and_then(|heights| model_contact(draw, sprite, heights, sx, sy))
+                            .unwrap_or_else(|| {
+                                projection
+                                    .as_ref()
+                                    .map_or(if sy >= pier { foot } else { axis }, |p| p.contact(sx, draw.rect.y + sy))
+                            });
                         let plane = (contact + lift).div_euclid(2);
                         let src = ((sy * sprite.w + sx) * 4) as usize;
                         if sprite.rgba[src + 3] == 0 || 2 * (draw.rect.y + sy) + 1 >= contact {
@@ -776,6 +797,39 @@ fn seabed_triangle(out: &mut [u8], bounds: Rect, p: [[f32; 2]; 3], h: [f32; 3], 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn spatial_height_reflects_independent_parts_and_flipped_texels() {
+        for view in 0..3 {
+            let scale = (4 >> view) as f32;
+            let sprite = Sprite {
+                w: 2,
+                h: 3,
+                rgba: vec![255; 24],
+                la: vec![255; 12],
+            };
+            // A high cable and an unrelated pier share a screen column.
+            let heights = vec![24.0 / scale, 12.0 / scale, f32::NAN, 5.5 / scale, 0.0, 1.0 / scale];
+            for flip in [false, true] {
+                let mut draw = Draw::new(0, Rect::new(40, -21, 2, 3));
+                draw.flip = flip;
+                for y in 0..3 {
+                    for x in 0..2 {
+                        let z = heights[(y * 2 + if flip { 1 - x } else { x }) as usize];
+                        let contact = model_contact(&draw, &sprite, &heights, x, y);
+                        if z.is_nan() {
+                            assert_eq!(contact, None);
+                            continue;
+                        }
+                        let row = draw.rect.y + y;
+                        let contact = contact.unwrap();
+                        let reflected = mirrored_row(row, contact.div_euclid(2), 7, 4, 12 >> (2 - view)) + contact.rem_euclid(2);
+                        assert_eq!(reflected, row + (2.0 * z).round() as i32 + 6 * (12 >> (2 - view)));
+                    }
+                }
+            }
+        }
+    }
 
     #[test]
     fn submerged_slopes_and_cliffs_leave_no_depth_holes() {

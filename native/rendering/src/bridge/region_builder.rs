@@ -444,6 +444,27 @@ impl NativeCityRegionBuilder {
             core.atlas.revision += previous_revision;
 
             configure_artwork(&mut core, &request)?;
+            if let Some(value) = request.get("model_heights") {
+                let heights = value.try_to::<AnyDictionary>().map_err(|_| "invalid model heights")?;
+                for (id, value) in heights.iter_shared() {
+                    let id = id.try_to::<i32>().map_err(|_| "invalid model sprite ID")?;
+                    if id / 500 != view || !(14..=111).contains(&(id % 500)) {
+                        return Err("invalid model sprite ID".into());
+                    }
+                    let values = value.try_to::<PackedFloat32Array>().map_err(|_| "invalid model height pixels")?;
+                    let sprite = core.sprites.images.get(&(id as u64 * 2)).ok_or("missing model sprite")?;
+                    if values.len() != (sprite.w * sprite.h) as usize
+                        || values
+                            .as_slice()
+                            .iter()
+                            .enumerate()
+                            .any(|(i, z)| sprite.rgba[i * 4 + 3] != 0 && (!z.is_finite() || !(0.0..=256.0).contains(z)))
+                    {
+                        return Err("invalid model height dimensions or values".into());
+                    }
+                    core.model_heights.insert(id, values.as_slice().to_vec());
+                }
+            }
             if let Some(value) = request.get("building_variants") {
                 let choices = value.try_to::<AnyDictionary>().map_err(|_| "invalid building variants")?;
                 core.sprites.variants.seed = int(&request, "building_mix_seed", 0) as u32;

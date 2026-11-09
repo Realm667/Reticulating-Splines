@@ -79,12 +79,12 @@ static func sprite_image(
 	sprite_id: int,
 	flip: bool
 ) -> Image:
-	var key := "%d:%d" % [sprite_id, int(flip)]
+	var entry := sprites.find_sprite(sprite_id)
+	var key := "%d:%d:%d" % [sprite_id, int(flip), entry.get_instance_id()]
 
 	if cache.has(key):
 		return cache[key]
 
-	var entry := sprites.find_sprite(sprite_id)
 	var rendered := entry.create_image(palette)
 	var image: Image = rendered.image
 

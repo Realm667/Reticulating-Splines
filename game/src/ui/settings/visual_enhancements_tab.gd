@@ -26,6 +26,7 @@ const SECTIONS := [
 		["disaster_blending", "speed_link", "pause_freezes", "idle_saving_enabled"]],
 	["Tilt shift", "Blur the top and bottom of the city view while keeping the center and interface sharp.",
 		["tilt_shift_enabled", "tilt_shift_strength", "tilt_shift_edge", "tilt_shift_transition"]],
+	["Models", "Render roads, railways, power lines and bridges from shared geometric models. Keeps the native pixel style. Unsupported graphics use their original sprites.", ["models_enabled"]],
 	["Tileset Shuffle", "Mix Reticulating Splines and original SC2000 buildings. Apply shuffles the selection again. Runways, piers, hydro and wind power plants always use SC2000 graphics.", []],
 ]
 const PERCENT_FIELDS := ["sunrise_strength", "sunset_strength", "day_glow_radius", "artwork_color_strength", "tilt_shift_strength", "tilt_shift_edge", "tilt_shift_transition", "nature_terrain_strength", "day_lut_strength", "night_strength", "season_transition", "season_lut_strength",

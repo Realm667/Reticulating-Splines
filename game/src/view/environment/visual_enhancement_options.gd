@@ -3,6 +3,7 @@ extends RefCounted
 ## Local presentation preferences. No value is written to a city document.
 
 const FIELDS := [
+	["models_enabled", "Enable models", "bool", false],
 	["tree_growth_enabled", "Tree growth", "bool", false],
 	["artwork_color_enabled", "Natural artwork colors", "bool", false],
 	["artwork_color_strength", "Artwork color reduction", "number", 0.5, 0.0, 1.0, 0.05],
@@ -84,7 +85,7 @@ const FIELDS := [
 
 
 const PRESET_NAMES := ["Vanilla SimCity 2000", "Lightweight", "Balanced", "Detailed", "Reticulated Splines Experience"]
-const PRESET_INDEPENDENT := ["tree_growth_enabled", "idle_saving_enabled", "speed_link", "pause_freezes", "brightmap_folder", "lut_path", "lut_folder"]
+const PRESET_INDEPENDENT := ["models_enabled", "tree_growth_enabled", "idle_saving_enabled", "speed_link", "pause_freezes", "brightmap_folder", "lut_path", "lut_folder"]
 
 
 ## Performance tiers enable progressively more rendering work. Simulation and

@@ -42157,3 +42157,15 @@ msgstr "Deux niveaux d’amélioration"
 #: src/ui/startup/new_city_terrain_dialog.tscn
 msgid "Upgrade eligible facilities through the building query. Stage 1 requires a population record of 25,000 and the year 1920; stage 2 requires 100,000 and 1950. Construction takes time, keeps the existing service running and increases capacity and, where applicable, upkeep."
 msgstr "Améliorez les installations compatibles depuis leur fiche. Le niveau 1 nécessite un record de 25 000 habitants et l’année 1920 ; le niveau 2, 100 000 et 1950. Les travaux prennent du temps, maintiennent le service existant et augmentent la capacité ainsi que, le cas échéant, l’entretien."
+
+#. Supplementary SC2000 model presentation, AI-assisted translation.
+msgid "Models"
+msgstr "Modèles"
+
+#. Supplementary SC2000 model presentation, AI-assisted translation.
+msgid "Enable models"
+msgstr "Activer les modèles"
+
+#. Supplementary SC2000 model presentation, AI-assisted translation.
+msgid "Render roads, railways, power lines and bridges from shared geometric models. Keeps the native pixel style. Unsupported graphics use their original sprites."
+msgstr "Affiche les routes, voies ferrées, lignes électriques et ponts à partir de modèles géométriques communs. Conserve le style de pixels original. Les graphismes non pris en charge utilisent leurs sprites d’origine."

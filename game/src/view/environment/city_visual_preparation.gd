@@ -99,7 +99,9 @@ func _layout() -> Array:
 		app.asset_state.large_sprites, app.asset_state.small_medium_sprites,
 		app.view_state.surface_visibility.duplicate(), app.preferences.city_renderer,
 		app.asset_state.large_sprites.visual_nature_enabled, app.asset_state.large_sprites.visual_terrain_enabled,
-		app.asset_state.small_medium_sprites.visual_nature_enabled, app.asset_state.small_medium_sprites.visual_terrain_enabled]
+		app.asset_state.small_medium_sprites.visual_nature_enabled, app.asset_state.small_medium_sprites.visual_terrain_enabled,
+		app.asset_state.large_sprites.visual_models_enabled, app.asset_state.large_sprites.network_model_revision,
+		app.asset_state.small_medium_sprites.visual_models_enabled, app.asset_state.small_medium_sprites.network_model_revision]
 
 
 func required_variants() -> Array[int]:
@@ -170,6 +172,7 @@ func begin() -> void:
 		archive.visual_tree_shadows_enabled = original.visual_tree_shadows_enabled
 		archive.visual_terrain_enabled = original.visual_terrain_enabled
 		archive.visual_revision = original.visual_revision
+		CityNetworkModels.copy_state(original, archive)
 		archive.water_reflections = original.water_reflections
 		archive.water_indices = original.water_indices
 		archive.redraw_small_highway_ground = original.redraw_small_highway_ground

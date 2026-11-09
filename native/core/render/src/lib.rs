@@ -368,6 +368,9 @@ pub struct Builder {
     pub moving: HashMap<usize, Vec<Draw>>,
     /// Shadow colors: each RGBA color and the darker color that a shadow makes.
     pub shadows: HashMap<[u8; 4], [u8; 4]>,
+    /// Model-space height per indexed texel, in the selected view's pixels.
+    /// Transparent texels use NaN. Original sprite artwork needs no metadata.
+    pub model_heights: HashMap<i32, Vec<f32>>,
 }
 
 impl Builder {
@@ -410,6 +413,7 @@ impl Builder {
             sprite_limit,
             moving: HashMap::new(),
             shadows: HashMap::new(),
+            model_heights: HashMap::new(),
         };
         // Pack all unflipped artwork once. Scrolling then seldom adds a sprite,
         // so the main thread seldom uploads a changed atlas. Tall sprites

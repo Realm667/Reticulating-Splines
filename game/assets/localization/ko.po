@@ -11477,3 +11477,15 @@ msgstr "건물 확장 2단계"
 #: src/ui/startup/new_city_terrain_dialog.tscn
 msgid "Upgrade eligible facilities through the building query. Stage 1 requires a population record of 25,000 and the year 1920; stage 2 requires 100,000 and 1950. Construction takes time, keeps the existing service running and increases capacity and, where applicable, upkeep."
 msgstr "건물 조회에서 확장 가능한 시설을 개선할 수 있습니다. 1단계는 최고 인구 25,000명과 1920년, 2단계는 100,000명과 1950년이 필요합니다. 공사에는 시간이 걸리며 기존 서비스는 계속 운영됩니다. 용량이 늘어나고 해당 시설의 유지비도 증가합니다."
+
+#. Supplementary SC2000 model presentation, AI-assisted translation.
+msgid "Models"
+msgstr "모델"
+
+#. Supplementary SC2000 model presentation, AI-assisted translation.
+msgid "Enable models"
+msgstr "모델 활성화"
+
+#. Supplementary SC2000 model presentation, AI-assisted translation.
+msgid "Render roads, railways, power lines and bridges from shared geometric models. Keeps the native pixel style. Unsupported graphics use their original sprites."
+msgstr "공유 기하 모델로 도로, 철도, 송전선과 다리를 표시합니다. 원래의 픽셀 스타일을 유지합니다. 지원하지 않는 그래픽은 기존 스프라이트를 사용합니다."

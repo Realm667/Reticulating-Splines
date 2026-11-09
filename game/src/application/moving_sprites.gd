@@ -649,7 +649,7 @@ func demolish_brush_visual(tile: Vector2i, direction: int) -> CityDynamicVisual:
 func dynamic_sprite_resource(
 	sprite_archive: Sc2SpriteArchive, sprite_id: int, flip: bool, divisor: int, texture_factor := 1, image_only := false
 ) -> CitySpriteResource:
-	var key := "%d:%d:%d:%d:%d:%d" % [sprite_id, int(flip), divisor, texture_factor, sprite_archive.get_instance_id(), int(sprite_archive.water_reflections)]
+	var key := "%d:%d:%d:%d:%d:%d:%d:%d" % [sprite_id, int(flip), divisor, texture_factor, sprite_archive.get_instance_id(), int(sprite_archive.water_reflections), sprite_archive.network_model_revision, int(sprite_archive.visual_models_enabled)]
 
 	if caches.dynamic_sprite_cache.has(key):
 		var cached: CitySpriteResource = caches.dynamic_sprite_cache[key]
@@ -718,7 +718,7 @@ func _complete_sprite_textures(resource: CitySpriteResource, sprite_archive: Sc2
 
 
 func _shows_artwork(sprite_archive: Sc2SpriteArchive, sprite_id: int) -> bool:
-	return sprite_archive.high_resolution.has(sprite_id) and caches.region_cache != null
+	return not (sprite_archive.visual_models_enabled and sprite_archive.network_model_entries.has(sprite_id)) and sprite_archive.high_resolution.has(sprite_id) and caches.region_cache != null
 
 
 # The texel density of a moving sprite: 1, or up to 4 for HD art. Positions and

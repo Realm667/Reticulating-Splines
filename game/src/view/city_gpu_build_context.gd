@@ -159,6 +159,12 @@ func prepare(city: CityState, palette: Sc2Palette, sprites: Sc2SpriteArchive, vi
 				if artwork.has(id):
 					parcels[id] = sprites.parcel_styles[id]
 		request["parcel_styles"] = parcels
+		var model_heights: Dictionary[int, PackedFloat32Array] = {}
+		if sprites.visual_models_enabled:
+			for id: int in sprites.network_model_heights:
+				if id / 500 == view:
+					model_heights[id] = sprites.network_model_heights[id]
+		request["model_heights"] = model_heights
 
 		# GPU regions and `raster_artwork` draw full-color art
 		if pack_atlas or with_artwork:
@@ -312,6 +318,8 @@ static func artwork_request(sprites: Sc2SpriteArchive, sprite_base: int, include
 	var rates: Dictionary[int, int] = {}
 
 	for id: int in sprites.high_resolution:
+		if sprites.visual_models_enabled and sprites.network_model_entries.has(id):
+			continue
 		var nature := sprites.visual_nature.has(id) and id % CityNatureArtwork.SPAN / 500 == sprite_base / 500
 		var mixed := id >= BuildingVariants.FIRST and id < BuildingVariants.FIRST + BuildingVariants.SPAN \
 			and id % BuildingVariants.SPAN / 500 == sprite_base / 500

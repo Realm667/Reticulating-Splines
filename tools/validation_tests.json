@@ -1,5 +1,18 @@
 [
   {
+    "id": "network_models_gpu_test",
+    "script": "tests/network_models_gpu_test.gd",
+    "domain": "rendering",
+    "lane": "native",
+    "driver": "scene-batch"
+  },
+  {
+    "id": "network_models_test",
+    "script": "tests/network_models_test.gd",
+    "domain": "rendering",
+    "lane": "product"
+  },
+  {
     "id": "building_upgrades_ui_test",
     "script": "tests/building_upgrades_ui_test.gd",
     "domain": "ui",

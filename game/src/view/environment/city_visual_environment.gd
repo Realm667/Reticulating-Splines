@@ -49,6 +49,7 @@ func configure() -> void:
 		_load_custom_lut(options.lut_path)
 	if profiles.atlases.is_empty() or _options.get("lut_folder", "") != options.lut_folder:
 		profiles.reload(options.lut_folder)
+	_configure_models(options)
 	_configure_water(options)
 	_configure_nature(options)
 	_options = options.duplicate()
@@ -92,6 +93,21 @@ func export_luts() -> void:
 	app.main_overlays.settings_dialog.show_visual_message(error if not error.is_empty() else "Editable LUT profiles and neutral template exported to:\n" + folder + "\nExisting files were preserved.")
 
 
+func _configure_models(options: Dictionary) -> void:
+	var changed := false
+	for pair in [[app.asset_state.large_sprites, "large"], [app.asset_state.small_medium_sprites, "small-medium"]]:
+		var archive: Sc2SpriteArchive = pair[0]
+		if CityNetworkModels.configure(archive, app.asset_state.palette, options.models_enabled):
+			CityBrightmaps.load_archive(archive, options.brightmap_folder, pair[1])
+			CityDispatchLights.prepare(archive, app.asset_state.palette)
+			CitySeasonColors.prepare(archive, app.asset_state.palette)
+			archive.visual_seasons.merge(archive.visual_nature_masks, true)
+			changed = true
+	if changed and app.document_state.city != null:
+		app.static_render.invalidate_rendered_city()
+		app.map_render.refresh_map()
+
+
 func _configure_water(options: Dictionary, refresh := true) -> void:
 	var indices := CityWaterLayer.blue_indices(app.asset_state.palette)
 	var changed := false
@@ -120,6 +136,7 @@ func reload_brightmaps(refresh := true) -> void:
 	for pair in [[app.asset_state.large_sprites, "large"], [app.asset_state.small_medium_sprites, "small-medium"]]:
 		var archive: Sc2SpriteArchive = pair[0]
 		if archive != null:
+			CityNetworkModels.configure(archive, app.asset_state.palette, app.preferences.visual_enhancements.models_enabled)
 			CityBrightmaps.load_archive(archive, app.preferences.visual_enhancements.brightmap_folder, pair[1])
 			if app.asset_state.palette != null:
 				CityDispatchLights.prepare(archive, app.asset_state.palette)
