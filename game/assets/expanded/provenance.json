@@ -1,8 +1,8 @@
 {
   "content": "Eight original Reticulating Splines metropolis rewards, shared by RS and SC2K tilesets",
   "authoring": "GFX workflow, AI-assisted artwork and native palette/lighting refinement; integration by EXP",
-  "delivery_date": "2026-11-08",
-  "source_delivery": "exp-glass-lighting-20261108, with opernhaus replaced by exp-opera-geometry-20261108",
+  "delivery_date": "2026-11-09",
+  "source_delivery": "exp-glass-lighting-20261108, with approved opera variant D from exp-opera-d-final-20261109",
   "original_game_pixels_included": false,
   "palette_data": "Indexed JSON is derived from each delivered PNG using the existing standalone graphics palette. Views use nearest-neighbor sampling. PNG and brightmap bytes are unchanged from GFX.",
   "asset_license": "No separate asset license grant is made by this integration; project asset licensing decisions remain applicable.",
@@ -49,11 +49,11 @@
     },
     {
       "path": "opernhaus-light.png",
-      "sha256": "236891e94b4b8264ec1fbbba91296d8812c23e5018eff5109617ec4d2f8749cc"
+      "sha256": "f1dcb0e8c49dd98b6f6748d1a2a7810daa7e0896ec6fe355a3d9ee1ee2ae0afc"
     },
     {
       "path": "opernhaus.png",
-      "sha256": "824f571bb9e1524bc311ec149b8a0225e61ebaa370f337b8e5940b556cf1a374"
+      "sha256": "2c4cf2453920d9e91be4aee9f88332c1365d1fe813900f14343837f7f8b9071e"
     },
     {
       "path": "universitaetsklinikum-light.png",
@@ -71,5 +71,6 @@
       "path": "weltausstellung.png",
       "sha256": "c1f7dfee9486639fd5af676e53f8ca3b18839f1e2c5e80880f3eb3b080a49b84"
     }
-  ]
+  ],
+  "opera_revision": "Variant D and its soft facade/dome brightmap approved by Daniel on 2026-11-09."
 }
