@@ -49,6 +49,16 @@ func _check_versions() -> void:
 		assert(not Check.is_newer(pair[1], pair[0]), str(pair))
 		assert(not Check.is_newer(pair[0], pair[0]), str(pair))
 	assert(Check.normalized_version(" v0.3.0-rs.6-dev.2 ") == "0.3.0-rs.6-dev.2")
+	assert(Check.parse_version("v1.0.0-rc.1") == [1, 0, 0, 0, 1])
+	assert(Check.normalized_version(" v1.0.0-rc.1 ") == "1.0.0-rc.1")
+	for pair in [["1.0.0-rc.1", "0.3.0-rs.9"], ["1.0.0-rc.10", "1.0.0-rc.9"],
+			["1.0.0", "1.0.0-rc.65535"], ["1.0.1-rc.1", "1.0.0"]]:
+		assert(Check.is_newer(pair[0], pair[1]), str(pair))
+		assert(not Check.is_newer(pair[1], pair[0]), str(pair))
+		assert(not Check.is_newer(pair[0], pair[0]), str(pair))
+	for invalid in ["1.0.0-rc", "1.0.0-rc.0", "1.0.0-rc.01", "1.0.0-rc.65536",
+			"01.0.0-rc.1", "1.0.65536-rc.1", "1.0.0-rc.1-rs.1"]:
+		assert(Check.parse_version(invalid).is_empty(), invalid)
 	for invalid in ["0.3.0-rs.0", "0.3.0-rs.01", "0.3.0-rs.65536", "0.3.0-rs.1-dev.0",
 			"0.3.0-rs.1-dev.02", "0.3.0-rs.1-dev.65536", "0.3.0-rs.1-beta", "0.3.0-rs.1-rs.2"]:
 		assert(Check.parse_version(invalid).is_empty(), invalid)
@@ -111,6 +121,10 @@ func _check_responses() -> void:
 	assert(Check.select_release(entries, "0.3.0-rs.11-dev.1").status == Check.Status.UP_TO_DATE)
 	assert(Check.select_release(entries, "invalid").status == Check.Status.FAILED)
 	assert(Check.select_release([draft, unpublished, {}], "0.3.0-rs.9").status == Check.Status.FAILED)
+	assert(Check.select_release([_release("v0.3.0-rs.9")], "1.0.0-rc.1").status == Check.Status.UP_TO_DATE)
+	for tag in ["v1.0.0-rc.2", "v1.0.0"]:
+		var candidate := Check.select_release([_release(tag)], "1.0.0-rc.1")
+		assert(candidate.status == Check.Status.UPDATE_AVAILABLE and candidate.version == tag.trim_prefix("v"))
 
 	# open only a release page of this project
 	var foreign := Check.read_response(

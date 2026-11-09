@@ -29,10 +29,19 @@ static func current_version() -> String:
 	return str(ProjectSettings.get_setting("application/config/version", ""))
 
 
-# Keep the native strict base parser; the fork additionally uses -rs.N[-dev.N].
-# Stable bases sort after their RS previews, and an RS release after its dev builds.
+# Keep the native strict base parser; additionally accept -rs.N[-dev.N] and -rc.N.
+# Stable bases sort after previews, and an RS release after its dev builds.
 static func parse_version(value: String) -> Array[int]:
 	var result: Array[int] = []
+	var candidate := RegEx.create_from_string("^(v?[0-9]+\\.[0-9]+\\.[0-9]+)-rc\\.([1-9][0-9]{0,4})$").search(value.strip_edges())
+	if candidate != null:
+		var number := int(candidate.get_string(2))
+		result.assign(Array(NativePlatform.parse_version(candidate.get_string(1))))
+		if result.is_empty() or number > 65535:
+			return []
+		result.append(0)
+		result.append(number)
+		return result
 	var parts := value.strip_edges().split("-rs.")
 	result.assign(Array(NativePlatform.parse_version(parts[0])))
 	if result.is_empty() or parts.size() == 1:
