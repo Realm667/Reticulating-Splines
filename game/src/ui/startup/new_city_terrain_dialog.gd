@@ -42,7 +42,12 @@ const FEATURE_TOOLTIPS := {
 }
 
 var city_name_input: LineEdit
-var rules_input: OptionButton
+var rules_tabs: TabBar
+var rules_description: Label
+var classic_size: Label
+var _active_rules := -1
+var _multiplayer_setup := false
+var _terrain_settings: Array[NewTerrain.Options] = [NewTerrain.Options.new(), NewTerrain.Options.new()]
 var game_type_input: OptionButton
 var game_type_label: Label
 var region_size_input: OptionButton
@@ -51,7 +56,6 @@ var mayor_name_input: LineEdit
 var difficulty_input: OptionButton
 var year_input: OptionButton
 var size_input: OptionButton
-var compatibility_input: CheckBox
 var feature_inputs: Dictionary = {}
 var generating := false
 var generation_revision := 0
@@ -104,7 +108,6 @@ func _ready() -> void:
 	preview_view = get_node("Center/NewCityDialog/Content/Body/Preview/PreviewFrame/TerrainPreview")
 	preview_status = get_node("Center/NewCityDialog/Content/Body/Preview/PreviewStatus")
 	preview_timer = get_node("PreviewTimer")
-	compatibility_input = $Center/NewCityDialog/Content/Buttons/CompatibilityInput
 	done_button = $Center/NewCityDialog/Content/Buttons/Start
 	_build_region_fields()
 	var feature_titles := {"meander": "Meandering River", "delta": "River Delta", "peninsula": "Peninsula",
@@ -137,7 +140,6 @@ func _ready() -> void:
 	visibility_changed.connect(_visibility_changed)
 	resized.connect(_clamp_panel)
 	_build_busy_overlay()
-	compatibility_input.toggled.connect(compatibility_changed)
 	$Center/NewCityDialog/Content/Body/Fields/CityFields/CityNameRow/RandomName.pressed.connect(_random_name)
 	var title_bar: DialogTitleBar = $Center/NewCityDialog/Content/TitleBar
 	title_bar.title_label.text = "New City"
@@ -162,6 +164,7 @@ func _ready() -> void:
 	water_input.tooltip_text = "The sea level and the number of streams. With terrain features, rivers are wider and there is more ocean."
 	trees_input.tooltip_text = "The number of tree groups."
 	set_control_graphics(control_graphics)
+	_rules_changed(0)
 
 
 func _notification(what: int) -> void:
@@ -212,10 +215,13 @@ func reset_fields(default_mayor: String) -> void:
 	if is_instance_valid(visual_preview):
 		visual_preview.queue_free()
 		visual_preview = null
-	compatibility_input.set_pressed_no_signal(false)
-	compatibility_changed(false)
-	rules_input.select(0)
-	rules_input.set_item_disabled(0, false)
+	_terrain_settings = [NewTerrain.Options.new(), NewTerrain.Options.new()]
+	_active_rules = -1
+	_multiplayer_setup = false
+	rules_tabs.set_tab_disabled(0, false)
+	rules_tabs.set_block_signals(true)
+	rules_tabs.current_tab = 0
+	rules_tabs.set_block_signals(false)
 	_rules_changed(0)
 	city_name_input.text = "New City"
 	mayor_name_input.text = default_mayor
@@ -248,63 +254,92 @@ func _build_region_fields() -> void:
 	for edge in RegionRules.SIZES:
 		region_size_input.add_item("%d × %d" % [edge, edge], edge)
 	region_size_input.select(1)
-	var rules_label := Label.new()
-	rules_label.text = "City rules"
-	rules_input = OptionButton.new()
-	rules_input.add_item("Classic")
-	rules_input.add_item("Expanded")
-	rules_input.tooltip_text = "Expanded adds regions, metropolis rewards, building upgrades and a ten-year city chronicle. You can upgrade a Classic city later, but cannot switch back."
-	var controls := [rules_label, rules_input, label, game_type_input, region_size_label, region_size_input]
+	var controls := [label, game_type_input, region_size_label, region_size_input]
 	for index in controls.size():
 		fields.add_child(controls[index])
 		fields.move_child(controls[index], index)
-	rules_input.item_selected.connect(_rules_changed)
+	classic_size = Label.new()
+	classic_size.text = "128 × 128"
+	fields.add_child(classic_size)
+	fields.move_child(classic_size, size_input.get_index() + 1)
+	var content := $Center/NewCityDialog/Content
+	rules_tabs = TabBar.new()
+	rules_tabs.focus_mode = Control.FOCUS_ALL
+	rules_tabs.add_tab("Classic")
+	rules_tabs.add_tab("Expanded")
+	rules_tabs.tab_alignment = TabBar.ALIGNMENT_CENTER
+	rules_tabs.tab_changed.connect(_rules_changed)
+	content.add_child(rules_tabs)
+	content.move_child(rules_tabs, 1)
+	rules_description = Label.new()
+	rules_description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	rules_description.theme_type_variation = "HelpLabel"
+	content.add_child(rules_description)
+	content.move_child(rules_description, 2)
 	game_type_input.item_selected.connect(_region_type_changed)
-	_rules_changed(0)
 
 
 func _rules_changed(index: int) -> void:
+	if _active_rules >= 0 and _active_rules != index:
+		_terrain_settings[_active_rules] = terrain_options()
+	_active_rules = index
 	var expanded := index == 1
+	var terrain := _terrain_settings[index]
+	for item in size_input.item_count:
+		size_input.set_item_disabled(item, not expanded and size_input.get_item_id(item) != 128)
+	size_input.select(size_input.get_item_index(terrain.size if expanded else 128))
+	ocean_input.set_pressed_no_signal(terrain.ocean)
+	river_input.set_pressed_no_signal(terrain.river)
+	hills_input.set_value_no_signal(terrain.hills)
+	water_input.set_value_no_signal(terrain.water)
+	trees_input.set_value_no_signal(terrain.trees)
+	for key in feature_inputs:
+		feature_inputs[key].set_pressed_no_signal(expanded and key in terrain.features)
+		feature_inputs[key].visible = expanded
+	size_input.visible = expanded
+	classic_size.visible = not expanded
+	mayor_name_input.visible = expanded
+	$Center/NewCityDialog/Content/Body/Fields/CityFields/MayorNameLabel.visible = expanded
+	$Center/NewCityDialog/Content/Body/Fields/CityFields/CityNameRow/RandomName.visible = expanded
+	game_type_input.visible = expanded and not _multiplayer_setup
+	game_type_label.visible = game_type_input.visible
 	game_type_input.set_item_disabled(1, not expanded)
-	game_type_input.tooltip_text = "" if expanded else "Regions require Expanded rules."
-	compatibility_input.disabled = expanded
-	if expanded:
-		compatibility_input.set_pressed_no_signal(false)
-		compatibility_changed(false)
-	elif game_type_input.selected == 1:
+	if not expanded:
 		game_type_input.select(0)
+	rules_description.text = ("Classic features plus larger maps, regions, additional terrain types, metropolis rewards, building upgrades and a ten-year city chronicle."
+		if expanded else "Original city rules, 128 × 128 tiles and classic terrain generation.")
 	_region_type_changed(game_type_input.selected)
+	_refresh_feature_constraints()
+	preview_requested.emit()
+	_center_panel.call_deferred()
 
 
 func _region_type_changed(index: int) -> void:
-	region_size_label.visible = index == 1
-	region_size_input.visible = index == 1
-	compatibility_input.visible = index == 0
-	if index == 1:
-		compatibility_input.set_pressed_no_signal(false)
-		compatibility_changed(false)
+	var region := _active_rules == 1 and not _multiplayer_setup and index == 1
+	region_size_label.visible = region
+	region_size_input.visible = region
 
 
 func region_edge() -> int:
-	return region_size_input.get_selected_id() if rules_input.selected == 1 and game_type_input.selected == 1 else 0
+	return region_size_input.get_selected_id() if _active_rules == 1 and not _multiplayer_setup and game_type_input.selected == 1 else 0
 
 
 func set_multiplayer_setup(value: bool, region_campaign := false) -> void:
 	# Competitive Region is configured in the lobby for all players together.
-	rules_input.set_item_disabled(0, value and region_campaign)
-	game_type_input.visible = not value
-	game_type_label.visible = not value
+	_multiplayer_setup = value
+	rules_tabs.set_tab_disabled(0, value and region_campaign)
 	if value:
 		game_type_input.select(0)
-		_region_type_changed(0)
 	if value and region_campaign:
-		rules_input.select(1)
-		_rules_changed(1)
+		rules_tabs.current_tab = 1
+	game_type_input.visible = _active_rules == 1 and not value
+	game_type_label.visible = game_type_input.visible
+	_region_type_changed(game_type_input.selected)
 
 
 func setup_options() -> SetupOptions:
 	var options := SetupOptions.new()
-	options.expanded = rules_input.selected == 1
+	options.expanded = _active_rules == 1
 	options.city_name = city_name_input.text
 	options.mayor_name = mayor_name_input.text
 	options.difficulty = difficulty_input.get_selected_id()
@@ -315,14 +350,14 @@ func setup_options() -> SetupOptions:
 func terrain_options() -> NewCityTerrain.Options:
 	var options := NewCityTerrain.Options.new()
 	options.features.assign(selected_features())
-	options.smooth_slopes = true
+	options.smooth_slopes = _active_rules == 1
 	options.size = size_input.get_selected_id()
 	options.ocean = ocean_input.button_pressed
 	options.river = river_input.button_pressed
 	options.hills = roundi(hills_input.value)
 	options.water = roundi(water_input.value)
 	options.trees = roundi(trees_input.value)
-	return OriginalCompatibility.terrain_options(options, compatibility_input.button_pressed)
+	return OriginalCompatibility.terrain_options(options, _active_rules != 1)
 
 
 func show_preview(landscape: Image, minimap: Image, status: String, artwork := false) -> void:
@@ -362,17 +397,6 @@ func set_control_graphics(graphics: CityUiGraphics) -> void:
 			view.texture = PixelArtTexture.wrap(ImageTexture.create_from_image(image))
 
 
-# an SC2 city uses only the original 128 × 128 map
-func compatibility_changed(enabled: bool) -> void:
-	for index in size_input.item_count:
-		size_input.set_item_disabled(index, enabled and size_input.get_item_id(index) != 128)
-
-	if enabled:
-		size_input.select(size_input.get_item_index(128))
-
-	preview_requested.emit()
-
-
 func invalidate() -> void:
 	candidate_valid = false
 	generation_revision += 1
@@ -393,6 +417,8 @@ func _random_name() -> void:
 
 func selected_features() -> Array[String]:
 	var result: Array[String] = []
+	if _active_rules != 1:
+		return result
 	for key in feature_inputs:
 		if feature_inputs[key].button_pressed:
 			result.append(key)

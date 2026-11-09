@@ -13,6 +13,7 @@ func _run() -> void:
 	main.new_city.open_new_city_dialog()
 	var dialog: NewCityTerrainDialog = main.city_dialogs.new_city_dialog
 	main.map_view.zoom_factor = 0.25
+	dialog.rules_tabs.current_tab = 1
 	# Exercise the workflow with simple terrain; layout algorithms have their own tests.
 	dialog.hills_input.value = 0
 	dialog.water_input.value = 0
@@ -21,7 +22,7 @@ func _run() -> void:
 	await process_frame
 	_assert_editor_controls(main, false)
 	assert(dialog.get_viewport_rect().grow(1.0).encloses(dialog.panel.get_global_rect()), "New City controls fit the viewport")
-	assert(not dialog.compatibility_input.button_pressed)
+	assert(dialog.setup_options().expanded)
 	assert(dialog.terrain_options().native_maps)
 	assert(dialog.done_button.disabled and main.new_city_state.session.preview_document == null)
 	for key in ["bay", "delta", "peninsula", "island", "islands", "meander", "crossing", "branch", "rejoin", "valley", "cliffs"]:
@@ -78,7 +79,10 @@ func _run() -> void:
 	root.push_input(peek, true)
 	assert(dialog.panel.modulate.a == 1.0)
 	dialog.size_input.select(dialog.size_input.get_item_index(512))
-	dialog.compatibility_input.button_pressed = true
+	dialog.rules_tabs.current_tab = 0
+	dialog.hills_input.value = 0
+	dialog.water_input.value = 0
+	dialog.trees_input.value = 0
 	assert(dialog.size_input.get_selected_id() == 128)
 	assert(dialog.size_input.is_item_disabled(dialog.size_input.get_item_index(512)))
 	assert(not dialog.terrain_options().native_maps)
@@ -128,7 +132,7 @@ func _run() -> void:
 	assert(main.new_city_state.session.preview_process_cursor == cursor)
 	main.new_city.create_new_city_unchecked()
 	assert(main.document_state.city == null)
-	dialog.compatibility_input.button_pressed = false
+	dialog.rules_tabs.current_tab = 1
 	dialog.size_input.select(dialog.size_input.get_item_index(128))
 	assert(not dialog.size_input.is_item_disabled(dialog.size_input.get_item_index(128)))
 	dialog._random_name()
@@ -176,10 +180,10 @@ func _run() -> void:
 	assert(not dialog.visible and main.new_city_state.session.preview_document == null)
 	main.new_city.open_new_city_dialog()
 	main.new_city.make_new_city_preview()
-	dialog.hills_input.value += 1
+	dialog.rules_tabs.current_tab = 1
 	while main.new_city_state.preview_job != null:
 		await process_frame
-	assert(not dialog.candidate_valid and main.new_city_state.session.preview_document == null)
+	assert(not dialog.candidate_valid and main.new_city_state.session.preview_document == null, "A result generated before the tab change cannot found a city")
 	main.new_city.cancel_new_city()
 	main.queue_free()
 	await process_frame

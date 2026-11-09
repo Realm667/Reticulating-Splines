@@ -11434,3 +11434,11 @@ msgstr "지역 (Expanded)"
 #. EXP supplementary translation; AI-assisted from English feature source.
 msgid "Regions require Expanded rules."
 msgstr "지역에는 Expanded 규칙이 필요합니다."
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "Original city rules, 128 × 128 tiles and classic terrain generation."
+msgstr "기존 도시 규칙, 128 × 128 타일 및 클래식 지형 생성."
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "Classic features plus larger maps, regions, additional terrain types, metropolis rewards, building upgrades and a ten-year city chronicle."
+msgstr "클래식 기능에 더 큰 지도, 지역, 추가 지형 유형, 대도시 보상, 건물 확장 및 10년 도시 연대기를 더합니다."

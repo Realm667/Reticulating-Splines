@@ -1,6 +1,6 @@
 # Regions
 
-Choose **Expanded** city rules, then **Region (Expanded)** above the city name in
+Choose the **Expanded** tab, then **Region (Expanded)** above the city name in
 New City. Single city remains the default. New regions require Expanded, including
 new multiplayer region campaigns. Existing regional saves retain their stored rules.
 A region contains 2×2, 3×3, or 4×4 city areas. Its size is fixed. The first city

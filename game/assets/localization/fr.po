@@ -42114,3 +42114,11 @@ msgstr "Région (Expanded)"
 #. EXP supplementary translation; AI-assisted from English feature source.
 msgid "Regions require Expanded rules."
 msgstr "Les régions nécessitent les règles Expanded."
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "Original city rules, 128 × 128 tiles and classic terrain generation."
+msgstr "Règles originales, 128 × 128 cases et génération classique du terrain."
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "Classic features plus larger maps, regions, additional terrain types, metropolis rewards, building upgrades and a ten-year city chronicle."
+msgstr "Fonctions classiques avec cartes plus grandes, régions, types de terrain supplémentaires, récompenses métropolitaines, améliorations de bâtiments et chronique de la ville sur dix ans."

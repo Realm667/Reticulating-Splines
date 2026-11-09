@@ -105,8 +105,7 @@ func check_ui() -> void:
 	await process_frame
 	main.set_process(false)
 	var dialog: NewCityTerrainDialog = main.city_dialogs.new_city_dialog
-	check(not dialog.compatibility_input.button_pressed and dialog.terrain_options().native_maps, "New City defaults to SC2X")
-	dialog.compatibility_input.button_pressed = true
+	check(not dialog.terrain_options().native_maps, "Classic defaults to original data maps")
 	check(dialog.size_input.is_item_disabled(dialog.size_input.get_item_index(512)), "New City disables other map sizes")
 	dialog.size_input.select(dialog.size_input.get_item_index(512))
 	check(
@@ -132,8 +131,8 @@ func check_ui() -> void:
 		PackedByteArray(),
 	)
 	check(created.ok and not created.document.is_extended(), "Compatibility creates original-format city")
-	dialog.compatibility_input.button_pressed = false
-	check(not dialog.size_input.is_item_disabled(dialog.size_input.get_item_index(512)), "Clearing compatibility restores map sizes")
+	dialog.rules_tabs.current_tab = 1
+	check(not dialog.size_input.is_item_disabled(dialog.size_input.get_item_index(512)), "Expanded restores map sizes")
 	var small := dialog.terrain_options()
 	small.size = 128
 	small.hills = 0
@@ -142,7 +141,7 @@ func check_ui() -> void:
 	small.ocean = false
 	small.river = false
 	generated = main.new_city_state.session.generate_preview(small, false)
-	check(generated.ok and generated.document.is_extended(), "A 128 preview without compatibility is SC2X")
+	check(generated.ok and generated.document.is_extended(), "An Expanded 128 preview is SC2X")
 	created = main.new_city_state.session.create_city("Extended", "Mayor", 1, 1900, small, PackedByteArray())
 	check(created.ok and created.document.is_extended(), "A 128 city without compatibility is SC2X")
 

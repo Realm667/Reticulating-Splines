@@ -11,6 +11,7 @@ func run_check() -> void:
 	root.add_child(main)
 	await process_frame
 	main.new_city.open_new_city_dialog()
+	main.city_dialogs.new_city_dialog.rules_tabs.current_tab = 1
 	# This suite tests size selection and preview jobs; terrain rules have their own tests.
 	main.city_dialogs.new_city_dialog.ocean_input.button_pressed = false
 	main.city_dialogs.new_city_dialog.river_input.button_pressed = false

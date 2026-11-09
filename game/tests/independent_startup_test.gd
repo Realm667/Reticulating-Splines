@@ -153,7 +153,7 @@ func _test_main() -> void:
 	assert(main.city_dialogs.new_city_dialog.visible and main.new_city_state.session.preview_document == null)
 	main.city_dialogs.new_city_dialog.city_name_input.text = "Original Startup"
 	# This scenario checks original SC2 save compatibility.
-	main.city_dialogs.new_city_dialog.compatibility_input.button_pressed = true
+	main.city_dialogs.new_city_dialog.rules_tabs.current_tab = 0
 	# Terrain algorithms are tested separately; retain the original-size workflow.
 	main.city_dialogs.new_city_dialog.hills_input.value = 0
 	main.city_dialogs.new_city_dialog.water_input.value = 0

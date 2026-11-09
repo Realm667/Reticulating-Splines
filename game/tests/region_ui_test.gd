@@ -272,20 +272,18 @@ func _new_city_fields() -> void:
 	root.add_child(dialog)
 	await process_frame
 	assert(dialog.region_edge() == 0)
-	assert(not dialog.region_size_input.visible and dialog.compatibility_input.visible)
+	assert(not dialog.region_size_input.visible and dialog.classic_size.visible)
 	assert(dialog.game_type_input.get_index() < dialog.city_name_input.get_parent().get_index())
-	dialog.compatibility_input.button_pressed = true
-	dialog.rules_input.select(1)
-	dialog.rules_input.item_selected.emit(1)
+	dialog.rules_tabs.current_tab = 1
 	dialog.game_type_input.select(1)
 	dialog.game_type_input.item_selected.emit(1)
-	assert(not dialog.compatibility_input.visible and not dialog.compatibility_input.button_pressed)
+	assert(not dialog.classic_size.visible)
 	assert(dialog.region_size_input.visible and dialog.terrain_options().native_maps)
 	for index in 3:
 		dialog.region_size_input.select(index)
 		assert(dialog.region_edge() == index + 2)
 	dialog.reset_fields("Region test")
-	assert(dialog.region_edge() == 0 and dialog.compatibility_input.visible)
+	assert(dialog.region_edge() == 0 and dialog.classic_size.visible)
 	dialog.queue_free()
 	await process_frame
 

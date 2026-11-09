@@ -1,14 +1,26 @@
 Expanded city rules — initial balance (2026-11-08)
 
-Classic keeps the existing simulation. Founding offers Classic or Expanded.
+Founding uses Classic and Expanded tabs. Classic offers city name, difficulty,
+the original four starting years, a fixed 128x128 map, coast/river toggles and
+mountain/water/tree sliders. It uses original-format data maps and the original
+terrain path without the added slope grading. Expanded adds the mayor field,
+random names, larger maps, region creation and the additional terrain shapes.
+Both tabs keep their terrain settings separately; city details are shared.
+Selecting Classic resets region creation to Single city. The old independent
+compatibility checkbox is replaced by the rule choice. Existing saves are unchanged.
+
+The original separated founding from terrain editing; this combined dialog is
+a convenience. Sources: supplied Windows SIMCITY.EXE dialogs 101/103 and the
+Maxis User's Manual (1993/1998), printed pages 10, 27, 75 and 97:
+https://www.bestoldgames.net/download/games/simcity-2000/simcity-2000-manual.pdf
 An existing Classic city can switch to Expanded once, through Options >
 Classic / Expanded. Conversion creates an independent SC2X working copy and
 opens Save As. A running multiplayer session must be stopped before conversion.
 There is no Expanded-to-Classic conversion.
 
 New multi-city regions require Expanded, both at founding and when converting
-an existing single city into a region. The New City dialog disables Region in
-Classic; a new multiplayer region campaign selects Expanded for all cities.
+an existing single city into a region. The New City dialog shows Region only in
+Expanded; a new multiplayer region campaign selects Expanded for all cities.
 Previously saved regions remain loadable with their stored rules unchanged.
 The ten-year city chronicle is also Expanded-only (single-player, including
 regions). Classic neither records years nor shows chronicle notices or its

@@ -19,8 +19,9 @@ func _run() -> void:
 	main.asset_state.reference_root = ProjectSettings.globalize_path("user://missing-test-originals")
 	root.add_child(main)
 	await process_frame
-	check(main.city_dialogs.new_city_dialog.terrain_options().native_maps, "New City without compatibility uses per-tile maps")
-	main.city_dialogs.new_city_dialog.compatibility_input.button_pressed = true
+	main.city_dialogs.new_city_dialog.rules_tabs.current_tab = 1
+	check(main.city_dialogs.new_city_dialog.terrain_options().native_maps, "Expanded uses per-tile maps")
+	main.city_dialogs.new_city_dialog.rules_tabs.current_tab = 0
 	check(not main.city_dialogs.new_city_dialog.terrain_options().native_maps, "Compatibility uses original data maps")
 	var options := NewCityTerrain.Options.new()
 	options.size = 128
