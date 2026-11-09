@@ -34,7 +34,8 @@ func open_new_city_dialog() -> void:
 	app.city_dialogs.new_city_dialog.preview_timer.stop()
 	app.new_city_state.session.begin(app.tool_state.tool_random.state, app.simulation_state.nuisance_random.state)
 	app.city_dialogs.new_city_dialog.reset_fields(app.preferences.default_mayor_name)
-	app.city_dialogs.new_city_dialog.set_multiplayer_setup(app.coop.pending_new_city)
+	app.city_dialogs.new_city_dialog.set_multiplayer_setup(app.coop.pending_new_city,
+		app.coop.pending_new_city and app.coop.mode_picker.selected == 2 and app.coop.launch.region_expansion.button_pressed)
 	app.city_dialogs.new_city_dialog.show()
 	app.city_dialogs.new_city_dialog.invalidate()
 	app.city_dialogs.new_city_dialog.focus_city_name()

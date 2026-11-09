@@ -215,7 +215,8 @@ func reset_fields(default_mayor: String) -> void:
 	compatibility_input.set_pressed_no_signal(false)
 	compatibility_changed(false)
 	rules_input.select(0)
-	compatibility_input.disabled = false
+	rules_input.set_item_disabled(0, false)
+	_rules_changed(0)
 	city_name_input.text = "New City"
 	mayor_name_input.text = default_mayor
 	difficulty_input.select(0)
@@ -240,7 +241,7 @@ func _build_region_fields() -> void:
 	game_type_label = label
 	game_type_input = OptionButton.new()
 	game_type_input.add_item("Single city")
-	game_type_input.add_item("Region")
+	game_type_input.add_item("Region (Expanded)")
 	region_size_label = Label.new()
 	region_size_label.text = "Region size"
 	region_size_input = OptionButton.new()
@@ -252,18 +253,27 @@ func _build_region_fields() -> void:
 	rules_input = OptionButton.new()
 	rules_input.add_item("Classic")
 	rules_input.add_item("Expanded")
-	rules_input.tooltip_text = "Expanded adds metropolis rewards. You can upgrade a Classic city later, but cannot switch back."
+	rules_input.tooltip_text = "Expanded adds regions, metropolis rewards, building upgrades and a ten-year city chronicle. You can upgrade a Classic city later, but cannot switch back."
 	var controls := [rules_label, rules_input, label, game_type_input, region_size_label, region_size_input]
 	for index in controls.size():
 		fields.add_child(controls[index])
 		fields.move_child(controls[index], index)
-	rules_input.item_selected.connect(func(index: int) -> void:
-		compatibility_input.disabled = index == 1
-		if index == 1:
-			compatibility_input.set_pressed_no_signal(false)
-			compatibility_changed(false))
+	rules_input.item_selected.connect(_rules_changed)
 	game_type_input.item_selected.connect(_region_type_changed)
-	_region_type_changed(0)
+	_rules_changed(0)
+
+
+func _rules_changed(index: int) -> void:
+	var expanded := index == 1
+	game_type_input.set_item_disabled(1, not expanded)
+	game_type_input.tooltip_text = "" if expanded else "Regions require Expanded rules."
+	compatibility_input.disabled = expanded
+	if expanded:
+		compatibility_input.set_pressed_no_signal(false)
+		compatibility_changed(false)
+	elif game_type_input.selected == 1:
+		game_type_input.select(0)
+	_region_type_changed(game_type_input.selected)
 
 
 func _region_type_changed(index: int) -> void:
@@ -276,16 +286,20 @@ func _region_type_changed(index: int) -> void:
 
 
 func region_edge() -> int:
-	return region_size_input.get_selected_id() if game_type_input.selected == 1 else 0
+	return region_size_input.get_selected_id() if rules_input.selected == 1 and game_type_input.selected == 1 else 0
 
 
-func set_multiplayer_setup(value: bool) -> void:
+func set_multiplayer_setup(value: bool, region_campaign := false) -> void:
 	# Competitive Region is configured in the lobby for all players together.
+	rules_input.set_item_disabled(0, value and region_campaign)
 	game_type_input.visible = not value
 	game_type_label.visible = not value
 	if value:
 		game_type_input.select(0)
 		_region_type_changed(0)
+	if value and region_campaign:
+		rules_input.select(1)
+		_rules_changed(1)
 
 
 func setup_options() -> SetupOptions:

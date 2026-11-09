@@ -31635,12 +31635,8 @@ msgid "Metropolis rewards"
 msgstr "Recompensas metropolitanas"
 
 #. EXP supplementary translation; AI-assisted from English feature source.
-msgid ""
-"Expanded adds metropolis rewards. You can upgrade a Classic city later, but "
-"cannot switch back."
-msgstr ""
-"Expanded añade recompensas metropolitanas. Puedes convertir una ciudad "
-"Classic más adelante, pero no volver atrás."
+msgid "Expanded adds regions, metropolis rewards, building upgrades and a ten-year city chronicle. You can upgrade a Classic city later, but cannot switch back."
+msgstr "Expanded añade regiones, recompensas metropolitanas, mejoras de edificios y una crónica de diez años de la ciudad. Puedes convertir una ciudad Classic más adelante, pero no volver atrás."
 
 #. EXP supplementary translation; AI-assisted from English feature source.
 msgid "This city uses Expanded rules. It cannot return to Classic."
@@ -31659,12 +31655,8 @@ msgid "Switch to Expanded"
 msgstr "Cambiar a Expanded"
 
 #. EXP supplementary translation; AI-assisted from English feature source.
-msgid ""
-"Expanded adds eight metropolis rewards. This city cannot return to Classic. "
-"Save a separate SC2X copy to keep your Classic city."
-msgstr ""
-"Expanded añade ocho recompensas metropolitanas. Esta ciudad no podrá volver "
-"a Classic. Guarda una copia SC2X separada para conservar tu ciudad Classic."
+msgid "Expanded adds regions, eight metropolis rewards, building upgrades and a ten-year city chronicle. This city cannot return to Classic. Save a separate SC2X copy to keep your Classic city."
+msgstr "Expanded añade regiones, ocho recompensas metropolitanas, mejoras de edificios y una crónica de diez años de la ciudad. Esta ciudad no podrá volver a Classic. Guarda una copia SC2X aparte para conservar tu ciudad Classic."
 
 #. EXP supplementary translation; AI-assisted from English feature source.
 msgid "Expanded rules enabled."
@@ -31883,3 +31875,12 @@ msgstr "Faltan los datos de ampliación."
 #. Expanded building upgrades; supplementary AI-assisted translation.
 msgid "Remaining power plant life: %d years; an upgrade does not extend it."
 msgstr "Vida restante de la central: %d años; ampliarla no la prolonga."
+
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "Region (Expanded)"
+msgstr "Región (Expanded)"
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "Regions require Expanded rules."
+msgstr "Las regiones requieren las reglas Expanded."

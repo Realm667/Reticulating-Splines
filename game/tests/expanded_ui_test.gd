@@ -16,24 +16,52 @@ func _run() -> void:
 	var dialog := app.city_dialogs.new_city_dialog
 	dialog.reset_fields("Test Mayor")
 	assert(not dialog.setup_options().expanded)
+	assert(dialog.game_type_input.is_item_disabled(1))
 	dialog.rules_input.select(1)
 	dialog.rules_input.item_selected.emit(1)
 	assert(dialog.setup_options().expanded and dialog.compatibility_input.disabled and not dialog.compatibility_input.button_pressed)
+	assert(not dialog.game_type_input.is_item_disabled(1))
+	dialog.game_type_input.select(1)
+	dialog.game_type_input.item_selected.emit(1)
+	assert(dialog.region_edge() == 3 and dialog.region_size_input.visible)
+	dialog.rules_input.select(0)
+	dialog.rules_input.item_selected.emit(0)
+	assert(dialog.region_edge() == 0 and dialog.game_type_input.selected == 0)
+	assert(not dialog.region_size_input.visible and dialog.compatibility_input.visible)
+	dialog.set_multiplayer_setup(true, true)
+	assert(dialog.setup_options().expanded and dialog.rules_input.is_item_disabled(0))
+	assert(not dialog.game_type_input.visible and dialog.region_edge() == 0)
 	dialog.reset_fields("Test Mayor")
+	dialog.set_multiplayer_setup(false)
 	assert(not dialog.setup_options().expanded and not dialog.compatibility_input.disabled)
+	assert(not dialog.rules_input.is_item_disabled(0) and dialog.game_type_input.visible)
 	for original: Sc2File in [EmptyCityTemplate.create(128), Sc2xDocument.create_empty(64, "Classic SC2X").document]:
 		original.set_misc_u32(Sc2MiscLayout.NORMAL_POPULATION, 4000000)
 		original.set_misc_i32(Sc2MiscLayout.FUNDS, 1000000)
 		assert(app.city_session.activate_document(original))
 		app.interface.hide_main_menu()
 		app.frame.select_speed(GameSpeedController.Speed.PAUSED)
+		ExpandedCity.open(app)
+		await process_frame
+		var confirmation: ConfirmationDialog
+		for child in app.get_children():
+			if child is ConfirmationDialog and child.visible:
+				confirmation = child
+		assert(confirmation != null and confirmation.size.x <= root.size.x and confirmation.size.y <= root.size.y)
+		confirmation.hide()
+		confirmation.queue_free()
 		var before := original.content_snapshot()
+		assert(app.reports.annual_review.city == null, "Classic does not record a chronicle")
+		app.regions.pending_edge = 2
+		assert(not app.regions.found_region(), "Classic cannot found a region through a stale request")
+		app.regions.pending_edge = 0
 		ExpandedCity.upgrade(app)
 		assert(ExpandedRules.enabled(app.document_state.current_document), "Both legacy and Classic SC2X cities can switch")
 		assert(before == original.content_snapshot(), "Conversion must preserve the Classic source")
 		assert(app.city_dialogs.city_save_dialog.visible)
 		app.city_dialogs.city_save_dialog.hide()
 		assert(app.document_state.current_save_path.is_empty())
+		assert(app.reports.annual_review.city == app.document_state.city)
 	var city := app.document_state.city
 	city.set_funds(1000000)
 	city.document.set_misc_u32(Sc2MiscLayout.NORMAL_POPULATION, 4000000)
@@ -61,6 +89,9 @@ func _run() -> void:
 	assert(ExpandedRules.at(world.city, Vector2i(20, 20)) == 7)
 	request.revision = world.revision
 	assert(not world.command("exp-fixture", request).ok, "Host enforces uniqueness")
+	app.regions.pending_edge = 2
+	assert(app.regions.found_region(), "Expanded can found a region")
+	assert(ExpandedRules.enabled(app.regions.campaign.template), "New regional cities inherit Expanded")
 	app.queue_free()
 	await process_frame
 	print("PASS: founding options, legacy/SC2X conversion, eight UI tools, query and multiplayer authority")

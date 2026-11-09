@@ -275,6 +275,8 @@ func _new_city_fields() -> void:
 	assert(not dialog.region_size_input.visible and dialog.compatibility_input.visible)
 	assert(dialog.game_type_input.get_index() < dialog.city_name_input.get_parent().get_index())
 	dialog.compatibility_input.button_pressed = true
+	dialog.rules_input.select(1)
+	dialog.rules_input.item_selected.emit(1)
 	dialog.game_type_input.select(1)
 	dialog.game_type_input.item_selected.emit(1)
 	assert(not dialog.compatibility_input.visible and not dialog.compatibility_input.button_pressed)

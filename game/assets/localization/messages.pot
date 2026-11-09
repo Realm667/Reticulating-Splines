@@ -11527,9 +11527,7 @@ msgid "Metropolis rewards"
 msgstr ""
 
 #. EXP supplementary translation; AI-assisted from English feature source.
-msgid ""
-"Expanded adds metropolis rewards. You can upgrade a Classic city later, but "
-"cannot switch back."
+msgid "Expanded adds regions, metropolis rewards, building upgrades and a ten-year city chronicle. You can upgrade a Classic city later, but cannot switch back."
 msgstr ""
 
 #. EXP supplementary translation; AI-assisted from English feature source.
@@ -11549,9 +11547,7 @@ msgid "Switch to Expanded"
 msgstr ""
 
 #. EXP supplementary translation; AI-assisted from English feature source.
-msgid ""
-"Expanded adds eight metropolis rewards. This city cannot return to Classic. "
-"Save a separate SC2X copy to keep your Classic city."
+msgid "Expanded adds regions, eight metropolis rewards, building upgrades and a ten-year city chronicle. This city cannot return to Classic. Save a separate SC2X copy to keep your Classic city."
 msgstr ""
 
 #. EXP supplementary translation; AI-assisted from English feature source.
@@ -11758,4 +11754,13 @@ msgstr ""
 
 #. Expanded building upgrades; supplementary AI-assisted translation.
 msgid "Remaining power plant life: %d years; an upgrade does not extend it."
+msgstr ""
+
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "Region (Expanded)"
+msgstr ""
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "Regions require Expanded rules."
 msgstr ""

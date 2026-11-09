@@ -11197,10 +11197,8 @@ msgid "Metropolis rewards"
 msgstr "대도시 보상"
 
 #. EXP supplementary translation; AI-assisted from English feature source.
-msgid ""
-"Expanded adds metropolis rewards. You can upgrade a Classic city later, but "
-"cannot switch back."
-msgstr "Expanded는 대도시 보상을 추가합니다. Classic 도시는 나중에 전환할 수 있지만 되돌릴 수 없습니다."
+msgid "Expanded adds regions, metropolis rewards, building upgrades and a ten-year city chronicle. You can upgrade a Classic city later, but cannot switch back."
+msgstr "Expanded는 지역, 대도시 보상, 건물 확장 및 10년 도시 연대기를 추가합니다. Classic 도시는 나중에 전환할 수 있지만 되돌릴 수는 없습니다."
 
 #. EXP supplementary translation; AI-assisted from English feature source.
 msgid "This city uses Expanded rules. It cannot return to Classic."
@@ -11219,12 +11217,8 @@ msgid "Switch to Expanded"
 msgstr "Expanded로 전환"
 
 #. EXP supplementary translation; AI-assisted from English feature source.
-msgid ""
-"Expanded adds eight metropolis rewards. This city cannot return to Classic. "
-"Save a separate SC2X copy to keep your Classic city."
-msgstr ""
-"Expanded는 대도시 보상 8개를 추가합니다. 이 도시는 Classic으로 되돌릴 수 없습니다. Classic 도시를 보존하려면 "
-"별도의 SC2X 사본을 저장하세요."
+msgid "Expanded adds regions, eight metropolis rewards, building upgrades and a ten-year city chronicle. This city cannot return to Classic. Save a separate SC2X copy to keep your Classic city."
+msgstr "Expanded는 지역, 대도시 보상 8종, 건물 확장 및 10년 도시 연대기를 추가합니다. 이 도시는 Classic으로 되돌릴 수 없습니다. Classic 도시를 보존하려면 별도의 SC2X 사본을 저장하세요."
 
 #. EXP supplementary translation; AI-assisted from English feature source.
 msgid "Expanded rules enabled."
@@ -11431,3 +11425,12 @@ msgstr "건물 확장 데이터가 없습니다."
 #. Expanded building upgrades; supplementary AI-assisted translation.
 msgid "Remaining power plant life: %d years; an upgrade does not extend it."
 msgstr "발전소 남은 수명: %d년. 확장해도 수명은 늘어나지 않습니다."
+
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "Region (Expanded)"
+msgstr "지역 (Expanded)"
+
+#. EXP supplementary translation; AI-assisted from English feature source.
+msgid "Regions require Expanded rules."
+msgstr "지역에는 Expanded 규칙이 필요합니다."

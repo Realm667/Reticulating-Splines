@@ -317,7 +317,7 @@ func attach_annual_review(city: CityState) -> void:
 		annual_newspaper.hide()
 	if app.city_status_bar != null:
 		app.city_status_bar.clear_annual_review_notice()
-	annual_review.attach(city)
+	annual_review.attach(city if city != null and ExpandedRules.enabled(city.document) else null)
 
 
 func prepare_annual_review() -> void:
@@ -332,6 +332,7 @@ func observe_annual_review(result: SimulationTickResult) -> void:
 
 func _annual_review_available() -> bool:
 	return (annual_review.city != null and annual_review.city == app.document_state.city
+		and ExpandedRules.enabled(annual_review.city.document)
 		and not app.coop.active() and not app.tool_state.landscape_editor)
 
 

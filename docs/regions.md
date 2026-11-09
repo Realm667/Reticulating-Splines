@@ -1,6 +1,8 @@
 # Regions
 
-Choose **Region** above the city name in New City. Single city remains the default.
+Choose **Expanded** city rules, then **Region (Expanded)** above the city name in
+New City. Single city remains the default. New regions require Expanded, including
+new multiplayer region campaigns. Existing regional saves retain their stored rules.
 A region contains 2×2, 3×3, or 4×4 city areas. Its size is fixed. The first city
 starts at a random position. Open **Windows → Region overview** to select a city
 or preview an unowned area next to your territory. Diagonal contact is not enough.
@@ -18,7 +20,8 @@ the viewed city's population (including arcologies), national population, and
 the four neighboring names and populations. Direction arrows follow the map's
 rotation. Existing Neighbors key bindings open this same overview. A single
 city uses a five-area diagram and offers **Create a region** explicitly; opening
-the overview does not convert a save.
+the overview does not convert a save. **Create a region** requires Expanded;
+switch an existing Classic city through **Options → Classic / Expanded** first.
 
 Competitive Region uses the same grid in the overview and sidebar, including
 older games without region expansion. Those games show occupied starting slots

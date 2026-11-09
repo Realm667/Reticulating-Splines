@@ -17,7 +17,8 @@ static func open(app: CityApplication) -> void:
 	var expected := city.document
 	var dialog := ConfirmationDialog.new()
 	dialog.title = "Switch to Expanded?"
-	dialog.dialog_text = "Expanded adds eight metropolis rewards. This city cannot return to Classic. Save a separate SC2X copy to keep your Classic city."
+	dialog.dialog_autowrap = true
+	dialog.dialog_text = "Expanded adds regions, eight metropolis rewards, building upgrades and a ten-year city chronicle. This city cannot return to Classic. Save a separate SC2X copy to keep your Classic city."
 	dialog.get_ok_button().text = "Switch to Expanded"
 	dialog.theme = AppUiTheme.current()
 	dialog.exclusive = true

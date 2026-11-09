@@ -8,6 +8,7 @@ func _initialize() -> void:
 func _run() -> void:
 	root.size = Vector2i(920, 620)
 	var document := Sc2xDocument.create_empty(128, "Annual review fixture").document
+	assert(ExpandedRules.enable(document).is_empty())
 	var city := CityState.from_document(document)
 	var journal := AnnualCityReview.new()
 	var first_year := city.founding_year()
@@ -116,6 +117,28 @@ func _run() -> void:
 	assert(ten_years.ok and reopened.parse(ten_years.data))
 	journal.attach(CityState.from_document(reopened))
 	assert(journal.history.size() == 10)
+	# Classic keeps an existing archive intact, but neither opens nor extends it.
+	var classic := Sc2xDocument.create_empty(128, "Classic archive fixture").document
+	classic.sc2x_extra_entries[AnnualCityReview.ENTRY] = reopened.sc2x_extra_entries[AnnualCityReview.ENTRY].duplicate()
+	classic.set_misc_u32(Sc2MiscLayout.CITY_DAYS, 13 * CityCalendar.DAYS_PER_YEAR)
+	assert(app.city_session.activate_document(classic))
+	var preserved: PackedByteArray = classic.sc2x_extra_entries[AnnualCityReview.ENTRY].duplicate()
+	assert(app.reports.annual_review.city == null)
+	app.reports.prepare_annual_review()
+	_observe(app, settled)
+	app.reports.refresh_newspaper_menu()
+	assert(menu.get_item_index(CityMenuBar.MENU_ANNUAL_REVIEW) < 0)
+	app.reports.open_annual_review()
+	assert(not dialog.visible and app.city_status_bar.annual_review_seconds == 0.0)
+	assert(classic.sc2x_extra_entries[AnnualCityReview.ENTRY] == preserved)
+	ExpandedCity.upgrade(app)
+	app.city_dialogs.city_save_dialog.hide()
+	assert(app.reports.annual_review.history.size() == 10, "Switching restores the preserved archive")
+	app.reports.refresh_newspaper_menu()
+	assert(menu.get_item_index(CityMenuBar.MENU_ANNUAL_REVIEW) >= 0)
+	app.reports.open_annual_review()
+	assert(dialog.visible)
+	dialog.hide()
 	var measured_document := Sc2xDocument.create_empty(128, "Statistics fixture").document
 	var measured_city := CityState.from_document(measured_document)
 	measured_city.set_funds(34567)

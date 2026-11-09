@@ -6,6 +6,15 @@ Classic / Expanded. Conversion creates an independent SC2X working copy and
 opens Save As. A running multiplayer session must be stopped before conversion.
 There is no Expanded-to-Classic conversion.
 
+New multi-city regions require Expanded, both at founding and when converting
+an existing single city into a region. The New City dialog disables Region in
+Classic; a new multiplayer region campaign selects Expanded for all cities.
+Previously saved regions remain loadable with their stored rules unchanged.
+The ten-year city chronicle is also Expanded-only (single-player, including
+regions). Classic neither records years nor shows chronicle notices or its
+menu entry. Existing archive data stays intact and becomes available after an
+explicit switch to Expanded. Ordinary newspapers remain available in Classic.
+
 Reward                        Residents    Area  Build cost  Yearly upkeep
 National Museum                 150,000     4x4           0           120
 Opera House                     250,000     4x4           0           240

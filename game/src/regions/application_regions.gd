@@ -78,7 +78,7 @@ func activated(document: Sc2File) -> String:
 
 
 func found_region() -> bool:
-	if pending_edge == 0 or app.coop.active():
+	if pending_edge == 0 or app.coop.active() or not ExpandedRules.enabled(app.document_state.current_document):
 		return false
 	var edge := pending_edge
 	pending_edge = 0
@@ -248,6 +248,8 @@ func refresh() -> void:
 	buy_button.visible = active()
 	buy_button.disabled = visiting or quote.is_empty() or not item.is_empty()
 	create_button.visible = not active() and not app.coop.active() and app.simulation_state.simulation_engine.scenario == null
+	create_button.disabled = not ExpandedRules.enabled(app.document_state.current_document)
+	create_button.tooltip_text = "Regions require Expanded rules." if create_button.disabled else ""
 	preview.visible = preview.texture != null and (not quote.is_empty() or bool(item.get("own", false)))
 	if not item.is_empty() and (not active() or not item.get("own", false)):
 		_show_city(item)
@@ -644,6 +646,9 @@ func _command_resolved(command_id: int, result: Dictionary) -> void:
 func open_conversion() -> void:
 	if app.coop.active() or app.document_state.city == null or app.simulation_state.simulation_engine.scenario != null:
 		return
+	if not ExpandedRules.enabled(app.document_state.current_document):
+		app.interface.show_error(tr("Regions require Expanded rules."))
+		return
 	var dialog := QolDialog.new()
 	dialog.title = "Create a region"
 	dialog.wrap_controls = false
@@ -677,6 +682,9 @@ static func conversion_document(source: Sc2File) -> Dictionary:
 
 func _convert_local(edge: int) -> bool:
 	if active() or app.coop.active() or app.document_state.city == null:
+		return false
+	if not ExpandedRules.enabled(app.document_state.current_document):
+		app.interface.show_error(tr("Regions require Expanded rules."))
 		return false
 	var error := Sc2xCheckpoint.save_error(app.simulation_state.speed_controller)
 	if not error.is_empty():
