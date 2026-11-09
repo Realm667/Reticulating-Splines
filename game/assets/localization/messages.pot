@@ -11772,3 +11772,38 @@ msgstr ""
 #. EXP supplementary translation; AI-assisted from English feature source.
 msgid "Classic features plus larger maps, regions, additional terrain types, metropolis rewards, building upgrades and a ten-year city chronicle."
 msgstr ""
+
+#. Supplementary Expanded founding dialog text; translated from the English source.
+#: src/ui/startup/new_city_terrain_dialog.tscn
+msgid "Expanded features"
+msgstr ""
+
+#. Supplementary Expanded founding dialog text; translated from the English source.
+#: src/ui/startup/new_city_terrain_dialog.tscn
+msgid "• Ten-year city chronicle"
+msgstr ""
+
+#. Supplementary Expanded founding dialog text; translated from the English source.
+#: src/ui/startup/new_city_terrain_dialog.tscn
+msgid "Review the last ten completed years of your city: population, finances, annual statistics, major buildings and disasters. Available in single-player cities and regions after the first completed year."
+msgstr ""
+
+#. Supplementary Expanded founding dialog text; translated from the English source.
+#: src/ui/startup/new_city_terrain_dialog.tscn
+msgid "• Eight metropolis rewards"
+msgstr ""
+
+#. Supplementary Expanded founding dialog text; translated from the English source.
+#: src/ui/startup/new_city_terrain_dialog.tscn
+msgid "Eight unique buildings unlock as your population record rises from 150,000 to 4 million residents, including the National Museum, Opera House and World Exhibition Grounds. They provide benefits when powered and have upkeep costs."
+msgstr ""
+
+#. Supplementary Expanded founding dialog text; translated from the English source.
+#: src/ui/startup/new_city_terrain_dialog.tscn
+msgid "• Two building upgrade stages"
+msgstr ""
+
+#. Supplementary Expanded founding dialog text; translated from the English source.
+#: src/ui/startup/new_city_terrain_dialog.tscn
+msgid "Upgrade eligible facilities through the building query. Stage 1 requires a population record of 25,000 and the year 1920; stage 2 requires 100,000 and 1950. Construction takes time, keeps the existing service running and increases capacity and, where applicable, upkeep."
+msgstr ""

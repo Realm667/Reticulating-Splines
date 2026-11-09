@@ -6,7 +6,6 @@ var app: CityApplication
 var rules := KnowledgeRules.new()
 var card: KnowledgeCard
 var window: KnowledgeWindow
-var start_card: KnowledgeCard
 var mode := 2
 var top := false
 var pending_start := false
@@ -18,7 +17,6 @@ var loading_card: KnowledgeCard
 var load_index := 18
 var suspended_card := false
 var growth_dialog: KnowledgeGrowthDialog
-var introduction_shown := false
 var host_view := ""
 var host_revision := -1
 var host_disaster := 0
@@ -78,23 +76,6 @@ func _ready() -> void:
 			app.main_overlays.settings_dialog.hide()
 			open())
 		settings_fields.add_child(button)
-	var new_dialog := app.city_dialogs.new_city_dialog
-	start_card = _card(new_dialog.get_node("Center/NewCityDialog/Content/Body/Preview"))
-	start_card.embedded = true
-	start_card.visibility_changed.connect(func() -> void:
-		new_dialog.preview_view.get_parent().custom_minimum_size.y = 160 if start_card.visible else 320)
-	new_dialog.visibility_changed.connect(func() -> void:
-		if new_dialog.visible:
-			start_card.show_entry("bonds" if new_dialog.difficulty_input.selected == 2 else "start")
-			start_card.visible = mode != 0 and not rules.muted.has(start_card.id)
-			introduction_shown = start_card.visible
-			start_card.action_button.hide()
-			start_card.pin.hide())
-	new_dialog.difficulty_input.item_selected.connect(func(index: int) -> void:
-		if new_dialog.visible and mode != 0:
-			start_card.show_entry("bonds" if index == 2 else "start")
-			start_card.visible = not rules.muted.has(start_card.id)
-			start_card.action_button.hide())
 
 
 func _card(parent: Node) -> KnowledgeCard:
@@ -135,7 +116,6 @@ func _preferences(value: int, upper: bool) -> void:
 		card.hide()
 		suspended_card = false
 	if mode == 0:
-		start_card.hide()
 		if loading_card != null:
 			loading_card.hide()
 	_save()
@@ -148,12 +128,9 @@ func activated(loaded: bool) -> void:
 	card.hide()
 	window.hide()
 	growth_dialog.hide()
-	pending_start = not loaded and not introduction_shown and not app.coop.active()
-	if not loaded and introduction_shown:
-		rules.record(start_card.id)
-	elif loaded and loading_card != null and loading_card.is_visible_in_tree():
+	pending_start = not loaded and not app.coop.active()
+	if loaded and loading_card != null and loading_card.is_visible_in_tree():
 		rules.record(loading_card.id)
-	introduction_shown = false
 	suspended_card = false
 	host_revision = -1
 	host_view = ""

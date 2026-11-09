@@ -11442,3 +11442,38 @@ msgstr "기존 도시 규칙, 128 × 128 타일 및 클래식 지형 생성."
 #. EXP supplementary translation; AI-assisted from English feature source.
 msgid "Classic features plus larger maps, regions, additional terrain types, metropolis rewards, building upgrades and a ten-year city chronicle."
 msgstr "클래식 기능에 더 큰 지도, 지역, 추가 지형 유형, 대도시 보상, 건물 확장 및 10년 도시 연대기를 더합니다."
+
+#. Supplementary Expanded founding dialog text; translated from the English source.
+#: src/ui/startup/new_city_terrain_dialog.tscn
+msgid "Expanded features"
+msgstr "Expanded 추가 기능"
+
+#. Supplementary Expanded founding dialog text; translated from the English source.
+#: src/ui/startup/new_city_terrain_dialog.tscn
+msgid "• Ten-year city chronicle"
+msgstr "• 10년 도시 연대기"
+
+#. Supplementary Expanded founding dialog text; translated from the English source.
+#: src/ui/startup/new_city_terrain_dialog.tscn
+msgid "Review the last ten completed years of your city: population, finances, annual statistics, major buildings and disasters. Available in single-player cities and regions after the first completed year."
+msgstr "최근 완료된 10개 연도의 인구, 재정, 연간 통계, 주요 건물과 재난을 돌아봅니다. 싱글플레이 도시와 지역에서 첫해가 끝난 뒤 이용할 수 있습니다."
+
+#. Supplementary Expanded founding dialog text; translated from the English source.
+#: src/ui/startup/new_city_terrain_dialog.tscn
+msgid "• Eight metropolis rewards"
+msgstr "• 대도시 보상 건물 8종"
+
+#. Supplementary Expanded founding dialog text; translated from the English source.
+#: src/ui/startup/new_city_terrain_dialog.tscn
+msgid "Eight unique buildings unlock as your population record rises from 150,000 to 4 million residents, including the National Museum, Opera House and World Exhibition Grounds. They provide benefits when powered and have upkeep costs."
+msgstr "최고 인구가 15만 명에서 400만 명까지 늘어나면 국립 박물관, 오페라 극장, 세계 박람회장 등 특별한 건물 8종이 해금됩니다. 전력이 공급되어야 효과를 발휘하며 유지비가 듭니다."
+
+#. Supplementary Expanded founding dialog text; translated from the English source.
+#: src/ui/startup/new_city_terrain_dialog.tscn
+msgid "• Two building upgrade stages"
+msgstr "• 건물 확장 2단계"
+
+#. Supplementary Expanded founding dialog text; translated from the English source.
+#: src/ui/startup/new_city_terrain_dialog.tscn
+msgid "Upgrade eligible facilities through the building query. Stage 1 requires a population record of 25,000 and the year 1920; stage 2 requires 100,000 and 1950. Construction takes time, keeps the existing service running and increases capacity and, where applicable, upkeep."
+msgstr "건물 조회에서 확장 가능한 시설을 개선할 수 있습니다. 1단계는 최고 인구 25,000명과 1920년, 2단계는 100,000명과 1950년이 필요합니다. 공사에는 시간이 걸리며 기존 서비스는 계속 운영됩니다. 용량이 늘어나고 해당 시설의 유지비도 증가합니다."

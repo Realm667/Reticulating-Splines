@@ -42122,3 +42122,38 @@ msgstr "Règles originales, 128 × 128 cases et génération classique du terrai
 #. EXP supplementary translation; AI-assisted from English feature source.
 msgid "Classic features plus larger maps, regions, additional terrain types, metropolis rewards, building upgrades and a ten-year city chronicle."
 msgstr "Fonctions classiques avec cartes plus grandes, régions, types de terrain supplémentaires, récompenses métropolitaines, améliorations de bâtiments et chronique de la ville sur dix ans."
+
+#. Supplementary Expanded founding dialog text; translated from the English source.
+#: src/ui/startup/new_city_terrain_dialog.tscn
+msgid "Expanded features"
+msgstr "Fonctions Expanded"
+
+#. Supplementary Expanded founding dialog text; translated from the English source.
+#: src/ui/startup/new_city_terrain_dialog.tscn
+msgid "• Ten-year city chronicle"
+msgstr "• Chronique sur dix ans"
+
+#. Supplementary Expanded founding dialog text; translated from the English source.
+#: src/ui/startup/new_city_terrain_dialog.tscn
+msgid "Review the last ten completed years of your city: population, finances, annual statistics, major buildings and disasters. Available in single-player cities and regions after the first completed year."
+msgstr "Consultez les dix dernières années achevées de votre ville : population, finances, statistiques annuelles, grands bâtiments et catastrophes. Disponible dans les villes et régions en solo après la première année complète."
+
+#. Supplementary Expanded founding dialog text; translated from the English source.
+#: src/ui/startup/new_city_terrain_dialog.tscn
+msgid "• Eight metropolis rewards"
+msgstr "• Huit récompenses métropolitaines"
+
+#. Supplementary Expanded founding dialog text; translated from the English source.
+#: src/ui/startup/new_city_terrain_dialog.tscn
+msgid "Eight unique buildings unlock as your population record rises from 150,000 to 4 million residents, including the National Museum, Opera House and World Exhibition Grounds. They provide benefits when powered and have upkeep costs."
+msgstr "Huit bâtiments uniques se débloquent lorsque le record de population passe de 150 000 à 4 millions d’habitants, dont le Musée national, l’Opéra et le site de l’Exposition universelle. Ils apportent des avantages avec une alimentation électrique et ont des frais d’entretien."
+
+#. Supplementary Expanded founding dialog text; translated from the English source.
+#: src/ui/startup/new_city_terrain_dialog.tscn
+msgid "• Two building upgrade stages"
+msgstr "• Deux niveaux d’amélioration"
+
+#. Supplementary Expanded founding dialog text; translated from the English source.
+#: src/ui/startup/new_city_terrain_dialog.tscn
+msgid "Upgrade eligible facilities through the building query. Stage 1 requires a population record of 25,000 and the year 1920; stage 2 requires 100,000 and 1950. Construction takes time, keeps the existing service running and increases capacity and, where applicable, upkeep."
+msgstr "Améliorez les installations compatibles depuis leur fiche. Le niveau 1 nécessite un record de 25 000 habitants et l’année 1920 ; le niveau 2, 100 000 et 1950. Les travaux prennent du temps, maintiennent le service existant et augmentent la capacité ainsi que, le cas échéant, l’entretien."

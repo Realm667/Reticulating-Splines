@@ -298,6 +298,7 @@ func _rules_changed(index: int) -> void:
 		feature_inputs[key].visible = expanded
 	size_input.visible = expanded
 	classic_size.visible = not expanded
+	$Center/NewCityDialog/Content/Body/Preview/ExpandedFeatures.visible = expanded
 	mayor_name_input.visible = expanded
 	$Center/NewCityDialog/Content/Body/Fields/CityFields/MayorNameLabel.visible = expanded
 	$Center/NewCityDialog/Content/Body/Fields/CityFields/CityNameRow/RandomName.visible = expanded

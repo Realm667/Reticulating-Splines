@@ -63,7 +63,6 @@ columns = 2
 [node name="CityNameLabel" type="Label" parent="Center/NewCityDialog/Content/Body/Fields/CityFields"]
 layout_mode = 2
 text = "City Name"
-horizontal_alignment = 2
 vertical_alignment = 1
 
 [node name="CityNameRow" type="HBoxContainer" parent="Center/NewCityDialog/Content/Body/Fields/CityFields"]
@@ -86,7 +85,6 @@ tooltip_text = "Make a random city name."
 [node name="MayorNameLabel" type="Label" parent="Center/NewCityDialog/Content/Body/Fields/CityFields"]
 layout_mode = 2
 text = "Mayor Name"
-horizontal_alignment = 2
 vertical_alignment = 1
 
 [node name="MayorNameInput" type="LineEdit" parent="Center/NewCityDialog/Content/Body/Fields/CityFields"]
@@ -98,7 +96,6 @@ max_length = 23
 [node name="DifficultyLabel" type="Label" parent="Center/NewCityDialog/Content/Body/Fields/CityFields"]
 layout_mode = 2
 text = "Difficulty"
-horizontal_alignment = 2
 vertical_alignment = 1
 
 [node name="DifficultyInput" type="OptionButton" parent="Center/NewCityDialog/Content/Body/Fields/CityFields"]
@@ -117,7 +114,6 @@ popup/item_2/id = 3
 [node name="StartingYearLabel" type="Label" parent="Center/NewCityDialog/Content/Body/Fields/CityFields"]
 layout_mode = 2
 text = "Starting Year"
-horizontal_alignment = 2
 vertical_alignment = 1
 
 [node name="YearInput" type="OptionButton" parent="Center/NewCityDialog/Content/Body/Fields/CityFields"]
@@ -138,7 +134,6 @@ popup/item_3/id = 2050
 [node name="MapSizeLabel" type="Label" parent="Center/NewCityDialog/Content/Body/Fields/CityFields"]
 layout_mode = 2
 text = "Map Size"
-horizontal_alignment = 2
 vertical_alignment = 1
 
 [node name="SizeInput" type="OptionButton" parent="Center/NewCityDialog/Content/Body/Fields/CityFields"]
@@ -182,7 +177,6 @@ columns = 2
 layout_mode = 2
 size_flags_vertical = 0
 text = "Features"
-horizontal_alignment = 2
 vertical_alignment = 1
 
 [node name="OceanRow" type="GridContainer" parent="Center/NewCityDialog/Content/Body/Fields/TerrainFields"]
@@ -222,7 +216,6 @@ stretch_mode = 3
 [node name="HillsLabel" type="Label" parent="Center/NewCityDialog/Content/Body/Fields/TerrainFields/HillsRow"]
 layout_mode = 2
 text = "Hills"
-horizontal_alignment = 2
 vertical_alignment = 1
 
 [node name="HillsInputGroup" type="HBoxContainer" parent="Center/NewCityDialog/Content/Body/Fields/TerrainFields"]
@@ -255,7 +248,6 @@ stretch_mode = 3
 [node name="WaterLabel" type="Label" parent="Center/NewCityDialog/Content/Body/Fields/TerrainFields/WaterRow"]
 layout_mode = 2
 text = "Water"
-horizontal_alignment = 2
 vertical_alignment = 1
 
 [node name="WaterInputGroup" type="HBoxContainer" parent="Center/NewCityDialog/Content/Body/Fields/TerrainFields"]
@@ -288,7 +280,6 @@ stretch_mode = 3
 [node name="TreesLabel" type="Label" parent="Center/NewCityDialog/Content/Body/Fields/TerrainFields/TreesRow"]
 layout_mode = 2
 text = "Trees"
-horizontal_alignment = 2
 vertical_alignment = 1
 
 [node name="TreesInputGroup" type="HBoxContainer" parent="Center/NewCityDialog/Content/Body/Fields/TerrainFields"]
@@ -346,6 +337,43 @@ autowrap_mode = 3
 layout_mode = 2
 tooltip_text = "Make new terrain with the same settings."
 text = "Regenerate Terrain"
+
+[node name="ExpandedFeatures" type="VBoxContainer" parent="Center/NewCityDialog/Content/Body/Preview"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 7
+
+[node name="Divider" type="HSeparator" parent="Center/NewCityDialog/Content/Body/Preview/ExpandedFeatures"]
+layout_mode = 2
+
+[node name="Heading" type="Label" parent="Center/NewCityDialog/Content/Body/Preview/ExpandedFeatures"]
+layout_mode = 2
+text = "Expanded features"
+autowrap_mode = 3
+
+[node name="Chronicle" type="Label" parent="Center/NewCityDialog/Content/Body/Preview/ExpandedFeatures"]
+layout_mode = 2
+text = "• Ten-year city chronicle"
+autowrap_mode = 3
+mouse_filter = 0
+mouse_default_cursor_shape = 16
+tooltip_text = "Review the last ten completed years of your city: population, finances, annual statistics, major buildings and disasters. Available in single-player cities and regions after the first completed year."
+
+[node name="Rewards" type="Label" parent="Center/NewCityDialog/Content/Body/Preview/ExpandedFeatures"]
+layout_mode = 2
+text = "• Eight metropolis rewards"
+autowrap_mode = 3
+mouse_filter = 0
+mouse_default_cursor_shape = 16
+tooltip_text = "Eight unique buildings unlock as your population record rises from 150,000 to 4 million residents, including the National Museum, Opera House and World Exhibition Grounds. They provide benefits when powered and have upkeep costs."
+
+[node name="Upgrades" type="Label" parent="Center/NewCityDialog/Content/Body/Preview/ExpandedFeatures"]
+layout_mode = 2
+text = "• Two building upgrade stages"
+autowrap_mode = 3
+mouse_filter = 0
+mouse_default_cursor_shape = 16
+tooltip_text = "Upgrade eligible facilities through the building query. Stage 1 requires a population record of 25,000 and the year 1920; stage 2 requires 100,000 and 1950. Construction takes time, keeps the existing service running and increases capacity and, where applicable, upkeep."
 
 [node name="Buttons" type="HBoxContainer" parent="Center/NewCityDialog/Content"]
 layout_mode = 2
