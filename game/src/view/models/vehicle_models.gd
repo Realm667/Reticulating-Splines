@@ -320,7 +320,7 @@ static func special_geometry(kind: int, forward: Vector2, rise: float) -> Dictio
 		g.box(parts,"nav_red",Vector3(-.71,-.04,5.4),Vector3(-.63,.04,6.6))
 	elif kind==Kind.SHIP:
 		var outline := PackedVector3Array([Vector3(-1.32,-.24,0),Vector3(.90,-.29,0),Vector3(1.32,0,0),Vector3(.90,.29,0),Vector3(-1.32,.24,0)])
-		g.slab(parts,"hull",outline,2)
+		g.slab(parts,"hull",outline,5)
 		for i in outline.size():
 			g.beam(parts,"red",outline[i]+Vector3(0,0,.8),outline[(i+1)%outline.size()]+Vector3(0,0,.8),1.3)
 		g.box(parts,"white",Vector3(-1.17,-.19,.8),Vector3(-.72,.19,5.2))
@@ -373,7 +373,7 @@ static func special_geometry(kind: int, forward: Vector2, rise: float) -> Dictio
 				p.x*=1+.25*vertical_pose
 				p.y*=1.35
 				if part.role not in ["wake","wake_foam"]:
-					p.z+=3.5
+					p.z+=5.0
 			part.vertices[i]=along*p.x+across*p.y+up*p.z
 	return {"parts":parts,"ports":0,"footprint":3,"origin_x":48}
 
