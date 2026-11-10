@@ -44,6 +44,7 @@ func _run() -> void:
 		assert(archive.find_sprite(key) == original[key])
 		assert(CityIsometricRenderer.sprite_image(archive, pack.palette, images, key, false) != modeled)
 	_check_fallback(pack)
+	_check_highway_surfaces(pack)
 	_check_geometry()
 	_check_options()
 	var city := CityState.from_document(EmptyCityTemplate.create(16))
@@ -61,6 +62,32 @@ func _run() -> void:
 	await _check_application()
 	print("PASS: %d native model rasters, shared geometry, opt-in restoration, custom fallback, immutable city (%d ms)" % [total, Time.get_ticks_msec()-started])
 	quit()
+
+
+func _check_highway_surfaces(pack: GraphicsPack) -> void:
+	var cases := 0
+	var ids: Array = range(BuildingTileIds.HIGHWAY_STRAIGHT_1,BuildingTileIds.HIGHWAY_POWER_CROSSING_2+1)
+	ids.append_array(range(BuildingTileIds.HIGHWAY_ONRAMP_1,BuildingTileIds.REINFORCED_HIGHWAY_BRIDGE+1))
+	for id: int in ids:
+		var entry: Sc2SpriteArchive.SpriteEntry=pack.large_sprites.entries_by_id[1000+id]
+		var source: Image=entry.create_image(pack.palette).image
+		var plain := Image.create(source.get_width(),source.get_height(),false,Image.FORMAT_RGBA8)
+		var raster := NetworkModelRaster.render(id,source,pack.palette)
+		var expected := NetworkModelRaster.render(id,plain,pack.palette)
+		for i in raster.roles.size():
+			# Crossings retain their independently drawn road/rail underneath.
+			if raster.height[i]>=12 and raster.roles[i]==1:
+				var point := Vector2i(i%raster.image.get_width(),i/raster.image.get_width())
+				assert(raster.image.get_pixelv(point)==expected.image.get_pixelv(point),"Projected railings or shadows leaked onto highway pavement: %s"%id)
+		if id in [BuildingTileIds.HIGHWAY_STRAIGHT_1,BuildingTileIds.HIGHWAY_STRAIGHT_2] or id>=BuildingTileIds.HIGHWAY_ONRAMP_1:
+			for view in 3:
+				var divisor := 4>>view
+				var small := source.duplicate()
+				small.resize(source.get_width()/divisor,ceili(float(source.get_height())/divisor),Image.INTERPOLATE_NEAREST)
+				var empty := Image.create(small.get_width(),small.get_height(),false,Image.FORMAT_RGBA8)
+				assert(NetworkModelRaster.render(id,small,pack.palette,view).image.get_data()==NetworkModelRaster.render(id,empty,pack.palette,view).image.get_data(),"Highway joins must not inherit projected sprite structure at any artwork size")
+				cases+=1
+	print("PASS: highway pavement is independent of projected sprite structure; %d native size cases"%cases)
 
 
 func _check_fallback(pack: GraphicsPack) -> void:
@@ -112,6 +139,24 @@ func _check_geometry() -> void:
 		for j in closed.parts[i].vertices.size():
 			assert(opened.parts[i].vertices[j].is_equal_approx(closed.parts[i].vertices[j]+Vector3(0,0,12)))
 	_check_truss_clearance()
+	_check_open_highway_joins()
+
+
+func _check_open_highway_joins() -> void:
+	for id in [BuildingTileIds.HIGHWAY_STRAIGHT_1,BuildingTileIds.HIGHWAY_STRAIGHT_2,
+			BuildingTileIds.HIGHWAY_SLOPE_1,BuildingTileIds.HIGHWAY_SLOPE_2,
+			BuildingTileIds.HIGHWAY_SLOPE_3,BuildingTileIds.HIGHWAY_SLOPE_4]:
+		var model := NetworkModelGeometry.build(id)
+		for part: Dictionary in model.parts:
+			if part.role!="pavement":
+				continue
+			var vertices: PackedVector3Array=part.vertices
+			var normal := (vertices[1]-vertices[0]).cross(vertices[2]-vertices[0])
+			if absf(normal.z)>.0001:
+				continue
+			# Vertical walls may run along the road, never across a connected end.
+			assert(absf(normal.y if model.ports==5 else normal.x)<.0001,"An internal highway end wall would draw over the adjoining road surface: %s"%id)
+	print("PASS: straight and graded highway joins have no transverse end walls")
 
 
 func _check_truss_clearance() -> void:

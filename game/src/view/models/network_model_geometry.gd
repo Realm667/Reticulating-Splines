@@ -173,12 +173,14 @@ static func box(parts: Array, role: String, low: Vector3, high: Vector3) -> void
 		face(parts,role,points)
 
 
-static func slab(parts: Array, role: String, top: PackedVector3Array, thickness := 2.0) -> void:
+static func slab(parts: Array, role: String, top: PackedVector3Array, thickness := 2.0, open_edges := PackedInt32Array()) -> void:
 	face(parts,role,top)
 	var bottom:=PackedVector3Array()
 	for p in top:
 		bottom.append(p-Vector3(0,0,thickness))
 	for i in top.size():
+		if open_edges.has(i):
+			continue
 		var j: int=(i+1)%top.size()
 		face(parts,role,PackedVector3Array([bottom[i],bottom[j],top[j],top[i]]))
 
@@ -213,7 +215,8 @@ static func ribbon(parts: Array, role: String, path: PackedVector3Array, width: 
 		left.append(path[i]+side)
 		right.append(path[i]-side)
 	for i in range(path.size()-1):
-		slab(parts,role,PackedVector3Array([left[i],left[i+1],right[i+1],right[i]]),.8)
+		slab(parts,role,PackedVector3Array([left[i],left[i+1],right[i+1],right[i]]),.8,
+			PackedInt32Array([1,3]) if role=="pavement" else PackedInt32Array())
 
 
 static func portal(parts: Array, scale := 1.0) -> void:
@@ -346,7 +349,7 @@ static func highway_truss(parts: Array, reinforced: bool) -> void:
 	# Pavement has its own material: projected tower pixels are not road texture.
 	for lane in [Vector2(-.5,.45),Vector2(.55,1.5)]:
 		slab(parts,"pavement",PackedVector3Array([Vector3(lane.x,-1.5,24),Vector3(lane.y,-1.5,24),
-			Vector3(lane.y,.5,24),Vector3(lane.x,.5,24)]))
+			Vector3(lane.y,.5,24),Vector3(lane.x,.5,24)]),2.0,PackedInt32Array([0,2]))
 		for dash in 6:
 			var v := -1.45+dash*.32
 			strip(parts,"road_paint",Vector3((lane.x+lane.y)*.5,v,24.05),Vector3((lane.x+lane.y)*.5,v+.16,24.05),.045)
@@ -384,7 +387,7 @@ static func highway_details(parts: Array, top: PackedVector3Array, ports: int, l
 		var a := Vector3(first.x,first.y,deck_height(first,top,low,high))
 		var b := Vector3(last.x,last.y,deck_height(last,top,low,high))
 		beam(parts,"curb",a+Vector3(0,0,.12),b+Vector3(0,0,.12),.7)
-		beam(parts,"guardrail",a+Vector3(0,0,.9),b+Vector3(0,0,.9),.55)
+		beam(parts,"guardrail",a+Vector3(0,0,.9),b+Vector3(0,0,.9),1.0)
 		for post in footprint*3:
 			var p := a.lerp(b,(post+.5)/(footprint*3))
 			box(parts,"railing_post",p+Vector3(-.02,-.02,0),p+Vector3(.02,.02,1.0))
@@ -398,6 +401,31 @@ static func deck_height(point: Vector2, top: PackedVector3Array, low: Vector2, h
 	var u := (point.x-low.x)/(high.x-low.x)
 	var v := (point.y-low.y)/(high.y-low.y)
 	return lerpf(lerpf(top[0].z,top[1].z,u),lerpf(top[3].z,top[2].z,u),v)
+
+
+static func highway_paint(parts: Array, top: PackedVector3Array, ports: int, low: Vector2, high: Vector2, footprint: int) -> void:
+	# Markings belong to the supporting surface, not the projected sprite silhouette.
+	if top.size()==3:
+		for lane in [.25,.75]:
+			var a := top[1].lerp(top[0],lane)
+			var b := top[1].lerp(top[2],lane)
+			for dash in 6:
+				var t := dash/6.0
+				var end := (dash+.5)/6.0
+				var first := a*pow(1-t,2)+top[1]*2*t*(1-t)+b*t*t
+				var last := a*pow(1-end,2)+top[1]*2*end*(1-end)+b*end*end
+				strip(parts,"road_paint",first+Vector3(0,0,.05),last+Vector3(0,0,.05),.045)
+		return
+	for axis: int in ([5,10] if ports==15 else [ports]):
+		var along_u := axis==10
+		for lane in footprint:
+			var across := lerpf(low.y,high.y,(lane+.5)/footprint) if along_u else lerpf(low.x,high.x,(lane+.5)/footprint)
+			for dash in footprint*3:
+				var t := (dash+.1)/(footprint*3)
+				var end := (dash+.6)/(footprint*3)
+				var a := Vector2(lerpf(low.x,high.x,t),across) if along_u else Vector2(across,lerpf(low.y,high.y,t))
+				var b := Vector2(lerpf(low.x,high.x,end),across) if along_u else Vector2(across,lerpf(low.y,high.y,end))
+				strip(parts,"road_paint",Vector3(a.x,a.y,deck_height(a,top,low,high)+.05),Vector3(b.x,b.y,deck_height(b,top,low,high)+.05),.045)
 
 
 static func power_routes(mask: int, corners: PackedFloat32Array, pole_height := 8.0, pole_position := Vector2.ZERO) -> Array:
@@ -504,9 +532,13 @@ static func build(id: int, corners := PackedFloat32Array(), flipped := false) ->
 			var top:=PackedVector3Array([
 				Vector3(low.x,low.y,12+corners[0]),Vector3(high.x,low.y,12+corners[1]),
 				Vector3(high.x,high.y,12+corners[2]),Vector3(low.x,high.y,12+corners[3])])
+			var open_edges := PackedInt32Array([0,2] if mask==5 else [1,3])
 			if id>=T.HIGHWAY_CURVE_1 and id<=T.HIGHWAY_CURVE_4:
 				var turn:=id-T.HIGHWAY_CURVE_1
 				top=PackedVector3Array([top[turn%4],top[(turn+1)%4],top[(turn+2)%4]])
+				open_edges=PackedInt32Array([0,1])
+			elif id==T.HIGHWAY_INTERSECTION:
+				open_edges=PackedInt32Array([0,1,2,3])
 			if kind=="highway_bridge":
 				highway_truss(parts,id==T.REINFORCED_HIGHWAY_BRIDGE)
 			elif id>=T.HIGHWAY_SLOPE_1 and id<=T.HIGHWAY_SLOPE_4:
@@ -517,9 +549,11 @@ static func build(id: int, corners := PackedFloat32Array(), flipped := false) ->
 						lane=PackedVector3Array([top[0].lerp(top[3],interval.x),top[1].lerp(top[2],interval.x),top[1].lerp(top[2],interval.y),top[0].lerp(top[3],interval.y)])
 					else:
 						lane=PackedVector3Array([top[0].lerp(top[1],interval.x),top[0].lerp(top[1],interval.y),top[3].lerp(top[2],interval.y),top[3].lerp(top[2],interval.x)])
-					slab(parts,"deck",lane)
+					slab(parts,"pavement",lane,2.0,open_edges)
 			else:
-				slab(parts,"deck",top)
+				slab(parts,"pavement",top,2.0,open_edges)
+			if kind!="highway_bridge":
+				highway_paint(parts,top,15 if id==T.HIGHWAY_INTERSECTION else mask,low,high,footprint)
 			if kind=="highway" or id<=T.HIGHWAY_SLOPE_4:
 				highway_details(parts,top,mask,low,high,footprint)
 			if id in [T.HIGHWAY_STRAIGHT_1,T.HIGHWAY_STRAIGHT_2]:
@@ -552,7 +586,9 @@ static func build(id: int, corners := PackedFloat32Array(), flipped := false) ->
 				var p: Vector2=a*pow(1-t,3)+c*3*t*pow(1-t,2)+d*3*t*t*(1-t)+b*pow(t,3)
 				var next:=Vector3(p.x,p.y,t*12)
 				path.append(next)
-			ribbon(parts,"ramp",path,.65)
+			ribbon(parts,"pavement",path,.65)
+			for dash in range(0,path.size()-1,2):
+				strip(parts,"road_paint",path[dash]+Vector3(0,0,.05),path[dash+1]+Vector3(0,0,.05),.045)
 		"tunnel", "rail_portal":
 			parts=ground_routes(5,corners,kind=="rail_portal")
 			portal(parts,.5 if kind=="rail_portal" else 1)
