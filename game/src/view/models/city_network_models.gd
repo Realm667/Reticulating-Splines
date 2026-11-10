@@ -30,6 +30,7 @@ static func configure(archive: Sc2SpriteArchive, palette: Sc2Palette, enabled: b
 
 
 static func prepare(archive: Sc2SpriteArchive, palette: Sc2Palette) -> void:
+	archive.network_model_palette=palette
 	if _admission.is_empty():
 		var content: Variant = JSON.parse_string(FileAccess.get_file_as_string(ADMISSION_PATH))
 		if content is Dictionary:
@@ -84,6 +85,7 @@ static func prepare(archive: Sc2SpriteArchive, palette: Sc2Palette) -> void:
 
 static func copy_state(source: Sc2SpriteArchive, target: Sc2SpriteArchive) -> void:
 	# Prepared entries and metadata are immutable after publication.
+	target.network_model_palette=source.network_model_palette
 	target.network_model_entries = source.network_model_entries
 	target.network_model_heights = source.network_model_heights
 	target.network_model_signature = source.network_model_signature

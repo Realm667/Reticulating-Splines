@@ -10,7 +10,7 @@ const EFFECT_STRIDE := 14
 # chunks that the native simulation reads. other chunks stay in the document only
 const CHUNK_IDS: PackedStringArray = [
 	"CNAM", "MISC", "ALTM", "XTER", "XBLD", "XZON", "XUND", "XTXT", "XLAB", "XMIC", "XTHG", "XBIT",
-	"XTRF", "XPLT", "XVAL", "XCRM", "XPLC", "XFIR", "XPOP", "XROG", "XGRP", "SCEN", "TEXT", "PICT", "TMPL", "XEXP", "XUPG",
+	"XTRF", "XPLT", "XVAL", "XCRM", "XPLC", "XFIR", "XPOP", "XROG", "XGRP", "SCEN", "TEXT", "PICT", "TMPL", "XEXP", "XUPG", "XQTR",
 ]
 # result classes by the name the native library sends in __class
 static var classes := {

@@ -11489,3 +11489,87 @@ msgstr "모델 활성화"
 #. Supplementary SC2000 model presentation, AI-assisted translation.
 msgid "Render roads, railways, power lines and bridges from shared geometric models. Keeps the native pixel style. Unsupported graphics use their original sprites."
 msgstr "공유 기하 모델로 도로, 철도, 송전선과 다리를 표시합니다. 원래의 픽셀 스타일을 유지합니다. 지원하지 않는 그래픽은 기존 스프라이트를 사용합니다."
+
+#. Supplementary quarter-height terrain, AI-assisted translation.
+msgid "Quarter-height terrain"
+msgstr "¼ 높이 지형"
+
+#. Supplementary quarter-height terrain, AI-assisted translation.
+msgid "Enable quarter-height terrain"
+msgstr "¼ 높이 지형 사용"
+
+#. Supplementary quarter-height terrain, AI-assisted translation.
+msgid "Edit height"
+msgstr "높이 간격"
+
+#. Supplementary quarter-height terrain, AI-assisted translation.
+msgid "¼ level"
+msgstr "¼ 단계"
+
+#. Supplementary quarter-height terrain, AI-assisted translation.
+msgid "½ level"
+msgstr "½ 단계"
+
+#. Supplementary quarter-height terrain, AI-assisted translation.
+msgid "1 level"
+msgstr "1 단계"
+
+#. Supplementary quarter-height terrain, AI-assisted translation.
+msgid "2 levels"
+msgstr "2 단계"
+
+#. Supplementary quarter-height terrain, AI-assisted translation.
+msgid "Maximum slope"
+msgstr "최대 경사"
+
+#. Supplementary quarter-height terrain, AI-assisted translation.
+msgid "Gentle"
+msgstr "완만함"
+
+#. Supplementary quarter-height terrain, AI-assisted translation.
+msgid "Steep"
+msgstr "가파름"
+
+#. Supplementary quarter-height terrain, AI-assisted translation.
+msgid "Vertical cliffs"
+msgstr "수직 절벽"
+
+#. Supplementary quarter-height terrain, AI-assisted translation.
+msgid "Quarter-height terrain requires Expanded rules."
+msgstr "¼ 높이 지형에는 확장 규칙이 필요합니다."
+
+#. Supplementary quarter-height terrain, AI-assisted translation.
+msgid "Quarter-height terrain is saved with the city. Models are required to display it."
+msgstr "¼ 높이 지형은 도시와 함께 저장됩니다. 표시하려면 모델이 필요합니다."
+
+#. Supplementary quarter-height terrain, AI-assisted translation.
+msgid "Roads, railways and power lines require gentle or normal slopes. Buildings and zones require level ground. Terrain costs follow the height moved."
+msgstr "도로, 철도와 전선은 완만하거나 보통인 경사에 건설할 수 있습니다. 건물과 구역에는 평지가 필요합니다. 지형 비용은 이동한 높이에 비례합니다."
+
+#. Supplementary quarter-height terrain, AI-assisted translation.
+msgid "Invalid quarter-height terrain data."
+msgstr "¼ 높이 지형 데이터가 잘못되었습니다."
+
+#. Supplementary quarter-height terrain, AI-assisted translation.
+msgid "Quarter-height terrain capability is missing."
+msgstr "¼ 높이 지형 기능 정보가 없습니다."
+
+#. Supplementary quarter-height terrain, AI-assisted translation.
+msgid "Quarter-height terrain data is missing."
+msgstr "¼ 높이 지형 데이터가 없습니다."
+
+#. Supplementary quarter-height terrain, AI-assisted translation.
+msgid "Buildings require level terrain."
+msgstr "건물에는 평지가 필요합니다."
+
+#. Supplementary quarter-height terrain, AI-assisted translation.
+msgid "Terrain is too steep for infrastructure."
+msgstr "지형이 너무 가팔라 기반 시설을 건설할 수 없습니다."
+
+#. Supplementary quarter-height terrain, AI-assisted translation.
+msgid "Render terrain, roads, railways, power lines and bridges from shared geometric models. Keeps the native pixel style. Unsupported graphics use their original sprites."
+msgstr "공유 기하 모델로 지형, 도로, 철도, 전선과 다리를 표시합니다. 원래 픽셀 스타일을 유지합니다. 지원하지 않는 그래픽은 기존 스프라이트를 사용합니다."
+
+#. Supplementary quarter-terrain slope category.
+msgid "Normal"
+msgstr "보통"

@@ -17,7 +17,7 @@ static func static_occlusion_commands(
 
 	var records := context.draw_records(Rect2i(Vector2i.ZERO, IsometricGeometry.output_size_for_view(view_size, city.map_size)))
 
-	return [] if records.has("error") else CityGpuBuildContext.foreground_commands(records.records)
+	return [] if records.has("error") else CityGpuBuildContext.foreground_commands(records.records,false,records.get("images",[]))
 
 
 # `base_commands` with the commands of each dirty tile painted again
@@ -50,7 +50,7 @@ static func patch_static_occlusion_commands(
 		var y := index % map_edge
 		var drawn := context.tile_draws([Vector2i(x, y)])
 		replacements[(x + y) * map_edge + y] = ([] if drawn.has("error")
-			else CityGpuBuildContext.foreground_commands(drawn.records))
+			else CityGpuBuildContext.foreground_commands(drawn.records,false,drawn.get("images",[])))
 
 	if replacements.is_empty():
 		return base_commands.duplicate()
@@ -88,7 +88,7 @@ static func tile_occlusion_commands(
 
 	var drawn := context.tile_draws([Vector2i(x, y)])
 
-	return [] if drawn.has("error") else CityGpuBuildContext.foreground_commands(drawn.records)
+	return [] if drawn.has("error") else CityGpuBuildContext.foreground_commands(drawn.records,false,drawn.get("images",[]))
 
 
 static func _context(city: CityState, sprites: Sc2SpriteArchive, view_size: int) -> CityGpuBuildContext:

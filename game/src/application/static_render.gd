@@ -153,9 +153,9 @@ static func _collect_changed_tiles(before: PackedByteArray, after: PackedByteArr
 	if before == after:
 		return
 
-	# chunk strides are one or two bytes per tile, so a shift replaces the
+	# Chunk strides are powers of two, so a shift replaces the
 	# per-byte division that maps a byte offset back to a tile
-	var tile_shift := 1 if stride == 2 else 0
+	var tile_shift := 3 if stride == 8 else (1 if stride == 2 else 0)
 	var size := mini(before.size(), after.size())
 	var full_bytes := size - size % 8
 	var word_mask := 0
@@ -218,7 +218,10 @@ static func _collect_payload_changes(old_payloads: Dictionary, new_payloads: Dic
 		if new_bytes.size() != old_bytes.size():
 			continue
 
-		var stride := 2 if chunk_id == "ALTM" or (chunk_id == "XTXT" and OverlayData.count(old_bytes) != old_bytes.size()) else 1
+		if chunk_id=="XQTR":
+			old_bytes=old_bytes.slice(16)
+			new_bytes=new_bytes.slice(16)
+		var stride := 8 if chunk_id=="XQTR" else (2 if chunk_id == "ALTM" or (chunk_id == "XTXT" and OverlayData.count(old_bytes) != old_bytes.size()) else 1)
 
 		if old_bytes.size() != cells * stride:
 			continue
@@ -258,6 +261,9 @@ static func changed_source_rects(city: CityState, old_payloads: Dictionary, spri
 	# for each retained graphics size when no source byte changed.
 	if before == after:
 		return true
+	# Quarter edits can move a surface without changing its coarse ALTM word.
+	if before.get("XQTR",PackedByteArray())!=after.get("XQTR",PackedByteArray()):
+		return false
 
 	var configuration := IsometricRenderer.view_configuration(view_size)
 	var building_sprites := PackedInt32Array()
@@ -303,7 +309,7 @@ static func _edit_dirty_indices(command: EditCommandResult, map_edge: int = 128)
 	var dirty := PackedByteArray()
 	dirty.resize(cells)
 	var indices := PackedInt32Array()
-	_collect_payload_changes(command.old_payloads, command.new_payloads, ["ALTM", "XBLD", "XTER", "XZON", "XBIT", "XTXT"],
+	_collect_payload_changes(command.old_payloads, command.new_payloads, ["ALTM", "XBLD", "XTER", "XZON", "XBIT", "XTXT", "XQTR"],
 		map_edge, dirty, indices)
 
 	# dispatch compares its whole text overlay instead of xtxt payloads

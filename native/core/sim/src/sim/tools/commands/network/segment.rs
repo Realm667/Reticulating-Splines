@@ -157,6 +157,7 @@ pub fn apply_segment(
 fn plan_route(city: &City, plan: &mut SegmentPlan) -> Option<RouteResult> {
     let edge = city.map_size;
     let maps = RouteMaps {
+        quarter: &city.xqtr.data,
         buildings: &city.xbld.data,
         terrain: &city.xter.data,
         zones: &city.xzon.data,

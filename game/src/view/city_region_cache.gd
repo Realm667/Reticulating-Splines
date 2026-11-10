@@ -18,7 +18,7 @@ const GPU_WORKERS := 2
 # vertex color tags of palette_cycle.gdshader for the overlays of HD regions
 const OVERLAY_PIPE_FLOW_TAG := 52
 # chunks whose tile data the region renderers read
-const SOURCE_CHUNKS: Array[String] = ["ALTM", "XBLD", "XTER", "XZON", "XBIT", "XTXT", "XUND", "XTRF"]
+const SOURCE_CHUNKS: Array[String] = ["ALTM", "XBLD", "XTER", "XZON", "XBIT", "XTXT", "XUND", "XTRF", "XQTR"]
 # above this count, report the whole region as changed foreground geometry
 const MAX_OCCLUDER_CHANGES := 32
 const MAX_PUBLISH_LOG := 512

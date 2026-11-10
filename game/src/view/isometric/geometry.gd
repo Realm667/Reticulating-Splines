@@ -192,6 +192,13 @@ static func terrain_surface_polygon(
 	if polygon.size() != 4:
 		return polygon
 
+	if not city.quarter_heights.is_empty() and (land_surface or not city.is_water(x,y)):
+		var index := city.index_of(x,y)
+		var base := city.land_altitude(x,y)*4
+		for corner in 4:
+			polygon[corner].y -= (city.quarter_heights[index*4+corner]-base)*ALTITUDE_STEP/4.0
+		return polygon
+
 	var terrain := city.terrain_id(x, y)
 
 	# shoreline art can show the seabed, but its selectable surface is flat water

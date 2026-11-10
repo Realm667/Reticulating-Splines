@@ -400,9 +400,7 @@ func _dynamic_occluder_image(
 		if overlap.get_area() <= 0:
 			continue
 
-		var resource := dynamic_sprite_resource(
-			sprite_archive, int(command.sprite_id), bool(command.flip), divisor, texture_factor
-		)
+		var resource := resource_for_command(sprite_archive,command,divisor,texture_factor)
 
 		if resource == null:
 			continue
@@ -514,9 +512,7 @@ func _floating_occluder_image(
 				waterline, Vector2(bounds.position), 1.0 / texture_factor, large, floating_altitude, map_edge, tile
 			)
 
-		var resource := dynamic_sprite_resource(
-			sprite_archive, int(command.sprite_id), bool(command.flip), divisor, texture_factor
-		)
+		var resource := resource_for_command(sprite_archive,command,divisor,texture_factor)
 
 		if resource == null:
 			continue
@@ -644,6 +640,19 @@ func demolish_brush_visual(tile: Vector2i, direction: int) -> CityDynamicVisual:
 	result.size = Vector2(entry.width, entry.height) * divisor
 
 	return result
+
+
+func resource_for_command(archive: Sc2SpriteArchive,command: CityStaticCommand,divisor: int,factor:=1) -> CitySpriteResource:
+	if command.model_image==null:
+		return dynamic_sprite_resource(archive,command.sprite_id,command.flip,divisor,factor,true)
+	if command.model_resource==null or command.model_scale!=Vector2i(divisor,factor):
+		var resource:=CitySpriteResource.new()
+		resource.image=command.model_image.duplicate()
+		resource.native_size=resource.image.get_size()*divisor
+		resource.image.resize(resource.native_size.x*factor,resource.native_size.y*factor,Image.INTERPOLATE_NEAREST)
+		command.model_resource=resource
+		command.model_scale=Vector2i(divisor,factor)
+	return command.model_resource
 
 
 func dynamic_sprite_resource(

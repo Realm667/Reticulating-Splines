@@ -126,6 +126,7 @@ struct PlotMaps<'a> {
     flags: &'a mut [u8],
     misc: &'a mut [u8],
     map_edge: i64,
+    quarter: &'a [u8],
 }
 
 fn plot_maps(city: &mut City) -> PlotMaps<'_> {
@@ -141,6 +142,7 @@ fn plot_maps(city: &mut City) -> PlotMaps<'_> {
     } = city;
 
     PlotMaps {
+        quarter: &city.xqtr.data,
         buildings: &mut xbld.data,
         terrain: &mut xter.data,
         zones: &mut xzon.data,
@@ -161,7 +163,8 @@ fn zone_plot(maps: &mut PlotMaps, site: Rect2i) -> Vec<i64> {
             let index = x * edge + y;
             let i = index as usize;
 
-            if is_clear_land(maps.buildings, maps.terrain, maps.flags, i)
+            if crate::sim::quarter_terrain::raw_level_site(maps.quarter, [i])
+                && is_clear_land(maps.buildings, maps.terrain, maps.flags, i)
                 && maps.zones[i] as i64 & zone::TYPE_MASK == 0
                 && maps.underground[i] as i64 == under::EMPTY
             {
@@ -330,6 +333,9 @@ fn find_land_site(city: &City, game: &mut GameLcgRandom, forced: i64) -> (Option
         let x = game.next_mod(edge - 9);
         let y = game.next_mod(edge - 9);
         let origin = Vec2i::new(x, y);
+        if !crate::sim::quarter_terrain::level_site(city, Rect2i::from(origin, Vec2i::new(8, 8))) {
+            continue;
+        }
         last_altitude = city.land_altitude(origin.x, origin.y);
         let mut valid = 0;
         let mut level = 0;
@@ -373,7 +379,7 @@ fn find_missile_sites(city: &City, game: &mut GameLcgRandom, altitude: i64) -> V
         let y = game.next_mod(edge - 4);
         let candidate = Rect2i::from(Vec2i::new(x, y), Vec2i::new(3, 3));
 
-        if sites.iter().any(|site| site.intersects(&candidate)) {
+        if !crate::sim::quarter_terrain::level_site(city, candidate) || sites.iter().any(|site| site.intersects(&candidate)) {
             continue;
         }
 
@@ -438,6 +444,9 @@ pub fn reserve_land_site(city: &mut City, base_type: i64, site: Rect2i, notice_i
         return MilitaryProposalResult::failed("military base reservation is invalid");
     }
 
+    if !crate::sim::quarter_terrain::level_site(city, site) {
+        return MilitaryProposalResult::failed("Buildings require level terrain.");
+    }
     let mut maps = plot_maps(city);
     let changed = zone_plot(&mut maps, site);
     write_u32_be(maps.misc, misc_layout::MILITARY_BASE_TYPE, base_type);
@@ -599,7 +608,12 @@ fn naval_candidate(city: &City, shore: Vec2i, inland: Vec2i, along: Vec2i) -> Re
     let position = Vec2i::new(shore.x.min(last.x), shore.y.min(last.y));
     let size = Vec2i::new((shore.x - last.x).abs() + 1, (shore.y - last.y).abs() + 1);
 
-    Rect2i::from(position, size)
+    let site = Rect2i::from(position, size);
+    if crate::sim::quarter_terrain::level_site(city, site) {
+        site
+    } else {
+        Rect2i::default()
+    }
 }
 
 fn naval_clear_land(city: &City, point: Vec2i) -> bool {
@@ -700,6 +714,7 @@ mod tests {
                     ..
                 } = &mut city;
                 let mut maps = SpecialMaps {
+                    quarter: &[],
                     buildings: &mut xbld.data,
                     zones: &mut xzon.data,
                     underground: &mut xund.data,

@@ -19,6 +19,7 @@ pub struct HighwayMaps<'a> {
     pub flags: &'a [u8],
     pub altitude: &'a [u8],
     pub map_edge: i64,
+    pub quarter: &'a [u8],
 }
 
 /// HighwayGeometry._network_can_cross: a straight network that runs across `direction`.
@@ -120,10 +121,23 @@ fn section_is_flat_eligible(maps: &HighwayMaps, anchor: Vec2i, direction: i64) -
         let point = anchor + offset;
         let index = (point.x * edge + point.y) as usize;
 
+        for (direction, dx, dy) in [(1, 1, 0), (2, 0, 1)] {
+            let neighbor = point + Vec2i::new(dx, dy);
+            if neighbor.x < anchor.x + 2
+                && neighbor.y < anchor.y + 2
+                && !crate::sim::quarter_terrain::raw_connects(maps.quarter, index, (neighbor.x * edge + neighbor.y) as usize, direction)
+            {
+                return false;
+            }
+        }
+
         if maps.flags[index] as i64 & flag_bits::WATER != 0 {
             return false;
         }
 
+        if !crate::sim::quarter_terrain::raw_allowed(maps.quarter, index) {
+            return false;
+        }
         let tile = maps.buildings[index] as i64;
 
         if !building_is_allowed(tile) {
@@ -135,11 +149,41 @@ fn section_is_flat_eligible(maps: &HighwayMaps, anchor: Vec2i, direction: i64) -
         }
     }
 
+    if !maps.quarter.is_empty() {
+        return crate::sim::quarter_terrain::highway_kind(maps.quarter, edge, anchor, direction).is_some_and(|kind| {
+            kind < 4
+                || SECTION_OFFSETS.iter().all(|offset| {
+                    let p = anchor + *offset;
+                    let b = maps.buildings[(p.x * edge + p.y) as usize];
+                    b <= 13 || is_highway_tile(i64::from(b))
+                })
+        });
+    }
     terrain_section_shape(maps.buildings, maps.terrain, maps.altitude, anchor, edge) != INVALID_TERRAIN_SHAPE
 }
 
 /// HighwayRoutes._section_follows: eligible, and at most one level from the current section.
 fn section_follows(maps: &HighwayMaps, current: Vec2i, candidate: Vec2i, direction: i64) -> bool {
+    if !maps.quarter.is_empty() {
+        for offset in SECTION_OFFSETS {
+            let point = current + offset;
+            let next = point + DIRECTIONS[direction as usize];
+            if next.x >= candidate.x
+                && next.x < candidate.x + 2
+                && next.y >= candidate.y
+                && next.y < candidate.y + 2
+                && !crate::sim::quarter_terrain::raw_connects(
+                    maps.quarter,
+                    (point.x * maps.map_edge + point.y) as usize,
+                    (next.x * maps.map_edge + next.y) as usize,
+                    direction as usize,
+                )
+            {
+                return false;
+            }
+        }
+        return section_is_flat_eligible(maps, candidate, direction);
+    }
     section_is_flat_eligible(maps, candidate, direction)
         && (section_altitude(maps.terrain, maps.altitude, candidate, maps.map_edge)
             - section_altitude(maps.terrain, maps.altitude, current, maps.map_edge))

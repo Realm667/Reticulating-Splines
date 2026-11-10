@@ -89,6 +89,7 @@ func open_settings_dialog() -> void:
 	if host_controls_growth:
 		visual_values.tree_growth_enabled = app.visual_environment.remote_weather.get("options", {}).get("tree_growth_enabled", false)
 	app.main_overlays.settings_dialog.visual_tab.show_values(visual_values)
+	app.main_overlays.settings_dialog.visual_tab.terrain_models_panel.sync(app)
 	app.main_overlays.settings_dialog.visual_tab.building_mix_panel.show_values(preferences.building_mix, app.assets.building_variants.notices,
 		BuildingVariants.supports_source(app.asset_state.asset_source))
 	app.main_overlays.settings_dialog.dark_underground_check.button_pressed = preferences.dark_underground
@@ -416,6 +417,7 @@ func _apply_visual_options(values: Dictionary) -> bool:
 		return false
 	preferences.visual_enhancements = values
 	app.visual_environment.configure()
+	app.main_overlays.settings_dialog.visual_tab.terrain_models_panel.sync(app)
 	if app.main_menu != null:
 		app.main_menu.city_background.set_visual_options(values)
 	return true

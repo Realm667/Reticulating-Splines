@@ -41,6 +41,10 @@ pub fn apply(city: &mut City, args: &ToolArgs, start: Vec2i, confirmation: i64) 
 
     let start_building = city.xbld.data[start_index as usize] as i64;
 
+    if !crate::sim::quarter_terrain::network_allowed(city, start_index as usize) {
+        return TunnelResult::rejected("Terrain is too steep for infrastructure.", 0);
+    }
+
     if start_building > MAX_CLEAR_BUILDING || start_building == tiles::RADIOACTIVE_WASTE {
         return TunnelResult::rejected("tunnel entrance contains a protected building", 0);
     }
@@ -99,6 +103,9 @@ pub fn apply(city: &mut City, args: &ToolArgs, start: Vec2i, confirmation: i64) 
     }
 
     let mut points = Vec::new();
+    if !crate::sim::quarter_terrain::network_allowed(city, finish_index as usize) {
+        return TunnelResult::rejected("Terrain is too steep for infrastructure.", 0);
+    }
     current = start;
 
     loop {

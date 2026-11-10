@@ -49,6 +49,7 @@ pub struct SpecialMaps<'a> {
     pub flags: &'a mut [u8],
     pub terrain: &'a [u8],
     pub altitude: &'a [u8],
+    pub quarter: &'a [u8],
     pub text_overlays: &'a mut [u8],
     pub things: &'a mut [u8],
     pub misc: &'a mut [u8],
@@ -148,6 +149,9 @@ fn axis_is_flipped(x_delta: i64, rotation: i64) -> bool {
 pub fn process(maps: &mut SpecialMaps, point: Vec2i, random: &mut SimRandom, counters: &mut Counters) {
     let edge = maps.map_edge;
     let index = index_of(point, edge);
+    if !crate::sim::quarter_terrain::raw_level_site(maps.quarter, [index as usize]) {
+        return;
+    }
     let zone_type = crate::sim::bytes::at(maps.zones, index) & 0x0f;
     let current_tile = crate::sim::bytes::at(maps.buildings, index);
     let mut fallback_tile = -1;
@@ -420,6 +424,9 @@ fn place_runway(maps: &mut SpecialMaps, point: Vec2i, zone_type: i64) -> Placeme
 
     while index_of(checked, edge) >= 0 {
         let checked_index = index_of(checked, edge) as usize;
+        if !crate::sim::quarter_terrain::raw_level_site(maps.quarter, [index_of(point, edge) as usize, checked_index]) {
+            return Placement::failed();
+        }
 
         if maps.zones[checked_index] as i64 & zone::TYPE_MASK != zone_type {
             return Placement::failed();
@@ -608,6 +615,10 @@ fn place_special_two_by_two(maps: &mut SpecialMaps, point: Vec2i, tile: i64, zon
         }
     }
 
+    if !crate::sim::quarter_terrain::raw_level_site(maps.quarter, points.iter().map(|p| index_of(*p, edge) as usize)) {
+        return Placement::failed();
+    }
+
     // Clear structures before the common placement checks. A failed placement
     // keeps these changes and still reports success, as in the original.
     for checked in points {
@@ -674,6 +685,10 @@ fn place_special_item(maps: &mut SpecialMaps, anchor: Vec2i, tile: i64, area: i6
         }
     }
 
+    if !crate::sim::quarter_terrain::raw_level_site(maps.quarter, points.iter().map(|p| index_of(*p, edge) as usize)) {
+        return false;
+    }
+
     for &point in &points {
         let index = index_of(point, edge);
         let i = index as usize;
@@ -720,6 +735,13 @@ fn place_missile_silo(maps: &mut SpecialMaps, point: Vec2i, zone_type: i64) -> P
     }
 
     if origin.x < 0 || origin.y < 0 || origin.x > edge - 3 || origin.y > edge - 3 {
+        return Placement::failed();
+    }
+
+    if !crate::sim::quarter_terrain::raw_level_site(
+        maps.quarter,
+        (origin.x..origin.x + 3).flat_map(|x| (origin.y..origin.y + 3).map(move |y| (x * edge + y) as usize)),
+    ) {
         return Placement::failed();
     }
 
@@ -810,6 +832,7 @@ mod tests {
         } = city;
 
         SpecialMaps {
+            quarter: &city.xqtr.data,
             buildings: &mut xbld.data,
             zones: &mut xzon.data,
             underground: &mut xund.data,
@@ -878,6 +901,35 @@ mod tests {
                 );
             }
         }
+    }
+
+    #[test]
+    fn special_growth_requires_one_exact_quarter_height() {
+        let mut city = fixture(16);
+        let mut data = vec![0; 16 + 16 * 16 * 8];
+        data[..4].copy_from_slice(b"QTR1");
+        data[5] = 16;
+        data[6] = 1;
+        data[7] = 4;
+        for tile in 0..256 {
+            for corner in 0..4 {
+                let offset = 16 + tile * 8 + corner * 2;
+                data[offset..offset + 2].copy_from_slice(&33_u16.to_be_bytes());
+            }
+        }
+        city.xqtr = crate::sim::city::Chunk::new(data);
+        let point = Vec2i::new(2, 2);
+        let offset = 16 + (3 * 16 + 3) * 8;
+        for corner in 0..4 {
+            city.xqtr.data[offset + corner * 2..offset + corner * 2 + 2].copy_from_slice(&34_u16.to_be_bytes());
+        }
+        let before = state(&city);
+        assert!(!grow_special_zone(&mut maps(&mut city, 0), point, tiles::PARKING_LOT_2, 7).ok);
+        assert_eq!(state(&city), before, "mixed fractional heights reject before clearing");
+        for corner in 0..4 {
+            city.xqtr.data[offset + corner * 2..offset + corner * 2 + 2].copy_from_slice(&33_u16.to_be_bytes());
+        }
+        assert!(grow_special_zone(&mut maps(&mut city, 0), point, tiles::PARKING_LOT_2, 7).ok);
     }
 
     #[test]
@@ -1036,6 +1088,7 @@ mod edge_tests {
         } = city;
 
         SpecialMaps {
+            quarter: &city.xqtr.data,
             buildings: &mut xbld.data,
             zones: &mut xzon.data,
             underground: &mut xund.data,

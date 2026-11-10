@@ -26,7 +26,7 @@ const SECTIONS := [
 		["disaster_blending", "speed_link", "pause_freezes", "idle_saving_enabled"]],
 	["Tilt shift", "Blur the top and bottom of the city view while keeping the center and interface sharp.",
 		["tilt_shift_enabled", "tilt_shift_strength", "tilt_shift_edge", "tilt_shift_transition"]],
-	["Models", "Render roads, railways, power lines and bridges from shared geometric models. Keeps the native pixel style. Unsupported graphics use their original sprites.", ["models_enabled"]],
+	["Models", "Render terrain, roads, railways, power lines and bridges from shared geometric models. Keeps the native pixel style. Unsupported graphics use their original sprites.", ["models_enabled"]],
 	["Tileset Shuffle", "Mix Reticulating Splines and original SC2000 buildings. Apply shuffles the selection again. Runways, piers, hydro and wind power plants always use SC2000 graphics.", []],
 ]
 const PERCENT_FIELDS := ["sunrise_strength", "sunset_strength", "day_glow_radius", "artwork_color_strength", "tilt_shift_strength", "tilt_shift_edge", "tilt_shift_transition", "nature_terrain_strength", "day_lut_strength", "night_strength", "season_transition", "season_lut_strength",
@@ -101,6 +101,7 @@ const HINTS := {
 	"lut_path": "Optional PNG lookup table (LUT) for custom color grading. Leave empty for standard colors.",
 }
 
+var terrain_models_panel: QuarterTerrainPanel
 var building_mix_panel: BuildingMixPanel
 var controls: Dictionary = {}
 var terrain_strength_slider: HSlider
@@ -172,6 +173,9 @@ func _ready() -> void:
 				subgroup.text = {"weather_enabled": "Weather", "cloud_enabled": "Clouds & Fog"}[key]
 				page.add_child(subgroup)
 			_add_field(page, fields[key])
+		if section[0] == "Models":
+			terrain_models_panel=QuarterTerrainPanel.new()
+			page.add_child(terrain_models_panel)
 		if section[0] == "Tileset Shuffle":
 			building_mix_panel = BuildingMixPanel.new()
 			page.add_child(building_mix_panel)

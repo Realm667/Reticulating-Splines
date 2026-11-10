@@ -165,7 +165,7 @@ impl Builder {
         Ok(out)
     }
 
-    fn add(&mut self, draws: &mut Vec<Draw>, id: i32, flip: bool, x: i32, baseline: i32) -> Result<u64, String> {
+    pub(super) fn add(&mut self, draws: &mut Vec<Draw>, id: i32, flip: bool, x: i32, baseline: i32) -> Result<u64, String> {
         let key = self.sprites.get(id, flip)?;
         let sprite = &self.sprites.images[&key];
         let (left, bottom) = self.sprites.canvas_padding(key);
@@ -228,7 +228,7 @@ impl Builder {
             } else {
                 self.city.land(i)
             }) * c.step();
-        if x == self.city.edge - 1 || y == self.city.edge - 1 {
+        if !self.terrain_models && (x == self.city.edge - 1 || y == self.city.edge - 1) {
             for level in 0..self.city.land(i) {
                 self.add(&mut draws, c.base() + LAND_SIDE_SPRITE, false, sx, flat - level * c.step())?;
             }
@@ -264,7 +264,7 @@ impl Builder {
                     // in both modes, including the older coastal waterfall code.
                     self.add(&mut draws, c.base() + WATER_SPRITE, false, sx, base - c.step())?;
                 }
-                self.add(&mut draws, self.nature_ground(c.base() + ground), false, sx, base)?;
+                self.quarter_ground(&mut draws, self.nature_ground(c.base() + ground), sx, base, i)?;
                 let draw = draws.last_mut().expect("the ground draw was added");
 
                 if SHORE_SPRITES.iter().any(|range| range.contains(&ground)) {
@@ -291,7 +291,13 @@ impl Builder {
                         if nx >= 0 && ny >= 0 && nx < self.city.edge && ny < self.city.edge {
                             let n = self.city.index(nx, ny);
                             let id = c.base() + terrain_sprite(self.city.terrain[n], self.city.wet(n));
-                            self.add(&mut draws, id, false, sx + px, base + py)?;
+                            self.quarter_ground(
+                                &mut draws,
+                                id,
+                                sx + px,
+                                base + py + (self.city.land(i) - self.city.land(n)) * c.step(),
+                                n,
+                            )?;
                         }
                     }
                 }
@@ -399,6 +405,7 @@ impl Builder {
             self.paint_special(&mut draws, x, y)?;
         }
 
+        self.quarter_objects(i, &mut draws)?;
         let depth = ((x + y) * self.city.edge + y) as i64;
         let mut foreground = 0;
 

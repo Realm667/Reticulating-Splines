@@ -109,6 +109,9 @@ fn step_is_eligible(maps: &RouteMaps, current: Vec2i, next: Vec2i, mode: i64, di
     let current_index = current.x * edge + current.y;
     let next_index = next.x * edge + next.y;
 
+    if !maps.quarter.is_empty() && mode != crate::sim::tools::network::MODE_PIPE && mode != crate::sim::tools::network::MODE_SUBWAY {
+        return crate::sim::quarter_terrain::raw_connects(maps.quarter, current_index as usize, next_index as usize, direction as usize);
+    }
     allows_height_step(
         maps.terrain[current_index as usize] as i64,
         land_altitude(maps.altitude, current_index),
@@ -237,6 +240,7 @@ mod tests {
 
         fn route(&self, start: Vec2i, finish: Vec2i, mode: i64) -> Vec<Vec2i> {
             let maps = RouteMaps {
+                quarter: &[],
                 buildings: &self.buildings,
                 terrain: &self.terrain,
                 zones: &self.zones,

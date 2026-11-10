@@ -48,6 +48,12 @@ pub fn surface_polygon(city: &City, x: i32, y: i32) -> [(f64, f64); 4] {
     ];
 
     if terrain < DEEP_WATER_FIRST {
+        if let Some(corners) = city.quarter.get(index) {
+            for (corner, point) in polygon.iter_mut().enumerate() {
+                point.1 -= f64::from(corners[corner] - land(city, index) as i16 * 4) * f64::from(ALTITUDE_STEP) / 4.0;
+            }
+            return polygon;
+        }
         let raised = CORNER_MASKS.get(usize::from(terrain & SHAPE_MASK)).copied().unwrap_or(0);
 
         for (corner, point) in polygon.iter_mut().enumerate() {

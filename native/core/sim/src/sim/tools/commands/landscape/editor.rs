@@ -110,6 +110,9 @@ pub fn apply(city: &mut City, group: i64, subtool: i64, point: Vec2i, random: &m
         );
     }
 
+    if !(group == GROUP_BULLDOZER && subtool == SUBTOOL_STRETCH || group == GROUP_LANDSCAPE && subtool == SUBTOOL_FOREST) {
+        crate::sim::quarter_terrain::sync_legacy_editor(&mut staged, city, group == GROUP_LANDSCAPE);
+    }
     let changed = CHUNK_IDS.iter().any(|id| {
         let old = city.chunk(id);
         let new = staged.chunk(id);

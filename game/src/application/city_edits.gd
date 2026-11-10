@@ -346,6 +346,8 @@ func _apply_landscape_brush(
 			origin.x,
 			origin.y,
 		)
+		if tool.level_brush_altitude<0 and not app.document_state.city.quarter_heights.is_empty():
+			target=QuarterTerrain.base_q(app.document_state.city,origin)
 		var terrain_command := TerrainTools.apply_path(app.document_state.city, tool.selected_group, tool.selected_subtool,
 			origin, path, tool.tool_random, free, target)
 

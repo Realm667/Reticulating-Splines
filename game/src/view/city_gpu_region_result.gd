@@ -47,6 +47,8 @@ func occlusion_command(index: int) -> CityStaticCommand:
 	if command == null:
 		var at := index * RECORD_SIZE
 		command = CityStaticCommand.new(draw_records[at + 5], draw_records[at + 6] != 0)
+		if not draw_images.is_empty() and draw_images[draw_records[at+4]].has_meta("quarter_model"):
+			command.model_image=draw_images[draw_records[at+4]]
 		command.position = Vector2i(draw_records[at], draw_records[at + 1])
 		command.size = Vector2i(draw_records[at + 2], draw_records[at + 3])
 		command.depth_order = draw_records[at + 7]

@@ -288,6 +288,7 @@ struct TileScan {
 impl TileScan {
     fn zone_maps<'a>(&self, city: &'a mut City) -> ZoneMaps<'a> {
         ZoneMaps {
+            quarter: &city.xqtr.data,
             buildings: &mut city.xbld.data,
             zones: &mut city.xzon.data,
             flags: &mut city.xbit.data,
@@ -420,6 +421,7 @@ impl TileScan {
             ..
         } = city;
         let mut maps = special::SpecialMaps {
+            quarter: &city.xqtr.data,
             buildings: &mut xbld.data,
             zones: &mut xzon.data,
             underground: &mut xund.data,
@@ -951,6 +953,7 @@ mod tests {
                     ..
                 } = &mut city;
                 let mut maps = special::SpecialMaps {
+                    quarter: &[],
                     buildings: &mut xbld.data,
                     zones: &mut xzon.data,
                     underground: &mut xund.data,

@@ -74,6 +74,11 @@ func add_player(actor: String) -> String:
 		var expanded_error := ExpandedRules.enable(document)
 		if not expanded_error.is_empty():
 			return expanded_error
+	if QuarterTerrain.enabled(template) and not QuarterTerrain.enabled(document):
+		var quarter_error:=QuarterTerrain.enable(CityState.from_document(document))
+		if not quarter_error.is_empty():
+			return quarter_error
+		document.find_chunk("XQTR").set_decoded_payload(template.find_chunk("XQTR").decoded_payload.duplicate())
 	CityActivityIdentity.ensure(document)
 	var child := CoopWorld.new()
 	if not child.open(document):
@@ -144,7 +149,7 @@ func _grow_forest(previous_age: int) -> void:
 	# without growing over another municipality's buildings or infrastructure.
 	snapshot_for(host_actor, true)
 	var document := city.document.duplicate_document()
-	for id: String in TILE_CHUNKS:
+	for id: String in tile_chunks(template):
 		document.find_chunk(id).set_decoded_payload(composed_chunks[id])
 	var landscape := CityState.from_document(document)
 	var grown := ForestGrowth.advance(landscape, previous_age, true)
@@ -577,7 +582,7 @@ func snapshot_for(actor: String, live := false) -> Dictionary:
 	var document := MultiplayerDocument.view_copy(child.city.document) if live else child.city.document.duplicate_document()
 	if composed_revision != revision:
 		var ownership_changed := owners != composition_owners or protection != composition_protection
-		for id: String in TILE_CHUNKS:
+		for id: String in tile_chunks(template):
 			var sources: Array = []
 			for player: String in actors:
 				sources.append(municipalities[player].city.document.find_chunk(id).decoded_payload)
@@ -586,13 +591,14 @@ func snapshot_for(actor: String, live := false) -> Dictionary:
 			var previous_sources: Array = composition_sources.get(id, [])
 			var incremental := not ownership_changed and composed_chunks.has(id) and previous_sources.size() == sources.size()
 			var data: PackedByteArray = composed_chunks[id].duplicate() if incremental else template.find_chunk(id).decoded_payload.duplicate()
-			var stride: int = TILE_CHUNKS[id]
+			var stride: int = tile_chunks(template)[id]
+			var header:=16 if id=="XQTR" else 0
 			for block in range(0, owners.size(), 512):
 				var end := mini(block + 512, owners.size())
 				var dirty := not incremental
 				if incremental:
 					for index in sources.size():
-						if sources[index].slice(block * stride, end * stride) != previous_sources[index].slice(block * stride, end * stride):
+						if sources[index].slice(header+block * stride, header+end * stride) != previous_sources[index].slice(header+block * stride, header+end * stride):
 							dirty = true
 							break
 				if not dirty:
@@ -603,7 +609,7 @@ func snapshot_for(actor: String, live := false) -> Dictionary:
 						owner = 0
 					if owner >= 0:
 						for byte in stride:
-							data[tile * stride + byte] = sources[owner][tile * stride + byte]
+							data[header+tile * stride + byte] = sources[owner][header+tile * stride + byte]
 			composed_chunks[id] = data
 			# Simulation may mutate a packed buffer in place. Keep an immutable
 			# comparison copy so an unchanged revision never hides a changed plane.
@@ -619,8 +625,14 @@ func snapshot_for(actor: String, live := false) -> Dictionary:
 			record_cache.clear()
 		composed_revision = revision
 	for id: String in composed_chunks:
-		document.find_chunk(id).expected_decoded_size = composed_chunks[id].size()
-		document.find_chunk(id).set_decoded_payload(composed_chunks[id])
+		var payload: PackedByteArray=composed_chunks[id]
+		if id=="XQTR":
+			payload=payload.duplicate()
+			var header:=document.find_chunk(id).decoded_payload
+			for byte in 16:
+				payload[byte]=header[byte]
+		document.find_chunk(id).expected_decoded_size = payload.size()
+		document.find_chunk(id).set_decoded_payload(payload)
 	if not record_cache.has(actor):
 		compose_records(document, actor)
 		var records := {}
@@ -635,7 +647,7 @@ func snapshot_for(actor: String, live := false) -> Dictionary:
 	if live:
 		if not live_documents.has(actor):
 			live_documents[actor] = MultiplayerDocument.new()
-		var common_ids: Array = TILE_CHUNKS.keys().filter(func(id: String) -> bool: return id != "XTXT")
+		var common_ids: Array = tile_chunks(template).keys().filter(func(id: String) -> bool: return id != "XTXT")
 		result.merge(live_documents[actor].capture(document, shared_live_document, common_ids))
 	else:
 		if not municipal_compression.has(actor):
@@ -816,6 +828,11 @@ func restore_shared(data: Dictionary) -> String:
 	var restored_template := Sc2File.new()
 	if not data.get("template") is String or not restored_template.parse(Marshalls.base64_to_raw(data.template)) or restored_template.map_size != city.map_size:
 		return "Invalid shared terrain."
+	if QuarterTerrain.enabled(restored_template) and not CityState.from_document(restored_template).is_valid():
+		return "Invalid shared terrain."
+	for child: CoopWorld in restored.values():
+		if QuarterTerrain.enabled(child.city.document)!=QuarterTerrain.enabled(restored_template):
+			return "Invalid shared terrain."
 	if not data.get("offers") is Dictionary or not whole_number(data.get("next_offer"), 1, 2147483647):
 		return "Invalid land offers."
 	for key: Variant in data.offers:
@@ -964,18 +981,19 @@ func share_public_network(source: CoopWorld, changed: PackedInt32Array) -> void:
 		if child != source:
 			destinations.append(child.city.document)
 	for document: Sc2File in destinations:
-		for id: String in TILE_CHUNKS:
+		for id: String in tile_chunks(template):
 			var payload := document.find_chunk(id).decoded_payload.duplicate()
 			var input := source.city.document.find_chunk(id).decoded_payload
-			var stride: int = TILE_CHUNKS[id]
+			var stride: int = tile_chunks(template)[id]
+			var header:=16 if id=="XQTR" else 0
 			for tile: int in public_tiles:
 				for byte in stride:
-					payload[tile * stride + byte] = input[tile * stride + byte]
+					payload[header+tile * stride + byte] = input[header+tile * stride + byte]
 			document.find_chunk(id).set_decoded_payload(payload)
 	for child: CoopWorld in municipalities.values():
 		if child == source:
 			continue
-		child.city.resync_mirrors(PackedStringArray(TILE_CHUNKS.keys()))
+		child.city.resync_mirrors(PackedStringArray(tile_chunks(template).keys()))
 		child.revision += 1
 		child.undo_document = null
 	snapshot_cache.clear()
@@ -997,3 +1015,10 @@ func compose_upgrades(document: Sc2File, viewer: String) -> void:
 			if owners[city.index_of(x, y)] == actors.find(actor) + 1:
 				markers.append([x, y, BinaryData.read_u32_be(bytes, offset + 12), BinaryData.read_u32_be(bytes, offset + 16), BinaryData.read_u32_be(bytes, offset + 20)])
 	document.sc2x_metadata.extensions["upgrade_view_markers"] = markers
+
+
+static func tile_chunks(document: Sc2File) -> Dictionary:
+	var result:=TILE_CHUNKS.duplicate()
+	if QuarterTerrain.enabled(document):
+		result["XQTR"]=8
+	return result

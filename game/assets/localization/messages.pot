@@ -11819,3 +11819,87 @@ msgstr ""
 #. Supplementary SC2000 model presentation, AI-assisted translation.
 msgid "Render roads, railways, power lines and bridges from shared geometric models. Keeps the native pixel style. Unsupported graphics use their original sprites."
 msgstr ""
+
+#. Supplementary quarter-height terrain, AI-assisted translation.
+msgid "Quarter-height terrain"
+msgstr ""
+
+#. Supplementary quarter-height terrain, AI-assisted translation.
+msgid "Enable quarter-height terrain"
+msgstr ""
+
+#. Supplementary quarter-height terrain, AI-assisted translation.
+msgid "Edit height"
+msgstr ""
+
+#. Supplementary quarter-height terrain, AI-assisted translation.
+msgid "¼ level"
+msgstr ""
+
+#. Supplementary quarter-height terrain, AI-assisted translation.
+msgid "½ level"
+msgstr ""
+
+#. Supplementary quarter-height terrain, AI-assisted translation.
+msgid "1 level"
+msgstr ""
+
+#. Supplementary quarter-height terrain, AI-assisted translation.
+msgid "2 levels"
+msgstr ""
+
+#. Supplementary quarter-height terrain, AI-assisted translation.
+msgid "Maximum slope"
+msgstr ""
+
+#. Supplementary quarter-height terrain, AI-assisted translation.
+msgid "Gentle"
+msgstr ""
+
+#. Supplementary quarter-height terrain, AI-assisted translation.
+msgid "Steep"
+msgstr ""
+
+#. Supplementary quarter-height terrain, AI-assisted translation.
+msgid "Vertical cliffs"
+msgstr ""
+
+#. Supplementary quarter-height terrain, AI-assisted translation.
+msgid "Quarter-height terrain requires Expanded rules."
+msgstr ""
+
+#. Supplementary quarter-height terrain, AI-assisted translation.
+msgid "Quarter-height terrain is saved with the city. Models are required to display it."
+msgstr ""
+
+#. Supplementary quarter-height terrain, AI-assisted translation.
+msgid "Roads, railways and power lines require gentle or normal slopes. Buildings and zones require level ground. Terrain costs follow the height moved."
+msgstr ""
+
+#. Supplementary quarter-height terrain, AI-assisted translation.
+msgid "Invalid quarter-height terrain data."
+msgstr ""
+
+#. Supplementary quarter-height terrain, AI-assisted translation.
+msgid "Quarter-height terrain capability is missing."
+msgstr ""
+
+#. Supplementary quarter-height terrain, AI-assisted translation.
+msgid "Quarter-height terrain data is missing."
+msgstr ""
+
+#. Supplementary quarter-height terrain, AI-assisted translation.
+msgid "Buildings require level terrain."
+msgstr ""
+
+#. Supplementary quarter-height terrain, AI-assisted translation.
+msgid "Terrain is too steep for infrastructure."
+msgstr ""
+
+#. Supplementary quarter-height terrain, AI-assisted translation.
+msgid "Render terrain, roads, railways, power lines and bridges from shared geometric models. Keeps the native pixel style. Unsupported graphics use their original sprites."
+msgstr ""
+
+#. Supplementary quarter-terrain slope category.
+msgid "Normal"
+msgstr ""

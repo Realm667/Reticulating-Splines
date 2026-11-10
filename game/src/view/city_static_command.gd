@@ -4,6 +4,9 @@ extends CitySpriteVisual
 # zero means no reference sprite or deck. a negative foreground reference
 # uses the full surface. region order is absent from whole-city commands
 
+var model_image: Image
+var model_resource: CitySpriteResource
+var model_scale := Vector2i.ZERO
 var position := Vector2i.ZERO
 var size := Vector2i.ZERO
 var depth_order := -1

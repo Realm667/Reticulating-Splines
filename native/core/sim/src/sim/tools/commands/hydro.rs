@@ -38,6 +38,10 @@ pub fn apply(city: &mut City, args: &ToolArgs, point: Vec2i, random: &mut SimRan
         return HydroResult::rejected("hydroelectric site is outside the city", 0);
     }
 
+    if !crate::sim::quarter_terrain::flat(city, index as usize) {
+        return HydroResult::rejected("Buildings require level terrain.", 0);
+    }
+
     // The shore tile 0x2e is a waterfall too.
     let terrain = city.xter.data[index as usize] as i64;
 

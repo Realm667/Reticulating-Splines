@@ -143,7 +143,11 @@ pub fn preview(city: &City, kind: usize, point: Vec2i) -> &'static str {
     let height = city.land_altitude(point.x, point.y);
     for index in indices(city, rect) {
         let n = index as usize;
-        if city.xbld.data[n] != 0
+        if !super::quarter_terrain::flat(city, n)
+            || (super::quarter_terrain::enabled(city)
+                && super::quarter_terrain::corners(city, n)[0]
+                    != super::quarter_terrain::corners(city, (point.x * city.map_size + point.y) as usize)[0])
+            || city.xbld.data[n] != 0
             || city.xter.data[n] != 0
             || city.altitude_word(index) & 31 != height
             || city.xbit.data[n] as i64 & flags::WATER != 0

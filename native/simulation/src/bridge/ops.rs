@@ -31,6 +31,7 @@ pub const OPERATIONS: &[&str] = &[
     "upgrades.info",
     "upgrades.budget",
     "expanded.validate",
+    "quarter.validate",
     "expanded.unlock",
     "query.inspect",
     "disaster.focus",
@@ -426,6 +427,7 @@ fn dispatch(op: &str, args: &VarDictionary, city: &mut City, randoms: &mut Rando
             convert::point(args, "point", sc2k_sim::sim::geom::Vec2i::NONE),
         )),
         "upgrades.budget" => Outcome::value(sc2k_sim::sim::upgrades::budget_info(city)),
+        "quarter.validate" => Outcome::value(Value::Str(sc2k_sim::sim::quarter_terrain::validate(city).err().unwrap_or_default())),
         "expanded.validate" => Outcome::value(Value::Str(
             sc2k_sim::sim::expanded::validate(city)
                 .and_then(|()| sc2k_sim::sim::upgrades::validate(city))

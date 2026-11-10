@@ -101,6 +101,7 @@ pub fn apply_segment(
 
 fn highway_maps(city: &City) -> HighwayMaps<'_> {
     HighwayMaps {
+        quarter: &city.xqtr.data,
         buildings: &city.xbld.data,
         terrain: &city.xter.data,
         flags: &city.xbit.data,
@@ -282,6 +283,7 @@ fn apply_plan(city: &mut City, plan: &mut SegmentPlan) -> Option<RouteResult> {
     let rotation = city.compass_rotation();
     let funds = city.funds();
     let mut directions = Vec::with_capacity(plan.sections.len());
+    let quarter = city.xqtr.data.clone();
     let mut maps = city.maps();
 
     for index in 0..plan.sections.len() {
@@ -294,6 +296,14 @@ fn apply_plan(city: &mut City, plan: &mut SegmentPlan) -> Option<RouteResult> {
             continue;
         }
 
+        if !quarter.is_empty() {
+            let Some(kind) = crate::sim::quarter_terrain::highway_kind(&quarter, edge, section, direction) else {
+                return Some(RouteResult::rejected("Terrain is too steep for infrastructure.", 0));
+            };
+            crate::sim::tools::highway::write_quarter_section(&mut maps, section, kind, rotation);
+            plan.graded_sections += i64::from(kind >= 4);
+            continue;
+        }
         let placement = place_section(&mut maps, section, direction, rotation);
 
         if !placement.ok {
@@ -310,7 +320,39 @@ fn apply_plan(city: &mut City, plan: &mut SegmentPlan) -> Option<RouteResult> {
         overlay::write(maps.text_overlays, anchor.x * edge + anchor.y, CONNECTION_MARKER);
     }
 
-    retile_route_sections(&mut maps, &plan.sections, rotation, &directions);
+    if quarter.is_empty() {
+        retile_route_sections(&mut maps, &plan.sections, rotation, &directions);
+    } else {
+        for &(anchor, direction) in &directions {
+            for offset in [
+                Vec2i::ZERO,
+                Vec2i::new(0, -2),
+                Vec2i::new(2, 0),
+                Vec2i::new(0, 2),
+                Vec2i::new(-2, 0),
+            ] {
+                let at = anchor + offset;
+                if !section_is_existing_highway(maps.buildings, at, edge) {
+                    continue;
+                }
+                if crate::sim::quarter_terrain::highway_kind(&quarter, edge, at, direction).is_some_and(|kind| kind < 4) {
+                    let kind = crate::sim::tools::highway::select_section_kind(
+                        maps.buildings,
+                        maps.terrain,
+                        maps.zones,
+                        maps.flags,
+                        maps.altitude,
+                        at,
+                        direction,
+                        edge,
+                    );
+                    if kind >= 0 {
+                        crate::sim::tools::highway::write_quarter_section(&mut maps, at, kind, rotation);
+                    }
+                }
+            }
+        }
+    }
 
     if plan.bridge_built
         && let Some(bridge_plan) = &plan.bridge_plan

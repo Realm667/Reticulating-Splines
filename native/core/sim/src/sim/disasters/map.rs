@@ -983,6 +983,7 @@ fn abandon_toxic_structure(maps: &mut DisasterMaps, point: Vec2i, random: &mut S
 
     let anchor = Vec2i::new(site.position.x, site.end().y - 1);
     let mut zone_maps = ZoneMaps {
+        quarter: &[],
         buildings: &mut *maps.maps.buildings,
         zones: &mut *maps.maps.zones,
         flags: &mut *maps.maps.flags,

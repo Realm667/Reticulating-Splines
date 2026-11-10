@@ -51,6 +51,9 @@ pub struct TerrainPath<'a> {
 /// TerrainCommand.apply_path. Without a random generator, a structure in the
 /// way skips the tile.
 pub fn apply(city: &mut City, args: &ToolArgs, path: &TerrainPath, mut random: Option<&mut SimRandom>) -> TerrainResult {
+    if crate::sim::quarter_terrain::enabled(city) {
+        return crate::sim::quarter_terrain::apply(city, args, path);
+    }
     let edge = city.map_size;
     let start_index = city.index_of(path.start.x, path.start.y);
 

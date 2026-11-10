@@ -21,6 +21,7 @@ var network_model_heights: Dictionary[int, PackedFloat32Array] = {}
 var network_model_signature := ""
 var network_model_revision := 0
 var network_model_meshes := 0
+var network_model_palette: Sc2Palette
 var visual_revision := 0
 var water_reflections := false
 var water_indices := PackedByteArray()

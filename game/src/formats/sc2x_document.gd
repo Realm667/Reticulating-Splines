@@ -23,7 +23,7 @@ const MAX_DATA_BYTES := 768 * 1024 * 1024
 const ENTRY_ORDER: PackedStringArray = [
 	"MISC", "ALTM", "XTER", "XBLD", "XZON", "XUND", "XTXT", "XLAB", "XMIC", "XTHG", "XBIT",
 	"XTRF", "XPLT", "XVAL", "XCRM", "XPLC", "XFIR", "XPOP", "XROG", "XGRP", "XSGN",
-	"SCEN", "TEXT", "PICT", "TMPL", "XEXP", "XUPG", "CUNK",
+	"SCEN", "TEXT", "PICT", "TMPL", "XEXP", "XUPG", "XQTR", "CUNK",
 ]
 const REQUIRED_ENTRIES: PackedStringArray = [
 	"MISC", "ALTM", "XTER", "XBLD", "XZON", "XUND", "XTXT", "XLAB", "XMIC", "XTHG", "XBIT",

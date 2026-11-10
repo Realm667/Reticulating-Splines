@@ -680,6 +680,21 @@ fn seabed_pixels(out: &mut [u8], bounds: Rect, city: &City, config: Config) {
         terrain: &city.terrain,
         flags: &city.flags,
     };
+    let polygon_of = |x: usize, y: usize| {
+        let mut polygon = data.surface_polygon(x, y, true);
+        if let Some(corners) = city.quarter.get(x * data.edge + y) {
+            let flat = [
+                512.0 + (x + y) as f32 * 8.0,
+                520.0 + (x + y) as f32 * 8.0,
+                528.0 + (x + y) as f32 * 8.0,
+                520.0 + (x + y) as f32 * 8.0,
+            ];
+            for k in 0..4 {
+                polygon[k][1] = flat[k] - f32::from(corners[k]) * 3.0;
+            }
+        }
+        polygon
+    };
     // The seabed exists beneath every cell, even when a multi-tile building
     // suppresses that cell's individual sprite draw. Bound the grid search by
     // the region and the legal altitude range; never traverse the whole city.
@@ -710,7 +725,7 @@ fn seabed_pixels(out: &mut [u8], bounds: Rect, city: &City, config: Config) {
             }
             // Reuse the height-map's actual seabed polygons, including deep-water
             // slopes and stream banks. These are not random textures or flat tiles.
-            let polygon = data.surface_polygon(x, y, true);
+            let polygon = polygon_of(x, y);
             let flat = [
                 512.0 + (x + y) as f32 * 8.0,
                 520.0 + (x + y) as f32 * 8.0,
@@ -726,7 +741,7 @@ fn seabed_pixels(out: &mut [u8], bounds: Rect, city: &City, config: Config) {
             for (side, nx, ny, near_corners, shade) in [(1, x + 1, y, [0, 3], 170), (2, x, y + 1, [1, 0], 155)] {
                 let mut lower = [flat[side], flat[side + 1]];
                 if nx < data.edge && ny < data.edge && data.visible(nx * data.edge + ny, true) {
-                    let neighbour = data.surface_polygon(nx, ny, true);
+                    let neighbour = polygon_of(nx, ny);
                     lower = near_corners.map(|n| neighbour[n][1]);
                 }
                 let bottom = std::array::from_fn::<_, 2, _>(|n| {

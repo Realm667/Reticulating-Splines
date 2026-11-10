@@ -168,6 +168,7 @@ func activate_document(
 	app.interface.refresh_details()
 	app.status_label.theme_type_variation = ""
 	app.status_label.text = status_text if not status_text.is_empty() else "City ready."
+	app.visual_environment._configure_models(app.preferences.visual_enhancements,false)
 	app.map_render.refresh_map()
 	app.debug_tools.on_city_activated()
 	if app.knowledge != null:

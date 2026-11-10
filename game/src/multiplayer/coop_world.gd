@@ -475,6 +475,12 @@ static func changed_tiles(before: Sc2File, after: Sc2File) -> PackedInt32Array:
 					# SC2X overlays store the low and high bytes in separate planes.
 					var tile: int = index % (before.map_size * before.map_size) if id == "XTXT" else index / stride
 					changed[tile] = true
+	if QuarterTerrain.enabled(before) and QuarterTerrain.enabled(after):
+		var old_q:=before.find_chunk("XQTR").decoded_payload
+		var new_q:=after.find_chunk("XQTR").decoded_payload
+		for tile in before.map_size*before.map_size:
+			if old_q.slice(16+tile*8,24+tile*8)!=new_q.slice(16+tile*8,24+tile*8):
+				changed[tile]=true
 	return PackedInt32Array(changed.keys())
 
 

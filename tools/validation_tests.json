@@ -2544,5 +2544,18 @@
     "script": "tests/multiplayer_timed_land_test.gd",
     "domain": "simulation",
     "lane": "product"
+  },
+  {
+    "id": "quarter_terrain_test",
+    "script": "tests/quarter_terrain_test.gd",
+    "domain": "tools",
+    "lane": "product"
+  },
+  {
+    "id": "quarter_terrain_gpu_test",
+    "script": "tests/quarter_terrain_gpu_test.gd",
+    "domain": "rendering",
+    "lane": "native",
+    "driver": "scene-batch"
   }
 ]

@@ -351,7 +351,7 @@ func _candidates(app: CityApplication, tile: Vector2i, enter: int = 0) -> Array:
 			continue
 		if command.depth_order <= depth and not own and not bridge_lane:
 			continue
-		var resource := app.moving_sprites.dynamic_sprite_resource(archive, command.sprite_id, command.flip, divisor, 1, true)
+		var resource := app.moving_sprites.resource_for_command(archive,command,divisor)
 		if resource != null:
 			var origin := Vector2i(command.position) * divisor
 			var mask: Image = resource.image

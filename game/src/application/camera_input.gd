@@ -377,10 +377,7 @@ func on_map_selection_started() -> void:
 	app.tool_state.level_brush_altitude = -1
 
 	if app.new_city.level_brush_active() and app.document_state.city != null:
-		app.tool_state.level_brush_altitude = app.document_state.city.land_altitude(
-			app.map_view.selection_start.x,
-			app.map_view.selection_start.y,
-		)
+		app.tool_state.level_brush_altitude = (QuarterTerrain.base_q(app.document_state.city,app.map_view.selection_start) if not app.document_state.city.quarter_heights.is_empty() else app.document_state.city.land_altitude(app.map_view.selection_start.x,app.map_view.selection_start.y))
 
 	if (app.tool_state.landscape_editor
 			and app.tool_state.selected_group == CityToolIds.Group.BULLDOZER

@@ -104,6 +104,10 @@ func offer(position: Vector2i) -> Dictionary:
 			var expanded_error := ExpandedRules.enable(document)
 			if not expanded_error.is_empty():
 				return failure(expanded_error)
+		if QuarterTerrain.enabled(template):
+			var quarter_error:=QuarterTerrain.enable(CityState.from_document(document))
+			if not quarter_error.is_empty():
+				return failure(quarter_error)
 		offers[id] = document
 		revision += 1
 	var report := terrain_price(offers[id])

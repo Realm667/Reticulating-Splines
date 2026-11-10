@@ -31,7 +31,9 @@
     "game/src/audio/sound_font_catalog.gd",
     "game/src/model/expanded_rules.gd",
     "game/src/application/expanded_city.gd",
-    "game/src/model/building_upgrades.gd"
+    "game/src/model/building_upgrades.gd",
+    "game/src/ui/settings/quarter_terrain_panel.gd",
+    "game/src/model/quarter_terrain.gd"
   ],
   "non_display_literals": {
     "ItemList": "Godot node class used to locate the native file browser control.",

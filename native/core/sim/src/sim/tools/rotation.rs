@@ -34,6 +34,7 @@ impl ToValue for RotationResult {
 /// Rotate the city one quarter turn. The caller checks the chunk sizes.
 /// Only the chunks that change are marked written.
 pub fn rotate(city: &mut City, counter_clockwise: bool) -> RotationResult {
+    crate::sim::quarter_terrain::rotate(city, counter_clockwise);
     let map_edge = city.map_size;
     let surface_table = surface_table(counter_clockwise);
     let terrain_table = terrain_table(counter_clockwise);

@@ -50,7 +50,7 @@ static func render(city: CityState, palette: Sc2Palette, sprites: Sc2SpriteArchi
 	var foreground: Array[CityStaticCommand] = []
 
 	if mode != CityViewMode.Mode.UNDERGROUND:
-		foreground = CityGpuBuildContext.foreground_commands(painted.records, true)
+		foreground = CityGpuBuildContext.foreground_commands(painted.records, true, painted.get("images",[]))
 
 	var result := CityRegionResult.new()
 	result.ok = true

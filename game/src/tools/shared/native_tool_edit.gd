@@ -17,7 +17,7 @@ static func run(
 	lfsr_random: SimLfsrRandom = null,
 ) -> Variant:
 	payload_ids = payload_ids.duplicate()
-	for id in ["XEXP", "XUPG"]:
+	for id in ["XEXP", "XUPG", "XQTR"]:
 		if city.document.find_chunk(id) != null and not payload_ids.has(id):
 			payload_ids.append(id)
 	var before: Dictionary[String, PackedByteArray] = {}
@@ -70,13 +70,23 @@ static func run(
 # Undo `command`: restore its old payloads when the city still holds the new
 # ones. Returns an error, or an empty string. `noun` names the command
 static func restore(city: CityState, command: EditCommandResult, noun: String) -> String:
+	var old_payloads:=command.old_payloads.duplicate()
+	var new_payloads:=command.new_payloads.duplicate()
+	# Brush choices are independent of undoing geometry and its cost remainder.
+	if command.changed_ids.has("XQTR") and QuarterTerrain.enabled(city.document):
+		var current:=city.document.find_chunk("XQTR").decoded_payload
+		for payloads: Dictionary in [old_payloads,new_payloads]:
+			var bytes: PackedByteArray=payloads["XQTR"].duplicate()
+			for field in [6,7]:
+				bytes[field]=current[field]
+			payloads["XQTR"]=bytes
 	for chunk_id in command.changed_ids:
 		var chunk := city.document.find_chunk(chunk_id)
 
-		if chunk == null or not command.new_payloads.has(chunk_id) or chunk.decoded_payload != command.new_payloads[chunk_id]:
+		if chunk == null or not new_payloads.has(chunk_id) or chunk.decoded_payload != new_payloads[chunk_id]:
 			return "city changed after this %s command" % noun
 
-	if not OrderedChunkCommit.apply(city, command.changed_ids, command.old_payloads, command.new_payloads):
+	if not OrderedChunkCommit.apply(city, command.changed_ids, old_payloads, new_payloads):
 		return "cannot restore %s changes" % noun
 
 	return ""

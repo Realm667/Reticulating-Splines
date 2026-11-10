@@ -42,6 +42,13 @@ pub fn painter_city(city: &City, visible: i32) -> PainterCity {
         },
         dispatch: HashMap::new(),
         expanded: HashMap::new(),
+        quarter: if city.xqtr.present {
+            (0..cells)
+                .map(|i| sc2k_sim::sim::quarter_terrain::corners(city, i).map(|q| q as i16))
+                .collect()
+        } else {
+            Vec::new()
+        },
     };
 
     for kind in 0..8 {

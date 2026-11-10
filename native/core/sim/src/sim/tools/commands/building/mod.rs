@@ -106,6 +106,19 @@ pub fn footprint_is_in_bounds(site: Rect2i, area: i64, map_edge: i64, allow_edge
 pub fn site_error(city: &City, site: Rect2i, tile: i64) -> &'static str {
     let edge = city.map_size;
     let mut marina_water = 0;
+    let mut quarter_height = None;
+    if crate::sim::quarter_terrain::enabled(city) {
+        for x in site.position.x..site.end().x {
+            for y in site.position.y..site.end().y {
+                let i = (x * edge + y) as usize;
+                let c = crate::sim::quarter_terrain::corners(city, i);
+                if !crate::sim::quarter_terrain::flat(city, i) || quarter_height.is_some_and(|q| q != c[0]) {
+                    return "Buildings require level terrain.";
+                }
+                quarter_height = Some(c[0]);
+            }
+        }
+    }
 
     for x in site.position.x..site.end().x {
         for y in site.position.y..site.end().y {

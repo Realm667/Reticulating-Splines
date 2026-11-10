@@ -33,6 +33,10 @@ pub fn apply(city: &mut City, args: &ToolArgs, point: Vec2i, preview_only: bool)
 
     let building = city.xbld.data[index as usize] as i64;
 
+    if !crate::sim::quarter_terrain::network_allowed(city, index as usize) {
+        return SubwayToRailResult::rejected("Terrain is too steep for infrastructure.", 0);
+    }
+
     if building > tiles::TREES_7 || building == tiles::RADIOACTIVE_WASTE {
         return SubwayToRailResult::rejected("connection site contains a protected building", 0);
     }
@@ -46,8 +50,15 @@ pub fn apply(city: &mut City, args: &ToolArgs, point: Vec2i, preview_only: bool)
     let mut found = DIRECTIONS.iter().enumerate().find_map(|(direction, offset)| {
         let checked = point + *offset;
 
-        (city.index_of(checked.x, checked.y) >= 0 && surface_rail_connects(city.building_id(checked.x, checked.y)))
-            .then_some((checked, direction as i64))
+        (city.index_of(checked.x, checked.y) >= 0
+            && surface_rail_connects(city.building_id(checked.x, checked.y))
+            && crate::sim::quarter_terrain::connects(
+                city,
+                index as usize,
+                city.index_of(checked.x, checked.y) as usize,
+                (direction + 1) % 4,
+            ))
+        .then_some((checked, direction as i64))
     });
 
     if found.is_none() {

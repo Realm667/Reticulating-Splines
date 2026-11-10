@@ -57,6 +57,7 @@ static func generate(
 			return Result.failure("cannot store generated %s data" % chunk_id)
 
 	process_random.state = response.randoms[0]
+	QuarterTerrain.reset_from_legacy(document)
 	game_random.state = response.randoms[2]
 	var options := Options.new()
 	options.hills = hills

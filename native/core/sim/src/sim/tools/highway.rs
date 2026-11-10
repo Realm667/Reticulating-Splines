@@ -661,6 +661,12 @@ pub fn write_section_kind(maps: &mut Maps, anchor: Vec2i, kind: i64, rotation: i
     }
 }
 
+/// Saved corner heights already describe the supporting terrain. Only write
+/// the shared highway recipe and its footprint; do not run legacy grading.
+pub fn write_quarter_section(maps: &mut Maps, anchor: Vec2i, kind: i64, rotation: i64) {
+    write_shape(maps, anchor, kind, rotation);
+}
+
 /// HighwayGeometry.snap_anchor: sections start on even coordinates.
 pub fn snap_anchor(point: Vec2i) -> Vec2i {
     Vec2i::new(point.x & !1, point.y & !1)

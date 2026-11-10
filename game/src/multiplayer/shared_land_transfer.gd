@@ -4,6 +4,8 @@ extends RefCounted
 
 
 static func stage(seller: CityState, buyer: CityState, tiles: Array) -> Dictionary:
+	if QuarterTerrain.enabled(seller.document)!=QuarterTerrain.enabled(buyer.document):
+		return {"error":"Invalid shared terrain."}
 	var selected := {}
 	for tile: int in tiles:
 		selected[tile] = true
@@ -23,13 +25,14 @@ static func stage(seller: CityState, buyer: CityState, tiles: Array) -> Dictiona
 			return {"error": "Wait for moving objects to leave this parcel or recall its emergency units."}
 	var from := seller.document.duplicate_document()
 	var to := buyer.document.duplicate_document()
-	for id: String in SharedWorld.TILE_CHUNKS:
+	for id: String in SharedWorld.tile_chunks(from):
 		var source := from.find_chunk(id).decoded_payload.duplicate()
 		var target := to.find_chunk(id).decoded_payload.duplicate()
-		var stride: int = SharedWorld.TILE_CHUNKS[id]
+		var stride: int = SharedWorld.tile_chunks(from)[id]
+		var header:=16 if id=="XQTR" else 0
 		for tile: int in tiles:
 			for byte in stride:
-				target[tile * stride + byte] = source[tile * stride + byte]
+				target[header+tile * stride + byte] = source[header+tile * stride + byte]
 			if id in ["XZON", "XUND"] or (id == "XBLD" and source[tile] > 13):
 				source[tile] = 0
 		from.find_chunk(id).set_decoded_payload(source)

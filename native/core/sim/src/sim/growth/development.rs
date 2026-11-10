@@ -51,6 +51,7 @@ pub struct ZoneMaps<'a> {
     pub misc: &'a mut [u8],
     pub land_value: &'a [u8],
     pub altitude: &'a [u8],
+    pub quarter: &'a [u8],
     pub rotation: i64,
     pub map_edge: i64,
     pub allow_edge_buildings: bool,
@@ -114,6 +115,24 @@ pub fn status(tile: i64) -> i64 {
 /// GrowthDevelopment.place_zone.
 pub fn place_zone(maps: &mut ZoneMaps, anchor: Vec2i, zone_density: i64, building_class: i64, random: &mut SimRandom) -> bool {
     let edge = maps.map_edge;
+    if !maps.quarter.is_empty() {
+        let radius = zone_density / 2;
+        let base = index_of(anchor, edge);
+        if base < 0 {
+            return false;
+        }
+        let q = land_level(maps.altitude, maps.quarter, base);
+        if q < 0
+            || !(anchor.x..=anchor.x + radius).all(|x| {
+                (anchor.y - radius..=anchor.y).all(|y| {
+                    let index = index_of(Vec2i::new(x, y), edge);
+                    index >= 0 && land_level(maps.altitude, maps.quarter, index) == q
+                })
+            })
+        {
+            return false;
+        }
+    }
     let tile = if zone_density == 1 && building_class == CLASS_RESIDENTIAL {
         let value_index = grid::index(maps.land_value, edge, anchor.x, anchor.y);
         let value_group = (crate::sim::bytes::at(maps.land_value, value_index) >> 6).min(2);
@@ -263,7 +282,10 @@ pub fn can_advance_density(zone_byte: i64, zone_type: i64, density: i64, land_va
 }
 
 #[inline]
-fn land_level(altitude: &[u8], index: i64) -> i64 {
+fn land_level(altitude: &[u8], quarter: &[u8], index: i64) -> i64 {
+    if let Some(c) = crate::sim::quarter_terrain::raw_corners(quarter, index as usize) {
+        return if c.windows(2).all(|v| v[0] == v[1]) { i64::from(c[0]) } else { -1 };
+    }
     // The low five bits of the ALTM word are in its second byte.
     altitude[(index * 2 + 1) as usize] as i64 & altitude_layout::LEVEL_MASK
 }
@@ -283,7 +305,7 @@ fn can_build_site(maps: &ZoneMaps, point: Vec2i, height: i64, zone_type: i64, ma
         return false;
     }
 
-    if land_level(maps.altitude, index) != height || maps.zones[index as usize] as i64 & zone::TYPE_MASK != zone_type {
+    if land_level(maps.altitude, maps.quarter, index) != height || maps.zones[index as usize] as i64 & zone::TYPE_MASK != zone_type {
         return false;
     }
 
@@ -297,7 +319,7 @@ pub fn advance_construction(maps: &mut ZoneMaps, point: Vec2i, density: i64, zon
     match density {
         0 => place_zone(maps, point, 1, CLASS_CONSTRUCTION, random),
         1 => {
-            let height = land_level(maps.altitude, index_of(point, maps.map_edge));
+            let height = land_level(maps.altitude, maps.quarter, index_of(point, maps.map_edge));
             let right = point + Vec2i::new(1, 0);
             let down = point + Vec2i::new(0, 1);
             let down_right = point + Vec2i::new(1, 1);
@@ -337,7 +359,7 @@ pub fn advance_construction(maps: &mut ZoneMaps, point: Vec2i, density: i64, zon
 
 fn advance_to_density_four(maps: &mut ZoneMaps, point: Vec2i, zone_type: i64, random: &mut SimRandom) -> bool {
     let edge = maps.map_edge;
-    let height = land_level(maps.altitude, index_of(point, edge));
+    let height = land_level(maps.altitude, maps.quarter, index_of(point, edge));
 
     for candidate in 0..4 {
         let anchor = point + Vec2i::new(-(candidate & 1), candidate / 2);
@@ -471,6 +493,7 @@ mod tests {
         } = city;
 
         ZoneMaps {
+            quarter: &[],
             buildings: &mut xbld.data,
             zones: &mut xzon.data,
             flags: &mut xbit.data,

@@ -258,6 +258,7 @@ static func ground_routes(mask: int, corners: PackedFloat32Array, rail: bool) ->
 		for edge: Vector2 in ends:
 			segments.append([Vector2.ZERO,edge])
 	for segment: Array in segments:
+		var first_part := result.size()
 		var start: Vector2=segment[0]
 		var finish: Vector2=segment[1]
 		var a:=Vector3(start.x,start.y,surface_height(start,corners))
@@ -273,6 +274,19 @@ static func ground_routes(mask: int, corners: PackedFloat32Array, rail: bool) ->
 				strip(result,"tie",p-across*1.15,p+across*1.15,.055)
 			for sign_value in [-1,1]:
 				strip(result,"rail",a+across*sign_value+Vector3(0,0,0.3),b+across*sign_value+Vector3(0,0,0.3),0.045)
+		# A road or sleeper also follows the grade across its width.
+		var along := (finish-start).normalized()
+		for part_index in range(first_part,result.size()):
+			var vertices: PackedVector3Array=result[part_index].vertices
+			for k in vertices.size():
+				var p:=vertices[k]
+				var xy:=Vector2(p.x,p.y)
+				var middle:=start+along*(xy-start).dot(along)
+				var rise:=surface_height(xy,corners)-surface_height(middle,corners)
+				if absf(rise)>.0001:
+					p.z+=rise
+				vertices[k]=p
+			result[part_index].vertices=vertices
 	return result
 
 
@@ -471,9 +485,24 @@ static func build(id: int, corners := PackedFloat32Array(), flipped := false) ->
 			for part in parts:
 				for i in part.vertices.size():
 					var p: Vector3=part.vertices[i]
+					var original:=Vector2(p.x,p.y)
 					for rotation in turn:
 						p=Vector3(-p.y,p.x,p.z)
+					if part.role in ["road_surface","ballast_surface","rail","tie"]:
+						p.z+=surface_height(Vector2(p.x,p.y),corners)-surface_height(original,corners)
 					part.vertices[i]=p
+	# Posts and portal/ramp shells inherit their actual mounting elevation.
+	for part: Dictionary in parts:
+		if kind=="highway" and part.role=="support":
+			for i in part.vertices.size():
+				part.vertices[i].z+=surface_height(Vector2.ZERO,corners)
+		if part.role in ["signal_pole","signal"] or kind in ["onramp","tunnel","rail_portal"]:
+			if part.role in ["road_surface","ballast_surface","rail","tie"]:
+				continue
+			for i in part.vertices.size():
+				var p: Vector3=part.vertices[i]
+				p.z+=surface_height(Vector2(p.x,p.y),corners)
+				part.vertices[i]=p
 	if flipped:
 		for part in parts:
 			for i in part.vertices.size():

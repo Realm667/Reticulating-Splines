@@ -121,6 +121,21 @@ pub struct RouteChoices {
 /// NetworkDragCommand.apply. The segments edit `city` in place; the bridge
 /// keeps the chunks only when the combined result succeeds.
 pub fn drag(city: &mut City, args: &ToolArgs, start: Vec2i, finish: Vec2i, choices: &RouteChoices) -> RouteResult {
+    if crate::sim::quarter_terrain::enabled(city) {
+        let mut staged = city.clone();
+        let result = drag_inner(&mut staged, args, start, finish, choices);
+        if result.base.ok {
+            if !crate::sim::quarter_terrain::reconcile_network(&mut staged, city) {
+                return RouteResult::rejected("Terrain is too steep for infrastructure.", 0);
+            }
+            *city = staged;
+        }
+        return result;
+    }
+    drag_inner(city, args, start, finish, choices)
+}
+
+fn drag_inner(city: &mut City, args: &ToolArgs, start: Vec2i, finish: Vec2i, choices: &RouteChoices) -> RouteResult {
     let endpoint = if choices.highway { snap_anchor(finish) } else { finish };
     let mut cursor = if choices.highway { snap_anchor(start) } else { start };
     let low = Vec2i::new(cursor.x.min(endpoint.x), cursor.y.min(endpoint.y));

@@ -170,6 +170,8 @@ static func edge_height(city: CityState, tile: Vector2i, direction: int) -> floa
 				raised = 0.0
 	if raised > 0.0 and city.is_water(tile.x, tile.y):
 		return city.object_altitude(tile.x, tile.y) + raised
+	if not city.quarter_heights.is_empty():
+		return QuarterTerrain.edge_height(city,tile,direction)+raised
 	var shape := city.terrain_id(tile.x, tile.y) & 15
 	var mask: int = IsometricConstants.TERRAIN_SURFACE_CORNER_MASKS[shape] if shape < 15 else 0
 	var corners: Array = EDGE_CORNERS[direction]

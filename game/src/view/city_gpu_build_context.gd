@@ -31,6 +31,7 @@ var tile_reuses := 0
 var error := ""
 var _layout: Array = []
 var _revision := -1
+var quarter_models := QuarterNetworkModels.new()
 
 
 static func tile_cache_limit() -> int:
@@ -119,6 +120,9 @@ func prepare(city: CityState, palette: Sc2Palette, sprites: Sc2SpriteArchive, vi
 	var layout := [city.map_size, city.visible_altitude_levels, city.compass_rotation(),
 		view, mode, pipes, subways, water_mains, palette, sprites, pack_atlas, special_overlays, animation_phase, tunnels,
 		with_artwork, hd_effects, sprites.visual_revision]
+	if not city.quarter_heights.is_empty():
+		layout.append(city.document.find_chunk("XQTR").mutation_revision)
+		layout.append(city.document.find_chunk("XBLD").mutation_revision)
 	var configuration := CityIsometricRenderer.view_configuration(view)
 
 	if configuration == null:
@@ -165,6 +169,11 @@ func prepare(city: CityState, palette: Sc2Palette, sprites: Sc2SpriteArchive, vi
 				if id / 500 == view:
 					model_heights[id] = sprites.network_model_heights[id]
 		request["model_heights"] = model_heights
+		request["terrain_models"] = int(sprites.visual_models_enabled and mode == CityViewMode.Mode.CITY)
+		if not city.quarter_heights.is_empty() and mode == CityViewMode.Mode.CITY:
+			var prepared:=quarter_models.prepare(city,sprites,palette,view)
+			artwork.merge(prepared.images)
+			request["quarter_networks"]=prepared.ids
 
 		# GPU regions and `raster_artwork` draw full-color art
 		if pack_atlas or with_artwork:
@@ -285,7 +294,7 @@ func tile_draw_list(tiles: Array[Vector2i], offset := Vector2i.ZERO) -> CityGpuD
 
 # The foreground commands of draw records, in painter order. Whole-city lists
 # leave the region order unset
-static func foreground_commands(records: PackedInt64Array, region_orders := false) -> Array[CityStaticCommand]:
+static func foreground_commands(records: PackedInt64Array, region_orders := false, images: Array = []) -> Array[CityStaticCommand]:
 	var commands: Array[CityStaticCommand] = []
 
 	for at in range(0, records.size(), RECORD_SIZE):
@@ -293,6 +302,8 @@ static func foreground_commands(records: PackedInt64Array, region_orders := fals
 			continue
 
 		var command := CityStaticCommand.new(records[at + 5], records[at + 6] != 0)
+		if not images.is_empty() and images[records[at+4]].has_meta("quarter_model"):
+			command.model_image=images[records[at+4]]
 		command.position = Vector2i(records[at], records[at + 1])
 		command.size = Vector2i(records[at + 2], records[at + 3])
 		command.depth_order = records[at + 7]
@@ -363,6 +374,7 @@ static func _snapshot(city: CityState) -> Dictionary:
 	var things := city.document.find_chunk("XTHG")
 
 	return {"edge": city.map_size, "visible": city.visible_altitude_levels, "rotation": city.compass_rotation(),
+		"quarter_terrain": city.document.find_chunk("XQTR").decoded_payload if QuarterTerrain.enabled(city.document) else PackedByteArray(),
 		"expanded": ExpandedRules.render_records(city), "altitude": city.altitude_words, "terrain": city.terrain, "buildings": city.buildings,
 		"zones": city.zones, "flags": city.tile_flags, "overlays": city.text_overlays, "underground": city.underground,
 		"ground": city.ground_overrides if city.ground_overrides.size() == cells else PackedInt32Array(),

@@ -35,6 +35,7 @@ var disaster_damage_class := -1
 var document: Sc2File
 var load_error := ""
 var altitude_words := PackedInt32Array()
+var quarter_heights := PackedInt32Array()
 var terrain := PackedByteArray()
 var buildings := PackedByteArray()
 var zones := PackedByteArray()
@@ -124,6 +125,17 @@ static func from_document(source: Sc2File) -> CityState:
 	elif source.find_chunk("XUPG") != null and not ExpandedRules.enabled(source):
 		city.load_error = "Building upgrades require Expanded rules."
 
+	if not city.load_error.is_empty():
+		return city
+	if QuarterTerrain.enabled(source):
+		if source.sc2x_metadata == null or QuarterTerrain.FEATURE not in source.sc2x_metadata.required_features:
+			city.load_error="Quarter-height terrain capability is missing."
+		else:
+			city.load_error=NativeSimulationBridge.run("quarter.validate",city,null,null,null).result
+			if city.load_error.is_empty():
+				city.resync_mirrors(PackedStringArray(["XQTR"]))
+	elif source.sc2x_metadata != null and QuarterTerrain.FEATURE in source.sc2x_metadata.required_features:
+		city.load_error="Quarter-height terrain data is missing."
 	return city
 
 
@@ -134,6 +146,7 @@ func is_valid() -> bool:
 # transfer only arrays from a completed, private snapshot
 func copy_mirrors_to(target: CityState, transfer_ownership := false) -> void:
 	target.altitude_words = altitude_words if transfer_ownership else altitude_words.duplicate()
+	target.quarter_heights = quarter_heights if transfer_ownership else quarter_heights.duplicate()
 	target.terrain = terrain if transfer_ownership else terrain.duplicate()
 	target.buildings = buildings if transfer_ownership else buildings.duplicate()
 	target.zones = zones if transfer_ownership else zones.duplicate()
@@ -154,6 +167,8 @@ func resync_mirrors(chunk_ids: PackedStringArray) -> void:
 			continue
 
 		match chunk_id:
+			"XQTR":
+				quarter_heights=NativeCityArrays.altitude_words(chunk.decoded_payload.slice(16))
 			"ALTM":
 				_resync_altitude_words(chunk.decoded_payload)
 			"XTER":

@@ -250,7 +250,8 @@ fn zone_of(city: &City, index: usize) -> i64 {
 fn tile_is_eligible(city: &City, index: usize) -> bool {
     let building = city.xbld.data[index] as i64;
 
-    city.xbit.data[index] as i64 & flag_bits::WATER == 0
+    crate::sim::quarter_terrain::flat(city, index)
+        && city.xbit.data[index] as i64 & flag_bits::WATER == 0
         && city.xter.data[index] as i64 == terrain_ids::FLAT
         && building < tiles::FIRST_ROAD
         && building < tiles::DEVELOPED_FIRST
@@ -264,7 +265,8 @@ fn tile_is_drag_price_eligible(city: &City, index: usize, zone_type: i64) -> boo
     let building = city.xbld.data[index] as i64;
     let current = zone_of(city, index);
 
-    city.xter.data[index] as i64 == terrain_ids::FLAT
+    crate::sim::quarter_terrain::flat(city, index)
+        && city.xter.data[index] as i64 == terrain_ids::FLAT
         && building < tiles::FIRST_ROAD
         && building != tiles::RADIOACTIVE_WASTE
         && building != tiles::SMALL_PARK

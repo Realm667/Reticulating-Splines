@@ -48,6 +48,7 @@ pub struct RouteMaps<'a> {
     pub flags: &'a [u8],
     pub altitude: &'a [u8],
     pub map_edge: i64,
+    pub quarter: &'a [u8],
 }
 
 /// NetworkTerrainRules.allows_entry.
@@ -147,6 +148,9 @@ pub fn tile_is_eligible(maps: &RouteMaps, point: Vec2i, mode: i64, direction: i6
         return false;
     }
 
+    if mode != MODE_SUBWAY && mode != MODE_PIPE && !crate::sim::quarter_terrain::raw_allowed(maps.quarter, index) {
+        return false;
+    }
     let terrain_id = maps.terrain[index] as i64;
 
     if !allows_entry(terrain_id, direction) {

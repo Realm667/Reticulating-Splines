@@ -28,6 +28,9 @@ pub fn apply(city: &mut City, args: &ToolArgs, point: Vec2i, preview_only: bool)
         return OnrampResult::rejected("on-ramp is outside the city", 0);
     }
 
+    if !crate::sim::quarter_terrain::network_allowed(city, index as usize) {
+        return OnrampResult::rejected("Terrain is too steep for infrastructure.", 0);
+    }
     let building = city.xbld.data[index as usize] as i64;
 
     if building > MAX_CLEAR_BUILDING || building == tiles::RADIOACTIVE_WASTE {
@@ -50,6 +53,10 @@ pub fn apply(city: &mut City, args: &ToolArgs, point: Vec2i, preview_only: bool)
         }
 
         let tile = city.xbld.data[neighbor_index as usize] as i64;
+
+        if !crate::sim::quarter_terrain::connects(city, index as usize, neighbor_index as usize, direction) {
+            continue;
+        }
 
         if (tiles::HIGHWAY_STRAIGHT_1..=tiles::HIGHWAY_POWER_CROSSING_2).contains(&tile) {
             highway_mask |= 1 << direction;

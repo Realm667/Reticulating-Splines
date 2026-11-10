@@ -13,6 +13,7 @@ pub mod minimap;
 pub mod nature;
 pub mod painter;
 mod parcel;
+mod quarter_terrain;
 pub mod raster;
 pub mod rect_index;
 mod reflection_facades;
@@ -72,6 +73,7 @@ pub struct City {
     pub ground: Vec<i32>,
     pub objects: Vec<i32>,
     pub traffic: Vec<u8>,
+    pub quarter: Vec<[i16; 4]>,
     // Sprite offsets of stationary dispatch objects, indexed by map cell.
     pub dispatch: HashMap<usize, i32>,
     /// Every occupied cell maps to (kind, area, is_left_anchor).
@@ -371,6 +373,9 @@ pub struct Builder {
     /// Model-space height per indexed texel, in the selected view's pixels.
     /// Transparent texels use NaN. Original sprite artwork needs no metadata.
     pub model_heights: HashMap<i32, Vec<f32>>,
+    pub terrain_models: bool,
+    pub quarter_networks: Vec<i32>,
+    quarter_ground_cache: HashMap<Vec<i16>, (u64, i32)>,
 }
 
 impl Builder {
@@ -397,6 +402,7 @@ impl Builder {
             }
         }
 
+        let has_quarter = !city.quarter.is_empty();
         let cells = city.altitude.len();
         let mut builder = Self {
             maximum_altitude: maximum_altitude(&city),
@@ -414,6 +420,9 @@ impl Builder {
             moving: HashMap::new(),
             shadows: HashMap::new(),
             model_heights: HashMap::new(),
+            terrain_models: has_quarter,
+            quarter_networks: Vec::new(),
+            quarter_ground_cache: HashMap::new(),
         };
         // Pack all unflipped artwork once. Scrolling then seldom adds a sprite,
         // so the main thread seldom uploads a changed atlas. Tall sprites
@@ -442,6 +451,20 @@ impl Builder {
         mark(&old.zones, &city.zones, &mut changed);
         mark(&old.flags, &city.flags, &mut changed);
         mark(&old.underground, &city.underground, &mut changed);
+        if old.quarter != city.quarter {
+            for i in 0..cells {
+                if old.quarter.get(i) != city.quarter.get(i) {
+                    changed[i] = true;
+                    let x = i as i32 / city.edge;
+                    let y = i as i32 % city.edge;
+                    for (dx, dy) in [(0, -1), (1, 0), (0, 1), (-1, 0)] {
+                        if x + dx >= 0 && y + dy >= 0 && x + dx < city.edge && y + dy < city.edge {
+                            changed[city.index(x + dx, y + dy)] = true;
+                        }
+                    }
+                }
+            }
+        }
 
         if old.overlays != city.overlays {
             for (i, cell) in changed.iter_mut().enumerate() {

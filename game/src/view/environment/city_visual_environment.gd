@@ -93,11 +93,11 @@ func export_luts() -> void:
 	app.main_overlays.settings_dialog.show_visual_message(error if not error.is_empty() else "Editable LUT profiles and neutral template exported to:\n" + folder + "\nExisting files were preserved.")
 
 
-func _configure_models(options: Dictionary) -> void:
+func _configure_models(options: Dictionary, refresh := true) -> void:
 	var changed := false
 	for pair in [[app.asset_state.large_sprites, "large"], [app.asset_state.small_medium_sprites, "small-medium"]]:
 		var archive: Sc2SpriteArchive = pair[0]
-		if CityNetworkModels.configure(archive, app.asset_state.palette, options.models_enabled):
+		if CityNetworkModels.configure(archive, app.asset_state.palette, options.models_enabled or QuarterTerrain.enabled(app.document_state.city.document if app.document_state.city != null else null)):
 			CityBrightmaps.load_archive(archive, options.brightmap_folder, pair[1])
 			CityDispatchLights.prepare(archive, app.asset_state.palette)
 			CitySeasonColors.prepare(archive, app.asset_state.palette)
@@ -105,7 +105,8 @@ func _configure_models(options: Dictionary) -> void:
 			changed = true
 	if changed and app.document_state.city != null:
 		app.static_render.invalidate_rendered_city()
-		app.map_render.refresh_map()
+		if refresh:
+			app.map_render.refresh_map()
 
 
 func _configure_water(options: Dictionary, refresh := true) -> void:
@@ -136,7 +137,7 @@ func reload_brightmaps(refresh := true) -> void:
 	for pair in [[app.asset_state.large_sprites, "large"], [app.asset_state.small_medium_sprites, "small-medium"]]:
 		var archive: Sc2SpriteArchive = pair[0]
 		if archive != null:
-			CityNetworkModels.configure(archive, app.asset_state.palette, app.preferences.visual_enhancements.models_enabled)
+			CityNetworkModels.configure(archive, app.asset_state.palette, app.preferences.visual_enhancements.models_enabled or QuarterTerrain.enabled(app.document_state.city.document if app.document_state.city != null else null))
 			CityBrightmaps.load_archive(archive, app.preferences.visual_enhancements.brightmap_folder, pair[1])
 			if app.asset_state.palette != null:
 				CityDispatchLights.prepare(archive, app.asset_state.palette)

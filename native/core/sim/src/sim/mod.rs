@@ -23,6 +23,7 @@ pub mod network;
 pub mod new_city;
 pub mod overlay;
 pub mod phase;
+pub mod quarter_terrain;
 pub mod random;
 pub mod reach;
 pub mod reports;

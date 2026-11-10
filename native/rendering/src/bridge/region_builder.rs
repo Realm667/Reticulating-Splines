@@ -187,8 +187,22 @@ fn city(d: &VarDictionary) -> Result<City, String> {
         traffic: bytes(d, "traffic"),
         dispatch: HashMap::new(),
         expanded: HashMap::new(),
+        quarter: Vec::new(),
     };
 
+    let quarter = bytes(d, "quarter_terrain");
+    if !quarter.is_empty() {
+        if quarter.len() != 16 + (c.edge * c.edge) as usize * 8 || &quarter[..4] != b"QTR1" {
+            return Err("Invalid quarter-height terrain dimensions.".into());
+        }
+        c.quarter = quarter[16..]
+            .chunks_exact(8)
+            .map(|q| std::array::from_fn(|k| u16::from_be_bytes([q[k * 2], q[k * 2 + 1]]) as i16))
+            .collect();
+        if c.quarter.iter().flatten().any(|q| !(0..=128).contains(q)) {
+            return Err("Invalid quarter-height terrain heights.".into());
+        }
+    }
     let records = ints(d, "expanded");
     for record in records.chunks_exact(4) {
         let (kind, x, y, area) = (record[0], record[1], record[2], record[3]);
@@ -442,6 +456,16 @@ impl NativeCityRegionBuilder {
             let pack_atlas = int(&request, "atlas", 1) != 0;
             let mut core = Builder::new(city, config, sprites, (target as u32).to_be_bytes(), atlas_edge, pack_atlas)?;
             core.atlas.revision += previous_revision;
+            core.terrain_models = int(&request, "terrain_models", 0) != 0 || !core.city.quarter.is_empty();
+            core.quarter_networks = ints(&request, "quarter_networks");
+            if !core.quarter_networks.is_empty() && core.quarter_networks.len() != core.city.altitude.len() {
+                return Err("Invalid quarter-height network dimensions.".into());
+            }
+            for id in core.quarter_networks.iter().filter(|id| **id != 0) {
+                if !(1_000_000_000..1_100_000_000).contains(id) || !core.sprites.images.contains_key(&(*id as u64 * 2)) {
+                    return Err("Invalid quarter-height network image.".into());
+                }
+            }
 
             configure_artwork(&mut core, &request)?;
             if let Some(value) = request.get("model_heights") {
@@ -926,6 +950,10 @@ impl NativeCityRegionBuilder {
                     Image::create_from_data(s.w, s.h, false, Format::RGBA8, &PackedByteArray::from(s.rgba.as_slice()))
                         .expect("validated sprite dimensions")
                 });
+
+                if (1_400_000_000..2_200_000_000).contains(&d.image) && !image.has_meta("quarter_model") {
+                    image.set_meta("quarter_model", &true.to_variant());
+                }
 
                 images.push(&image.to_variant());
                 images.len() as i64 - 1
