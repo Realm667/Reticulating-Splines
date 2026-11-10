@@ -9,7 +9,7 @@ const GROUND_ROLES := ["road_surface","ballast_surface","rail","rail_web","tie",
 
 # Geometry templates are independent of sprite IDs and material/tileset names.
 # Crossings compose these templates instead of owning another complete model.
-const TEMPLATES := ["surface", "cable_network", "portal", "elevated_deck", "ramp", "suspension", "lift_gate", "truss", "crossing"]
+const TEMPLATES := ["surface", "cable_network", "portal", "elevated_deck", "ramp", "suspension", "lift_gate", "truss", "crossing", "rubble"]
 
 
 class Library extends RefCounted:
@@ -60,6 +60,8 @@ class Library extends RefCounted:
 
 static func template(kind: String) -> String:
 	match kind:
+		"rubble":
+			return "rubble"
 		"road", "rail":
 			return "surface"
 		"power", "power_bridge":
@@ -99,6 +101,8 @@ static func canonical_ports(mask: int) -> Vector2i:
 
 
 static func family(id: int) -> String:
+	if id in range(T.RUBBLE_1,T.RUBBLE_4+1):
+		return "rubble"
 	if id >= T.POWER_LINE_STRAIGHT_1 and id <= T.POWER_LINE_CROSSROADS:
 		return "power"
 	if id >= T.ROAD_STRAIGHT_1 and id <= T.ROAD_CROSSROADS:
@@ -461,6 +465,77 @@ static func power_routes(mask: int, corners: PackedFloat32Array, pole_height := 
 	return parts
 
 
+static func rubble(id: int, corners: PackedFloat32Array) -> Array:
+	# One pile recipe, four quarter-turn poses. SC2000 debris is predominantly
+	# broken brown timbers with scattered gray masonry, rather than gray gravel.
+	var centers: Array[Vector2] = [
+		Vector2(-.30,-.10),Vector2(-.21,.14),Vector2(-.12,-.24),Vector2(.02,-.30),
+		Vector2(.22,-.17),Vector2(.31,.03),Vector2(.20,.23),Vector2(-.02,.30),
+		Vector2(-.26,.27),Vector2(-.33,.06),Vector2(.09,-.13),Vector2(-.10,.04),
+		Vector2(.08,.13),Vector2(-.05,-.11),Vector2(.23,.05),Vector2(-.13,.20),
+		Vector2(.28,-.29),Vector2(-.29,-.27),Vector2(.04,.02)]
+	var parts: Array=[]
+	var turn := (id-T.RUBBLE_1)*PI*.5
+	# Loose dark debris closes the pile below the distinct rigid fragments.
+	var rim := PackedVector3Array()
+	for step in 8:
+		var p := Vector2(cos(step*PI*.25),sin(step*PI*.25))*.35
+		rim.append(Vector3(p.x,p.y,rubble_ground(p,corners)+.12))
+	var summit := Vector3(0,0,rubble_ground(Vector2.ZERO,corners)+1.9)
+	for step in 8:
+		face(parts,"rubble_dark",PackedVector3Array([rim[step],rim[(step+1)%8],summit]))
+	for index in centers.size():
+		var center := centers[index].rotated(turn)
+		var fragment: Array=[]
+		if index==centers.size()-1:
+			box(fragment,"rubble_timber",Vector3(-.02,-.02,0),Vector3(.02,.02,2.7))
+		elif index%3!=0:
+			var length := .18+(index%4)*.03
+			box(fragment,"rubble_timber",Vector3(-length*.5,-.028,0),Vector3(length*.5,.028,.65))
+			for end in [-1,1]:
+				var x: float = end*(length*.5+.0001)
+				face(fragment,"rubble_cut",PackedVector3Array([
+					Vector3(x,-.028,0),Vector3(x,.028,0),Vector3(x,.028,.65),Vector3(x,-.028,.65)]))
+		else:
+			var radius := .044+(index%4)*.007
+			var height := .95+(index%4)*.2
+			var points := PackedVector3Array([
+				Vector3(-radius,-radius,0),Vector3(radius,-radius,0),
+				Vector3(radius,radius,0),Vector3(-radius,radius,0),
+				Vector3(-radius*.8,-radius*.7,height*.72),Vector3(radius*.65,-radius*.8,height),
+				Vector3(radius*.9,radius*.8,height*.82),Vector3(-radius*.65,radius*.9,height*.66)])
+			for indices in [[4,5,6,7],[0,1,5,4],[1,2,6,5],[2,3,7,6],[3,0,4,7]]:
+				var polygon := PackedVector3Array()
+				for vertex in indices:
+					polygon.append(points[vertex])
+				face(fragment,"rubble_stone",polygon)
+		var yaw := turn+(index%4)*PI*.25
+		var u := center.x+.5
+		var v := center.y+.5
+		# Same two terrain triangles as the native patch. Each fragment uses a
+		# rigid orthonormal frame resting on its own supporting terrain plane.
+		var gx := (corners[1]-corners[0]) if u>=v else (corners[2]-corners[3])
+		var gy := (corners[2]-corners[1]) if u>=v else (corners[3]-corners[0])
+		var ground := rubble_ground(center,corners)
+		var normal := Vector3(-gx/32.0,-gy/32.0,1).normalized()
+		var along := Vector3(cos(yaw),sin(yaw),(gx*cos(yaw)+gy*sin(yaw))/32.0).normalized()
+		var across := normal.cross(along).normalized()
+		var pile := maxf(0.0,1.7*(1.0-center.length_squared()/.20))
+		for part: Dictionary in fragment:
+			for k in part.vertices.size():
+				var local: Vector3=part.vertices[k]
+				var physical := along*local.x*32.0+across*local.y*32.0+normal*local.z
+				part.vertices[k]=Vector3(center.x+physical.x/32.0,center.y+physical.y/32.0,ground+pile+physical.z)
+		parts.append_array(fragment)
+	return parts
+
+
+static func rubble_ground(point: Vector2, corners: PackedFloat32Array) -> float:
+	var u := point.x+.5
+	var v := point.y+.5
+	return corners[0]*(1-u)+corners[1]*(u-v)+corners[2]*v if u>=v else corners[0]*(1-v)+corners[2]*u+corners[3]*(v-u)
+
+
 static func build(id: int, corners := PackedFloat32Array(), flipped := false) -> Dictionary:
 	if corners.is_empty():
 		corners=profile(id)
@@ -469,6 +544,9 @@ static func build(id: int, corners := PackedFloat32Array(), flipped := false) ->
 	var mask := 5
 	var footprint := 1
 	match kind:
+		"rubble":
+			mask=0
+			parts=rubble(id,corners)
 		"road", "rail", "power":
 			var first: int = T.ROAD_STRAIGHT_1 if kind=="road" else (T.RAIL_STRAIGHT_1 if kind=="rail" else T.POWER_LINE_STRAIGHT_1)
 			mask=PORTS[id-first] if id-first<PORTS.size() else (10 if (id-first)%2 else 5)

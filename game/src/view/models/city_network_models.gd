@@ -5,7 +5,7 @@ extends RefCounted
 const Geometry = preload("res://src/view/models/network_model_geometry.gd")
 const Raster = preload("res://src/view/models/network_model_raster.gd")
 const ADMISSION_PATH := "res://assets/data/network_model_sources.json"
-const VERSION := 5
+const VERSION := 6
 static var _admission: Dictionary = {}
 
 
@@ -39,7 +39,7 @@ static func prepare(archive: Sc2SpriteArchive, palette: Sc2Palette) -> void:
 	var ids: Array[int] = []
 	var hd_hashes: Dictionary[int, String] = {}
 	for id: int in archive.entries_by_id:
-		if id % 500 < 14 or id % 500 > 111 or id >= 1500:
+		if (id % 500 not in range(1,5) and id % 500 not in range(14,112)) or id >= 1500:
 			continue
 		ids.append(id)
 	ids.sort()

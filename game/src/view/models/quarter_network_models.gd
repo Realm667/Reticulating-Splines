@@ -20,7 +20,10 @@ func prepare(city: CityState,archive: Sc2SpriteArchive,palette: Sc2Palette,view:
 	var library:=NetworkModelGeometry.Library.new(NetworkModelGeometry.build,NetworkModelGeometry.template)
 	for i in city.buildings.size():
 		var id:=int(city.buildings[i])
-		if id<14 or id>111 or id in range(81,93) or id in [106,107] or city.is_water(i/city.map_size,i%city.map_size):
+		var debris := id in range(1,5)
+		if (not debris and (id<14 or id>111)) or id in range(81,93) or id in [106,107] or city.is_water(i/city.map_size,i%city.map_size):
+			continue
+		if debris and not archive.network_model_entries.has(view*500+id):
 			continue
 		var tile:=Vector2i(i/city.map_size,i%city.map_size)
 		var base:=city.land_altitude(tile.x,tile.y)*4

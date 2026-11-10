@@ -36,9 +36,19 @@ All geometry is coverage-reduced to the three existing native pixel sizes.
 The following retain sprite artwork:
 
 - Dam structures remain building sprites. Their terrain/water is drawn separately.
-- Zone/lot colors, trees, rubble, decorative objects, markers, shadows, pedestrian
+- Zone/lot colors, trees, decorative objects, markers, shadows, pedestrian
   figures and disaster effects stay in their existing sprite/effect paths.
   They are outside the terrain and transport model inventory.
+
+These remaining objects deliberately retain sprites by the user's scope decision;
+further model conversion is not planned for them.
+
+Rubble IDs 1–4 compose one shared pile template in four poses: broken brown
+timbers, gray masonry and a loose dark base following the SC2000 reference.
+Each rigid fragment mounts on its own terrain plane; the loose base follows the
+two actual XQTR triangles. Models off restores the imported rubble artwork.
+The native model-height registry includes these four IDs, while radioactive
+waste, vegetation and other objects keep their existing sprite paths.
 
 Buildings and zones still require flat supporting terrain. Keeping their artwork
 preserves the original design and the existing painter/foreground masks.
@@ -109,6 +119,7 @@ city. All valid branches of the declared local state domains are exercised:
 
 | Domain | Coverage |
 | --- | --- |
+| Rubble | IDs 1–4, 41 planes, four quarter phases, three native sizes: 1,968 rasters; rigid-fragment dimensions; 24 full CPU/GPU pairs, all rotations and classic/fractional cities; sprite restoration and unchanged saved state |
 | Surface geometry | IDs 14–111, 41 planar normal-or-gentler grades, four quarter phases, both mirrors; two-tile highways use doubled spans |
 | Native model raster | Every preceding unmirrored surface recipe and underground/service recipe at all three artwork sizes |
 | Underground geometry | 67 sprite/service forms on the same 41 planes and four phases; all 6,561 relative corner forms through the shared all-arm, crossing and shaft templates |

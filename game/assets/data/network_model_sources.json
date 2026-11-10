@@ -2,6 +2,13 @@
 	"description": "Fingerprints only. SC2000 is the sole design reference; RS hashes admit compatible footprints, not model designs.",
 	"format": 1,
 	"sprites": {
+		"1": {
+			"77cc5b66f778b0d47a603089dd1a624f546098b70f825853bfefae4bca94eef2": {
+				"height": 5,
+				"reference": true,
+				"width": 8
+			}
+		},
 		"100": {
 			"0397520543b42862ef3bf2ebd8a8edcf8b61a5b88d93823fba21e61bc2577b8b": {
 				"hd_hash": "333be329054bdb13a081b56ee6c0fa16ce8584d3ace33a054c6c0dae1a5f1d9f",
@@ -13,6 +20,34 @@
 				"height": 12,
 				"reference": true,
 				"width": 16
+			}
+		},
+		"1001": {
+			"b11b68eb7ad39d7fca051cc5512a4d4131206ade4f69772329df5eafc463a0ea": {
+				"height": 17,
+				"reference": true,
+				"width": 32
+			}
+		},
+		"1002": {
+			"cc917889540a5366b02c43e8ec6fe21897fa08614b72a8cbf16828c72bcc5c8c": {
+				"height": 17,
+				"reference": true,
+				"width": 32
+			}
+		},
+		"1003": {
+			"1191438c61472dcb933428af45818afe74768c152059d69de1a203d8af3de07c": {
+				"height": 17,
+				"reference": true,
+				"width": 32
+			}
+		},
+		"1004": {
+			"5f1af54b905612b49c0e199e7542b5d0f344784dc186df1bf1b1c677097b178c": {
+				"height": 17,
+				"reference": true,
+				"width": 32
 			}
 		},
 		"101": {
@@ -1510,6 +1545,13 @@
 				"width": 8
 			}
 		},
+		"2": {
+			"159354dbdbd0345aa9946af7151e1a4ab4887fdaebf2226afd3ae73bf3521762": {
+				"height": 5,
+				"reference": true,
+				"width": 8
+			}
+		},
 		"20": {
 			"85fc43730cd15b427b01ffbad418ff678ea8357d68baa041fa9282640173b5fd": {
 				"hd_hash": "60572ba4ac2389327798f2b57a639ae69dfb062c363e73090907eb54f94b098c",
@@ -1635,6 +1677,13 @@
 				"width": 8
 			},
 			"3dde90f5ceff8b5307a1017e1850a165843b4c25fe1847c6e3a4afa8e0de32e7": {
+				"height": 5,
+				"reference": true,
+				"width": 8
+			}
+		},
+		"3": {
+			"ba7fde0d8a3a5f50609fbbd393d6c40801fd2f6c5024eade4c7a30752852a6b0": {
 				"height": 5,
 				"reference": true,
 				"width": 8
@@ -1767,6 +1816,13 @@
 				"hd_hash": "140ed75c834cd1d398924d2619016831b7bde739c26c18348901a38ecf29cc9b",
 				"height": 6,
 				"reference": false,
+				"width": 8
+			}
+		},
+		"4": {
+			"2d2cbe416ef0bf6bacb0a2cd24f8dcf83c7e8be5d89912c939c6a3d87706c3d7": {
+				"height": 5,
+				"reference": true,
 				"width": 8
 			}
 		},
@@ -1911,6 +1967,34 @@
 				"height": 5,
 				"reference": true,
 				"width": 8
+			}
+		},
+		"501": {
+			"048745ba88e8f4fd83d5e5a3fefe34f970e4c5a8aed9706b27f7a847ab05cd19": {
+				"height": 9,
+				"reference": true,
+				"width": 16
+			}
+		},
+		"502": {
+			"ab1ac495bab1cf440b65b63a02c9e41679fc7c1dce45bb819aa0a05b9ac31fc4": {
+				"height": 9,
+				"reference": true,
+				"width": 16
+			}
+		},
+		"503": {
+			"d2ac8d582b33f6042f60fb4de1c0dc14b334bb352762db2612b85b6adc85b4c5": {
+				"height": 9,
+				"reference": true,
+				"width": 16
+			}
+		},
+		"504": {
+			"3f237a4cf2c172f8ff97188a846ed577129732d3d9aacb76c92f58da1205763a": {
+				"height": 9,
+				"reference": true,
+				"width": 16
 			}
 		},
 		"51": {

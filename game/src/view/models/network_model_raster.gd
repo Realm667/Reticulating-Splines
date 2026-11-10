@@ -20,6 +20,8 @@ static func materials(palette: Sc2Palette, id: int) -> Dictionary:
 	var base:=palette.color(161)
 	var metal:=Color("670700") if id in range(81,86) or id in [106,107] else base
 	var colors: Dictionary={
+		"rubble_timber":Color("836333"),"rubble_cut":Color("b39b6b"),
+		"rubble_stone":Color("77776b"),"rubble_dark":Color("332b1b"),
 		"surface":base,"deck":base,"railing":Color("505050"),"pier":base,
 		"pole":Color("101010"),"crossarm":Color("282828"),"cable":Color("101010"),
 		"rail":Color("b7b7b7"),"rail_web":Color("282828"),"ballast":Color("101010"),"tie":Color("470000"),

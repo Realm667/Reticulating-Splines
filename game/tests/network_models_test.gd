@@ -15,8 +15,8 @@ func _run() -> void:
 	for archive: Sc2SpriteArchive in [pack.large_sprites, pack.small_medium_sprites]:
 		var original := archive.entries_by_id.duplicate()
 		assert(CityNetworkModels.configure(archive, pack.palette, true))
-		assert(archive.network_model_entries.size() == (98 if archive == pack.large_sprites else 196))
-		assert(archive.network_model_meshes < 98, "Equal geometry must share a record")
+		assert(archive.network_model_entries.size() == (102 if archive == pack.large_sprites else 204))
+		assert(archive.network_model_meshes < 102, "Equal geometry must share a record")
 		var revision := archive.visual_revision
 		assert(not CityNetworkModels.configure(archive, pack.palette, true))
 		assert(archive.visual_revision == revision, "Unchanged settings must retain model resources")

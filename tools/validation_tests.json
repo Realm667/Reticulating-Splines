@@ -1,5 +1,14 @@
 [
   {
+    "id": "rubble_models_gpu_test",
+    "script": "tests/rubble_models_gpu_test.gd",
+    "domain": "rendering",
+    "lane": "native",
+    "driver": "scene-batch",
+    "requires": ["ext/graphics/pack.json"],
+    "timeout": 900
+  },
+  {
     "id": "water_models_gpu_test",
     "script": "tests/water_models_gpu_test.gd",
     "domain": "rendering",

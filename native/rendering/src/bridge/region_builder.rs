@@ -505,7 +505,7 @@ impl NativeCityRegionBuilder {
                 let heights = value.try_to::<AnyDictionary>().map_err(|_| "invalid model heights")?;
                 for (id, value) in heights.iter_shared() {
                     let id = id.try_to::<i32>().map_err(|_| "invalid model sprite ID")?;
-                    if id / 500 != view || !(14..=111).contains(&(id % 500)) {
+                    if id / 500 != view || !matches!(id % 500, 1..=4 | 14..=111) {
                         return Err("invalid model sprite ID".into());
                     }
                     let values = value.try_to::<PackedFloat32Array>().map_err(|_| "invalid model height pixels")?;
