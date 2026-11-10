@@ -1,5 +1,13 @@
 [
   {
+    "id": "model_effects_gpu_test",
+    "script": "tests/model_effects_gpu_test.gd",
+    "domain": "rendering",
+    "lane": "native",
+    "driver": "scene-batch",
+    "timeout": 900
+  },
+  {
     "id": "rubble_models_gpu_test",
     "script": "tests/rubble_models_gpu_test.gd",
     "domain": "rendering",

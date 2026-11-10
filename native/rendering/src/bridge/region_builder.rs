@@ -280,7 +280,7 @@ impl NativeCityRegionBuilder {
         result.set("edge", edge);
         result.set("full", full);
         for (channel, name, images) in [(0, "emission", emission), (1, "seasons", seasons)] {
-            if images.is_empty() {
+            if images.is_empty() && (channel != 1 || !core.terrain_models) {
                 continue;
             }
             let (sources, cache) = self
@@ -302,10 +302,10 @@ impl NativeCityRegionBuilder {
     /// A channel's masks are immutable until configure replaces the artwork.
     #[func]
     fn cached_auxiliary_atlas(&mut self, channel: i64, images: VarDictionary) -> Option<Gd<Image>> {
-        if images.is_empty() {
+        let core = self.core.as_ref()?;
+        if images.is_empty() && (channel != 1 || !core.terrain_models) {
             return None;
         }
-        let core = self.core.as_ref()?;
         let (sources, cache) = self
             .auxiliary
             .entry(channel)
@@ -341,10 +341,10 @@ impl NativeCityRegionBuilder {
 
     #[func]
     fn auxiliary_raster(&mut self, bounds: Rect2i, images: VarDictionary, emission: bool) -> Option<Gd<Image>> {
-        if images.is_empty() {
+        let core = self.core.as_mut()?;
+        if images.is_empty() && (emission || !core.terrain_models) {
             return None;
         }
-        let core = self.core.as_mut()?;
         let rect = Rect::new(bounds.position.x, bounds.position.y, bounds.size.x, bounds.size.y);
         if !rect.area() {
             return None;

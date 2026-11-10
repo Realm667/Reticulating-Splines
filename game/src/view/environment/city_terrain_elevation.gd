@@ -8,19 +8,28 @@ var _range := Vector2(0, 31)
 func range_for(city: CityState) -> Vector2:
 	if city == null:
 		return Vector2(0, 31)
-	var signature := [city.get_instance_id(), city.chunk_revision("ALTM")]
+	var signature := [city.get_instance_id(), city.chunk_revision("ALTM"), city.chunk_revision("XQTR")]
 	if signature == _signature:
 		return _range
 	_signature = signature
-	var lowest := 31
-	var highest := 0
-	for word: int in city.altitude_words:
+	var lowest := 32.0
+	var highest := 0.0
+	for index in city.altitude_words.size():
+		var word: int=city.altitude_words[index]
 		var land := word & Sc2AltitudeLayout.LAND_MASK
 		var water := (word >> Sc2AltitudeLayout.WATER_SHIFT) & Sc2AltitudeLayout.LEVEL_MASK
-		if water > land:
-			continue
-		lowest = mini(lowest, land)
-		highest = maxi(highest, land)
+		if city.quarter_heights.is_empty():
+			if water > land:
+				continue
+			lowest = minf(lowest, land)
+			highest = maxf(highest, land)
+		else:
+			for k in 4:
+				var level := city.quarter_heights[index*4+k]/4.0
+				if water>level:
+					continue
+				lowest=minf(lowest,level)
+				highest=maxf(highest,level)
 	if lowest > highest:
 		_range = Vector2(0, 31)
 	else:

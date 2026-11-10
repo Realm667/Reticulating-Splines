@@ -15,6 +15,8 @@ static func load_archive(archive: Sc2SpriteArchive, folder: String, group: Strin
 	archive.visual_emission.clear()
 	archive.visual_emission_artwork.clear()
 	ExpandedGraphics.lights(archive)
+	if archive.visual_models_enabled:
+		archive.visual_emission.merge(archive.network_model_emission,true)
 	# A master pack owns its light masks. Original catalog files remain optional.
 	for id: int in archive.high_resolution:
 		if archive.visual_models_enabled and archive.network_model_entries.has(id):

@@ -36,12 +36,15 @@ All geometry is coverage-reduced to the three existing native pixel sizes.
 The following retain sprite artwork:
 
 - Dam structures remain building sprites. Their terrain/water is drawn separately.
-- Zone/lot colors, trees, decorative objects, markers, shadows, pedestrian
+- Zone/lot colors, trees, decorative objects, markers, pedestrian
   figures and disaster effects stay in their existing sprite/effect paths.
   They are outside the terrain and transport model inventory.
 
 These remaining objects deliberately retain sprites by the user's scope decision;
 further model conversion is not planned for them.
+
+Aircraft shadow silhouettes project the current model onto the receiver. Other
+existing shadow/effect artwork remains in its established compositor.
 
 Rubble IDs 1–4 compose one shared pile template in four poses: broken brown
 timbers, gray masonry and a loose dark base following the SC2000 reference.
@@ -49,6 +52,36 @@ Each rigid fragment mounts on its own terrain plane; the loose base follows the
 two actual XQTR triangles. Models off restores the imported rubble artwork.
 The native model-height registry includes these four IDs, while radioactive
 waste, vegetation and other objects keep their existing sprite paths.
+
+The aircraft and ship recipes use the original SC2000 proportions and palette:
+swept airliner wings and blue tail, a dithered animated helicopter rotor, aft
+cargo-ship superstructure, and separate colored container rows. The rubble uses
+the original dark brown and gray material ramps. No reference pixels are shipped.
+
+## Visual effects
+
+Models use the existing environment dispatcher and palette shaders. The parity
+test compares scalar/vector effect parameters at identical transition times
+with Models off and on; it also renders winter on actual dry model terrain.
+This verifies common effect semantics, not identical pixels for different bodies.
+
+| Effect family | Model integration |
+| --- | --- |
+| Seasons, frost, terrain variation | Masks follow generated soil caps; interior rock and water are separate. |
+| Height coloring, edge sediment | Ranges and boundary profiles track exact quarter heights and their edits. Only map-boundary faces receive sediment. |
+| Day/night, dawn/dusk, LUTs, artwork color | Existing shared palette/environment pipeline. |
+| Rain/snow, lightning, cloud/fog shadows | Existing shared environment and world-coordinate passes. |
+| Traffic/detail lights and glow | Geometry-sized signal and vehicle emission; foreground clipping uses the model mask. |
+| Aircraft shadows | Flattened current model, with the existing opaque/transparent shadow choices. |
+| Ship wakes and reflections | Indexed animated wakes; enhanced water exposes live water beneath neutral foam. Reflections use signed model heights, retain blue cargo and navigation lights, and exclude wakes. |
+| Underground pipe flow | Supplied tubes carry cycling water indices and the existing optional flow overlay. Dry tubes remain static. |
+| Disaster sprites, dust, crowds | Retained sprite/effect paths and the same painter/foreground integration. |
+| Forest shadows | Retained canopy silhouettes project onto actual quarter-height receiver triangles. |
+| Tilt shift, idle saving, zoom/detail cutoff | Existing final-view and refresh controls. |
+
+Custom LUT/brightmap file loading remains in the common loaders. Geometry-sized
+procedural signal masks are available even without an external brightmap catalog;
+compatible explicit replacement masks still take precedence.
 
 Buildings and zones still require flat supporting terrain. Keeping their artwork
 preserves the original design and the existing painter/foreground masks.

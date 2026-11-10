@@ -183,6 +183,7 @@ func prepare(city: CityState, palette: Sc2Palette, sprites: Sc2SpriteArchive, vi
 		if not city.quarter_heights.is_empty() and mode == CityViewMode.Mode.CITY:
 			var prepared:=quarter_models.prepare(city,sprites,palette,view)
 			artwork.merge(prepared.images)
+			_emission.merge(prepared.emission)
 			request["quarter_networks"]=prepared.ids
 
 		# GPU regions and `raster_artwork` draw full-color art

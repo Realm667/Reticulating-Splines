@@ -32,6 +32,16 @@ fn corners(x: i32, y: i32, altitude: f32, mask: u8) -> [[f32; 3]; 4] {
     points
 }
 
+fn receiving_corners(city: &crate::City, x: i32, y: i32, i: usize, mask: u8) -> [[f32; 3]; 4] {
+    let mut points = corners(x, y, city.land(i) as f32, mask);
+    if let Some(quarter) = city.quarter.get(i) {
+        for (point, height) in points.iter_mut().zip(quarter) {
+            point[2] = f32::from(*height) / 4.0;
+        }
+    }
+    points
+}
+
 #[cfg(test)]
 fn ground_height(point: [f32; 2], x: i32, y: i32, altitude: f32, mask: u8) -> f32 {
     let p = corners(x, y, altitude, mask);
@@ -107,7 +117,7 @@ pub fn append(builder: &mut Builder, out: &mut Region, draw: &Draw, bounds: Rect
         return Ok(());
     };
     let c = builder.config;
-    let points = corners(x, y, city.land(i) as f32, mask);
+    let points = receiving_corners(city, x, y, i, mask);
     for nx in (x - 1).max(0)..=(x + 1).min(city.edge - 1) {
         for ny in (y - 1).max(0)..=(y + 1).min(city.edge - 1) {
             let n = city.index(nx, ny);
@@ -146,12 +156,18 @@ pub fn append(builder: &mut Builder, out: &mut Region, draw: &Draw, bounds: Rect
                 let slot = builder.atlas.slot(source, sprite)?;
                 let width = (sprite.w + i32::from(density >= 4 && neighbors & (1 << side) != 0)) as f32;
                 let height = (sprite.h + (seed / 6) % 2) as f32;
+                let root_height = city
+                    .quarter
+                    .get(n)
+                    .map_or(city.object(n) as f32 + f32::from(source_mask == 15), |q| {
+                        f32::from(*q.iter().min().unwrap()) / 4.0
+                    });
                 let root = [
                     nx as f32 + (rx - 16) as f32 / 32.0 + (ry - 26) as f32 / 16.0,
                     ny as f32 - (rx - 16) as f32 / 32.0 + (ry - 26) as f32 / 16.0,
-                    city.object(n) as f32 + f32::from(source_mask == 15),
+                    root_height,
                 ];
-                for face in faces(mask) {
+                for face in faces(if city.quarter.is_empty() { mask } else { 0 }) {
                     let mut polygon: Vec<Vertex> = face
                         .iter()
                         .map(|&index| {
@@ -206,6 +222,17 @@ pub fn append(builder: &mut Builder, out: &mut Region, draw: &Draw, bounds: Rect
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn quarter_receivers_keep_fractional_and_steep_corner_heights() {
+        let city = crate::City {
+            altitude: vec![3],
+            quarter: vec![[13, 14, 25, 24]],
+            ..Default::default()
+        };
+        let points = receiving_corners(&city, 4, 5, 0, 0);
+        assert_eq!(points.map(|p| p[2]), [3.25, 3.5, 6.25, 6.0]);
+        assert_eq!(faces(0), [[0, 1, 2], [0, 2, 3]]);
+    }
     #[test]
     fn ground_faces_keep_all_raised_corners_and_both_diagonals() {
         for mask in MASKS {

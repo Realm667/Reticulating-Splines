@@ -109,6 +109,9 @@ impl Builder {
                 -1
             });
         }
+        // Only exposed map boundaries receive sediment layers. Interior cliffs
+        // retain their rock material even when they have the same height profile.
+        key.push(i16::from(y == 0) | (i16::from(x == edge - 1) << 1) | (i16::from(y == edge - 1) << 2) | (i16::from(x == 0) << 3));
         let (image, padding) = if let Some(value) = self.quarter_ground_cache.get(&key) {
             *value
         } else {
@@ -127,7 +130,7 @@ impl Builder {
             let image = FIRST_IMAGE + self.quarter_ground_cache.len() as u64 * 2;
             self.sprite_limit.0 = self.sprite_limit.0.max(raster.w);
             self.sprite_limit.1 = self.sprite_limit.1.max(raster.h);
-            if mask.iter().any(|v| *v != 0) {
+            {
                 let rgba: Vec<u8> = mask
                     .iter()
                     .enumerate()
@@ -136,6 +139,8 @@ impl Builder {
                         match kind {
                             1 => [0, 0, 153, alpha],
                             2 => [0, 0, 64, alpha],
+                            3 => [0, 0, 0, alpha],
+                            4 => [0, 0, 102, alpha],
                             _ => [0, 255, 0, alpha],
                         }
                     })
@@ -328,6 +333,11 @@ fn raster(key: &[i16], top: &Sprite, side: &Sprite, water: &Sprite, falling: &Sp
         }
     }
     for (s, [a, b]) in EDGES.into_iter().enumerate() {
+        let soil_side = if key.get(22).is_some_and(|flags| flags & (1 << s) != 0) {
+            4
+        } else {
+            1
+        };
         if bank_surface {
             // Follow the actual edge profile. Joining only its two raised
             // corners would put a soil dam across an open channel port.
@@ -342,7 +352,7 @@ fn raster(key: &[i16], top: &Sprite, side: &Sprite, water: &Sprite, falling: &Sp
                 let (a, lower_a) = edge_point(segment as f32 / 16.0);
                 let (b, lower_b) = edge_point((segment + 1) as f32 / 16.0);
                 if lower_a[2] < a[2] || lower_b[2] < b[2] {
-                    faces.push(([a, b, lower_b, lower_a], 1));
+                    faces.push(([a, b, lower_b, lower_a], soil_side));
                 }
             }
             continue;
@@ -352,7 +362,7 @@ fn raster(key: &[i16], top: &Sprite, side: &Sprite, water: &Sprite, falling: &Sp
         let lower_a = key[4 + s * 2].min(qa);
         let lower_b = key[5 + s * 2].min(qb);
         if lower_a < qa || lower_b < qb {
-            faces.push(([corners[a], corners[b], vertex(b, lower_b), vertex(a, lower_a)], 1));
+            faces.push(([corners[a], corners[b], vertex(b, lower_b), vertex(a, lower_a)], soil_side));
         }
     }
     let low = faces
@@ -380,7 +390,7 @@ fn raster(key: &[i16], top: &Sprite, side: &Sprite, water: &Sprite, falling: &Sp
                 side,
                 falling,
                 &key[..4],
-                if material >= 2 || key[12] == i16::MIN {
+                if matches!(material, 2 | 3) || key[12] == i16::MIN {
                     f32::NEG_INFINITY
                 } else {
                     f32::from(key[12]) * 3.0
@@ -523,7 +533,7 @@ fn triangle(
             let color = &source.rgba[pos..pos + 4];
             let color = if color[3] != 0 {
                 color
-            } else if material >= 2 {
+            } else if matches!(material, 2 | 3) {
                 source.rgba.chunks_exact(4).find(|v| v[3] != 0).unwrap_or(fallback)
             } else {
                 fallback
@@ -533,6 +543,8 @@ fn triangle(
             mask[pixel] = match material {
                 2 => 1,
                 3 => 2,
+                1 => 3,
+                4 => 4,
                 _ => 0,
             };
         }
@@ -744,8 +756,8 @@ mod tests {
                                 let (image, _, mask) = raster(&key, &top, &side, &water, &falling, divisor);
                                 assert_eq!(mask.len(), (image.w * image.h) as usize);
                                 for (pixel, kind) in image.la.chunks_exact(2).zip(&mask) {
-                                    assert!(*kind <= 2);
-                                    if *kind != 0 {
+                                    assert!(*kind <= 4);
+                                    if matches!(*kind, 1 | 2) {
                                         assert_eq!(pixel, [if *kind == 1 { 200 } else { 201 }, 255]);
                                     }
                                 }
@@ -760,5 +772,30 @@ mod tests {
             }
         }
         assert_eq!(cases, 10080);
+    }
+
+    #[test]
+    fn dry_caps_interior_cliffs_and_map_edges_have_distinct_effect_masks() {
+        let (top, side, water) = (solid(10), solid(20), solid(30));
+        for divisor in [1, 2, 4] {
+            let mut key = vec![8; 4];
+            key.extend([0; 8]);
+            key.extend([i16::MIN, 0]);
+            key.extend([i16::MIN; 4]);
+            key.extend([-1; 4]);
+            key.push(0);
+            let (interior, _, mask) = raster(&key, &top, &side, &water, &water, divisor);
+            assert!(mask.contains(&3));
+            for (pixel, role) in interior.la.chunks_exact(2).zip(&mask) {
+                if pixel[1] != 0 {
+                    assert_eq!(*role, if pixel[0] == 10 { 0 } else { 3 });
+                }
+            }
+            key[22] = 15;
+            let (boundary, _, edge_mask) = raster(&key, &top, &side, &water, &water, divisor);
+            assert_eq!(interior.rgba, boundary.rgba);
+            assert!(edge_mask.contains(&4));
+            assert!(!edge_mask.contains(&3));
+        }
     }
 }

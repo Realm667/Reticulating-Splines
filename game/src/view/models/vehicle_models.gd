@@ -13,7 +13,7 @@ var palette_source: Sc2Palette
 var meshes: Dictionary = {}
 
 
-func frame(kind: int, variant: int, forward: Vector2, rise: float, palette: Sc2Palette, divisor := 1) -> Dictionary:
+func frame(kind: int, variant: int, forward: Vector2, rise: float, palette: Sc2Palette, divisor := 1, shadow := false) -> Dictionary:
 	if palette != palette_source:
 		palette_source = palette
 		frames.clear()
@@ -21,7 +21,7 @@ func frame(kind: int, variant: int, forward: Vector2, rise: float, palette: Sc2P
 	# Quarter terrain and the existing ramp geometry have exact discrete grades.
 	rise = snappedf(rise,.5)
 	var shape := Kind.ENGINE if kind == Kind.COACH else kind
-	var geometry_key := var_to_bytes([shape,forward,rise]).hex_encode()
+	var geometry_key := var_to_bytes([shape,forward,rise,shadow]).hex_encode()
 	var key := var_to_bytes([kind,geometry_key,variant % BODY_COLORS.size(),divisor]).hex_encode()
 	if frames.has(key):
 		return frames[key]
@@ -33,6 +33,10 @@ func frame(kind: int, variant: int, forward: Vector2, rise: float, palette: Sc2P
 		swatches[color_key] = _materials(kind,variant,palette)
 	if not meshes.has(geometry_key):
 		meshes[geometry_key] = geometry(shape,forward,rise)
+		if shadow:
+			for part: Dictionary in meshes[geometry_key].parts:
+				for i in part.vertices.size():
+					part.vertices[i].z=0
 	var recipe: Dictionary = meshes[geometry_key].duplicate()
 	recipe.materials = swatches[color_key]
 	# Long ships and steep subway poses extend below the contact point.
@@ -52,12 +56,7 @@ func frame(kind: int, variant: int, forward: Vector2, rise: float, palette: Sc2P
 	var end := Vector2i(ceili(float(rect.end.x)/divisor),ceili(float(rect.end.y)/divisor))*divisor
 	rect = Rect2i(first,end-first)
 	var indexed: Image = entry.create_image(Sc2Palette.index_encoding()).image
-	var lamps := Image.create(full.get_width(),full.get_height(),false,Image.FORMAT_RGBA8)
-	for y in full.get_height():
-		for x in full.get_width():
-			var role: int = raster.roles[y*full.get_width()+x]
-			if role >= 3:
-				lamps.set_pixel(x,y,[Color("ffe3a0"),Color("ff3426"),Color("709fff")][role-3])
+	var lamps := NetworkModelRaster.emission(raster)
 	var images: Array[Image] = []
 	for image: Image in [full,indexed,lamps]:
 		var cropped := Image.create(rect.size.x,rect.size.y,false,Image.FORMAT_RGBA8)
@@ -72,8 +71,47 @@ func frame(kind: int, variant: int, forward: Vector2, rise: float, palette: Sc2P
 	images[0].set_meta("vehicle_model_lamps",images[2])
 	var result := {"image":images[0],"indexed":images[1],"lamps":images[2],
 		"anchor":Vector2(float(recipe.get("origin_x",16)),entry.height-baseline)-Vector2(rect.position),"recipe":recipe}
+	if kind in [Kind.SHIP,Kind.SAILBOAT] and not shadow:
+		result.merge(floating_images(raster,indexed,lamps,rect,divisor))
 	frames[key] = result
 	return result
+
+
+static func floating_images(raster: Dictionary, indexed: Image, lamps: Image, rect: Rect2i, divisor: int) -> Dictionary:
+	var body := Image.create(rect.size.x,rect.size.y,false,Image.FORMAT_RGBA8)
+	var clean := Image.create(rect.size.x,rect.size.y,false,Image.FORMAT_RGBA8)
+	var reflected := Image.create(rect.size.x,rect.size.y*2,false,Image.FORMAT_RGBA8)
+	var light := Image.create(rect.size.x,rect.size.y*2,false,Image.FORMAT_RGBA8)
+	for y in indexed.get_height():
+		for x in indexed.get_width():
+			var pixel := indexed.get_pixel(x,y)
+			if pixel.a==0 or not rect.has_point(Vector2i(x,y)):
+				continue
+			var role: int=raster.roles[y*indexed.get_width()+x]
+			var local := Vector2i(x,y)-rect.position
+			if role==6:
+				continue
+			if role==7:
+				clean.set_pixelv(local,Color(154.0/255,0,0,.4))
+				continue
+			body.set_pixelv(local,pixel)
+			clean.set_pixelv(local,pixel)
+			var z: float=raster.signed_height[y*indexed.get_width()+x]
+			if z<0:
+				continue
+			var target := Vector2i(local.x,roundi(local.y+2*z))
+			if target.y>=reflected.get_height():
+				continue
+			pixel.a*=maxf(0,1-z/255.0)
+			reflected.set_pixelv(target,pixel)
+			light.set_pixelv(target,lamps.get_pixel(x,y))
+	if divisor>1:
+		for image: Image in [body,clean,reflected,light]:
+			var size := image.get_size()
+			var reduced := reduce_coverage(image,divisor)
+			reduced.resize(size.x,size.y,Image.INTERPOLATE_NEAREST)
+			image.copy_from(reduced)
+	return {"floating_source":body,"water_indexed":clean,"reflection":reflected,"reflection_lamps":light}
 
 
 static func reduce_coverage(source: Image, divisor: int) -> Image:
@@ -114,6 +152,8 @@ static func _materials(kind: int, variant: int, palette: Sc2Palette) -> Dictiona
 	colors.hull = Color("000000")
 	colors.rotor = Color("0000df")
 	colors.rotor_blur = Color("2720ff")
+	colors.nav_white=Color("dfdfdf")
+	colors.nav_red=Color("dfdfdf")
 	colors.cargo_red=Color("df0000")
 	colors.cargo_blue=Color("0000b3")
 	colors.cargo_yellow=Color("bfb300")
@@ -236,6 +276,8 @@ static func special_geometry(kind: int, forward: Vector2, rise: float) -> Dictio
 			var b: Vector3=fin[(edge+1)%fin.size()]
 			g.face(parts,"white",PackedVector3Array([a+Vector3(0,-.022,0),b+Vector3(0,-.022,0),b+Vector3(0,.022,0),a+Vector3(0,.022,0)]))
 		g.box(parts,"glass",Vector3(.88,-.065,2.8),Vector3(1.02,.065,3.35))
+		for side in [-1,1]:
+			g.box(parts,"nav_red" if side<0 else "nav_white",Vector3(-.59,side*1.25-.015,1.2),Vector3(-.45,side*1.25+.015,1.8))
 	elif kind==Kind.HELICOPTER:
 		g.box(parts,"red",Vector3(-.28,-.13,1),Vector3(.30,.13,3.7))
 		g.box(parts,"glass",Vector3(.08,-.135,2.5),Vector3(.30,.135,3.75))
@@ -263,6 +305,8 @@ static func special_geometry(kind: int, forward: Vector2, rise: float) -> Dictio
 				Vector3(-.044+cos(a)*.50,sin(a)*.50,6.6),Vector3(-.044+cos(b)*.50,sin(b)*.50,6.6)]))
 		g.box(parts,"rotor",Vector3(-.544,-.018,6.65),Vector3(.456,.018,6.72))
 		g.box(parts,"rotor",Vector3(-.062,-.50,6.65),Vector3(-.026,.50,6.72))
+		g.box(parts,"nav_white",Vector3(.23,-.065,1.1),Vector3(.29,.065,2.3))
+		g.box(parts,"nav_red",Vector3(-.71,-.04,5.4),Vector3(-.63,.04,6.6))
 	elif kind==Kind.SHIP:
 		var outline := PackedVector3Array([Vector3(-1.32,-.24,0),Vector3(.90,-.29,0),Vector3(1.32,0,0),Vector3(.90,.29,0),Vector3(-1.32,.24,0)])
 		g.slab(parts,"hull",outline,2)
@@ -279,11 +323,21 @@ static func special_geometry(kind: int, forward: Vector2, rise: float) -> Dictio
 				var role: String=["cargo_white","cargo_red","cargo_yellow","cargo_blue"][(row+column)%4]
 				g.box(parts,role,Vector3(x-.095,y-.06,.9),Vector3(x+.095,y+.06,2.25))
 		g.beam(parts,"red",Vector3(-.65,0,.75),Vector3(1.1,0,.75),.7)
+		for side in [-1,1]:
+			g.box(parts,"nav_red" if side<0 else "nav_white",Vector3(-.74,side*.20-.025,5.5),Vector3(-.68,side*.20+.025,6.1))
 	else:
 		g.slab(parts,"white",PackedVector3Array([Vector3(-.33,-.08,0),Vector3(.25,-.09,0),Vector3(.38,0,0),Vector3(.25,.09,0),Vector3(-.33,.08,0)]),1)
 		g.beam(parts,"metal",Vector3(0,0,0),Vector3(0,0,11),.6)
 		g.face(parts,"red",PackedVector3Array([Vector3(0,0,10),Vector3(0,0,2),Vector3(.30,0,2)]))
 		g.face(parts,"white",PackedVector3Array([Vector3(-.02,0,8),Vector3(-.30,0,1.5),Vector3(-.02,0,1.5)]))
+	if kind in [Kind.SHIP,Kind.SAILBOAT]:
+		var length := 1.32 if kind==Kind.SHIP else .38
+		var width := .29 if kind==Kind.SHIP else .10
+		for side in [-1,1]:
+			g.face(parts,"wake",PackedVector3Array([Vector3(-length-.28,side*(width+.16),-.04),Vector3(length*.8,side*(width+.03),-.04),
+				Vector3(length,side*width,-.04),Vector3(-length-.28,side*(width+.04),-.04)]))
+			g.face(parts,"wake_foam",PackedVector3Array([Vector3(-length-.15,side*(width+.05),-.02),Vector3(length*.85,side*(width+.01),-.02),
+				Vector3(length*.75,side*(width-.01),-.02),Vector3(-length-.15,side*(width+.015),-.02)]))
 	var heading := forward.normalized()
 	var angle := atan2(rise,32.0)
 	var along := Vector3(heading.x*cos(angle),heading.y*cos(angle),32*sin(angle))

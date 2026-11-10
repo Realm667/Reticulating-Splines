@@ -86,6 +86,9 @@ static func render(id: int, source: Image, palette: Sc2Palette, view := 2, prepa
 	var z_values:=PackedFloat32Array()
 	z_values.resize(width*height)
 	z_values.fill(NAN)
+	var signed_height := PackedFloat32Array()
+	signed_height.resize(width*height)
+	signed_height.fill(NAN)
 	var roles:=PackedByteArray()
 	roles.resize(width*height)
 	var colors: Dictionary=recipe.materials if recipe.has("materials") else materials(palette,id)
@@ -135,6 +138,8 @@ static func render(id: int, source: Image, palette: Sc2Palette, view := 2, prepa
 					var world: Vector3=a*u+b*v+c*w
 					if role=="rotor_blur" and (x+y)%2==0:
 						continue
+					if role in ["wake","wake_foam"] and posmod(x*3+y*5,5)>2:
+						continue
 					if role in ["road_surface","ballast_surface","ramp"] and (world.x<-.5 or world.x>.5 or world.y<-.5 or world.y>.5):
 						continue
 					var d: float=Geometry.depth(world)
@@ -142,8 +147,14 @@ static func render(id: int, source: Image, palette: Sc2Palette, view := 2, prepa
 					if d<depths[i]-.0001:
 						continue
 					var index:=int(swatch[tone])
-					if role=="rotor_blur":
+					if role in ["rotor_blur","wake"]:
 						index=200+posmod(x*5+y*3,12)
+					elif role=="wake_foam":
+						index=154
+					elif role=="wet_pipe":
+						# Preserve the original water cycle and the optional pipe-flow
+						# shader on the actual sloping tube, independently of its size.
+						index=200+posmod(floori((world.x+world.y)*32+world.z*.5),8)
 					if absf(normal.z)>.001 and role in ["road_surface","deck","ramp"]:
 						index=road_marking(world,recipe.ports,id,index,palette)
 					# Authored markings are sampled only on supporting surfaces. Solid
@@ -155,12 +166,19 @@ static func render(id: int, source: Image, palette: Sc2Palette, view := 2, prepa
 							index=source_indices[authored.to_rgba32()]
 					depths[i]=d
 					z_values[i]=maxf(0,world.z/divisor)
+					signed_height[i]=world.z/divisor
 					pixels[i]=index
 					roles[i]=1 if role in ["road_surface","ballast_surface","deck","ramp","pavement","ballast"] else 2
 					if role in ["headlamp","taillamp","beacon"]:
 						roles[i]=3+["headlamp","taillamp","beacon"].find(role)
+					elif role in ["signal","nav_red"]:
+						roles[i]=4
+					elif role=="nav_white":
+						roles[i]=3
+					elif role in ["wake","wake_foam"]:
+						roles[i]=6+["wake","wake_foam"].find(role)
 	var entry:=Sc2SpriteArchive.entry_from_indices(id+1000,width,height,pixels)
-	return {"entry":entry,"image":entry.create_image(palette).image,"depth":depths,"height":z_values,"roles":roles,"recipe":recipe}
+	return {"entry":entry,"image":entry.create_image(palette).image,"depth":depths,"height":z_values,"signed_height":signed_height,"roles":roles,"recipe":recipe}
 
 
 static func road_marking(point: Vector3, ports: int, id: int, base: int, palette: Sc2Palette) -> int:
@@ -193,6 +211,8 @@ static func reduced(id: int, source: Image, palette: Sc2Palette, view: int, prep
 	var heights := PackedFloat32Array()
 	heights.resize(pixels.size())
 	heights.fill(NAN)
+	var roles := PackedByteArray()
+	roles.resize(pixels.size())
 	for y in height:
 		for x in width:
 			var closest := INF
@@ -207,5 +227,17 @@ static func reduced(id: int, source: Image, palette: Sc2Palette, view: int, prep
 						closest = distance
 						pixels[y*width+x] = indices[at]
 						heights[y*width+x] = full.height[at]/divisor
+						roles[y*width+x] = full.roles[at]
 	var entry := Sc2SpriteArchive.entry_from_indices(id+view*500,width,height,pixels)
-	return {"entry":entry,"image":entry.create_image(palette).image,"height":heights}
+	return {"entry":entry,"image":entry.create_image(palette).image,"height":heights,"roles":roles}
+
+
+static func emission(raster: Dictionary) -> Image:
+	var image: Image=raster.image
+	var result := Image.create(image.get_width(),image.get_height(),false,Image.FORMAT_RGBA8)
+	for y in image.get_height():
+		for x in image.get_width():
+			var role: int=raster.roles[y*image.get_width()+x]
+			if role in range(3,6):
+				result.set_pixel(x,y,[Color("ffe3a0"),Color("ff3426"),Color("709fff")][role-3])
+	return result

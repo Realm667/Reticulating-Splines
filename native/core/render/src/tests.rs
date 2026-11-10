@@ -88,9 +88,13 @@ fn every_water_terrain_uses_models_without_mutating_the_city_or_the_opt_out() {
                     let image = models[0].image;
                     assert!(image >= quarter_terrain::FIRST_IMAGE);
                     assert!(b.terrain_water.contains_key(&image));
+                    assert!(
+                        b.terrain_seasons.contains_key(&image),
+                        "Dry and wet spatial terrain both need effect masks"
+                    );
                     if !wet && matches!(terrain, 0x2f | 0x3f) {
                         assert!(
-                            b.terrain_water[&image].iter().all(|v| *v == 0),
+                            b.terrain_water[&image].iter().all(|v| !matches!(*v, 1 | 2)),
                             "Reserved dry fallbacks must not acquire water"
                         );
                     }

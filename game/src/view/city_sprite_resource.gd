@@ -5,6 +5,7 @@ extends RefCounted
 var image: Image
 # Optional original hull/wake source when the display uses neutral foam.
 var floating_source: Image
+var model_reflection: WaterReflectionSprite
 var native_size := Vector2i.ZERO
 var texture: ImageTexture
 var index_texture: ImageTexture
@@ -49,7 +50,7 @@ func reflection(origin: Vector2i, level: int, palette: Sc2Palette, lights_enable
 		# Normalize the hull/wake and light mask together before finding contact.
 		var source := _reflection_raster(floating_source if floating_source != null else image)
 		var lights := _reflection_raster(_light_mask)
-		_reflection = WaterReflectionSprite.create(source, lights, Vector2i.ZERO, 0, palette)
+		_reflection = model_reflection if model_reflection!=null else WaterReflectionSprite.create(source, lights, Vector2i.ZERO, 0, palette)
 		_reflection_palette = palette
 	var result := WaterReflectionSprite.new()
 	result.position = origin

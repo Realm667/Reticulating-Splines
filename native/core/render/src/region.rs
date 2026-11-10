@@ -479,6 +479,9 @@ impl Builder {
                         INDEXED
                     };
                     quad(&mut out, clipped, uv, bounds, color);
+                    if self.config.underground && !self.underground_models.is_empty() {
+                        self.artwork_effects(&mut out, &draw, bounds)?;
+                    }
                 }
             }
 

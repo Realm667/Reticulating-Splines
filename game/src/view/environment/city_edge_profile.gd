@@ -11,7 +11,7 @@ func texture_for(city: CityState) -> Texture2D:
 	if city == null:
 		return null
 	var signature := [city.get_instance_id(), city.chunk_revision("ALTM"), city.chunk_revision("XTER"),
-		city.chunk_revision("XBIT"), city.compass_rotation()]
+		city.chunk_revision("XBIT"), city.chunk_revision("XQTR"), city.compass_rotation()]
 	if signature == _signature:
 		return _texture
 	_signature = signature
@@ -22,7 +22,12 @@ func texture_for(city: CityState) -> Texture2D:
 			var tile := Vector2i(edge - 1, along) if face == 0 else Vector2i(along, edge - 1)
 			# CityRotation already rotates the tile arrays into view coordinates.
 			# Applying compass rotation here a second time samples a different edge.
-			image.set_pixel(along, face, Color(city.land_altitude(tile.x, tile.y) / 31.0,
+			var land := float(city.land_altitude(tile.x,tile.y))
+			if not city.quarter_heights.is_empty():
+				var first := city.index_of(tile.x,tile.y)*4
+				var corners := city.quarter_heights.slice(first,first+4)
+				land=(corners[1]+corners[2])/8.0 if face==0 else (corners[2]+corners[3])/8.0
+			image.set_pixel(along, face, Color(land / 31.0,
 				city.water_altitude(tile.x, tile.y) / 31.0, float(city.is_water(tile.x, tile.y)), 1))
 	# Smooth along the whole visible perimeter, including the shared front corner.
 	# This is a rendering profile only; the actual land/water heights stay intact.

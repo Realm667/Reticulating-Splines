@@ -343,7 +343,7 @@ impl Builder {
                         .filter(|_| (140..=166).contains(&auxiliary(seasons, &draw, sprite, x - draw.rect.x, y - draw.rect.y)[2]));
                     let model_water = model_mask.map(|mask| mask[src / 4]);
                     if let Some(i) = water
-                        .filter(|_| model_water.map_or(water_indices[sprite.rgba[src] as usize] != 0, |kind| kind != 0))
+                        .filter(|_| model_water.map_or(water_indices[sprite.rgba[src] as usize] != 0, |kind| matches!(kind, 1 | 2)))
                         .or(embedded)
                     {
                         let cap = if embedded.is_some() {
@@ -664,7 +664,7 @@ impl Builder {
                     }
                     let at = ((y - area.y) * area.w + x - area.x) as usize;
                     distance[at] = if model_mask.map_or(water && (water_indices[sprite.rgba[src] as usize] != 0 || offset == 270), |mask| {
-                        mask[src / 4] != 0
+                        matches!(mask[src / 4], 1 | 2)
                     }) {
                         255
                     } else {

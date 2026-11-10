@@ -5,7 +5,7 @@ extends RefCounted
 const Geometry = preload("res://src/view/models/network_model_geometry.gd")
 const Raster = preload("res://src/view/models/network_model_raster.gd")
 const ADMISSION_PATH := "res://assets/data/network_model_sources.json"
-const VERSION := 7
+const VERSION := 8
 static var _admission: Dictionary = {}
 
 
@@ -54,6 +54,7 @@ static func prepare(archive: Sc2SpriteArchive, palette: Sc2Palette) -> void:
 		return
 	var entries: Dictionary[int, Sc2SpriteArchive.SpriteEntry] = {}
 	var heights: Dictionary[int, PackedFloat32Array] = {}
+	var emission: Dictionary[int, Image] = {}
 	var library := Geometry.Library.new(Geometry.build, Geometry.template)
 	for id in ids:
 		var entry: Sc2SpriteArchive.SpriteEntry = archive.entries_by_id[id]
@@ -76,8 +77,12 @@ static func prepare(archive: Sc2SpriteArchive, palette: Sc2Palette) -> void:
 		replacement.sprite_id = id
 		entries[id] = replacement
 		heights[id] = result.height
+		var lights := Raster.emission(result)
+		if not lights.is_invisible():
+			emission[id]=lights
 	archive.network_model_entries = entries
 	archive.network_model_heights = heights
+	archive.network_model_emission = emission
 	archive.network_model_signature = signature
 	archive.network_model_revision += 1
 	archive.network_model_meshes = library.meshes.size()
@@ -88,6 +93,7 @@ static func copy_state(source: Sc2SpriteArchive, target: Sc2SpriteArchive) -> vo
 	target.network_model_palette=source.network_model_palette
 	target.network_model_entries = source.network_model_entries
 	target.network_model_heights = source.network_model_heights
+	target.network_model_emission = source.network_model_emission
 	target.network_model_signature = source.network_model_signature
 	target.network_model_revision = source.network_model_revision
 	target.network_model_meshes = source.network_model_meshes

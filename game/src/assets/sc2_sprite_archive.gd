@@ -18,6 +18,7 @@ var visual_terrain_enabled := false
 var visual_models_enabled := false
 var network_model_entries: Dictionary[int, SpriteEntry] = {}
 var network_model_heights: Dictionary[int, PackedFloat32Array] = {}
+var network_model_emission: Dictionary[int, Image] = {}
 var network_model_signature := ""
 var network_model_revision := 0
 var network_model_meshes := 0
@@ -104,6 +105,7 @@ func parse(bytes: PackedByteArray) -> bool:
 	entries_by_id.clear()
 	network_model_entries.clear()
 	network_model_heights.clear()
+	network_model_emission.clear()
 	network_model_signature = ""
 	network_model_revision += 1
 	visual_nature.clear()

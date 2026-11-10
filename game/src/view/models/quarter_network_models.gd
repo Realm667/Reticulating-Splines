@@ -12,6 +12,7 @@ func prepare(city: CityState,archive: Sc2SpriteArchive,palette: Sc2Palette,view:
 	var ids:=PackedInt32Array()
 	ids.resize(city.map_size*city.map_size)
 	var images: Dictionary[int,Image]={}
+	var emission: Dictionary[int,Image]={}
 	var design: Sc2Palette=archive.network_model_palette if archive.network_model_palette!=null else palette
 	var signature:=design.to_rgba_bytes().hex_encode().sha256_text()+str(view)
 	if signature!=material_signature or cache.size()>1024:
@@ -52,9 +53,12 @@ func prepare(city: CityState,archive: Sc2SpriteArchive,palette: Sc2Palette,view:
 			var entry: Sc2SpriteArchive.SpriteEntry=rendered.entry
 			entry.sprite_id=next_id
 			next_id+=1
-			cache[key]=entry
-		var entry: Sc2SpriteArchive.SpriteEntry=cache[key]
+			cache[key]={"entry":entry,"emission":NetworkModelRaster.emission(rendered)}
+		var entry: Sc2SpriteArchive.SpriteEntry=cache[key].entry
 		ids[i]=entry.sprite_id
 		if not images.has(entry.sprite_id):
 			images[entry.sprite_id]=entry.create_image(palette).image
-	return {"ids":ids,"images":images}
+			var lights: Image=cache[key].emission
+			if not lights.is_invisible():
+				emission[entry.sprite_id]=lights
+	return {"ids":ids,"images":images,"emission":emission}

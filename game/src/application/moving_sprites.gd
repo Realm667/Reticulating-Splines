@@ -139,7 +139,7 @@ func refresh_moving_things(view_size := -1) -> void:
 		var model_height := -1.0
 		var thing := app.document_state.city.thing(command.record) if command.record >= 0 else null
 		var model_kind := VehicleModels.kind_for_thing(thing.type,thing.state) if thing!=null else -1
-		if app.preferences.visual_enhancements.models_enabled and not command.shadow and model_kind>=0:
+		if app.preferences.visual_enhancements.models_enabled and model_kind>=0 and (not command.shadow or aircraft_shadow):
 			var city := app.document_state.city
 			var track: CityTrafficMotion.Track = traffic_motion.tracks.get(command.record)
 			var world := track.tile if track != null else Vector2(thing.x,thing.y)
@@ -154,19 +154,19 @@ func refresh_moving_things(view_size := -1) -> void:
 					forward = CityLifePaths.forward(4+(thing.dx-1)/2)
 			var rise := VehicleModels.rise_at(city,world,forward) if thing.type in [4,10,11] else 0.0
 			model_height=VehicleModels.height(city,world)
-			if thing.type in [1,2]:
+			if thing.type in [1,2] and not command.shadow:
 				model_height=traffic_motion.aircraft_altitude(command.record,city)
 			elif thing.type in [3,9]:
 				model_height=city.water_altitude(thing.x,thing.y)
 			elif thing.type in [12,13]:
 				model_height=VehicleModels.underground_height(city,world)
 				rise=(VehicleModels.underground_height(city,world+forward*.34)-VehicleModels.underground_height(city,world-forward*.34))*12/.68
-			model = vehicle_models.frame(model_kind,0,forward,rise,app.asset_state.palette,divisor)
+			model = vehicle_models.frame(model_kind,0,forward,rise,app.asset_state.palette,divisor,command.shadow)
 			display_position = VehicleModels.contact(city,world)+Vector2(0,(VehicleModels.height(city,world)-model_height)*12)-model.anchor
 			position = Vector2i(display_position.round())
 			factor = 1
 		var surface_altitude := traffic_motion.aircraft_altitude(command.record, app.document_state.city) if not command.shadow else -1.0
-		if not model.is_empty():
+		if not model.is_empty() and not command.shadow:
 			surface_altitude = model_height
 		var height_steps := 4 if not app.document_state.city.quarter_heights.is_empty() else 1
 		var visual_cache_key := var_to_str([view_size, factor, sprite_archive.visual_revision, transparent_shadow, toxic_cloud, warm_cloud, light_allowed, position, command.value_signature(), floori(surface_altitude*height_steps + 0.00001), model.get("image")])
@@ -185,14 +185,20 @@ func refresh_moving_things(view_size := -1) -> void:
 		if model.is_empty():
 			resource = dynamic_sprite_resource(sprite_archive,command.sprite_id,command.flip,divisor,factor)
 		else:
-			if not model.has("resource"):
+			var resource_key := "water_resource" if sprite_archive.water_reflections and model.has("water_indexed") else "resource"
+			if not model.has(resource_key):
 				var modeled := CitySpriteResource.new()
-				modeled.image = model.indexed
+				modeled.image = model.water_indexed if resource_key=="water_resource" else model.indexed
 				modeled.native_size = model.indexed.get_size()
+				if model.has("floating_source"):
+					modeled.floating_source=model.floating_source
+					modeled.model_reflection=WaterReflectionSprite.new()
+					modeled.model_reflection.image=model.reflection
+					modeled.model_reflection.emission=model.reflection_lamps
 				modeled.texture = ImageTexture.create_from_image(modeled.image)
 				modeled.index_texture = modeled.texture
-				model.resource = modeled
-			resource = model.resource
+				model[resource_key] = modeled
+			resource = model[resource_key]
 
 		if resource == null:
 			continue
@@ -269,14 +275,16 @@ func refresh_moving_things(view_size := -1) -> void:
 		visual.image = visual_image
 		if not command.shadow and light_allowed:
 			var light_source := moving_lights.mask(sprite_archive, command.sprite_id, resource.artwork_image != null)
-			var emission := resource.light_mask(light_source, command.flip) if model.is_empty() else resource.light_mask(model.lamps,false)
+			if not model.is_empty():
+				light_source=model.lamps
+			var emission := resource.light_mask(light_source,command.flip if model.is_empty() else false)
 			if visual_image == resource.image:
 				visual.emission_texture = resource.light_texture()
 			elif emission != null:
 				# The cached mask already includes the original artwork alpha.
 				# Apply the final silhouette to the authored source exactly once.
 				visual.emission_texture = ImageTexture.create_from_image(CityBrightmaps.transform_mask(
-					light_source, visual_image, command.flip))
+					light_source, visual_image, command.flip if model.is_empty() else false))
 		if sprite_archive.water_reflections and command.floating_altitude >= 0 and not command.shadow:
 			visual.water_reflection = resource.reflection(position, int(command.floating_altitude), app.asset_state.palette, light_allowed)
 		visual.special_overlay = command.overlay >= 0
