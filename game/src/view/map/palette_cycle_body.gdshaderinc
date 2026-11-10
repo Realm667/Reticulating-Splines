@@ -141,7 +141,8 @@ void vertex() {
 	if (building_emission < 0.5) { tag -= 128.0; }
 	parcel_border = float(tag == PARCEL_BORDER_TAG);
 	tree_shadow = float(tag == TREE_SHADOW_TAG);
-	terrain_elevation = (tag == TERRAIN_ARTWORK_TAG || tag == TERRAIN_INDEXED_TAG || tag == SPATIAL_WATER_TAG) ? bytes.g : -1.0;
+	terrain_elevation = (tag == TERRAIN_ARTWORK_TAG || tag == TERRAIN_INDEXED_TAG) ? bytes.g + bytes.b / 16.0
+		: (tag == SPATIAL_WATER_TAG ? bytes.g + floor(bytes.b / 4.0) / 16.0 : -1.0);
 	artwork_kind = 0.0;
 	power_warning = 0.0;
 	artwork_frames = vec3(1.0, 8.0, 0.0);
@@ -174,8 +175,8 @@ void vertex() {
 		world_position *= divisor;
 		waterfall_local = COLOR.ba * vec2(32.0, 28.0 + divisor);
 	} else if (tag == SPATIAL_WATER_TAG) {
-		waterfall_view = bytes.b;
-		world_position *= exp2(2.0 - bytes.b);
+		waterfall_view = mod(bytes.b, 4.0);
+		world_position *= exp2(2.0 - waterfall_view);
 		// The spatial material mask, rather than the old sprite outline,
 		// selects falling faces in fragment(). The cap remains horizontal.
 		waterfall_local = vec2(16.0, 1000.0);
@@ -238,7 +239,7 @@ vec3 ground_patch(vec2 grid) {
 vec4 pipe_water(vec4 encoded) {
 	int index = palette_index(encoded);
 
-	if (encoded.a <= 0.0 || index < 200 || index > 207) {
+	if (!palette_cycle_enabled || encoded.a <= 0.0 || index < 200 || index > 207) {
 		return vec4(0.0);
 	}
 

@@ -20,7 +20,7 @@ const POWER_WARNING_SPRITE: i32 = 386;
 const WATERFALL_TAG: u8 = 49;
 /// The indexed sprite under underground HD art: the shader draws pipe water.
 const PIPE_FLOW_TAG: u8 = 52;
-/// Natural ground altitude in green, shared by every zoom/view of a tile.
+/// Natural ground altitude in green; blue stores its fractional sixteenths.
 const TERRAIN_ARTWORK_TAG: u8 = 53;
 const PARCEL_BORDER_TAG: u8 = 55;
 const TERRAIN_INDEXED_TAG: u8 = 54;
@@ -72,6 +72,13 @@ fn ceil(a: i32, b: i32) -> i32 {
 }
 
 impl Builder {
+    fn terrain_height(&self, index: usize) -> (i32, i32) {
+        self.city.quarter.get(index).map_or((self.city.land(index), 0), |q| {
+            let sum: i32 = q.iter().map(|v| i32::from(*v)).sum();
+            (sum / 16, sum % 16)
+        })
+    }
+
     fn terrain_color(&self, draw: &Draw, artwork: bool) -> Option<[f32; 4]> {
         if !self.config.natural_terrain || self.config.underground || draw.moving || draw.shadow || draw.depth < 0 || self.city.edge <= 0 {
             return None;
@@ -87,9 +94,9 @@ impl Builder {
         if x < 0 || x >= edge || y < 0 || y >= edge {
             return None;
         }
-        let height = self.city.land(self.city.index(x as i32, y as i32));
+        let (height, fraction) = self.terrain_height(self.city.index(x as i32, y as i32));
         let tag = if artwork { TERRAIN_ARTWORK_TAG } else { TERRAIN_INDEXED_TAG };
-        Some([byte(i32::from(tag)), byte(height), 0.0, 1.0])
+        Some([byte(i32::from(tag)), byte(height), byte(fraction), 1.0])
     }
 
     fn anchor(&self, x: i32, y: i32) -> (i32, i32) {
@@ -465,10 +472,11 @@ impl Builder {
                         && self.terrain_water.get(&draw.image).is_some_and(|v| v.contains(&2))
                     {
                         let i = crate::water_reflections::terrain_cell(&self.city, draw.depth);
+                        let (height, fraction) = i.map_or((0, 0), |i| self.terrain_height(i));
                         [
                             byte(i32::from(SPATIAL_WATER_TAG)),
-                            byte(i.map_or(0, |i| self.city.land(i))),
-                            byte(self.config.view),
+                            byte(height),
+                            byte(self.config.view + fraction * 4),
                             1.0,
                         ]
                     } else if let Some(terrain) = self.terrain_color(&draw, false) {

@@ -51,6 +51,7 @@ func _run() -> void:
 			assert(mask.get_size()==Vector2i(entry.width,entry.height))
 			assert(not mask.is_invisible())
 	var quarter := Q.fixture()
+	_check_quarter_receivers(quarter)
 	var edge := CityEdgeProfile.new()
 	Q.set_corners(quarter,Vector2i(63,20),[12,13,14,12])
 	edge.texture_for(quarter)
@@ -72,9 +73,156 @@ func _run() -> void:
 			var prepared := variants.prepare(quarter,archive,pack.palette,view)
 			assert(not prepared.emission.is_empty(),"Graded traffic signals retain geometry-aligned light masks")
 	await _terrain_seasons(pack)
+	await _quarter_fog()
+	await _fractional_shading()
+	await _pipe_overlay(pack.palette)
 	await _environment_parity()
 	print("PASS: 96 spatial aircraft/ship effect poses, three native sizes, graded signal masks and all shared option dispatches")
 	quit()
+
+
+func _check_quarter_receivers(city: CityState) -> void:
+	var tile := Vector2i(20,20)
+	city.set_building_id(tile.x,tile.y,BuildingTileIds.ROAD_STRAIGHT_1)
+	var lighting := CityNightGround.new()
+	var baseline := lighting.sources(city,tile).size()
+	var neighbor := tile+Vector2i.RIGHT
+	city.set_building_id(neighbor.x,neighbor.y,int(lighting.profiles.entrances.keys()[0]))
+	Q.set_corners(city,tile,[13,13,13,13])
+	Q.set_corners(city,neighbor,[13,13,13,13])
+	assert(lighting.sources(city,tile).size()==baseline+1)
+	Q.set_corners(city,neighbor,[14,14,14,14])
+	assert(lighting.sources(city,tile).size()==baseline,"Entrance lights cannot bridge a quarter-height mismatch")
+	lighting.free()
+	var traffic := CityLifeController.new(null)
+	Q.set_corners(city,tile,[13,14,14,13])
+	traffic._advance(city,0)
+	traffic._paths[Vector3i(20,20,0)]=CityLifePaths.Segment.new(city,tile,0,2,false)
+	Q.set_corners(city,tile,[13,15,15,13])
+	traffic._advance(city,0)
+	assert(traffic._paths.is_empty(),"Quarter-only terrain edits invalidate cosmetic vehicle paths")
+
+
+func _quarter_fog() -> void:
+	var city := Q.fixture()
+	var fog := CityVisualFog.new(null)
+	var tile := Vector2i(20,20)
+	var viewport := SubViewport.new()
+	viewport.size=Vector2i.ONE
+	viewport.render_target_update_mode=SubViewport.UPDATE_ALWAYS
+	root.add_child(viewport)
+	var rectangle := ColorRect.new()
+	rectangle.size=Vector2.ONE
+	var material := ShaderMaterial.new()
+	material.shader=CityVisualFog.HEIGHT_SHADER
+	material.set_shader_parameter("fog_has_quarters",true)
+	material.set_shader_parameter("fog_edge",64)
+	material.set_shader_parameter("fog_ceiling",3.5)
+	rectangle.material=material
+	viewport.add_child(rectangle)
+	for values in [[13,13,13,13],[12,13,13,12],[12,16,16,12],[20,12,12,20]]:
+		Q.set_corners(city,tile,values)
+		fog._sync_terrain(city)
+		material.set_shader_parameter("fog_altitudes",fog.altitude_texture)
+		material.set_shader_parameter("fog_terrain",fog.terrain_texture)
+		material.set_shader_parameter("fog_flags",fog.flags_texture)
+		material.set_shader_parameter("fog_quarters",fog.quarter_texture)
+		var height: float = (float(values[0])+float(values[2]))/8.0
+		var flat := Vector2(tile)-Vector2.ONE*height*.75
+		material.set_shader_parameter("fog_mask_to_tiles",CityVisualClouds.shader_basis(Transform2D(0,flat-Vector2.ONE*.5)))
+		await RenderingServer.frame_post_draw
+		var expected := 1-smoothstep(2,5,height)
+		assert(absf(viewport.get_texture().get_image().get_pixel(0,0).r-expected)<.012,"Fog must follow the actual fractional terrain plane")
+	for shape in [0x10,0x3e,0x3f]:
+		Q.set_corners(city,tile,[0,0,0,0])
+		city.set_water_altitude(tile.x,tile.y,4)
+		city.set_terrain_id(tile.x,tile.y,shape)
+		city.set_tile_flag(tile.x,tile.y,Sc2TileFlags.WATER,shape!=0x3f)
+		fog._sync_terrain(city)
+		var height := 0.0 if shape==0x3f else (5.0 if shape==0x3e else 4.0)
+		var flat := Vector2(tile)-Vector2.ONE*height*.75
+		material.set_shader_parameter("fog_mask_to_tiles",CityVisualClouds.shader_basis(Transform2D(0,flat-Vector2.ONE*.5)))
+		await RenderingServer.frame_post_draw
+		assert(absf(viewport.get_texture().get_image().get_pixel(0,0).r-(1-smoothstep(2,5,height)))<.012,"Quarter fog must use water and waterfall caps while reserved dry codes remain land")
+	Q.set_corners(city,tile,[13,14,14,13])
+	fog._sync_terrain(city)
+	var texture := fog.quarter_texture
+	var data := texture.get_image().get_data()
+	fog.height_signature=[1]
+	Q.set_corners(city,tile,[13,15,15,13])
+	fog._sync_terrain(city)
+	assert(fog.quarter_texture==texture and texture.get_image().get_data()!=data and fog.height_signature.is_empty(),"Quarter-only edits refresh resident fog terrain and invalidate its projected mask")
+	viewport.queue_free()
+	await process_frame
+
+
+func _fractional_shading() -> void:
+	var viewport := SubViewport.new()
+	viewport.size=Vector2i(128,24)
+	viewport.transparent_bg=true
+	viewport.render_target_update_mode=SubViewport.UPDATE_ALWAYS
+	root.add_child(viewport)
+	var pixels := Image.create(8,8,false,Image.FORMAT_RGBA8)
+	pixels.fill(Color(.6,.65,.4))
+	var soil := Image.create(8,8,false,Image.FORMAT_RGBA8)
+	soil.fill(Color(0,1,0,1))
+	var material := ShaderMaterial.new()
+	material.shader=CityMapControl.PALETTE_CYCLE_SHADER
+	material.set_shader_parameter("environment_has_seasons",true)
+	material.set_shader_parameter("environment_season_mask",ImageTexture.create_from_image(soil))
+	material.set_shader_parameter("terrain_elevation_enabled",true)
+	material.set_shader_parameter("terrain_elevation_range",Vector2(0,8))
+	for row in 3:
+		for fraction in 16:
+			var sprite := Sprite2D.new()
+			sprite.centered=false
+			sprite.position=Vector2(fraction*8,row*8)
+			sprite.texture=ImageTexture.create_from_image(pixels)
+			sprite.material=material
+			sprite.self_modulate=Color8([53,54,57][row],3,2+fraction*4 if row==2 else fraction,255)
+			viewport.add_child(sprite)
+	await RenderingServer.frame_post_draw
+	var result := viewport.get_texture().get_image()
+	for row in 3:
+		assert(result.get_pixel(124,row*8+4).r>result.get_pixel(4,row*8+4).r,"Terrain shading must preserve sixteenth-level means through packed vertex colors")
+		for fraction in 16:
+			assert(result.get_pixel(fraction*8+4,row*8+4).is_equal_approx(result.get_pixel(fraction*8+4,4)),"Indexed, artwork and waterfall height tags must decode the same fractional mean")
+	viewport.queue_free()
+	await process_frame
+
+
+func _pipe_overlay(palette: Sc2Palette) -> void:
+	var viewport := SubViewport.new()
+	viewport.size=Vector2i(16,16)
+	viewport.transparent_bg=true
+	viewport.render_target_update_mode=SubViewport.UPDATE_ALWAYS
+	root.add_child(viewport)
+	var sprite := Sprite2D.new()
+	sprite.centered=false
+	sprite.self_modulate=Color8(52,0,0,255)
+	var pixels := Image.create(16,16,false,Image.FORMAT_RGBA8)
+	pixels.fill(Color8(200,0,0,255))
+	sprite.texture=ImageTexture.create_from_image(pixels)
+	var material := ShaderMaterial.new()
+	material.shader=CityMapControl.PALETTE_CYCLE_SHADER
+	material.set_shader_parameter("animated_palette",ImageTexture.create_from_image(palette.animation_image(0)))
+	sprite.material=material
+	viewport.add_child(sprite)
+	await RenderingServer.frame_post_draw
+	assert(viewport.get_texture().get_image().is_invisible(),"Unresolved indexed CPU/GPU comparisons must not receive a decoded flow overlay")
+	material.set_shader_parameter("palette_cycle_enabled",true)
+	await RenderingServer.frame_post_draw
+	var first := viewport.get_texture().get_image()
+	assert(not first.is_invisible(),"The production palette pass must show supplied pipe flow")
+	material.set_shader_parameter("animated_palette",ImageTexture.create_from_image(palette.animation_image(5)))
+	await RenderingServer.frame_post_draw
+	assert(first.get_data()!=viewport.get_texture().get_image().get_data(),"Supplied pipe flow must retain its original palette cycle")
+	pixels.fill(Color8(16,0,0,255))
+	sprite.texture=ImageTexture.create_from_image(pixels)
+	await RenderingServer.frame_post_draw
+	assert(viewport.get_texture().get_image().is_invisible(),"Dry pipe texels cannot acquire a water-flow overlay")
+	viewport.queue_free()
+	await process_frame
 
 
 func _terrain_seasons(pack: GraphicsPack) -> void:
@@ -87,6 +235,10 @@ func _terrain_seasons(pack: GraphicsPack) -> void:
 	var bounds := Rect2i(center-Vector2i(48,48),Vector2i(96,96))
 	var region := context.render(city,pack.palette,archive,bounds,2,CityViewMode.Mode.CITY,true,true,0,-1,true,true)
 	assert(region.error.is_empty())
+	var has_fraction := false
+	for color: Color in region.gpu_arrays[Mesh.ARRAY_COLOR]:
+		has_fraction=has_fraction or (color.r8==54 and color.g8==3 and color.b8==2)
+	assert(has_fraction,"The actual native model draw must publish the exact mean of its four quarter corners")
 	var mask := context.builder.auxiliary_raster(bounds,{},false)
 	var ground := 0
 	for y in mask.get_height():
@@ -146,25 +298,28 @@ func _environment_parity() -> void:
 		for field: Array in VisualEnhancementOptions.FIELDS:
 			if field[0] in ["models_enabled","tree_growth_enabled"] or field[2]=="path":
 				continue
-			var changed := options.duplicate()
+			var samples: Array=[]
 			match field[2]:
-				"bool": changed[field[0]]=not options[field[0]]
-				"number": changed[field[0]]=field[5]
-				"choice": changed[field[0]]=field[4].size()-1
-			main.preferences.visual_enhancements=changed
-			# Compare the same instant of each transition, independently of how
-			# long the preceding native model preparation took.
-			main.visual_environment.weather.reset()
-			main.visual_environment.clouds.reset()
-			main.visual_environment.profiles.reset()
-			main.visual_environment.configure()
-			var values: Dictionary={}
-			for key: String in main.map_view.layers.environment_parameters:
-				var value: Variant=main.map_view.layers.environment_parameters[key]
-				if not value is Object:
-					values[key]=value
-			mode[field[0]]=values
-			opts_restore(main,options)
+				"bool": samples=[false,true]
+				"number": samples=[field[4],field[5]]
+				"choice": samples=range(field[4].size())
+			for sample: Variant in samples:
+				var changed := options.duplicate()
+				changed[field[0]]=sample
+				main.preferences.visual_enhancements=changed
+				# Compare the same instant of each transition, independently of how
+				# long the preceding native model preparation took.
+				main.visual_environment.weather.reset()
+				main.visual_environment.clouds.reset()
+				main.visual_environment.profiles.reset()
+				main.visual_environment.configure()
+				var values: Dictionary={}
+				for key: String in main.map_view.layers.environment_parameters:
+					var value: Variant=main.map_view.layers.environment_parameters[key]
+					if not value is Object:
+						values[key]=value
+				mode[str(field[0])+":"+str(sample)]=values
+				opts_restore(main,options)
 		snapshots.append(mode)
 	for field: String in snapshots[0]:
 		for key: String in snapshots[0][field]:

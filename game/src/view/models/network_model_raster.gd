@@ -3,6 +3,9 @@ extends RefCounted
 ## Native indexed raster from spatial components. No subpixel filtering or lighting passes.
 @warning_ignore_start("integer_division")
 const Geometry = preload("res://src/view/models/network_model_geometry.gd")
+const MATERIAL_CACHE_LIMIT := 12
+static var _material_cache: Dictionary = {}
+static var _material_mutex := Mutex.new()
 const RUBBLE_SHADES := {
 	"rubble_timber":["735323","7b5f2b","431f07"],
 	"rubble_cut":["8f8f8f","ababab","575757"],
@@ -22,6 +25,26 @@ static func nearest(palette: Sc2Palette, color: Color) -> int:
 
 
 static func materials(palette: Sc2Palette, id: int) -> Dictionary:
+	# Palette matching is independent of pose, source sprite and native size.
+	# Keep four palettes' three structural ramps; no images or city state live here.
+	var category := 1 if id in range(81,86) else (2 if id in [106,107] else 0)
+	var key := var_to_bytes([palette.colors,category]).hex_encode().sha256_text()
+	_material_mutex.lock()
+	if _material_cache.has(key):
+		var cached: Dictionary=_material_cache[key].duplicate(true)
+		_material_mutex.unlock()
+		return cached
+	_material_mutex.unlock()
+	var result := _build_materials(palette,id)
+	_material_mutex.lock()
+	if _material_cache.size()>=MATERIAL_CACHE_LIMIT:
+		_material_cache.clear()
+	_material_cache[key]=result.duplicate(true)
+	_material_mutex.unlock()
+	return result
+
+
+static func _build_materials(palette: Sc2Palette, id: int) -> Dictionary:
 	var base:=palette.color(161)
 	var metal:=Color("670700") if id in range(81,86) or id in [106,107] else base
 	var colors: Dictionary={

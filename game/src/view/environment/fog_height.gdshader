@@ -4,6 +4,9 @@ render_mode unshaded;
 // Native ALTM bytes are big-endian; XTER shares the same x-major tile order.
 uniform sampler2D fog_altitudes : filter_nearest, repeat_disable;
 uniform sampler2D fog_terrain : filter_nearest, repeat_disable;
+uniform sampler2D fog_quarters : filter_nearest, repeat_disable;
+uniform sampler2D fog_flags : filter_nearest, repeat_disable;
+uniform bool fog_has_quarters = false;
 uniform mat3 fog_mask_to_tiles = mat3(1.0);
 uniform int fog_edge = 128;
 uniform float fog_ceiling = 4.5;
@@ -22,6 +25,18 @@ float surface_height(vec2 point, ivec2 cell) {
 	float land = float(word & 31);
 	if (land >= fog_visible_levels) { return -100.0; }
 	int terrain = int(round(texelFetch(fog_terrain, texel, 0).r * 255.0));
+	vec2 local = point - vec2(cell) + 0.5;
+	if (fog_has_quarters) {
+		vec4 a = round(texelFetch(fog_quarters, ivec2(cell.y * 2, cell.x), 0) * 255.0);
+		vec4 b = round(texelFetch(fog_quarters, ivec2(cell.y * 2 + 1, cell.x), 0) * 255.0);
+		vec4 q = vec4(a.r * 256.0 + a.g, a.b * 256.0 + a.a, b.r * 256.0 + b.g, b.b * 256.0 + b.a) / 4.0;
+		float height = local.x >= local.y
+			? q.x + (q.y - q.x) * local.x + (q.z - q.y) * local.y
+			: q.x + (q.z - q.w) * local.x + (q.w - q.x) * local.y;
+		int flags = int(round(texelFetch(fog_flags, texel, 0).r * 255.0));
+		float water = float((word >> 5) & 31) + float(terrain == 46 || terrain == 62);
+		return (flags & 4) != 0 ? max(height, water) : height;
+	}
 	// Match IsometricGeometry. Water is its visible surface, not the seabed.
 	if (terrain >= 16) { return float((word >> 5) & 31); }
 	int shape = terrain & 15;
@@ -29,7 +44,6 @@ float surface_height(vec2 point, ivec2 cell) {
 	int mask = int(packed >> uint((shape % 8) * 4)) & 15;
 	vec4 corners = vec4(float(mask & 1), float((mask >> 1) & 1),
 		float((mask >> 2) & 1), float((mask >> 3) & 1));
-	vec2 local = point - vec2(cell) + 0.5;
 	// Top/right/bottom and top/bottom/left terrain triangles.
 	float slope = local.x >= local.y
 		? corners.x + (corners.y - corners.x) * local.x + (corners.z - corners.y) * local.y

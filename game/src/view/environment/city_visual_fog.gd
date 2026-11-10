@@ -15,6 +15,8 @@ var field: Texture2D
 var drift := Vector2.ZERO
 var altitude_texture: ImageTexture
 var terrain_texture: ImageTexture
+var quarter_texture: ImageTexture
+var flags_texture: ImageTexture
 var terrain_signature: Array = []
 var height_viewport: SubViewport
 var height_rect: ColorRect
@@ -124,7 +126,7 @@ func process(elapsed: float, active: bool, fog_density: float, light: Color) -> 
 
 func _sync_terrain(city: CityState) -> void:
 	var revision := [city.document.get_instance_id(), city.map_size,
-		city.chunk_revision("ALTM"), city.chunk_revision("XTER")]
+		city.chunk_revision("ALTM"), city.chunk_revision("XTER"), city.chunk_revision("XBIT"), city.chunk_revision("XQTR")]
 	if terrain_signature == revision:
 		return
 	var edge := city.map_size
@@ -138,6 +140,17 @@ func _sync_terrain(city: CityState) -> void:
 	else:
 		altitude_texture.update(altitude)
 		terrain_texture.update(terrain)
+	if not city.quarter_heights.is_empty():
+		# Two RGBA8 texels retain the four original big-endian u16 corners.
+		# Decode them on the GPU without walking a large city in GDScript.
+		var quarters := Image.create_from_data(edge*2,edge,false,Image.FORMAT_RGBA8,city.document.find_chunk("XQTR").decoded_payload.slice(16))
+		var flags := Image.create_from_data(edge,edge,false,Image.FORMAT_R8,city.document.find_chunk("XBIT").decoded_payload)
+		if quarter_texture==null or quarter_texture.get_width()!=edge*2:
+			quarter_texture=ImageTexture.create_from_image(quarters)
+			flags_texture=ImageTexture.create_from_image(flags)
+		else:
+			quarter_texture.update(quarters)
+			flags_texture.update(flags)
 	terrain_signature = revision
 	height_signature.clear()
 
@@ -173,6 +186,9 @@ func _sync_height(city: CityState, source_to_canvas: Transform2D, bounds: Rect2)
 	height_material.set_shader_parameter("fog_mask_to_tiles", CityVisualClouds.shader_basis(transform))
 	height_material.set_shader_parameter("fog_altitudes", altitude_texture)
 	height_material.set_shader_parameter("fog_terrain", terrain_texture)
+	height_material.set_shader_parameter("fog_has_quarters",not city.quarter_heights.is_empty())
+	height_material.set_shader_parameter("fog_quarters",quarter_texture)
+	height_material.set_shader_parameter("fog_flags",flags_texture)
 	height_material.set_shader_parameter("fog_edge", city.map_size)
 	height_material.set_shader_parameter("fog_ceiling", ceiling)
 	height_material.set_shader_parameter("fog_visible_levels", float(city.visible_altitude_levels))

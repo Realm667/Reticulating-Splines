@@ -411,7 +411,12 @@ func sources(city: CityState, tile: Vector2i) -> Array[Dictionary]:
 		if city.index_of(neighbor.x, neighbor.y) < 0:
 			continue
 		var id := str(city.building_id(neighbor.x, neighbor.y))
-		if profiles.entrances.has(id) and city.land_altitude(tile.x, tile.y) == city.land_altitude(neighbor.x, neighbor.y):
+		if not profiles.entrances.has(id):
+			continue
+		var same_height := city.land_altitude(tile.x, tile.y) == city.land_altitude(neighbor.x, neighbor.y)
+		if not city.quarter_heights.is_empty():
+			same_height=is_equal_approx(CityLifePaths.edge_height(city,tile,direction),QuarterTerrain.edge_height(city,neighbor,(direction+2)%4))
+		if same_height:
 			var entrance: Dictionary = profiles.entrances[id].duplicate()
 			entrance.offset = Vector2(CityLifePaths.DIRECTIONS[direction]) * 0.32
 			entrance.position = Vector2(tile) + entrance.offset

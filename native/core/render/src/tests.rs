@@ -1284,6 +1284,32 @@ fn terrain_elevation_follows_world_height_in_indexed_and_hd_regions() {
 }
 
 #[test]
+fn terrain_elevation_keeps_every_fractional_mean_and_water_view() {
+    for view in 0..3 {
+        for fraction in 0..16 {
+            let mut b = fixture(4, view);
+            b.config.natural_terrain = true;
+            b.city.altitude.fill(3);
+            b.city.quarter = vec![[12, 12, 12, 12 + fraction]; 16];
+            let region = b.region(Rect::new(0, 0, 4096, 4096)).unwrap();
+            let tags: Vec<_> = region.colors.iter().map(|color| color.map(|v| (v * 255.0).round() as u8)).collect();
+            assert!(tags.contains(&[54, 3, fraction as u8, 255]));
+            assert!(tags.iter().filter(|t| t[0] == 54).all(|t| t[1] == 3 && t[2] == fraction as u8));
+
+            b.terrain_models = true;
+            b.city.altitude.fill(3 | (4 << 5));
+            b.city.flags.fill(4);
+            b.city.terrain.fill(0x3e);
+            b.config.effects = effects::WATERFALL;
+            b.tiles.clear();
+            let water = b.region(Rect::new(0, 0, 4096, 4096)).unwrap();
+            let tags: Vec<_> = water.colors.iter().map(|color| color.map(|v| (v * 255.0).round() as u8)).collect();
+            assert!(tags.contains(&[57, 3, (i32::from(fraction) * 4 + view) as u8, 255]));
+        }
+    }
+}
+
+#[test]
 fn artwork_replaces_its_draw_in_painter_order_and_keeps_indexed_draws() {
     let mut b = fixture(4, 2);
     let key = b.region(Rect::new(0, 0, 600, 700)).unwrap().draws[0].image & !1;

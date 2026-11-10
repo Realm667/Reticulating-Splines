@@ -301,19 +301,27 @@ fn raster(key: &[i16], top: &Sprite, side: &Sprite, water: &Sprite, falling: &Sp
     };
     if key[12] != i16::MIN {
         if bank_surface {
-            corners = std::array::from_fn(|k| {
-                let [x, y] = POINTS[k];
-                [x, y, bank_height(x + 0.5, y + 0.5) * 3.0]
-            });
+            let grid: Vec<Point> = (0..=16)
+                .flat_map(|y| {
+                    let bank_height = &bank_height;
+                    (0..=16).map(move |x| {
+                        let (u, v) = (x as f32 / 16.0, y as f32 / 16.0);
+                        [u - 0.5, v - 0.5, bank_height(u, v) * 3.0]
+                    })
+                })
+                .collect();
+            corners = [grid[0], grid[16], grid[288], grid[272]];
             faces.clear();
             // A shallow bed, sloping banks and open ports. Sixteen samples per
             // tile retain native-pixel shore widths without billboard cutouts.
             for y in 0..16 {
                 for x in 0..16 {
-                    let quad = [[x, y], [x + 1, y], [x + 1, y + 1], [x, y + 1]].map(|[x, y]| {
-                        let (u, v) = (x as f32 / 16.0, y as f32 / 16.0);
-                        [u - 0.5, v - 0.5, bank_height(u, v) * 3.0]
-                    });
+                    let quad = [
+                        grid[y * 17 + x],
+                        grid[y * 17 + x + 1],
+                        grid[(y + 1) * 17 + x + 1],
+                        grid[(y + 1) * 17 + x],
+                    ];
                     faces.push((quad, 0));
                 }
             }
@@ -382,6 +390,11 @@ fn raster(key: &[i16], top: &Sprite, side: &Sprite, water: &Sprite, falling: &Sp
     let mut mask = vec![0_u8; (32 * height) as usize];
     let origin = [16.0, (height - 9 - padding) as f32];
     for (face, material) in faces {
+        // Keep the same conservative raster bounds while skipping soil faces
+        // which the water-plane clipping would discard at every sample.
+        if !matches!(material, 2 | 3) && water_q != i16::MIN && face.iter().all(|p| p[2] < f32::from(water_q) * 3.0 - 0.0001) {
+            continue;
+        }
         for tri in [[0, 1, 2], [0, 2, 3]] {
             triangle(
                 [face[tri[0]], face[tri[1]], face[tri[2]]],
@@ -743,6 +756,7 @@ mod tests {
     fn all_water_forms_have_spatial_materials_at_every_native_size() {
         let (top, side, water, falling) = (solid(10), solid(20), solid(200), solid(201));
         let mut cases = 0;
+        let mut checksum = 0xcbf2_9ce4_8422_2325_u64;
         for divisor in [1, 2, 4] {
             for shape in 0..=20 {
                 for classic in [0, 256] {
@@ -754,6 +768,9 @@ mod tests {
                                 key.extend([water_q, shape | classic]);
                                 key.extend([i16::MIN; 4]);
                                 let (image, _, mask) = raster(&key, &top, &side, &water, &falling, divisor);
+                                for byte in image.rgba.iter().chain(&mask) {
+                                    checksum = (checksum ^ u64::from(*byte)).wrapping_mul(0x100_0000_01b3);
+                                }
                                 assert_eq!(mask.len(), (image.w * image.h) as usize);
                                 for (pixel, kind) in image.la.chunks_exact(2).zip(&mask) {
                                     assert!(*kind <= 4);
@@ -772,6 +789,7 @@ mod tests {
             }
         }
         assert_eq!(cases, 10080);
+        println!("spatial terrain matrix checksum: {checksum:016x}");
     }
 
     #[test]

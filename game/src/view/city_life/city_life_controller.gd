@@ -92,13 +92,13 @@ func process(delta: float) -> void:
 		_serial = 0
 		random.seed = 0x5343324b
 	var geometry := [city.chunk_revision("XBLD"), city.chunk_revision("ALTM"), city.chunk_revision("XTER"),
-		city.compass_rotation(), city.visible_altitude_levels]
+		city.chunk_revision("XQTR"), city.compass_rotation(), city.visible_altitude_levels]
 	var rebuilt_view := false
 	var viewport := Rect2i(map.visible_source_rect().grow(96))
 	if geometry != _geometry_signature or not _viewport.encloses(viewport):
 		_spawn_cursor = -1
 		var changed_geometry := geometry != _geometry_signature
-		var changed_view := _geometry_signature.is_empty() or geometry.slice(3) != _geometry_signature.slice(3)
+		var changed_view := _geometry_signature.is_empty() or geometry.slice(4) != _geometry_signature.slice(4)
 		_geometry_signature = geometry
 		_viewport = viewport.grow(96)
 		_collect_tiles(city)
@@ -335,7 +335,7 @@ func _vehicle_kind(tile: Vector2i) -> int:
 
 
 func _advance(city: CityState, elapsed: float) -> void:
-	var path_signature := [city.mirror_signature(["ALTM", "XBLD", "XTER", "XZON", "XBIT"]), city.compass_rotation()]
+	var path_signature := [city.mirror_signature(["ALTM", "XBLD", "XTER", "XZON", "XBIT", "XQTR"]), city.compass_rotation()]
 	if path_signature != _path_signature:
 		_paths.clear()
 		_path_signature = path_signature

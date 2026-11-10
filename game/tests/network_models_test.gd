@@ -9,6 +9,7 @@ func _initialize() -> void:
 
 
 func _run() -> void:
+	_check_material_cache()
 	var pack := FixtureGraphics.pack()
 	var total := 0
 	var started := Time.get_ticks_msec()
@@ -234,3 +235,21 @@ func _check_application() -> void:
 	assert([engine.random.state,engine.lfsr_random.state,engine.game_random.state]==random_before)
 	main.free()
 	await process_frame
+
+
+func _check_material_cache() -> void:
+	var palette := FixtureGraphics.pack().palette
+	var original := NetworkModelRaster.materials(palette,29)
+	NetworkModelRaster.materials(palette,29).surface[0]=-2
+	assert(NetworkModelRaster.materials(palette,29)==original,"A caller must not mutate another worker's material swatches")
+	var replacement := Sc2Palette.new()
+	replacement.colors.assign(palette.colors)
+	assert(NetworkModelRaster.materials(replacement,29)==original,"Equivalent palettes reuse the same material result")
+	replacement.colors.fill(Color.BLACK)
+	var black := NetworkModelRaster.materials(replacement,29)
+	for role: String in black:
+		assert(black[role]==PackedInt32Array([0,0,0]),"A changed palette must invalidate the matching cache")
+	for sample in 16:
+		replacement.colors.fill(Color.from_hsv(sample/16.0,1,1))
+		NetworkModelRaster.materials(replacement,29)
+	assert(NetworkModelRaster._material_cache.size()<=NetworkModelRaster.MATERIAL_CACHE_LIMIT,"The shared material cache must remain bounded")

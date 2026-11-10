@@ -3,6 +3,8 @@
 The Models option uses spatial recipes projected into the existing indexed
 isometric renderer. It does not replace the whole renderer with a 3D scene.
 SC2000 supplies the design reference. Original imported artwork is not shipped.
+This is an experimental implementation, excluded from the approved product
+source, Runtime, Distributable and releases until separately authorized.
 
 ## Terrain and water
 
@@ -68,10 +70,10 @@ This verifies common effect semantics, not identical pixels for different bodies
 | Effect family | Model integration |
 | --- | --- |
 | Seasons, frost, terrain variation | Masks follow generated soil caps; interior rock and water are separate. |
-| Height coloring, edge sediment | Ranges and boundary profiles track exact quarter heights and their edits. Only map-boundary faces receive sediment. |
+| Height coloring, edge sediment | Ranges and boundary profiles track exact quarter heights and their edits. Packed vertex tags retain every 1/16-level corner mean in indexed, artwork and waterfall draws. Only map-boundary faces receive sediment. |
 | Day/night, dawn/dusk, LUTs, artwork color | Existing shared palette/environment pipeline. |
-| Rain/snow, lightning, cloud/fog shadows | Existing shared environment and world-coordinate passes. |
-| Traffic/detail lights and glow | Geometry-sized signal and vehicle emission; foreground clipping uses the model mask. |
+| Rain/snow, lightning, cloud/fog shadows | Shared environment passes; the fog ray uses the actual quarter-height triangles, water flags and waterfall caps. Native corner bytes upload directly into resident textures. |
+| Traffic/detail lights and glow | Geometry-sized signal and vehicle emission; foreground clipping uses the model mask. Entrance approaches require matching actual edge heights. |
 | Aircraft shadows | Flattened current model, with the existing opaque/transparent shadow choices. |
 | Ship wakes and reflections | Indexed animated wakes; enhanced water exposes live water beneath neutral foam. Reflections use signed model heights, retain blue cargo and navigation lights, and exclude wakes. |
 | Underground pipe flow | Supplied tubes carry cycling water indices and the existing optional flow overlay. Dry tubes remain static. |
@@ -79,9 +81,44 @@ This verifies common effect semantics, not identical pixels for different bodies
 | Forest shadows | Retained canopy silhouettes project onto actual quarter-height receiver triangles. |
 | Tilt shift, idle saving, zoom/detail cutoff | Existing final-view and refresh controls. |
 
+Quarter-only terrain edits invalidate cosmetic traffic paths and local geometry
+without resetting their simulation-independent figure population. The parity
+matrix visits both Boolean states, both numeric endpoints and every choice of
+the shared visual options at a fixed transition instant. Tree-growth mechanics
+and custom file paths retain their separate existing tests and loaders.
+
 Custom LUT/brightmap file loading remains in the common loaders. Geometry-sized
 procedural signal masks are available even without an external brightmap catalog;
 compatible explicit replacement masks still take precedence.
+
+## Preparation performance
+
+Native palette matching is shared by palette contents and three structural
+material families. A mutex protects publication between rendering workers;
+callers receive independent swatches. The cache holds at most twelve entries.
+Equivalent palettes share results; edits invalidate them. No city or image
+resources are retained by this cache.
+
+Shore generation evaluates each of its 17×17 vertices once. Fully submerged soil
+faces keep their conservative image bounds but skip invisible raster work.
+The 10,080-case terrain matrix retains its exact aggregate pixel/material
+checksum, and the 306 network/debris rasters and representative city-region
+images retain their SHA-256 fingerprints.
+
+Serial local measurements with Godot 4.7.2 and isolated Dummy profiles:
+
+| Preparation work | Before | After |
+| --- | ---: | ---: |
+| 306 material requests, median of three | 1,897 ms | 16 ms |
+| 306 native model rasters, median of three | 2,781 ms | 817 ms |
+| Static model archive preparation | 891 ms | 252 ms |
+
+Reused 512×384 regions remain about 0.25 ms on classic model terrain and 1.8 ms
+with quarter-height water in these fixtures. These are worker timings, not total
+frame costs. A separate 120-frame native check of the generated 128-tile city at
+1360×900 and 2× zoom measured medians of 1.24 ms with sprites and 1.23 ms with
+Models, with 152 draw calls in both cases. That check paused the city, disabled
+VSync/idle caps and used the Vanilla effect preset to isolate the model overhead.
 
 Buildings and zones still require flat supporting terrain. Keeping their artwork
 preserves the original design and the existing painter/foreground masks.
