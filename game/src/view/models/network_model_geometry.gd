@@ -372,9 +372,12 @@ static func bridge_span(height: float, water: float, tower := false, rail := fal
 		box(parts,"deck",Vector3(-.5,-.5,height-2),Vector3(.5,.5,height))
 	for side in [] if rail else [-1,1]:
 		var u: float = side * 0.46
-		box(parts,"railing",Vector3(u-0.02,-0.5,height),Vector3(u+0.02,0.5,height+2))
+		var railing_role := "railing" if tower else "bridge_railing"
+		# SC2000 draws a narrow top rail with gaps between the supports.
+		var rail_bottom := height if tower else height+1.5
+		box(parts,railing_role,Vector3(u-0.02,-0.5,rail_bottom),Vector3(u+0.02,0.5,height+2))
 		for at in [-.42,0,.42]:
-			box(parts,"railing_post",Vector3(u-.03,at-.025,height),Vector3(u+.03,at+.025,height+2))
+			box(parts,"railing_post" if tower else railing_role,Vector3(u-.03,at-.025,height),Vector3(u+.03,at+.025,height+2))
 	if tower:
 		for side in [-1,1]:
 			var u: float = side * 0.37

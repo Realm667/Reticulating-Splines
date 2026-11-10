@@ -51,6 +51,7 @@ static func _build_materials(palette: Sc2Palette, id: int) -> Dictionary:
 		"rubble_timber":Color("836333"),"rubble_cut":Color("b39b6b"),
 		"rubble_stone":Color("77776b"),"rubble_dark":Color("332b1b"),
 		"surface":base,"deck":base,"railing":Color("505050"),"pier":base,"gate_pier":Color("bfbfbf"),
+		"bridge_railing":Color("000000"),
 		"pole":Color("000000"),"crossarm":Color("000000"),"cable":Color("000000"),
 		"rail":Color("9f9f9f"),"rail_web":Color("000000"),"ballast":Color("000000"),"tie":Color("670700"),
 		"shoulder":Color("735323"),"road_edge":Color("735323"),"insulator":Color("000000"),
@@ -67,9 +68,13 @@ static func _build_materials(palette: Sc2Palette, id: int) -> Dictionary:
 	for role: String in colors:
 		var c: Color=colors[role]
 		result[role]=PackedInt32Array([nearest(palette,c),nearest(palette,c.lightened(.22)),nearest(palette,c.darkened(.25))])
-		if role in ["pole","crossarm","cable","suspension_cable","ballast","insulator","rail","rail_web"]:
+		if role in ["pole","crossarm","cable","suspension_cable","ballast","insulator","rail","rail_web","bridge_railing"]:
 			result[role].fill(nearest(palette,c))
 	result.tie=PackedInt32Array([nearest(palette,Color("670700")),nearest(palette,Color("000000")),nearest(palette,Color("000000"))])
+	# The SC2000 lift-gate concrete uses gray faces, not the bright generic ramp.
+	for role in ["gate_pier","roof","lintel"]:
+		result[role]=PackedInt32Array([nearest(palette,Color("8f8f8f")),
+			nearest(palette,Color("8f8f8f")),nearest(palette,Color("676767"))])
 	# Original SC2000 rubble is dominated by this dark brown ramp, with gray
 	# broken ends and masonry. Generic lightening made the pile too olive/gray.
 	for role: String in RUBBLE_SHADES:
