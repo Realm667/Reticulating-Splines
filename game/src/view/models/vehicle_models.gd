@@ -355,11 +355,16 @@ static func special_geometry(kind: int, forward: Vector2, rise: float, compact: 
 	# The source artists lengthened the near-vertical screen poses. Preserve
 	# their directional proportions before applying the rigid terrain pitch.
 	var vertical_pose := maxf(0,2*heading.x*heading.y)
+	# The rear axial sprite has a shorter projected tail than the nose-on sprite.
+	var axial_detail := 0.0 if compact else vertical_pose
+	var nose_scale := lerpf(1.0,.90,axial_detail)
+	var tail_scale := lerpf(1.0,.88 if heading.x>0 else .60,axial_detail)
 	for part: Dictionary in parts:
 		for i in part.vertices.size():
 			var p: Vector3=part.vertices[i]
 			if kind==Kind.AIRPLANE:
-				p*=Vector3(.84*(1+.65*vertical_pose),.68,.8)
+				var length_scale := nose_scale if p.x>=0.0 else tail_scale
+				p*=Vector3(.84*(1+.65*vertical_pose)*length_scale,.68,.8)
 			elif kind==Kind.SHIP:
 				p.x*=1+.25*vertical_pose
 				p.y*=1.35
@@ -382,9 +387,14 @@ static func aircraft(parts: Array, forward: Vector2, compact: bool) -> void:
 	# Use the compact profile of this same airframe in small native glyphs.
 	# A wider fuselage and narrow paint panels alias into solid blocks there.
 	var axial := 1.0 if compact else maxf(0,2*direction.x*direction.y)
-	var root := lerpf(.20,.10,axial)
-	var sweep := lerpf(-.25,-.47,axial)
-	var chord := lerpf(.55,.25,axial)
+	var detail := 0.0 if compact else axial
+	var rear := detail if direction.x<0 else 0.0
+	# The rear artwork projects the wider wing chord closer to the nose.
+	var wing_shift := .44*rear
+	var root := lerpf(.20,.10,axial)-.10*detail+wing_shift
+	var sweep := lerpf(-.25,-.47,axial)+wing_shift
+	var chord := lerpf(.55,.25,axial)+.27*detail+.07*rear
+	var wing_span := 1.25*lerpf(1.0,.94,detail)
 	var width := lerpf(.16,.10,axial)
 	var radius := lerpf(1.9,1.3,axial)
 	var rings: Array[Vector3]=[Vector3(-1.10,.025,.45),Vector3(-.94,width,radius),
@@ -403,7 +413,7 @@ static func aircraft(parts: Array, forward: Vector2, compact: bool) -> void:
 		var stripe: float=side*(width+.001)
 		g.box(parts,"blue",Vector3(-.85,stripe-.003,band),Vector3(.78,stripe+.003,band+.95))
 		# The source side poses show less of the wing beyond the fuselage.
-		var span := 1.25
+		var span := wing_span
 		if not compact and side*(direction.x-direction.y)<0:
 			span*=1-.25*maxf(0,-2*direction.x*direction.y)
 		var wing := PackedVector3Array([Vector3(root,0,1.4),Vector3(sweep,side*span,1.2),
@@ -424,9 +434,12 @@ static func aircraft(parts: Array, forward: Vector2, compact: bool) -> void:
 		if compact:
 			g.box(parts,"metal",Vector3(-.25,side*.52-.06,-.3),Vector3(.10,side*.52+.06,1.5))
 		else:
-			aircraft_engine(parts,side*.52)
+			var engine := Vector3(wing_shift-.13*detail,side*lerpf(.52,.54,detail),lerpf(.6,.15,detail))
+			aircraft_engine(parts,engine,detail)
 	# Two palette bands retain the original painted blue fin on a real surface.
-	var fin_height := 9.5 if compact else 14.0
+	var fin_height := 9.5 if compact else lerpf(14.0,12.5,detail)
+	var thickness := lerpf(.022,.035,detail)
+	var lit_edge := signf(direction.x)*thickness
 	var bands := 1 if compact else 2
 	for side in [-1,1]:
 		for band in bands:
@@ -434,30 +447,41 @@ static func aircraft(parts: Array, forward: Vector2, compact: bool) -> void:
 			var high := float(band+1)/bands
 			var role := "blue" if compact else ("air_tail_base" if band==0 else "air_tail_tip")
 			g.face(parts,role,PackedVector3Array([
-				Vector3(-1.02,side*.022,lerpf(2,fin_height,low)),Vector3(-1.02,side*.022,lerpf(2,fin_height,high)),
-				Vector3(lerpf(-.67,-.89,high),side*.022,lerpf(2,fin_height,high)),
-				Vector3(lerpf(-.67,-.89,low),side*.022,lerpf(2,fin_height,low))]))
+				Vector3(-1.02,side*thickness,lerpf(2,fin_height,low)),Vector3(-1.02,side*thickness,lerpf(2,fin_height,high)),
+				Vector3(lerpf(-.67,-.89,high),side*thickness,lerpf(2,fin_height,high)),
+				Vector3(lerpf(-.67,-.89,low),side*thickness,lerpf(2,fin_height,low))]))
 	var fin := PackedVector3Array([Vector3(-1.02,0,2),Vector3(-1.02,0,fin_height),Vector3(-.89,0,fin_height),Vector3(-.67,0,2)])
 	for edge in fin.size():
 		var a: Vector3=fin[edge]
 		var b: Vector3=fin[(edge+1)%fin.size()]
-		g.face(parts,"white" if compact else "air_leading",PackedVector3Array([a+Vector3(0,-.022,0),b+Vector3(0,-.022,0),b+Vector3(0,.022,0),a+Vector3(0,.022,0)]))
+		if detail>.5:
+			# The edge fills the native grid. Only its lit half carries blue paint.
+			var lit := Vector3(0,lit_edge,0)
+			var tint := "air_tail_tip" if direction.x>0 else "air_tail_base"
+			g.face(parts,tint,PackedVector3Array([a,b,b+lit,a+lit]))
+			g.face(parts,"air_side",PackedVector3Array([a-lit,b-lit,b,a]))
+		else:
+			var offset := Vector3(0,thickness,0)
+			g.face(parts,"white" if compact else "air_leading",PackedVector3Array([a-offset,b-offset,b+offset,a+offset]))
 	g.box(parts,"glass",Vector3(.88,-.065,2.8),Vector3(1.02,.065,3.35))
 	for side in [-1,1]:
-		var span := 1.25
+		var span := wing_span
 		if not compact and side*(direction.x-direction.y)<0:
 			span*=1-.25*maxf(0,-2*direction.x*direction.y)
 		g.box(parts,"nav_red" if side<0 else "nav_white",Vector3(sweep-.13,side*span-.035,1.2),Vector3(sweep+.03,side*span+.035,2.2))
 
 
-static func aircraft_engine(parts: Array, across: float) -> void:
+static func aircraft_engine(parts: Array, center: Vector3, axial: float) -> void:
 	var g = NetworkModelGeometry
 	var mouth := PackedVector3Array()
+	# Wider underslung cowls stay round when their length is foreshortened.
+	var width := lerpf(.06,.15,axial)
+	var radius := lerpf(.9,1.75,axial)
 	for segment in 8:
 		var a := segment*TAU/8.0
 		var b := (segment+1)*TAU/8.0
-		var first := Vector3(0,across+cos(a)*.06,.6+sin(a)*.9)
-		var last := Vector3(0,across+cos(b)*.06,.6+sin(b)*.9)
+		var first := center+Vector3(0,cos(a)*width,sin(a)*radius)
+		var last := center+Vector3(0,cos(b)*width,sin(b)*radius)
 		g.face(parts,"air_engine" if segment<4 else "air_edge",PackedVector3Array([
 			first+Vector3(-.25,0,0),first+Vector3(.10,0,0),last+Vector3(.10,0,0),last+Vector3(-.25,0,0)]))
 		mouth.append(first+Vector3(.102,0,0))
