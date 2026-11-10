@@ -14,8 +14,10 @@ pub fn ports(tile: u8, pipe: bool) -> u8 {
     }
 }
 
-fn depth(tile: u8, pipe: bool) -> i16 {
-    if pipe && matches!(tile, 31 | 32) { -24 } else { -12 }
+fn depth(_tile: u8, pipe: bool) -> i16 {
+    // SC2000's cutaway puts water mains at the grid and the subway below it.
+    // This is a display datum; XUND connectivity and simulation are unchanged.
+    if pipe { 0 } else { -12 }
 }
 
 pub fn profile(base: i16, tile: u8, own: [i16; 4], neighbors: [(u8, [i16; 4]); 4]) -> [i16; 13] {
@@ -69,6 +71,15 @@ pub fn city_profile(city: &City, i: usize) -> [i16; 13] {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn water_mains_keep_the_original_cutaway_datum_above_subways() {
+        for tile in [16, 30, 31, 32] {
+            let p = profile(4, tile, [16; 4], [(0, [16; 4]); 4]);
+            assert_eq!(p[12], 0);
+            assert_eq!(&p[8..12], &[0; 4]);
+            assert_eq!(&p[4..8], &[-48; 4]);
+        }
+    }
     #[test]
     fn every_connected_topology_pair_has_the_same_absolute_port_height() {
         let mut checks = 0;

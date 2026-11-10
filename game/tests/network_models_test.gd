@@ -47,6 +47,8 @@ func _run() -> void:
 	_check_fallback(pack)
 	_check_highway_surfaces(pack)
 	_check_geometry()
+	_check_crossing_clearance()
+	_check_shared_road_poses(pack)
 	_check_options()
 	var city := CityState.from_document(EmptyCityTemplate.create(16))
 	var before := State.capture(city.document)
@@ -63,6 +65,40 @@ func _run() -> void:
 	await _check_application()
 	print("PASS: %d native model rasters, shared geometry, opt-in restoration, custom fallback, immutable city (%d ms)" % [total, Time.get_ticks_msec()-started])
 	quit()
+
+
+func _check_shared_road_poses(pack: GraphicsPack) -> void:
+	var library := NetworkModelGeometry.Library.new(NetworkModelGeometry.build,NetworkModelGeometry.template)
+	assert(library.acquire(29).mesh==library.acquire(30).mesh,"Both road axes must share their actual base mesh")
+	for id in range(29,35):
+		var model: Dictionary=library.acquire(id)
+		var recipe := {"parts":model.mesh.parts,"ports":model.ports,"footprint":model.footprint,"pose_turns":model.pose_turns}
+		for view in 3:
+			var source := Image.create(32,64,false,Image.FORMAT_RGBA8)
+			var shared := NetworkModelRaster.render(id,source,pack.palette,view,recipe)
+			var direct := NetworkModelRaster.render(id,source,pack.palette,view)
+			assert(shared.image.get_data()==direct.image.get_data(),"Sharing a rotated road mesh must preserve native pixels and its material orientation")
+	for plane: PackedFloat32Array in preload("res://tests/model_combination_matrix_test.gd").planes():
+		for id in [29,30]:
+			var model: Dictionary=library.acquire(id,plane)
+			var recipe := {"parts":model.mesh.parts,"ports":model.ports,"footprint":model.footprint,"pose_turns":model.pose_turns}
+			var source := Image.create(32,64,false,Image.FORMAT_RGBA8)
+			assert(NetworkModelRaster.render(id,source,pack.palette,2,recipe).image.get_data()==NetworkModelRaster.render(id,source,pack.palette,2,NetworkModelGeometry.build(id,plane)).image.get_data(),"Shared road poses must preserve every supported grade")
+
+
+func _check_crossing_clearance() -> void:
+	for id in [67,68,71,72,79,80]:
+		for corners in [PackedFloat32Array([0,0,0,0]),PackedFloat32Array([0,3,3,0]),PackedFloat32Array([3,0,0,3])]:
+			var recipe := NetworkModelGeometry.build(id,corners)
+			var sides := {}
+			for part: Dictionary in recipe.parts:
+				if part.role!="pole":
+					continue
+				for vertex: Vector3 in part.vertices:
+					var coordinate := vertex.x if id%2 else vertex.y
+					assert(absf(coordinate)>.44,"Crossing posts must stay outside the road and train corridor")
+					sides[signf(coordinate)]=true
+			assert(sides.size()==2,"The crossing cables need a support at both sides")
 
 
 func _check_highway_surfaces(pack: GraphicsPack) -> void:
@@ -121,15 +157,16 @@ func _check_geometry() -> void:
 		assert(NetworkModelGeometry.TEMPLATES.has(model.mesh.template))
 		assert(library.acquire(id).mesh == model.mesh)
 		var flipped := NetworkModelGeometry.build(id, PackedFloat32Array(), true)
-		for i in model.mesh.parts.size():
-			for j in model.mesh.parts[i].vertices.size():
-				var p: Vector3 = model.mesh.parts[i].vertices[j]
+		var posed := NetworkModelGeometry.posed_parts(model.mesh.parts,model.pose_turns)
+		for i in posed.size():
+			for j in posed[i].vertices.size():
+				var p: Vector3 = posed[i].vertices[j]
 				var q: Vector3 = flipped.parts[i].vertices[j]
 				# Two-tile composites mirror around their own 64-pixel canvas.
 				assert(is_equal_approx(NetworkModelGeometry.project(p).x + NetworkModelGeometry.project(q).x, 32.0*(model.footprint-1)))
 				assert(is_equal_approx(NetworkModelGeometry.project(p).y, NetworkModelGeometry.project(q).y))
 	# Fixed endpoint heights cover each distinct grade direction.
-	for first in [16, 31, 46, 97]:
+	for first in [16, 31, 46, 59, 97]:
 		for turn in 4:
 			var heights := NetworkModelGeometry.profile(first+turn)
 			assert(heights.count(12.0) == 2 and heights.count(0.0) == 2)

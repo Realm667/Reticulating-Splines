@@ -10,7 +10,7 @@ const RUBBLE_SHADES := {
 	"rubble_timber":["735323","7b5f2b","431f07"],
 	"rubble_cut":["8f8f8f","ababab","575757"],
 	"rubble_stone":["8f8f8f","ababab","575757"],
-	"rubble_dark":["431f07","5f3b13","000000"]}
+	"rubble_dark":["431f07","431f07","000000"]}
 
 static func nearest(palette: Sc2Palette, color: Color) -> int:
 	var best:=0
@@ -50,23 +50,26 @@ static func _build_materials(palette: Sc2Palette, id: int) -> Dictionary:
 	var colors: Dictionary={
 		"rubble_timber":Color("836333"),"rubble_cut":Color("b39b6b"),
 		"rubble_stone":Color("77776b"),"rubble_dark":Color("332b1b"),
-		"surface":base,"deck":base,"railing":Color("505050"),"pier":base,
-		"pole":Color("101010"),"crossarm":Color("282828"),"cable":Color("101010"),
-		"rail":Color("b7b7b7"),"rail_web":Color("282828"),"ballast":Color("101010"),"tie":Color("470000"),
-		"shoulder":Color("9b8747"),"road_edge":Color("202020"),"insulator":Color("9f9f9f"),
+		"surface":base,"deck":base,"railing":Color("505050"),"pier":base,"gate_pier":Color("bfbfbf"),
+		"pole":Color("000000"),"crossarm":Color("000000"),"cable":Color("000000"),
+		"rail":Color("9f9f9f"),"rail_web":Color("000000"),"ballast":Color("000000"),"tie":Color("670700"),
+		"shoulder":Color("735323"),"road_edge":Color("735323"),"insulator":Color("000000"),
 		"curb":Color("b7b7b7"),"guardrail":Color("202020"),"railing_post":Color("b7b7b7"),
 		"masonry_joint":Color("777777"),"tower_brace":Color("470000"),
 		"road_paint":Color("b7b7b7"),"truss_hanger":Color("777777"),
+		"median_marking":Color("2f2f2f"),
 		"portal":base,"truss":metal,"tower":metal,"tower_beam":metal,
-		"suspension_cable":Color("282828"),"hanger":metal,"roof":base,"lintel":base,
-		"ramp":base,"support":base,"signal_pole":Color("383838"),"signal":Color("d02020"),
-		"portal_back":Color("202020"),"portal_vault":Color("383838"),"ramp_ground":Color("9b8747")}
+		"suspension_cable":Color("000000"),"hanger":metal,"roof":Color("bfbfbf"),"lintel":Color("bfbfbf"),
+		"ramp":base,"support":base,"signal_pole":Color("383838"),"signal":Color("d02020"),"signal_go":Color("00bf00"),
+		"portal_pier":Color("9f9f9f"),"portal_ring":Color("bfbfbf"),"portal_roof":Color("575757"),
+		"portal_back":Color("575757"),"portal_vault":Color("171717"),"ramp_ground":Color("9b8747")}
 	var result: Dictionary={}
 	for role: String in colors:
 		var c: Color=colors[role]
 		result[role]=PackedInt32Array([nearest(palette,c),nearest(palette,c.lightened(.22)),nearest(palette,c.darkened(.25))])
-		if role in ["pole","crossarm","cable","ballast"]:
+		if role in ["pole","crossarm","cable","suspension_cable","ballast","insulator","rail","rail_web"]:
 			result[role].fill(nearest(palette,c))
+	result.tie=PackedInt32Array([nearest(palette,Color("670700")),nearest(palette,Color("000000")),nearest(palette,Color("000000"))])
 	# Original SC2000 rubble is dominated by this dark brown ramp, with gray
 	# broken ends and masonry. Generic lightening made the pile too olive/gray.
 	for role: String in RUBBLE_SHADES:
@@ -88,6 +91,10 @@ static func render(id: int, source: Image, palette: Sc2Palette, view := 2, prepa
 	if view < 2:
 		return reduced(id, source, palette, view, prepared)
 	var recipe: Dictionary=Geometry.build(id) if prepared.is_empty() else prepared
+	if int(recipe.get("pose_turns",0))!=0:
+		recipe=recipe.duplicate()
+		recipe.parts=Geometry.posed_parts(recipe.parts,recipe.pose_turns)
+		recipe.pose_turns=0
 	var divisor: int=4>>view
 	# Geometry IDs are logical XBLD values. Rendering uses large-view units.
 	id=posmod(id,500)
@@ -133,7 +140,7 @@ static func render(id: int, source: Image, palette: Sc2Palette, view := 2, prepa
 			material_role="ballast"
 		if role.begins_with("pier"):
 			material_role="pier"
-		if role.begins_with("portal"):
+		if role.begins_with("portal") and not colors.has(role):
 			material_role="portal"
 		if role in ["portal_back","portal_vault"]:
 			material_role=role
@@ -170,7 +177,9 @@ static func render(id: int, source: Image, palette: Sc2Palette, view := 2, prepa
 					if d<depths[i]-.0001:
 						continue
 					var index:=int(swatch[tone])
-					if role in ["rotor_blur","wake"]:
+					if role=="tube" and colors.has("tube_dither") and posmod(floori((world.x+world.y)*32)+floori(world.z)*3,4)==0:
+						index=colors.tube_dither[tone]
+					elif role in ["rotor_blur","wake"]:
 						index=200+posmod(x*5+y*3,12)
 					elif role=="wake_foam":
 						index=154
@@ -198,6 +207,8 @@ static func render(id: int, source: Image, palette: Sc2Palette, view := 2, prepa
 						roles[i]=4
 					elif role=="nav_white":
 						roles[i]=3
+					elif role=="signal_go":
+						roles[i]=8
 					elif role in ["wake","wake_foam"]:
 						roles[i]=6+["wake","wake_foam"].find(role)
 	var entry:=Sc2SpriteArchive.entry_from_indices(id+1000,width,height,pixels)
@@ -263,4 +274,6 @@ static func emission(raster: Dictionary) -> Image:
 			var role: int=raster.roles[y*image.get_width()+x]
 			if role in range(3,6):
 				result.set_pixel(x,y,[Color("ffe3a0"),Color("ff3426"),Color("709fff")][role-3])
+			elif role==8:
+				result.set_pixel(x,y,Color("36ff45"))
 	return result

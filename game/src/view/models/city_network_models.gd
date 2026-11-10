@@ -5,7 +5,7 @@ extends RefCounted
 const Geometry = preload("res://src/view/models/network_model_geometry.gd")
 const Raster = preload("res://src/view/models/network_model_raster.gd")
 const ADMISSION_PATH := "res://assets/data/network_model_sources.json"
-const VERSION := 8
+const VERSION := 9
 static var _admission: Dictionary = {}
 
 
@@ -71,7 +71,7 @@ static func prepare(archive: Sc2SpriteArchive, palette: Sc2Palette) -> void:
 		if allowed.get("reference", false):
 			source = entry.create_image(palette).image
 		var model: Dictionary = library.acquire(id % 500)
-		var recipe: Dictionary = {"parts":model.mesh.parts,"footprint":model.footprint,"ports":model.ports}
+		var recipe: Dictionary = {"parts":model.mesh.parts,"footprint":model.footprint,"ports":model.ports,"pose_turns":model.pose_turns}
 		var result: Dictionary = Raster.render(id % 500,source,palette,id / 500,recipe)
 		var replacement: Sc2SpriteArchive.SpriteEntry = result.entry
 		replacement.sprite_id = id

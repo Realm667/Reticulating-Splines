@@ -60,6 +60,35 @@ swept airliner wings and blue tail, a dithered animated helicopter rotor, aft
 cargo-ship superstructure, and separate colored container rows. The rubble uses
 the original dark brown and gray material ramps. No reference pixels are shipped.
 
+Native SC2000 terrain sprites also supply the directional soil material for the
+matching corner mask. Fractional slopes reuse that orientation on their actual
+spatial faces. Material projection uses the original native pixel origin instead
+of rounding the flat texture down by one row. Cliff geometry and water clipping
+remain independent of the source picture's silhouette.
+
+Surface recipes retain the original diagonal corner simplifications. Track heads
+have a stable native width, dark webs, and red timber tops with black side faces.
+Power masts extend above their narrower paired cables and transverse mounts.
+Crossings carry the cables on posts outside both edges of the road/rail corridor.
+Road tunnels use square portals; subway entrances retain ribbed arches and their
+red/green signals. The four additional classic rail-slope graphics have their
+own graded pose and short open supports instead of reusing a flat track.
+Highway corners contain two separated tapered carriageways; curb tops are inset
+from the dark rails so both survive native rasterization. Suspension cables use
+the original black contour. Rubble has a tile-shaped dark-brown loose base under
+the shared rigid fragments, rather than a small circular mound.
+
+Aircraft retain the source artists' longer near-vertical screen poses before
+terrain pitch is applied. Cargo ships have a raised black hull, white stern
+superstructure, separate funnel/windows and outboard navigation lights. Reflection
+samples resolve mirrored spatial depth so source-image traversal cannot overwrite
+a nearer reflected sample. These are shared recipes, not whole-sprite billboards.
+
+Axis-equivalent road geometry shares a canonical mesh and an explicit quarter-turn
+pose. Both native axes and every supported grade are raster-compared against the
+direct spatial recipe. The cache stores the actual common mesh; corrected rail
+slopes no longer count as accidental flat-track duplicates.
+
 ## Visual effects
 
 Models use the existing environment dispatcher and palette shaders. The parity
@@ -127,22 +156,25 @@ preserves the original design and the existing painter/foreground masks.
 
 Subways and water mains compose shared tube arms, rails, pipe collars, service
 frames and station shafts. Curves, junctions and the two pipe/subway crossings
-reuse these components. Crossings separate pipe and subway depth. Cutaway tunnel
-shells expose the shared train bodies. Relative corner profiles share raster
+reuse these components. Crossings separate pipe and subway depth. The underground
+compositor exposes the shared train bodies within the tunnel view. Relative corner profiles share raster
 entries across tiles; the native substitution table scales with distinct profiles,
 not with four sprite records for every city tile.
 
 The existing painter still chooses the original logical sprite IDs and layer
 order. Optional model images replace their artwork afterwards. The four PIPED /
 WATERED flag combinations, hidden mains, service areas, subway layers, tunnel
-depths and altitude cutaways retain that selection. Dry mains are dark; supplied
-mains are blue; connected and supplied service frames have distinct green tones.
+depths and altitude cutaways retain that selection. Dry mains are static blue;
+supplied mains use the cycling blue ramp. Connected and supplied service frames
+have distinct green tones.
 Reserved unused XUND values retain the existing fallback behavior.
 
-Connected neighbors use one native port-height calculation. Their shared edge
-uses the lower buried endpoint, including a pipe's deeper subway-crossing level.
-Arms slope from their own center to that shared endpoint. They remain continuous
-across independent cliffs without moving a pipe above either terrain side.
+Connected neighbors use one native port-height calculation. Water mains use the
+original SC2000 grid datum; subways are twelve native pixels below it, including
+crossings. Their tube/collar radii leave a real gap between the two networks.
+The green subway shell has a hollow gray mouth and a dark inner lining, outside
+the train envelope. Shared edges use the lower endpoint. Arms slope from their
+own center to that shared endpoint and remain continuous across independent cliffs.
 Subway vehicles sample these same arms. Raster baselines expand for deep drops;
 transparent padding never clips the model at its original sprite boundary.
 
@@ -208,3 +240,20 @@ The registered checks are `model_combination_matrix_test`,
 `vehicle_models_gpu_test`, `isometric_data_view_test` and the native workspace
 tests. No transportation simulation, save format, terrain price or build rule is
 changed by this rendering integration.
+
+## Fidelity evidence and limits
+
+Private reference atlases register original art and model images at the same
+native world contact. They include all three artwork sizes, the native moving
+sprite/direction/flip mapping, underground water states, overlays, alpha contours
+and RGB differences. Transparency includes original ground/water corner pixels
+that are already supplied by the game's underlying terrain; an isolated alpha
+score therefore is not a measure of perceived fidelity on its own.
+
+The original traffic overlays do not provide individual truck/bus sprites or
+every spatial vehicle heading. Those bodies and additional terrain slopes are
+documented derivations from SC2000 proportions/materials. The deliberately rounded
+lake corners and open river mouths retain the user's earlier approved geometry.
+Spatial silhouettes and occlusion, particularly hollow tunnels and free bridge
+clearance, do not reproduce every hand-placed source pixel. Reference differences
+are retained as evidence; there is no claim of pixel identity for all models.

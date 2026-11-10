@@ -40,7 +40,7 @@ func _run() -> void:
 			if not mask & (1<<direction):
 				continue
 			var forward: Vector2 = NetworkModelGeometry.STEPS[direction]
-			var across := Vector2(-forward.y,forward.x).normalized()*.2
+			var across := Vector2(-forward.y,forward.x).normalized()*.125
 			for sign_value in [-1,1]:
 				var mount := Vector3(across.x*sign_value,across.y*sign_value,8)
 				assert(parts.any(func(part: Dictionary) -> bool:
@@ -78,8 +78,8 @@ func _run() -> void:
 	for kind in [VehicleModels.Kind.ENGINE,VehicleModels.Kind.COACH]:
 		for part: Dictionary in VehicleModels.geometry(kind,Vector2.RIGHT,0).parts:
 			for vertex: Vector3 in part.vertices:
-				assert(Vector2(vertex.y*32,vertex.z).length()<UndergroundModels.TUNNEL_RADIUS,"Train bodies need real tunnel clearance")
-	assert(12.0>UndergroundModels.TUNNEL_RADIUS+1.35,"Crossing pipes and their collars must clear the subway lining")
+				assert(Vector2(vertex.y*32,vertex.z).length()<UndergroundModels.TUNNEL_INNER_RADIUS,"Train bodies need real clearance inside the lining and hollow mouths")
+	assert(12.0>UndergroundModels.TUNNEL_RADIUS+UndergroundModels.PIPE_COLLAR_RADIUS,"Crossing pipes and their collars must clear the subway lining")
 	for kind in VehicleModels.Kind.size():
 		for direction in 8:
 			for rise in [-384.0,0.0,384.0]:

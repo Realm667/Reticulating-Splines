@@ -5,10 +5,13 @@ extends RefCounted
 const G = preload("res://src/view/models/network_model_geometry.gd")
 const PORTS := G.PORTS
 const BASELINE := 45
-const TUNNEL_RADIUS := 6.5
+const TUNNEL_RADIUS := 8.0
+const TUNNEL_INNER_RADIUS := 6.5
+const PIPE_RADIUS := 2.75
+const PIPE_COLLAR_RADIUS := 3.0
 const COLORS := {"frame":"9b8747","service":"007700","water":"00bf00",
-	"tube":"007700","cut":"777777","rail":"b7b7b7","sleeper":"282828",
-	"dry_pipe":"171717","wet_pipe":"0000df","rim":"00bfbf","silo":"777777"}
+	"tube":"077300","cut":"8f8f8f","lining":"000000","rail":"b7b7b7","sleeper":"282828",
+	"dry_pipe":"0000b3","wet_pipe":"0000df","rim":"00bfbf","silo":"777777"}
 var cache: Dictionary = {}
 var signature := ""
 var next_id := 1100000000
@@ -112,6 +115,12 @@ static func materials(palette: Sc2Palette) -> Dictionary:
 		result[role]=PackedInt32Array([NetworkModelRaster.nearest(palette,color),
 			NetworkModelRaster.nearest(palette,color.lightened(.22)),NetworkModelRaster.nearest(palette,color.darkened(.3))])
 	result.deck=result.frame
+	result.tube=PackedInt32Array([NetworkModelRaster.nearest(palette,Color("077300")),
+		NetworkModelRaster.nearest(palette,Color("078b00")),NetworkModelRaster.nearest(palette,Color("074300"))])
+	result.tube_dither=PackedInt32Array([NetworkModelRaster.nearest(palette,Color("075b00")),
+		NetworkModelRaster.nearest(palette,Color("077300")),NetworkModelRaster.nearest(palette,Color("075b00"))])
+	result.lining=PackedInt32Array([NetworkModelRaster.nearest(palette,Color("000000")),
+		NetworkModelRaster.nearest(palette,Color("8f8f8f")),NetworkModelRaster.nearest(palette,Color("575757"))])
 	return result
 
 
@@ -123,14 +132,14 @@ static func geometry(sprite: int, heights: PackedFloat32Array) -> Dictionary:
 		points.append(Vector3(p.x,p.y,heights[k]))
 	var service := sprite in [351,467]
 	for k in 4:
-		G.beam(parts,"water" if sprite==467 else ("service" if service else "frame"),points[k],points[(k+1)%4],.7)
+		G.beam(parts,"water" if sprite==467 else ("service" if service else "frame"),points[k],points[(k+1)%4],1.4)
 	var tile := sprite-318
 	var watered := tile>=132 and tile<=148
 	if watered:
 		tile-=116
 	var subway_ends := heights.slice(4,8) if heights.size()>=12 else PackedFloat32Array()
 	var pipe_ends := heights.slice(8,12) if heights.size()>=12 else PackedFloat32Array()
-	var pipe_depth := heights[12] if heights.size()==13 else (-24.0 if tile in [31,32] else -12.0)
+	var pipe_depth := heights[12] if heights.size()==13 else 0.0
 	if tile>=1 and tile<=15:
 		routes(parts,PORTS[tile-1],heights,false,false,-12,subway_ends)
 	elif tile>=16 and tile<=30:
@@ -164,22 +173,21 @@ static func routes(parts: Array, mask: int, heights: PackedFloat32Array, pipe: b
 		var end := Vector3(p.x,p.y,ends[k] if ends.size()==4 else G.surface_height(p,heights)+depth)
 		var across := Vector3(-p.y,p.x,0).normalized()
 		if pipe:
-			tube(parts,"wet_pipe" if watered else "dry_pipe",center,end,1.1)
-			tube(parts,"rim",end,end-(end-center)*.04,1.35)
+			tube(parts,"wet_pipe" if watered else "dry_pipe",center,end,PIPE_RADIUS)
+			tube(parts,"rim",end,end-(end-center)*.04,PIPE_COLLAR_RADIUS)
 		else:
-			# Open upper half exposes track and vehicles; the rear shell remains spatial.
-			tube(parts,"cut",center,end,TUNNEL_RADIUS,true)
-			# The back quarter of the green shell keeps the original tunnel silhouette.
-			# Its open front quarter exposes the shared train bodies and the rails.
+			# The original shows a green cylindrical shell and gray, hollow mouths.
+			# Both skins remain outside the train envelope; no end disc blocks it.
+			tube(parts,"tube",center,end,TUNNEL_RADIUS)
+			tube(parts,"lining",center,end,TUNNEL_INNER_RADIUS)
 			var axis := Vector2(end.x-center.x,end.y-center.y).normalized()
 			var normal := Vector3(-axis.y/32,axis.x/32,0)
-			for segment in 4:
+			for segment in 8:
 				var angle := segment*PI/4
-				if cos(angle+PI/8)*(normal.x+normal.y)>0:
-					continue
 				var a := normal*cos(angle)*TUNNEL_RADIUS+Vector3(0,0,sin(angle)*TUNNEL_RADIUS)
 				var b := normal*cos(angle+PI/4)*TUNNEL_RADIUS+Vector3(0,0,sin(angle+PI/4)*TUNNEL_RADIUS)
-				G.face(parts,"tube",PackedVector3Array([center+a,end+a,end+b,center+b]))
+				var inner := TUNNEL_INNER_RADIUS/TUNNEL_RADIUS
+				G.face(parts,"cut",PackedVector3Array([end+a,end+b,end+b*inner,end+a*inner]))
 			for sign_value in [-1,1]:
 				G.beam(parts,"rail",center+across*.09*sign_value,end+across*.09*sign_value,0.7)
 			for t in [.15,.45,.75]:

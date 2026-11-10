@@ -115,7 +115,7 @@ impl Builder {
         let (image, padding) = if let Some(value) = self.quarter_ground_cache.get(&key) {
             *value
         } else {
-            let flat = self.sprites.get(self.config.base() + 256, false)?;
+            let flat = self.sprites.get(self.config.base() + 256 + reference_shape(&key) as i32, false)?;
             let side = self.sprites.get(self.config.base() + 269, false)?;
             let water = self.sprites.get(self.config.base() + 270, false)?;
             let falling = self.sprites.get(self.config.base() + 284, false)?;
@@ -283,7 +283,21 @@ fn ground_height(corners: &[i16], u: f32, v: f32) -> f32 {
     }
 }
 
+fn reference_shape(key: &[i16]) -> usize {
+    let low = *key[..4].iter().min().unwrap();
+    let high = *key[..4].iter().max().unwrap();
+    if low == high {
+        return 0;
+    }
+    let mask = key[..4].iter().enumerate().fold(0, |mask, (k, &q)| {
+        mask | (u8::from(i32::from(q - low) * 2 >= i32::from(high - low)) << k)
+    });
+    MASKS.iter().position(|&candidate| candidate == mask).unwrap_or(0)
+}
+
 fn raster(key: &[i16], top: &Sprite, side: &Sprite, water: &Sprite, falling: &Sprite, divisor: i32) -> (Sprite, i32, Vec<u8>) {
+    let reference_mask = MASKS[reference_shape(key)];
+    let reference_corners = std::array::from_fn(|k| if reference_mask & (1 << k) != 0 { 12.0 } else { 0.0 });
     let mut corners: [Point; 4] = std::array::from_fn(|k| vertex(k, key[k]));
     let mut faces = vec![(corners, 0_u8)];
     let shape = key.get(13).copied().unwrap_or(0) as u8;
@@ -403,6 +417,7 @@ fn raster(key: &[i16], top: &Sprite, side: &Sprite, water: &Sprite, falling: &Sp
                 side,
                 falling,
                 &key[..4],
+                reference_corners,
                 if matches!(material, 2 | 3) || key[12] == i16::MIN {
                     f32::NEG_INFINITY
                 } else {
@@ -459,6 +474,7 @@ fn triangle(
     side: &Sprite,
     falling: &Sprite,
     corner_heights: &[i16],
+    reference_corners: [f32; 4],
     water_height: f32,
     origin: [f32; 2],
     height: i32,
@@ -520,7 +536,21 @@ fn triangle(
                 [16.0 * (world[0] - world[1]), world[2]]
             };
             let tx = ((uv[0] / 32.0 + 0.5) * source.w as f32).floor() as i32;
-            let ty = if is_top {
+            let ty = if material == 0 {
+                // Project the material on its original SC2000 slope, while the
+                // supporting face retains the actual fractional corner heights.
+                // This preserves directional soil ramps and native pixel motifs.
+                let u = world[0] + 0.5;
+                let v = world[1] + 0.5;
+                let [a, b, c, d] = reference_corners;
+                let z = if u >= v {
+                    a * (1.0 - u) + b * (u - v) + c * v
+                } else {
+                    a * (1.0 - v) + c * u + d * (v - u)
+                };
+                let native_height = source.h as f32 * 32.0 / source.w as f32;
+                ((8.0 * (world[0] + world[1]) - z + native_height - 9.0) * source.w as f32 / 32.0).floor() as i32
+            } else if is_top {
                 ((uv[1] / 16.0 + 0.5) * (source.h - 1) as f32).round() as i32
             } else if material == 3 {
                 // Repeat the indexed falling-water band vertically; preserve
@@ -573,6 +603,36 @@ mod tests {
             h: 17,
             rgba: [index, index, index, 255].repeat(32 * 17),
             la: [index, 255].repeat(32 * 17),
+        }
+    }
+    #[test]
+    fn fractional_slopes_reuse_the_matching_original_material_orientation() {
+        for (shape, &mask) in MASKS[..13].iter().enumerate() {
+            for rise in [1, 2, 4, 8] {
+                for phase in 0..4 {
+                    let corners: Vec<i16> = (0..4).map(|k| phase + if mask & (1 << k) != 0 { rise } else { 0 }).collect();
+                    assert_eq!(reference_shape(&corners), shape);
+                }
+            }
+        }
+        assert_eq!(reference_shape(&[12; 4]), 0);
+    }
+    #[test]
+    fn flat_soil_samples_the_original_native_pixel_without_a_row_shift() {
+        let mut top = solid(10);
+        for y in 0..17 {
+            for x in 0..32 {
+                let i = (y * 32 + x) as usize;
+                top.rgba[i * 4..i * 4 + 4].copy_from_slice(&[x as u8, y as u8, 10, 255]);
+            }
+        }
+        let mut key = vec![0; 12];
+        key.push(i16::MIN);
+        let (image, _, mask) = raster(&key, &top, &solid(20), &solid(30), &solid(30), 1);
+        for (i, &material) in mask.iter().enumerate() {
+            if material == 0 && image.rgba[i * 4 + 3] != 0 {
+                assert_eq!(&image.rgba[i * 4..i * 4 + 4], &top.rgba[i * 4..i * 4 + 4]);
+            }
         }
     }
     #[test]

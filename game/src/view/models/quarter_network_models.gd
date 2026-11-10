@@ -44,7 +44,7 @@ func prepare(city: CityState,archive: Sc2SpriteArchive,palette: Sc2Palette,view:
 		var key:=var_to_bytes([id,corners]).hex_encode()
 		if not cache.has(key):
 			var model: Dictionary=library.acquire(id,corners)
-			var recipe: Dictionary={"parts":model.mesh.parts,"footprint":model.footprint,"ports":model.ports}
+			var recipe: Dictionary={"parts":model.mesh.parts,"footprint":model.footprint,"ports":model.ports,"pose_turns":model.pose_turns}
 			var source:=archive.entries_by_id.get(view*500+id) as Sc2SpriteArchive.SpriteEntry
 			if source==null:
 				continue

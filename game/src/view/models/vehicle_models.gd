@@ -4,8 +4,8 @@ extends RefCounted
 @warning_ignore_start("integer_division")
 
 enum Kind { CAR, TRUCK, BUS, ENGINE, COACH, BULLDOZER, AIRPLANE, HELICOPTER, SHIP, SAILBOAT }
-const BODY_COLORS := [Color("972713"), Color("c7c7b7"), Color("b79737"),
-	Color("376747"), Color("375777"), Color("777777")]
+const BODY_COLORS := [Color("0000b3"), Color("bfbfbf"), Color("df0000"),
+	Color("bfb300"), Color("007700"), Color("7f7f7f")]
 const LIMIT := 2048
 var frames: Dictionary = {}
 var swatches: Dictionary = {}
@@ -82,6 +82,9 @@ static func floating_images(raster: Dictionary, indexed: Image, lamps: Image, re
 	var clean := Image.create(rect.size.x,rect.size.y,false,Image.FORMAT_RGBA8)
 	var reflected := Image.create(rect.size.x,rect.size.y*2,false,Image.FORMAT_RGBA8)
 	var light := Image.create(rect.size.x,rect.size.y*2,false,Image.FORMAT_RGBA8)
+	var reflected_depth := PackedFloat32Array()
+	reflected_depth.resize(reflected.get_width()*reflected.get_height())
+	reflected_depth.fill(-INF)
 	for y in indexed.get_height():
 		for x in indexed.get_width():
 			var pixel := indexed.get_pixel(x,y)
@@ -102,6 +105,14 @@ static func floating_images(raster: Dictionary, indexed: Image, lamps: Image, re
 			var target := Vector2i(local.x,roundi(local.y+2*z))
 			if target.y>=reflected.get_height():
 				continue
+			# Mirroring height reverses the vertical visit order. Resolve each
+			# reflected sample by its spatial depth instead of source-image order,
+			# or a later hull pixel can erase an already visible navigation light.
+			var depth: float=raster.depth[y*indexed.get_width()+x]-z*.25
+			var at := target.y*reflected.get_width()+target.x
+			if depth<reflected_depth[at]:
+				continue
+			reflected_depth[at]=depth
 			pixel.a*=maxf(0,1-z/255.0)
 			reflected.set_pixelv(target,pixel)
 			light.set_pixelv(target,lamps.get_pixel(x,y))
@@ -135,7 +146,7 @@ static func _materials(kind: int, variant: int, palette: Sc2Palette) -> Dictiona
 		body = Color("bfbfbf")
 	elif kind == Kind.BULLDOZER:
 		body = Color("978313")
-	var colors := {"body":body,"roof":body.lightened(.12),"glass":Color("203747"),
+	var colors := {"body":body,"roof":body.lightened(.12),"glass":Color("575757"),
 		"wheel":Color("101010"),"trim":Color("b7b7a7"),"headlamp":Color("eee7bf"),
 		"taillamp":Color("b71707"),"beacon":Color("3757b7"),
 		"window_frame":Color("202020"),"metal":Color("777777"),"cargo":Color("bfbfbf"),
@@ -277,7 +288,7 @@ static func special_geometry(kind: int, forward: Vector2, rise: float) -> Dictio
 			g.face(parts,"white",PackedVector3Array([a+Vector3(0,-.022,0),b+Vector3(0,-.022,0),b+Vector3(0,.022,0),a+Vector3(0,.022,0)]))
 		g.box(parts,"glass",Vector3(.88,-.065,2.8),Vector3(1.02,.065,3.35))
 		for side in [-1,1]:
-			g.box(parts,"nav_red" if side<0 else "nav_white",Vector3(-.59,side*1.25-.015,1.2),Vector3(-.45,side*1.25+.015,1.8))
+			g.box(parts,"nav_red" if side<0 else "nav_white",Vector3(-.60,side*1.25-.035,1.2),Vector3(-.44,side*1.25+.035,2.2))
 	elif kind==Kind.HELICOPTER:
 		g.box(parts,"red",Vector3(-.28,-.13,1),Vector3(.30,.13,3.7))
 		g.box(parts,"glass",Vector3(.08,-.135,2.5),Vector3(.30,.135,3.75))
@@ -314,7 +325,14 @@ static func special_geometry(kind: int, forward: Vector2, rise: float) -> Dictio
 			g.beam(parts,"red",outline[i]+Vector3(0,0,.8),outline[(i+1)%outline.size()]+Vector3(0,0,.8),1.3)
 		g.box(parts,"white",Vector3(-1.17,-.19,.8),Vector3(-.72,.19,5.2))
 		g.box(parts,"glass",Vector3(-1.175,-.195,3.8),Vector3(-.715,.195,4.5))
-		g.box(parts,"red",Vector3(-1.19,-.20,5.2),Vector3(-.70,.20,5.8))
+		g.box(parts,"white",Vector3(-1.19,-.20,5.2),Vector3(-.70,.20,5.8))
+		g.box(parts,"red",Vector3(-1.26,-.09,4.0),Vector3(-1.13,.09,6.5))
+		g.box(parts,"hull",Vector3(-1.26,-.09,6.5),Vector3(-1.13,.09,7.0))
+		for window in 3:
+			var x := -1.10+window*.13
+			for side in [-1,1]:
+				for level in [2.0,3.3]:
+					g.box(parts,"glass",Vector3(x-.025,side*.195-.006,level),Vector3(x+.025,side*.195+.006,level+.6))
 		g.beam(parts,"white",Vector3(-.84,0,4.8),Vector3(-.84,0,9),.7)
 		for row in 6:
 			for column in 3:
@@ -324,12 +342,12 @@ static func special_geometry(kind: int, forward: Vector2, rise: float) -> Dictio
 				g.box(parts,role,Vector3(x-.095,y-.06,.9),Vector3(x+.095,y+.06,2.25))
 		g.beam(parts,"red",Vector3(-.65,0,.75),Vector3(1.1,0,.75),.7)
 		for side in [-1,1]:
-			g.box(parts,"nav_red" if side<0 else "nav_white",Vector3(-.74,side*.20-.025,5.5),Vector3(-.68,side*.20+.025,6.1))
+			g.box(parts,"nav_red" if side<0 else "nav_white",Vector3(-.77,side*.32-.035,4.6),Vector3(-.67,side*.32+.035,5.8))
 	else:
 		g.slab(parts,"white",PackedVector3Array([Vector3(-.33,-.08,0),Vector3(.25,-.09,0),Vector3(.38,0,0),Vector3(.25,.09,0),Vector3(-.33,.08,0)]),1)
-		g.beam(parts,"metal",Vector3(0,0,0),Vector3(0,0,11),.6)
-		g.face(parts,"red",PackedVector3Array([Vector3(0,0,10),Vector3(0,0,2),Vector3(.30,0,2)]))
-		g.face(parts,"white",PackedVector3Array([Vector3(-.02,0,8),Vector3(-.30,0,1.5),Vector3(-.02,0,1.5)]))
+		g.beam(parts,"metal",Vector3(0,0,0),Vector3(0,0,14),.6)
+		g.face(parts,"red",PackedVector3Array([Vector3(0,0,13),Vector3(0,0,2),Vector3(.34,0,2)]))
+		g.face(parts,"white",PackedVector3Array([Vector3(-.02,0,8),Vector3(-.25,0,1.5),Vector3(-.02,0,1.5)]))
 	if kind in [Kind.SHIP,Kind.SAILBOAT]:
 		var length := 1.32 if kind==Kind.SHIP else .38
 		var width := .29 if kind==Kind.SHIP else .10
@@ -343,9 +361,19 @@ static func special_geometry(kind: int, forward: Vector2, rise: float) -> Dictio
 	var along := Vector3(heading.x*cos(angle),heading.y*cos(angle),32*sin(angle))
 	var across := Vector3(-heading.y,heading.x,0)
 	var up := Vector3(-heading.x*sin(angle)/32,-heading.y*sin(angle)/32,cos(angle))
+	# The source artists lengthened the near-vertical screen poses. Preserve
+	# their directional proportions before applying the rigid terrain pitch.
+	var vertical_pose := maxf(0,2*heading.x*heading.y)
 	for part: Dictionary in parts:
 		for i in part.vertices.size():
 			var p: Vector3=part.vertices[i]
+			if kind==Kind.AIRPLANE:
+				p*=Vector3(.84*(1+.65*vertical_pose),.68,.8)
+			elif kind==Kind.SHIP:
+				p.x*=1+.25*vertical_pose
+				p.y*=1.35
+				if part.role not in ["wake","wake_foam"]:
+					p.z+=3.5
 			part.vertices[i]=along*p.x+across*p.y+up*p.z
 	return {"parts":parts,"ports":0,"footprint":3,"origin_x":48}
 

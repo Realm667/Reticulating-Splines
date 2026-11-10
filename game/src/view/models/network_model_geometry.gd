@@ -34,15 +34,21 @@ class Library extends RefCounted:
 			hits+=1
 			return requests[request_key]
 		var data: Dictionary=factory.call(id,corners,flipped)
+		var pose_turns := 0
+		if data.family=="road" and data.ports in [5,10]:
+			var canonical := ""
+			var canonical_parts: Array=[]
+			for turn in 4:
+				var candidate := NetworkModelGeometry.posed_parts(data.parts,turn)
+				var candidate_key := geometry_key(candidate)
+				if canonical.is_empty() or candidate_key<canonical:
+					canonical=candidate_key
+					canonical_parts=candidate
+					pose_turns=posmod(-turn,4)
+			data.parts=canonical_parts
 		# Source IDs and tilesets do not own meshes: structurally equal recipes
 		# share one immutable model record even when their materials differ.
-		var context:=HashingContext.new()
-		context.start(HashingContext.HASH_SHA256)
-		for part: Dictionary in data.parts:
-			context.update(str(part.role).to_utf8_buffer())
-			context.update((part.vertices as PackedVector3Array).to_byte_array())
-			context.update((part.indices as PackedInt32Array).to_byte_array())
-		var key:=context.finish().hex_encode()
+		var key:=geometry_key(data.parts)
 		if not meshes.has(key):
 			if meshes.size()>=LIMIT:
 				# A complete view contains a bounded set of templates/variants.
@@ -53,9 +59,33 @@ class Library extends RefCounted:
 			builds+=1
 		else:
 			hits+=1
-		var result: Dictionary={"mesh":meshes[key],"ports":data.ports,"footprint":data.footprint}
+		var result: Dictionary={"mesh":meshes[key],"ports":data.ports,"footprint":data.footprint,"pose_turns":pose_turns}
 		requests[request_key]=result
 		return result
+
+	static func geometry_key(parts: Array) -> String:
+		var context:=HashingContext.new()
+		context.start(HashingContext.HASH_SHA256)
+		for part: Dictionary in parts:
+			context.update(str(part.role).to_utf8_buffer())
+			context.update((part.vertices as PackedVector3Array).to_byte_array())
+			context.update((part.indices as PackedInt32Array).to_byte_array())
+		return context.finish().hex_encode()
+
+
+static func posed_parts(parts: Array, turns: int) -> Array:
+	var result: Array=parts.duplicate(true)
+	for part: Dictionary in result:
+		var vertices: PackedVector3Array=part.vertices.duplicate()
+		for index in vertices.size():
+			var p := vertices[index]
+			for turn in posmod(turns,4):
+				p=Vector3(-p.y,p.x,p.z)
+			if is_zero_approx(p.x): p.x=0
+			if is_zero_approx(p.y): p.y=0
+			vertices[index]=p
+		part.vertices=vertices
+	return result
 
 
 static func template(kind: String) -> String:
@@ -223,8 +253,16 @@ static func ribbon(parts: Array, role: String, path: PackedVector3Array, width: 
 			PackedInt32Array([1,3]) if role=="pavement" else PackedInt32Array())
 
 
-static func portal(parts: Array, scale := 1.0) -> void:
+static func portal(parts: Array, scale := 1.0, arched := true) -> void:
 	var first:=parts.size()
+	if not arched:
+		for side in [-1,1]:
+			box(parts,"portal_pier",Vector3(side*.40-.08,-.5,0),Vector3(side*.40+.08,.5,10))
+		box(parts,"portal_roof",Vector3(-.48,-.5,9),Vector3(.48,.5,12))
+		box(parts,"portal_back",Vector3(-.32,-.5,0),Vector3(.32,-.48,9))
+		for at in [-.30,-.1,.1,.3]:
+			box(parts,"portal_ring",Vector3(-.48,at-.018,11.8),Vector3(.48,at+.018,12.05))
+		return
 	for side in [-1,1]:
 		var x: float=side*.39
 		box(parts,"portal_pier",Vector3(x-.09,-.5,0),Vector3(x+.09,.5,6))
@@ -244,11 +282,20 @@ static func portal(parts: Array, scale := 1.0) -> void:
 	rear.append(Vector3(.48,-.5,6))
 	rear.append(Vector3(.48,-.5,0))
 	face(parts,"portal_back",rear)
+	for at in [-.40,-.16,.08,.32]:
+		for segment in 8:
+			var a := segment*PI/8
+			var b := (segment+1)*PI/8
+			face(parts,"portal_ring",PackedVector3Array([
+				Vector3(-.49*cos(a),at-.02,6+6.2*sin(a)),Vector3(-.49*cos(b),at-.02,6+6.2*sin(b)),
+				Vector3(-.49*cos(b),at+.02,6+6.2*sin(b)),Vector3(-.49*cos(a),at+.02,6+6.2*sin(a))]))
 	for index in range(first,parts.size()):
 		var vertices: PackedVector3Array=parts[index].vertices
 		for i in vertices.size():
 			vertices[i].z*=scale
 		parts[index].vertices=vertices
+	box(parts,"signal",Vector3(-.375,.505,3.6*scale),Vector3(-.315,.56,5.2*scale))
+	box(parts,"signal_go",Vector3(-.375,.505,1.6*scale),Vector3(-.315,.56,3.2*scale))
 
 
 static func ground_routes(mask: int, corners: PackedFloat32Array, rail: bool) -> Array:
@@ -261,17 +308,20 @@ static func ground_routes(mask: int, corners: PackedFloat32Array, rail: bool) ->
 			ends.append(STEPS[direction])
 	var segments: Array=[]
 	if ends.size()==2:
+		# Original corners use diagonal chords, including the narrow projected
+		# horizontal/vertical rail variants. Preserve this deliberate simplification.
 		segments.append([ends[0],ends[1]])
 	else:
 		for edge: Vector2 in ends:
 			segments.append([Vector2.ZERO,edge])
+	var sleeper_distance := .125
 	for segment: Array in segments:
 		var first_part := result.size()
 		var start: Vector2=segment[0]
 		var finish: Vector2=segment[1]
 		var a:=Vector3(start.x,start.y,surface_height(start,corners))
 		var b:=Vector3(finish.x,finish.y,surface_height(finish,corners))
-		var width:=0.62 if rail else (0.65 if ends.size()==2 and mask not in [5,10] else 0.88)
+		var width:=0.62 if rail else 0.88
 		if not rail:
 			strip(result,"road_surface",a,b,width)
 			if mask in [5,10]:
@@ -281,16 +331,22 @@ static func ground_routes(mask: int, corners: PackedFloat32Array, rail: bool) ->
 					strip(result,"shoulder",a+side*.465*sign_value+Vector3(0,0,.03),b+side*.465*sign_value+Vector3(0,0,.03),.035)
 					strip(result,"road_edge",a+side*.44*sign_value+Vector3(0,0,.06),b+side*.44*sign_value+Vector3(0,0,.06),.025)
 		if rail:
+			if ends.size()!=2:
+				sleeper_distance=.125
 			var along := (finish-start).normalized()
 			var across := Vector3(-along.y,along.x,0) * 0.21
 			# SC2000 leaves terrain visible between individual timber sleepers.
-			var sleepers:=maxi(2,ceili(start.distance_to(finish)/.20))
-			for sleeper in sleepers:
-				var p:=a.lerp(b,(sleeper+.5)/sleepers)+Vector3(0,0,.1)
-				strip(result,"tie",p-across*1.45,p+across*1.45,.055)
+			var length := start.distance_to(finish)
+			while sleeper_distance<length:
+				var p:=a.lerp(b,sleeper_distance/length)+Vector3(0,0,.7)
+				strip(result,"tie",p-across*1.6,p+across*1.6,.10)
+				var top: Dictionary=result.pop_back()
+				slab(result,"tie",top.vertices,.7)
+				sleeper_distance+=.25
+			sleeper_distance-=length
 			for sign_value in [-1,1]:
-				strip(result,"rail_web",a+across*sign_value+Vector3(0,0,.16),b+across*sign_value+Vector3(0,0,.16),.075)
-				strip(result,"rail",a+across*sign_value+Vector3(0,0,0.3),b+across*sign_value+Vector3(0,0,0.3),0.045)
+				beam(result,"rail_web",a+across*sign_value+Vector3(0,0,.8),b+across*sign_value+Vector3(0,0,.8),2.0)
+				beam(result,"rail",a+across*sign_value+Vector3(0,0,1.1),b+across*sign_value+Vector3(0,0,1.1),.85)
 		# A road or sleeper also follows the grade across its width.
 		var along := (finish-start).normalized()
 		for part_index in range(first_part,result.size()):
@@ -320,7 +376,7 @@ static func bridge_span(height: float, water: float, tower := false, rail := fal
 	if tower:
 		for side in [-1,1]:
 			var u: float = side * 0.37
-			box(parts,"pier",Vector3(u-0.08,-0.44,water),Vector3(u+0.08,0.44,height+9))
+			box(parts,"gate_pier",Vector3(u-0.08,-0.44,water),Vector3(u+0.08,0.44,height+9))
 		box(parts,"lintel",Vector3(-0.29,-0.44,height+6),Vector3(0.29,0.44,height+9))
 		box(parts,"roof",Vector3(-0.45,-0.44,height+9),Vector3(0.45,0.44,height+10))
 		for front in [-.445,.445]:
@@ -390,7 +446,8 @@ static func highway_details(parts: Array, top: PackedVector3Array, ports: int, l
 		var last := Vector2(high.x,across) if along_u else Vector2(across,high.y)
 		var a := Vector3(first.x,first.y,deck_height(first,top,low,high))
 		var b := Vector3(last.x,last.y,deck_height(last,top,low,high))
-		beam(parts,"curb",a+Vector3(0,0,.12),b+Vector3(0,0,.12),.7)
+		var inset := Vector3(0,-sign_value*.045,0) if along_u else Vector3(-sign_value*.045,0,0)
+		beam(parts,"curb",a+inset+Vector3(0,0,.12),b+inset+Vector3(0,0,.12),1.0)
 		beam(parts,"guardrail",a+Vector3(0,0,.9),b+Vector3(0,0,.9),1.0)
 		for post in footprint*3:
 			var p := a.lerp(b,(post+.5)/(footprint*3))
@@ -399,6 +456,45 @@ static func highway_details(parts: Array, top: PackedVector3Array, ports: int, l
 		var a := Vector2(low.x,(low.y+high.y)*.5) if along_u else Vector2((low.x+high.x)*.5,low.y)
 		var b := Vector2(high.x,a.y) if along_u else Vector2(a.x,high.y)
 		beam(parts,"curb",Vector3(a.x,a.y,deck_height(a,top,low,high)+.25),Vector3(b.x,b.y,deck_height(b,top,low,high)+.25),.7)
+
+
+static func highway_corner(parts: Array, top: PackedVector3Array) -> void:
+	# SC2000's corner is two tapered carriageways, separated by open ground.
+	# Keep the same three footprint corners and their terrain-derived heights.
+	for interval in [Vector2(.04,.44),Vector2(.56,1)]:
+		var a := top[1].lerp(top[0],interval.x)
+		var b := top[1].lerp(top[2],interval.x)
+		var c := top[1].lerp(top[2],interval.y)
+		var d := top[1].lerp(top[0],interval.y)
+		slab(parts,"pavement",PackedVector3Array([a,b,c,d]),2,PackedInt32Array([1,3]))
+		for edge in [[a,b],[d,c]]:
+			beam(parts,"guardrail",edge[0]+Vector3(0,0,.9),edge[1]+Vector3(0,0,.9),1.0)
+		for radial in [interval.x+.035,interval.y-.035]:
+			beam(parts,"curb",top[1].lerp(top[0],radial)+Vector3(0,0,.12),top[1].lerp(top[2],radial)+Vector3(0,0,.12),1.0)
+		var first := a.lerp(d,.5)+Vector3(0,0,.05)
+		var last := b.lerp(c,.5)+Vector3(0,0,.05)
+		for dash in 6:
+			strip(parts,"road_paint",first.lerp(last,dash/6.0),first.lerp(last,(dash+.55)/6.0),.045)
+
+
+static func highway_junction(parts: Array, top: PackedVector3Array, low: Vector2, high: Vector2) -> void:
+	var outline := PackedVector3Array()
+	for uv: Vector2 in [Vector2(.1,0),Vector2(.9,0),Vector2(1,.1),Vector2(1,.9),
+		Vector2(.9,1),Vector2(.1,1),Vector2(0,.9),Vector2(0,.1)]:
+		var p := Vector2(lerpf(low.x,high.x,uv.x),lerpf(low.y,high.y,uv.y))
+		outline.append(Vector3(p.x,p.y,deck_height(p,top,low,high)))
+	slab(parts,"pavement",outline,2,PackedInt32Array([0,1,2,3,4,5,6,7]))
+	# The original interchange has three curved dark separators. These are
+	# surface inlays, so crossing traffic keeps its established support plane.
+	for across in [-.40,.5,1.40]:
+		for segment in 8:
+			var a := segment/8.0
+			var b := (segment+1)/8.0
+			var first := Vector2(across+.10*sin(a*PI),lerpf(low.y+.18,high.y-.18,a))
+			var last := Vector2(across+.10*sin(b*PI),lerpf(low.y+.18,high.y-.18,b))
+			strip(parts,"median_marking",Vector3(first.x,first.y,deck_height(first,top,low,high)+.03),Vector3(last.x,last.y,deck_height(last,top,low,high)+.03),.14)
+			beam(parts,"curb",Vector3(first.x-.08,first.y,deck_height(first,top,low,high)+.04),Vector3(last.x-.08,last.y,deck_height(last,top,low,high)+.04),.7)
+	highway_paint(parts,top,5,low,high,2)
 
 
 static func deck_height(point: Vector2, top: PackedVector3Array, low: Vector2, high: Vector2) -> float:
@@ -432,36 +528,52 @@ static func highway_paint(parts: Array, top: PackedVector3Array, ports: int, low
 				strip(parts,"road_paint",Vector3(a.x,a.y,deck_height(a,top,low,high)+.05),Vector3(b.x,b.y,deck_height(b,top,low,high)+.05),.045)
 
 
-static func power_routes(mask: int, corners: PackedFloat32Array, pole_height := 8.0, pole_position := Vector2.ZERO) -> Array:
+static func power_routes(mask: int, corners: PackedFloat32Array, pole_height := 12.0, pole_position := Vector2.ZERO) -> Array:
 	var parts: Array = []
 	var base := surface_height(Vector2.ZERO,corners)
-	box(parts,"pole",Vector3(pole_position.x-.035,pole_position.y-.035,base),Vector3(pole_position.x+.035,pole_position.y+.035,base+pole_height))
+	var attachment_height := minf(pole_height,8.0)
+	box(parts,"pole",Vector3(pole_position.x-.045,pole_position.y-.045,base),Vector3(pole_position.x+.045,pole_position.y+.045,base+pole_height))
 	if pole_position!=Vector2.ZERO:
-		beam(parts,"crossarm",Vector3(pole_position.x,pole_position.y,base+pole_height),Vector3(0,0,base+pole_height),1.1)
+		beam(parts,"crossarm",Vector3(pole_position.x,pole_position.y,base+attachment_height),Vector3(0,0,base+attachment_height),1.1)
 	# Each cable pair needs a transverse arm at its actual attachment height.
 	# Junctions share the mast and carry one arm for each occupied axis.
 	if mask & 5:
-		box(parts,"crossarm",Vector3(-0.28,-0.035,base+pole_height-.5),Vector3(0.28,0.035,base+pole_height))
-		for u in [-.2,.2]:
-			box(parts,"insulator",Vector3(u-.025,-.025,base+pole_height-.25),Vector3(u+.025,.025,base+pole_height+.25))
+		box(parts,"crossarm",Vector3(-0.18,-0.025,base+attachment_height-.5),Vector3(0.18,0.025,base+attachment_height))
+		for u in [-.125,.125]:
+			box(parts,"insulator",Vector3(u-.025,-.025,base+attachment_height-.25),Vector3(u+.025,.025,base+attachment_height+.25))
 	if mask & 10:
-		box(parts,"crossarm",Vector3(-0.035,-0.28,base+pole_height-.5),Vector3(0.035,0.28,base+pole_height))
-		for v in [-.2,.2]:
-			box(parts,"insulator",Vector3(-.025,v-.025,base+pole_height-.25),Vector3(.025,v+.025,base+pole_height+.25))
+		box(parts,"crossarm",Vector3(-0.025,-0.18,base+attachment_height-.5),Vector3(0.025,0.18,base+attachment_height))
+		for v in [-.125,.125]:
+			box(parts,"insulator",Vector3(-.025,v-.025,base+attachment_height-.25),Vector3(.025,v+.025,base+attachment_height+.25))
 	for direction in 4:
 		if not mask & (1 << direction):
 			continue
 		var edge: Vector2 = STEPS[direction]
-		var across := Vector2(-edge.y,edge.x).normalized() * 0.2
+		var across := Vector2(-edge.y,edge.x).normalized() * .125
 		for cable in [-1,1]:
-			var previous := Vector3(across.x*cable,across.y*cable,base+pole_height)
+			var previous := Vector3(across.x*cable,across.y*cable,base+attachment_height)
 			for sample in range(1,5):
 				var t := sample/4.0
 				var planar: Vector2 = edge*t + across*cable
-				var z := lerpf(base,surface_height(edge,corners),t)+pole_height-sin(t*PI)*.6
+				var z := lerpf(base,surface_height(edge,corners),t)+attachment_height
 				var point := Vector3(planar.x,planar.y,z)
 				beam(parts,"cable",previous,point)
 				previous=point
+	return parts
+
+
+static func power_crossing(mask: int, corners: PackedFloat32Array) -> Array:
+	# Crossing masts stand beside the carried road/track, not in its centre.
+	var parts := power_routes(mask,corners,8)
+	parts=parts.filter(func(part: Dictionary) -> bool:return part.role=="cable")
+	for direction in 4:
+		if not mask&(1<<direction):
+			continue
+		var p: Vector2=STEPS[direction]*.96
+		var z := surface_height(p,corners)
+		box(parts,"pole",Vector3(p.x-.025,p.y-.025,z),Vector3(p.x+.025,p.y+.025,z+8))
+		var across := Vector2(-p.y,p.x).normalized()*.18
+		beam(parts,"crossarm",Vector3(p.x-across.x,p.y-across.y,z+8),Vector3(p.x+across.x,p.y+across.y,z+8),1.0)
 	return parts
 
 
@@ -478,14 +590,14 @@ static func rubble(id: int, corners: PackedFloat32Array) -> Array:
 	var turn := (id-T.RUBBLE_1)*PI*.5
 	# Loose dark debris closes the pile below the distinct rigid fragments.
 	var rim := PackedVector3Array()
-	for step in 8:
-		var p := Vector2(cos(step*PI*.25),sin(step*PI*.25))*.45
+	for p: Vector2 in [Vector2(-.48,-.48),Vector2(0,-.5),Vector2(.48,-.48),Vector2(.5,0),
+		Vector2(.48,.48),Vector2(0,.5),Vector2(-.48,.48),Vector2(-.5,0)]:
 		rim.append(Vector3(p.x,p.y,rubble_ground(p,corners)+.12))
 	var summit := Vector3(0,0,rubble_ground(Vector2.ZERO,corners)+1.9)
 	for step in 8:
 		face(parts,"rubble_dark",PackedVector3Array([rim[step],rim[(step+1)%8],summit]))
 	for index in centers.size():
-		var center := centers[index].rotated(turn)
+		var center := centers[index].rotated(turn)*1.15
 		var fragment: Array=[]
 		if index==centers.size()-1:
 			box(fragment,"rubble_timber",Vector3(-.02,-.02,0),Vector3(.02,.02,2.7))
@@ -551,6 +663,16 @@ static func build(id: int, corners := PackedFloat32Array(), flipped := false) ->
 			var first: int = T.ROAD_STRAIGHT_1 if kind=="road" else (T.RAIL_STRAIGHT_1 if kind=="rail" else T.POWER_LINE_STRAIGHT_1)
 			mask=PORTS[id-first] if id-first<PORTS.size() else (10 if (id-first)%2 else 5)
 			parts=power_routes(mask,corners) if kind=="power" else ground_routes(mask,corners,kind=="rail")
+			if kind=="rail" and id in range(T.RAIL_SLOPE_5,T.RAIL_SLOPE_8+1):
+				for direction in 4:
+					if not mask&(1<<direction):
+						continue
+					var p: Vector2=STEPS[direction]*.82
+					var across := Vector2(-p.y,p.x).normalized()*.25
+					for side in [-1,1]:
+						var at: Vector2=p+across*side
+						var z := surface_height(at,corners)
+						beam(parts,"rail_web",Vector3(at.x,at.y,z-2),Vector3(at.x,at.y,z+.8),.8)
 			if kind=="road" and id>=T.ROAD_JUNCTION_1:
 				for p in [Vector2(.43,-.43),Vector2(-.43,.43)]:
 					box(parts,"signal_pole",Vector3(p.x-.02,p.y-.02,0),Vector3(p.x+.02,p.y+.02,5))
@@ -560,13 +682,13 @@ static func build(id: int, corners := PackedFloat32Array(), flipped := false) ->
 			mask=15
 			if id<=T.ROAD_POWER_CROSSING_2:
 				parts=ground_routes(first_axis,corners,false)
-				parts.append_array(power_routes(15^first_axis,corners,8,Vector2(.43,-.43)))
+				parts.append_array(power_crossing(15^first_axis,corners))
 			elif id<=T.ROAD_RAIL_CROSSING_2:
 				parts=ground_routes(first_axis,corners,false)
 				parts.append_array(ground_routes(15^first_axis,corners,true))
 			else:
 				parts=ground_routes(first_axis,corners,true)
-				parts.append_array(power_routes(15^first_axis,corners,8,Vector2(.43,-.43)))
+				parts.append_array(power_crossing(15^first_axis,corners))
 		"road_bridge", "lift_tower", "rail_bridge":
 			parts=bridge_span(12,0,kind=="lift_tower",kind=="rail_bridge")
 			if id in [T.RAISING_BRIDGE_CLOSED,T.RAISING_BRIDGE_OPEN,T.RAIL_BRIDGE_PYLON]:
@@ -588,7 +710,7 @@ static func build(id: int, corners := PackedFloat32Array(), flipped := false) ->
 				var u: float = side*0.38
 				var a:=Vector3(u,-0.5,heights[piece+1])
 				var b:=Vector3(u,0.5,heights[piece])
-				beam(parts,"suspension_cable",a,b)
+				beam(parts,"suspension_cable",a,b,2.0)
 				for step in range(1,5):
 					var p:=a.lerp(b,step/5.0)
 					# Vertical ribbons are oriented in the transverse plane, not zero-area strips.
@@ -619,6 +741,10 @@ static func build(id: int, corners := PackedFloat32Array(), flipped := false) ->
 				open_edges=PackedInt32Array([0,1,2,3])
 			if kind=="highway_bridge":
 				highway_truss(parts,id==T.REINFORCED_HIGHWAY_BRIDGE)
+			elif id==T.HIGHWAY_INTERSECTION:
+				highway_junction(parts,top,low,high)
+			elif top.size()==3:
+				highway_corner(parts,top)
 			elif id>=T.HIGHWAY_SLOPE_1 and id<=T.HIGHWAY_SLOPE_4:
 				var along_u: bool=(id-T.HIGHWAY_SLOPE_1)%2==0
 				for interval in [Vector2(0,.44),Vector2(.56,1)]:
@@ -630,14 +756,14 @@ static func build(id: int, corners := PackedFloat32Array(), flipped := false) ->
 					slab(parts,"pavement",lane,2.0,open_edges)
 			else:
 				slab(parts,"pavement",top,2.0,open_edges)
-			if kind!="highway_bridge":
+			if kind!="highway_bridge" and top.size()!=3 and id!=T.HIGHWAY_INTERSECTION:
 				highway_paint(parts,top,15 if id==T.HIGHWAY_INTERSECTION else mask,low,high,footprint)
 			if kind=="highway" or id<=T.HIGHWAY_SLOPE_4:
 				highway_details(parts,top,mask,low,high,footprint)
 			if id in [T.HIGHWAY_STRAIGHT_1,T.HIGHWAY_STRAIGHT_2]:
 				box(parts,"support",Vector3(-.04,-.04,0),Vector3(.04,.04,10))
 			elif kind!="highway_bridge":
-				for index in [0,2]:
+				for index in ([0,1,2,3] if id==T.HIGHWAY_INTERSECTION else [0,2]):
 					var p: Vector3=top[index]
 					var x:=lerpf(p.x,(low.x+high.x)*.5,.10)
 					var y:=lerpf(p.y,(low.y+high.y)*.5,.10)
@@ -646,10 +772,8 @@ static func build(id: int, corners := PackedFloat32Array(), flipped := false) ->
 				mask=15
 				parts.append_array(ground_routes(10 if id%2 else 5,corners,id>=T.HIGHWAY_RAIL_CROSSING_1))
 			elif id in [T.HIGHWAY_POWER_CROSSING_1,T.HIGHWAY_POWER_CROSSING_2]:
-				parts.append_array(power_routes(10 if id%2 else 5,corners,8,Vector2(.43,-.43)))
+				parts.append_array(power_crossing(10 if id%2 else 5,corners))
 		"onramp":
-			face(parts,"ramp_ground",PackedVector3Array([
-				Vector3(-.5,-.5,0),Vector3(.5,-.5,0),Vector3(.5,.5,0),Vector3(-.5,.5,0)]))
 			var quarter:=id-T.HIGHWAY_ONRAMP_1
 			var highway: int=[0,0,2,2][quarter]
 			var road: int=[1,3,3,1][quarter]
@@ -665,11 +789,20 @@ static func build(id: int, corners := PackedFloat32Array(), flipped := false) ->
 				var next:=Vector3(p.x,p.y,t*12)
 				path.append(next)
 			ribbon(parts,"pavement",path,.65)
+			var outside := signf(a.cross(b))
+			for step in range(path.size()-1):
+				var p: Vector3=path[step]
+				var q: Vector3=path[step+1]
+				var direction := Vector2(q.x-p.x,q.y-p.y).normalized()
+				var side := Vector3(-direction.y,direction.x,0)
+				beam(parts,"guardrail",p+side*.325*outside+Vector3(0,0,.9),q+side*.325*outside+Vector3(0,0,.9),1.0)
+				for edge in [-1,1]:
+					beam(parts,"curb",p+side*.29*edge+Vector3(0,0,.12),q+side*.29*edge+Vector3(0,0,.12),.75)
 			for dash in range(0,path.size()-1,2):
 				strip(parts,"road_paint",path[dash]+Vector3(0,0,.05),path[dash+1]+Vector3(0,0,.05),.045)
 		"tunnel", "rail_portal":
 			parts=ground_routes(5,corners,kind=="rail_portal")
-			portal(parts,.5 if kind=="rail_portal" else 1)
+			portal(parts,.5 if kind=="rail_portal" else 1,kind=="rail_portal")
 			var turn: int=[3,0,1,2][(id-(T.TUNNEL_ENTRANCE_1 if kind=="tunnel" else T.RAIL_SUBWAY_ENTRANCE_1))%4]
 			for part in parts:
 				for i in part.vertices.size():
@@ -702,7 +835,7 @@ static func build(id: int, corners := PackedFloat32Array(), flipped := false) ->
 
 static func profile(id: int) -> PackedFloat32Array:
 	var shape:=0
-	for first in [T.POWER_LINE_SLOPE_1,T.ROAD_SLOPE_1,T.RAIL_SLOPE_1,T.HIGHWAY_SLOPE_1]:
+	for first in [T.POWER_LINE_SLOPE_1,T.ROAD_SLOPE_1,T.RAIL_SLOPE_1,T.RAIL_SLOPE_5,T.HIGHWAY_SLOPE_1]:
 		if id>=first and id<first+4:
 			shape=id-first+1
 	var masks: Array=[0,9,3,6,12]
