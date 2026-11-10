@@ -5,7 +5,7 @@ extends RefCounted
 const Geometry = preload("res://src/view/models/network_model_geometry.gd")
 const Raster = preload("res://src/view/models/network_model_raster.gd")
 const ADMISSION_PATH := "res://assets/data/network_model_sources.json"
-const VERSION := 1
+const VERSION := 2
 static var _admission: Dictionary = {}
 
 

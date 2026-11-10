@@ -22,7 +22,10 @@ static func materials(palette: Sc2Palette, id: int) -> Dictionary:
 	var colors: Dictionary={
 		"surface":base,"deck":base,"railing":Color("505050"),"pier":base,
 		"pole":Color("101010"),"crossarm":Color("282828"),"cable":Color("101010"),
-		"rail":Color("9f9f9f"),"ballast":Color("101010"),"tie":Color("670700"),
+		"rail":Color("b7b7b7"),"rail_web":Color("282828"),"ballast":Color("101010"),"tie":Color("470000"),
+		"shoulder":Color("9b8747"),"road_edge":Color("202020"),"insulator":Color("9f9f9f"),
+		"curb":Color("b7b7b7"),"guardrail":Color("202020"),"railing_post":Color("b7b7b7"),
+		"masonry_joint":Color("777777"),"tower_brace":Color("470000"),
 		"portal":base,"truss":metal,"tower":metal,"tower_beam":metal,
 		"suspension_cable":Color("282828"),"hanger":metal,"roof":base,"lintel":base,
 		"ramp":base,"support":base,"signal_pole":Color("383838"),"signal":Color("d02020"),
