@@ -352,6 +352,9 @@ static func _check_trains() -> void:
 	write_thing(city, 1, {"type": 12})
 	motion.observe(city, options)
 	assert(motion.tracks.is_empty(), "Entering the subway must remove the surface train immediately")
+	motion.observe(city,options,true,true)
+	assert(motion.tracks.has(1),"The underground model view must independently observe the subway train")
+	assert(motion.tracks[1].tile==Vector2(city.thing(1).x,city.thing(1).y),"Underground train poses use whole train positions")
 
 
 static func _check_train_publication_jitter() -> void:

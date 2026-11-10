@@ -105,6 +105,7 @@ pub struct MinimapCity<'a> {
     pub altitude: &'a [i32],
     /// The mode's data map at full, half or quarter resolution, or empty.
     pub data: &'a [u8],
+    pub quarter: &'a [[i16; 4]],
 }
 
 impl MinimapCity<'_> {
@@ -123,6 +124,9 @@ impl MinimapCity<'_> {
             .any(|n| *n != cells)
         {
             return Err("invalid city map arrays".into());
+        }
+        if !self.quarter.is_empty() && (self.quarter.len() != cells || self.quarter.iter().flatten().any(|q| !(0..=128).contains(q))) {
+            return Err("invalid minimap quarter heights".into());
         }
 
         Ok(())
@@ -149,6 +153,10 @@ impl MinimapCity<'_> {
                 return WATER_COLOR;
             }
 
+            if let Some(q) = self.quarter.get(i) {
+                let mean = q.iter().map(|v| f32::from(*v)).sum::<f32>() / 16.0;
+                return (f32::from(EMPTY_GROUND) - mean.clamp(0.0, 32.0) * 0.375).round() as u8;
+            }
             let level = (self.altitude[i] & altitude::LAND_MASK).min(GROUND_ALTITUDE_LIMIT);
 
             return EMPTY_GROUND - (level * 3 / 4) as u8;
@@ -272,6 +280,48 @@ pub fn colorize(indices: &[u8], palette: &[u8]) -> Vec<u8> {
     out
 }
 
+/// Fractional relief affects background terrain; network/service colors remain exact.
+pub fn rgba(city: &MinimapCity, mode: Mode, palette: &[u8]) -> Vec<u8> {
+    if city.quarter.is_empty() {
+        return colorize(&indices(city, mode), palette);
+    }
+    let size = image_edge(city.edge);
+    let step = (city.edge / MAX_IMAGE_EDGE).max(1);
+    let mut out = Vec::with_capacity(size * size * 4);
+    for y in 0..size {
+        for x in 0..size {
+            let (tx, ty) = (x * step, y * step);
+            let i = tx * city.edge + ty;
+            let index = city.color_index(tx, ty, mode);
+            let fractional = city.buildings[i] == tiles::EMPTY && city.flags[i] & flags::WATER == 0 && index == city.base(i, tiles::EMPTY);
+            if !fractional {
+                let p = usize::from(index) * 4;
+                out.extend_from_slice(palette.get(p..p + 4).unwrap_or(&[0, 0, 0, 0]));
+                continue;
+            }
+            let mut sum = 0.0;
+            let mut count = 0;
+            for dx in 0..step {
+                for dy in 0..step {
+                    let cell = (tx + dx) * city.edge + ty + dy;
+                    sum += city.quarter[cell].iter().map(|q| f32::from(*q)).sum::<f32>() / 16.0;
+                    count += 1;
+                }
+            }
+            // The full 0..32 terrain range uses the original terrain color ramp.
+            let shade = f32::from(EMPTY_GROUND) - (sum / count as f32 / 2.0).clamp(0.0, 16.0) * 0.75;
+            let first = shade.floor() as usize;
+            let t = shade - first as f32;
+            for c in 0..4 {
+                let a = f32::from(*palette.get(first * 4 + c).unwrap_or(&0));
+                let b = f32::from(*palette.get((first + 1) * 4 + c).unwrap_or(&0));
+                out.push((a + (b - a) * t).round() as u8);
+            }
+        }
+    }
+    out
+}
+
 fn is_road(b: u8) -> bool {
     use tiles::*;
     matches!(b, ROAD_STRAIGHT_1..=ROAD_CROSSROADS
@@ -318,6 +368,89 @@ mod tests {
     use super::*;
     use crate::ids::building_tile_ids::*;
 
+    #[test]
+    fn all_quarter_levels_use_the_full_range_and_keep_every_mode_classification() {
+        let mut a = Arrays::new(1);
+        let palette: Vec<u8> = (0..256_u16).flat_map(|i| [i as u8, i as u8, i as u8, 255]).collect();
+        let mut last = 255;
+        for q in 0..=128_i16 {
+            let mut city = a.city();
+            let corners = [[q; 4]];
+            city.quarter = &corners;
+            let image = rgba(&city, Mode::Structures, &palette);
+            let expected = (128.0 - f32::from(q) / 8.0 * 0.75).round() as u8;
+            assert_eq!(image, [expected, expected, expected, 255]);
+            assert_eq!(city.color_index(0, 0, Mode::Structures), expected);
+            assert!(image[0] <= last);
+            last = image[0];
+            assert!(city.validate().is_ok());
+        }
+        assert_eq!(last, 116);
+        for name in [
+            "structures",
+            "zones",
+            "roads",
+            "rail",
+            "traffic",
+            "power",
+            "water",
+            "density",
+            "growth",
+            "crime",
+            "police_power",
+            "police_stations",
+            "pollution",
+            "land_value",
+            "fire_power",
+            "fire_stations",
+            "schools",
+            "colleges",
+        ] {
+            for building in 0..=255 {
+                a.buildings[0] = building;
+                for flag in 0..=255 {
+                    a.flags[0] = flag;
+                    let legacy = a.city();
+                    let mode = Mode::from_name(name);
+                    let index = legacy.color_index(0, 0, mode);
+                    let q = [[127; 4]];
+                    let mut city = a.city();
+                    city.quarter = &q;
+                    if index != legacy.base(0, building) {
+                        assert_eq!(
+                            rgba(&city, mode, &palette),
+                            colorize(&[index], &palette),
+                            "{name}, {building}, {flag}"
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn downsampled_minimap_evaluates_all_corners_and_all_tiles_of_each_pixel() {
+        let a = Arrays::new(2048);
+        let mut q = vec![[0; 4]; 2048 * 2048];
+        q[1] = [128; 4];
+        q[2048] = [128; 4];
+        let mut city = a.city();
+        city.quarter = &q;
+        let palette: Vec<u8> = (0..256_u16).flat_map(|i| [i as u8, i as u8, i as u8, 255]).collect();
+        let image = rgba(&city, Mode::Structures, &palette);
+        assert_eq!(&image[..4], &[122, 122, 122, 255]);
+        assert_eq!(&image[4..8], &[128, 128, 128, 255]);
+        let small = Arrays::new(1);
+        for encoded in 0..9_usize.pow(4) {
+            let corners = [std::array::from_fn(|k| ((encoded / 9_usize.pow(k as u32)) % 9) as i16)];
+            let mut city = small.city();
+            city.quarter = &corners;
+            let mean = corners[0].iter().map(|q| f32::from(*q)).sum::<f32>() / 16.0;
+            let expected = (128.0 - mean * 0.375).round() as u8;
+            assert_eq!(&rgba(&city, Mode::Structures, &palette), &[expected, expected, expected, 255]);
+        }
+    }
+
     struct Arrays {
         edge: usize,
         buildings: Vec<u8>,
@@ -351,6 +484,7 @@ mod tests {
                 underground: &self.underground,
                 altitude: &self.altitude,
                 data: &self.data,
+                quarter: &[],
             }
         }
     }

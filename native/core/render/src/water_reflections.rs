@@ -679,6 +679,7 @@ fn seabed_pixels(out: &mut [u8], bounds: Rect, city: &City, config: Config) {
         altitude: &city.altitude,
         terrain: &city.terrain,
         flags: &city.flags,
+        quarter: &city.quarter,
     };
     let polygon_of = |x: usize, y: usize| {
         let mut polygon = data.surface_polygon(x, y, true);

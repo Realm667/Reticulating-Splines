@@ -1,5 +1,20 @@
 [
   {
+    "id": "model_integration_gpu_test",
+    "script": "tests/model_integration_gpu_test.gd",
+    "domain": "rendering",
+    "lane": "native",
+    "driver": "scene-batch",
+    "timeout": 900
+  },
+  {
+    "id": "model_combination_matrix_test",
+    "script": "tests/model_combination_matrix_test.gd",
+    "domain": "rendering",
+    "lane": "product",
+    "timeout": 1800
+  },
+  {
     "id": "vehicle_models_test",
     "script": "tests/vehicle_models_test.gd",
     "domain": "rendering",

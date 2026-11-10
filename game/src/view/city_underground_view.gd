@@ -115,6 +115,7 @@ static func visual_signature(city: CityState, view_size: int, show_pipes := true
 		show_tunnels,
 		city.compass_rotation(),
 		city.chunk_revision("ALTM"),
+		city.chunk_revision("XQTR"),
 		city.chunk_revision("XTER"),
 		city.chunk_revision("XUND"),
 		city.masked_tile_flag_signature(0x30),

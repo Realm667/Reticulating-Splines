@@ -44,7 +44,12 @@ func _traffic_active() -> bool:
 	var options := app.preferences.visual_enhancements
 	return app.document_state.city != null and app.map_view != null \
 		and (app.view_state.show_vehicles or (options.disaster_enabled and options.disaster_motion)) \
-		and app.view_state.overlay_mode == CityViewMode.Mode.CITY and not app.tool_state.landscape_editor
+		and (app.view_state.overlay_mode == CityViewMode.Mode.CITY or _underground_models_visible()) and not app.tool_state.landscape_editor
+
+
+func _underground_models_visible() -> bool:
+	return app.preferences.visual_enhancements.models_enabled and app.view_state.overlay_mode==CityViewMode.Mode.UNDERGROUND \
+		and app.view_state.show_underground_subways
 
 
 func refresh_moving_things(view_size := -1) -> void:
@@ -54,14 +59,14 @@ func refresh_moving_things(view_size := -1) -> void:
 	caches.trim_moving()
 	caches.dynamic_active_keys.clear()
 	if _traffic_active():
-		traffic_motion.observe(app.document_state.city, app.preferences.visual_enhancements, app.view_state.show_vehicles)
+		traffic_motion.observe(app.document_state.city, app.preferences.visual_enhancements, app.view_state.show_vehicles,_underground_models_visible())
 	else:
 		traffic_motion.reset()
 
 	if (app.document_state.city == null
 			or app.asset_state.palette == null
 			or app.map_view == null
-			or app.view_state.overlay_mode != CityViewMode.Mode.CITY):
+			or (app.view_state.overlay_mode != CityViewMode.Mode.CITY and not _underground_models_visible())):
 		if app.map_view != null:
 			app.map_view.set_dynamic_sprites([])
 
@@ -86,6 +91,8 @@ func refresh_moving_things(view_size := -1) -> void:
 	var commands := caches.dynamic_command_cache.get_commands(
 		app.document_state.city, sprite_archive, view_size, int(Time.get_ticks_msec() / 100)
 	)
+	if _underground_models_visible():
+		commands=VehicleModels.underground_commands(app.document_state.city,view_size)
 	var visuals: Array[CityDynamicVisual] = []
 	var visible_bounds := app.map_view.visible_source_rect().grow(256 * divisor)
 	var command_extent := Vector2(256, 256) * divisor
@@ -131,23 +138,33 @@ func refresh_moving_things(view_size := -1) -> void:
 		var model: Dictionary = {}
 		var model_height := -1.0
 		var thing := app.document_state.city.thing(command.record) if command.record >= 0 else null
-		if app.preferences.visual_enhancements.models_enabled and not command.shadow and thing != null and thing.type in [4,10,11]:
+		var model_kind := VehicleModels.kind_for_thing(thing.type,thing.state) if thing!=null else -1
+		if app.preferences.visual_enhancements.models_enabled and not command.shadow and model_kind>=0:
 			var city := app.document_state.city
 			var track: CityTrafficMotion.Track = traffic_motion.tracks.get(command.record)
 			var world := track.tile if track != null else Vector2(thing.x,thing.y)
-			if thing.type == 4:
+			if track==null and thing.type in [1,2,3,4,9]:
 				world += Vector2(thing.px,thing.py)/16.0
 			var forward := Vector2(CityLifePaths.DIRECTIONS[thing.direction & 3])
-			if thing.type in [10,11] and thing.dx in [1,3,5,7]:
-				var ports := CitySurfaceOcclusion._rail_ports(city,Vector2i(world.round()))
+			if thing.type in [1,2,3]:
+				forward=Vector2.UP.rotated(thing.direction*PI/4)
+			if thing.type in [10,11,12,13] and thing.dx in [1,3,5,7]:
+				var ports := CitySurfaceOcclusion._rail_ports(city,Vector2i(world.round())) if thing.type in [10,11] else VehicleModels.subway_ports(city,Vector2i(world.round()))
 				if ports in [3,6,9,12]:
 					forward = CityLifePaths.forward(4+(thing.dx-1)/2)
-			var kind := VehicleModels.Kind.BULLDOZER if thing.type == 4 else (VehicleModels.Kind.ENGINE if thing.type == 10 else VehicleModels.Kind.COACH)
-			model = vehicle_models.frame(kind,0,forward,VehicleModels.rise_at(city,world,forward),app.asset_state.palette,divisor)
-			display_position = VehicleModels.contact(city,world)-model.anchor
+			var rise := VehicleModels.rise_at(city,world,forward) if thing.type in [4,10,11] else 0.0
+			model_height=VehicleModels.height(city,world)
+			if thing.type in [1,2]:
+				model_height=traffic_motion.aircraft_altitude(command.record,city)
+			elif thing.type in [3,9]:
+				model_height=city.water_altitude(thing.x,thing.y)
+			elif thing.type in [12,13]:
+				model_height=VehicleModels.underground_height(city,world)
+				rise=(VehicleModels.underground_height(city,world+forward*.34)-VehicleModels.underground_height(city,world-forward*.34))*12/.68
+			model = vehicle_models.frame(model_kind,0,forward,rise,app.asset_state.palette,divisor)
+			display_position = VehicleModels.contact(city,world)+Vector2(0,(VehicleModels.height(city,world)-model_height)*12)-model.anchor
 			position = Vector2i(display_position.round())
 			factor = 1
-			model_height = VehicleModels.height(city,world)
 		var surface_altitude := traffic_motion.aircraft_altitude(command.record, app.document_state.city) if not command.shadow else -1.0
 		if not model.is_empty():
 			surface_altitude = model_height

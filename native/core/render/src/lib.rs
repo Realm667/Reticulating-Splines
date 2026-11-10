@@ -13,6 +13,7 @@ pub mod minimap;
 pub mod nature;
 pub mod painter;
 mod parcel;
+mod quarter_data;
 mod quarter_terrain;
 pub mod raster;
 pub mod rect_index;
@@ -22,6 +23,7 @@ pub mod region_plan;
 pub mod sprites;
 pub mod surface_grid;
 pub mod tree_shadows;
+pub mod underground_models;
 pub mod variants;
 pub mod visual_auxiliary;
 pub mod water_reflections;
@@ -375,6 +377,8 @@ pub struct Builder {
     pub model_heights: HashMap<i32, Vec<f32>>,
     pub terrain_models: bool,
     pub quarter_networks: Vec<i32>,
+    /// Underground sprite substitutions shared by relative corner profile.
+    pub underground_models: HashMap<(i32, [i16; 13]), (i32, i16)>,
     quarter_ground_cache: HashMap<Vec<i16>, (u64, i32)>,
 }
 
@@ -422,6 +426,7 @@ impl Builder {
             model_heights: HashMap::new(),
             terrain_models: has_quarter,
             quarter_networks: Vec::new(),
+            underground_models: HashMap::new(),
             quarter_ground_cache: HashMap::new(),
         };
         // Pack all unflipped artwork once. Scrolling then seldom adds a sprite,

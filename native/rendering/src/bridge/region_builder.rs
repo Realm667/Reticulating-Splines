@@ -458,6 +458,29 @@ impl NativeCityRegionBuilder {
             core.atlas.revision += previous_revision;
             core.terrain_models = int(&request, "terrain_models", 0) != 0 || !core.city.quarter.is_empty();
             core.quarter_networks = ints(&request, "quarter_networks");
+            if let Some(value) = request.get("underground_models") {
+                let packed = value
+                    .try_to::<PackedInt64Array>()
+                    .map_err(|_| "invalid underground model records")?;
+                if packed.len() % 16 != 0 {
+                    return Err("invalid underground model dimensions".into());
+                }
+                for row in packed.as_slice().chunks_exact(16) {
+                    let (original, replacement, baseline) = (row[0], row[14], row[15]);
+                    if row[1..14].iter().any(|h| !(-1600..=1600).contains(h))
+                        || !(9..=2048).contains(&baseline)
+                        || original / 500 != i64::from(view)
+                        || !(1_100_000_000..1_200_000_000).contains(&replacement)
+                        || !core.sprites.images.contains_key(&(replacement as u64 * 2))
+                    {
+                        return Err("invalid underground model image".into());
+                    }
+                    core.underground_models.insert(
+                        (original as i32, std::array::from_fn(|k| row[k + 1] as i16)),
+                        (replacement as i32, baseline as i16),
+                    );
+                }
+            }
             if !core.quarter_networks.is_empty() && core.quarter_networks.len() != core.city.altitude.len() {
                 return Err("Invalid quarter-height network dimensions.".into());
             }

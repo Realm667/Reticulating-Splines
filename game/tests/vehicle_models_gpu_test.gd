@@ -19,7 +19,7 @@ func _run() -> void:
 	var entries: Array[Dictionary]=[]
 	var mask:=Image.create(256,192,false,Image.FORMAT_RGBA8)
 	mask.fill_rect(Rect2i(83,0,2,192),Color.WHITE)
-	for kind in VehicleModels.Kind.size():
+	for kind in VehicleModels.Kind.AIRPLANE:
 		for direction in 4:
 			var index:=entries.size()
 			var figure:=CityLifeController.Figure.new()

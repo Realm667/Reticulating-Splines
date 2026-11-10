@@ -505,6 +505,17 @@ impl Builder {
         Some((self.config.base() + TRAFFIC_SPRITES + variant, flip))
     }
 
+    fn underground_model(&self, i: usize, sprite: i32) -> Option<(i32, i32)> {
+        if self.underground_models.is_empty() {
+            return None;
+        }
+        let heights = crate::underground_models::city_profile(&self.city, i);
+        let divisor = self.config.divisor();
+        self.underground_models
+            .get(&(sprite, heights))
+            .map(|&(id, baseline)| (id, (i32::from(baseline) + divisor - 1) / divisor - (9 + divisor - 1) / divisor))
+    }
+
     fn paint_underground(&mut self, draws: &mut Vec<Draw>, x: i32, y: i32, layers: UndergroundLayers) -> Result<(), String> {
         let UndergroundLayers {
             pipes,
@@ -529,13 +540,13 @@ impl Builder {
                 } else {
                     DEEP_TUNNEL
                 };
-            self.add(
-                draws,
-                sprite,
-                false,
-                sx,
-                baseline + if levels > 1 { (levels - 1) * c.step() } else { 0 },
-            )?;
+            let bottom = baseline + if levels > 1 { (levels - 1) * c.step() } else { 0 };
+            if let Some((model, padding)) = self.underground_model(i, sprite) {
+                self.add(draws, model, false, sx, bottom + padding)?;
+                draws.last_mut().unwrap().sprite = sprite;
+            } else {
+                self.add(draws, sprite, false, sx, bottom)?;
+            }
         }
 
         let mut tile = self.city.underground[i];
@@ -589,9 +600,14 @@ impl Builder {
         }
 
         for id in ids {
-            let key = self.sprites.get(id, false)?;
-            let h = self.sprites.images[&key].h;
-            self.add(draws, id, false, sx, top + h)?;
+            if let Some((model, padding)) = self.underground_model(i, id) {
+                self.add(draws, model, false, sx, baseline + padding)?;
+                draws.last_mut().unwrap().sprite = id;
+            } else {
+                let key = self.sprites.get(id, false)?;
+                let h = self.sprites.images[&key].h;
+                self.add(draws, id, false, sx, top + h)?;
+            }
         }
 
         Ok(())

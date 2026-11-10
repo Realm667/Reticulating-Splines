@@ -110,16 +110,16 @@ func set_data_view(value: CityState, mode: CityViewMode.Mode) -> void:
 	if map.data_view_signature != signature:
 		var image := CityDataView.value_image(value, mode)
 
-		if map.data_value_texture != null and Vector2i(map.data_value_texture.get_size()) == image.get_size():
+		if map.data_value_texture != null and Vector2i(map.data_value_texture.get_size()) == image.get_size() and map.data_value_texture.get_format()==image.get_format():
 			map.data_value_texture.update(image)
 		else:
 			map.data_value_texture = ImageTexture.create_from_image(image)
 
 		material.set_shader_parameter("tile_values", map.data_value_texture)
+		var fractional := mode==CityViewMode.Mode.HEIGHT and not value.quarter_heights.is_empty()
+		material.set_shader_parameter("fractional_height",fractional)
+		material.set_shader_parameter("value_colors",ImageTexture.create_from_image(CityDataView.color_image(mode,fractional)))
 		map.data_view_signature = signature
-
-	if map.data_view_mode != mode:
-		material.set_shader_parameter("value_colors", ImageTexture.create_from_image(CityDataView.color_image(mode)))
 
 	map.data_view_mode = mode
 	map.data_view_layer.mesh = map.data_view_mesh
@@ -216,10 +216,11 @@ func draw_data_key(canvas: Control) -> void:
 			canvas.draw_string(font, position + Vector2(0, 38), caption, HORIZONTAL_ALIGNMENT_LEFT, 96, caption_size,
 					canvas.get_theme_color("font_color", "MapLegend"))
 	else:
+		var fractional := map.data_view_mode==CityViewMode.Mode.HEIGHT and map.city!=null and not map.city.quarter_heights.is_empty()
 		for index in CityDataView.SCALE_CELLS:
 			canvas.draw_rect(
 				Rect2(origin + Vector2(12 + index * 9.25, 38), Vector2(9.25, 20)),
-				CityDataView.color(CityDataView.scale_value(map.data_view_mode, index), map.data_view_mode),
+				CityDataView.scale_color(map.data_view_mode,index,fractional),
 			)
 
 		if map.data_view_mode == CityViewMode.Mode.HEIGHT:
@@ -227,11 +228,11 @@ func draw_data_key(canvas: Control) -> void:
 			for index in 32:
 				var depth := roundi(index * CityDataView.MAX_SHOWN_DEPTH / 31.0)
 				canvas.draw_rect(Rect2(origin + Vector2(12 + index * 9.25, WATER_SCALE_TOP), Vector2(9.25, 20)),
-					CityDataView.color(CityDataView.UNDERWATER_BASE + depth, map.data_view_mode))
+					CityDataView.height_color(64.0+index*CityDataView.MAX_SHOWN_DEPTH/31.0) if fractional else CityDataView.color(CityDataView.UNDERWATER_BASE + depth, map.data_view_mode))
 
 			_draw_scale_labels(canvas, font, origin + Vector2(0, WATER_SCALE_TOP + 42), "Shallow water", "Deep water")
 
-		var labels := CityDataView.range_labels(map.data_view_mode)
+		var labels := CityDataView.range_labels(map.data_view_mode,fractional)
 		_draw_scale_labels(canvas, font, origin + Vector2(0, 80), labels[0], labels[1])
 		var middle := tr(CityDataView.middle_label(map.data_view_mode))
 

@@ -466,7 +466,7 @@ func poll_static_render() -> void:
 	)
 	app.menus.sync_map_style()
 
-	if app.view_state.overlay_mode == CityViewMode.Mode.CITY:
+	if app.view_state.overlay_mode in [CityViewMode.Mode.CITY,CityViewMode.Mode.UNDERGROUND]:
 		app.moving_sprites.refresh_moving_things(int(rendered.view_size))
 	else:
 		app.map_view.set_dynamic_sprites([])

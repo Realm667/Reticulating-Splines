@@ -3,6 +3,109 @@ use super::painter::TRAFFIC;
 use super::*;
 
 #[test]
+fn quarter_water_and_hidden_water_use_the_same_physical_height_as_data_views() {
+    for view in 0..3 {
+        let mut b = fixture(8, view);
+        let i = b.city.index(3, 3);
+        b.city.quarter = vec![[0; 4]; 64];
+        b.terrain_models = true;
+        b.city.terrain[i] = 16;
+        b.city.altitude[i] = 2 << 5;
+        b.city.flags[i] = 4;
+        b.sprites.images.insert(
+            (view * 500 + 270) as u64 * 2,
+            Sprite {
+                w: 32,
+                h: 17,
+                rgba: [200, 0, 0, 255].repeat(32 * 17),
+                la: [200, 255].repeat(32 * 17),
+            },
+        );
+        for wet in [true, false] {
+            b.city.flags[i] = if wet { 4 } else { 0 };
+            b.city.objects = vec![-1; 64];
+            b.city.objects[i] = 2;
+            let draws = b.paint(3, 3).unwrap();
+            let c = b.config;
+            let x = c.side() + b.city.edge * c.hw() + c.hw();
+            let y = c.top() + 6 * c.hh() + c.hh() - if wet { 2 * c.step() } else { 0 };
+            assert!(
+                draws.iter().any(|d| {
+                    let (px, py) = (x - d.rect.x, y - d.rect.y);
+                    if px < 0 || py < 0 || px >= d.rect.w || py >= d.rect.h {
+                        return false;
+                    }
+                    let image = &b.sprites.images[&d.image];
+                    let at = ((py * image.w + px) * 4) as usize;
+                    image.rgba[at + 3] != 0 && (image.rgba[at] == 200) == wet
+                }),
+                "water/seabed anchor differs at view {view}, water={wet}"
+            );
+        }
+    }
+}
+
+#[test]
+fn underground_models_preserve_all_layer_state_and_cutaway_combinations() {
+    let mut cases = 0;
+    for view in 0..3 {
+        let mut b = fixture(2, view);
+        let replacement = 1_100_000_001;
+        b.sprites
+            .images
+            .insert(replacement as u64 * 2, b.sprites.images[&((view * 500 + 305) as u64 * 2)].clone());
+        b.config.underground = true;
+        for rotation in 0..4 {
+            b.city.rotation = rotation;
+            for phase in 0..4 {
+                b.city.quarter = vec![[8 + phase, 10 + phase, 12 + phase, 10 + phase]; 4];
+                b.city.altitude[0] = 2;
+                b.city.underground[0] = 0;
+                let heights = underground_models::city_profile(&b.city, 0);
+                let mut normal = (0..500).map(|id| ((view * 500 + id, heights), (replacement, 45))).collect();
+                b.city.underground[0] = 31;
+                let heights = underground_models::city_profile(&b.city, 0);
+                let mut crossing = (0..500).map(|id| ((view * 500 + id, heights), (replacement, 45))).collect();
+                for terrain in 0..=0x47 {
+                    b.city.terrain[0] = terrain;
+                    for tile in 0..=0x27 {
+                        b.city.underground[0] = tile;
+                        let replacements = if matches!(tile, 31 | 32) { &mut crossing } else { &mut normal };
+                        for flags in [0, 16, 32, 48] {
+                            b.city.flags[0] = flags;
+                            for layer in 0..16 {
+                                b.config.pipes = layer & 1 != 0;
+                                b.config.subways = layer & 2 != 0;
+                                b.config.mains = layer & 4 != 0;
+                                b.config.tunnels = layer & 8 != 0;
+                                for (visible, tunnel) in [(32, 0), (32, 1), (32, 3), (2, 1), (3, 3)] {
+                                    b.city.visible = visible;
+                                    b.city.altitude[0] = 2 | (tunnel << 10);
+                                    let original = b.paint(0, 0).unwrap();
+                                    std::mem::swap(&mut b.underground_models, replacements);
+                                    let models = b.paint(0, 0).unwrap();
+                                    std::mem::swap(&mut b.underground_models, replacements);
+                                    assert_eq!(original.len(), models.len());
+                                    for (a, m) in original.iter().zip(&models) {
+                                        assert_eq!(
+                                            a.sprite, m.sprite,
+                                            "layer selection changed: tile {tile}, flags {flags}, layers {layer}"
+                                        );
+                                        assert_eq!(m.image, replacement as u64 * 2);
+                                    }
+                                    cases += 1;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    assert_eq!(cases, 44_236_800);
+}
+
+#[test]
 fn building_variants_keep_multicell_identity_across_views_rotations_and_rebuilds() {
     let mut expected = HashMap::new();
     for view in 0..3 {

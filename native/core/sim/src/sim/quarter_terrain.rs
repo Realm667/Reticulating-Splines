@@ -561,6 +561,19 @@ mod tests {
     use super::*;
     use crate::sim::city::Chunk;
 
+    #[test]
+    fn every_relative_shape_obeys_flat_sites_and_normal_network_limit() {
+        let mut city = fixture();
+        for encoded in 0..9_u16.pow(4) {
+            let q = std::array::from_fn(|k| 8 + (encoded / 9_u16.pow(k as u32)) % 9);
+            store(&mut city.xqtr.data, 27, q);
+            let planar = q[0] + q[2] == q[1] + q[3];
+            let grade = q.iter().max().unwrap() - q.iter().min().unwrap();
+            assert_eq!(network_allowed(&city, 27), planar && grade <= 4);
+            assert_eq!(flat(&city, 27), grade == 0);
+        }
+    }
+
     fn fixture() -> City {
         let mut city = City::new(8, 4);
         city.altm = Chunk::new(vec![0; 128]);

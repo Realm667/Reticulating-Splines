@@ -44,6 +44,7 @@ pub struct DataCity<'a> {
     pub altitude: &'a [i32],
     pub terrain: &'a [u8],
     pub flags: &'a [u8],
+    pub quarter: &'a [[i16; 4]],
 }
 
 impl DataCity<'_> {
@@ -52,6 +53,9 @@ impl DataCity<'_> {
 
         if self.edge == 0 || self.altitude.len() != cells || self.terrain.len() != cells || self.flags.len() != cells {
             return Err("invalid data map city".into());
+        }
+        if !self.quarter.is_empty() && (self.quarter.len() != cells || self.quarter.iter().flatten().any(|q| !(0..=128).contains(q))) {
+            return Err("invalid quarter-height data map".into());
         }
 
         Ok(())
@@ -70,6 +74,14 @@ impl DataCity<'_> {
     }
 
     pub(crate) fn visible(&self, i: usize, height_view: bool) -> bool {
+        if let Some(q) = self.quarter.get(i) {
+            return self.visible >= 32
+                || if self.wet(i) && !height_view {
+                    self.water(i) < self.visible
+                } else {
+                    i32::from(*q.iter().min().unwrap()) < self.visible * 4
+                };
+        }
         if height_view {
             return self.land(i) < self.visible;
         }
@@ -101,6 +113,19 @@ impl DataCity<'_> {
         let mut polygon = self.tile_polygon(x, y, land_surface);
         let i = x * self.edge + y;
         let terrain = self.terrain[i];
+        if let Some(q) = self.quarter.get(i) {
+            let flat = [0.0, HALF_HEIGHT, TILE_BOTTOM, HALF_HEIGHT];
+            let base = TOP_MARGIN + (x + y) as f32 * HALF_HEIGHT;
+            for k in 0..4 {
+                let level = if self.wet(i) && !land_surface {
+                    q[k].max((self.water(i) * 4) as i16)
+                } else {
+                    q[k]
+                };
+                polygon[k][1] = base + flat[k] - f32::from(level) * 3.0;
+            }
+            return polygon;
+        }
 
         if !land_surface && terrain >= DEEP_WATER_FIRST {
             return polygon;
@@ -149,6 +174,7 @@ pub struct DataMesh {
     pub colors: Vec<[f32; 4]>,
     pub uvs: Vec<Point>,
     pub indices: Vec<i32>,
+    pub quarter_height: bool,
 }
 
 impl DataMesh {
@@ -166,6 +192,9 @@ impl DataMesh {
 /// Build the overlay in terrain painter order, so raised foreground tiles cover
 /// distant tiles. Only exposed walls get quads.
 pub fn build(city: &DataCity, height_view: bool) -> DataMesh {
+    if !city.quarter.is_empty() {
+        return super::quarter_data::build(city, height_view);
+    }
     let edge = city.edge;
     let mut surfaces = Vec::with_capacity(edge * edge);
 
@@ -258,6 +287,25 @@ pub fn height_values(altitude: &[i32], flags: &[u8]) -> Vec<u8> {
         .collect()
 }
 
+/// Exact tile means, retaining sixteenth-level means of four quarter corners.
+pub fn fractional_heights(altitude: &[i32], flags: &[u8], quarter: &[[i16; 4]]) -> Vec<f32> {
+    altitude
+        .iter()
+        .zip(flags)
+        .enumerate()
+        .map(|(i, (word, flags))| {
+            let land = quarter
+                .get(i)
+                .map_or((word & 31) as f32, |q| q.iter().map(|v| f32::from(*v)).sum::<f32>() / 16.0);
+            if flags & WATER_FLAG == 0 {
+                land
+            } else {
+                64.0 + (((word >> 5) & 31) as f32 - land).max(0.0)
+            }
+        })
+        .collect()
+}
+
 /// Utility map values from XBIT: 2 where `supplied` is set, 1 where only
 /// `connected` is set, and 0 elsewhere.
 pub fn utility_values(flags: &[u8], supplied: u8, connected: u8) -> Vec<u8> {
@@ -278,6 +326,7 @@ mod tests {
             altitude,
             terrain,
             flags,
+            quarter: &[],
         };
 
         city.validate().unwrap();

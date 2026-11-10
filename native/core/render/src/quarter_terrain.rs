@@ -1,19 +1,25 @@
 //! Rasterized spatial terrain patches in the existing indexed regional atlas.
 //! Corner heights are quarter levels; vertical faces join independent plateaus.
 
-use crate::{Builder, Draw, Rect, sprites::Sprite};
+use crate::{Builder, City, Draw, Rect, sprites::Sprite};
 
 pub const FIRST_IMAGE: u64 = 1_400_000_000;
 const MASKS: [u8; 16] = [0, 9, 3, 6, 12, 11, 7, 14, 13, 1, 2, 4, 8, 15, 0, 0];
 const EDGES: [[usize; 2]; 4] = [[0, 1], [1, 2], [2, 3], [3, 0]];
 const POINTS: [[f32; 2]; 4] = [[-0.5, -0.5], [0.5, -0.5], [0.5, 0.5], [-0.5, 0.5]];
 
-impl Builder {
-    fn quarter_corners(&self, index: usize) -> [i16; 4] {
-        self.city.quarter.get(index).copied().unwrap_or_else(|| {
-            let mask = MASKS[(self.city.terrain[index] & 15) as usize];
-            std::array::from_fn(|k| (self.city.land(index) * 4 + if mask & (1 << k) != 0 { 4 } else { 0 }) as i16)
+impl City {
+    pub(super) fn quarter_corners(&self, index: usize) -> [i16; 4] {
+        self.quarter.get(index).copied().unwrap_or_else(|| {
+            let mask = MASKS[(self.terrain[index] & 15) as usize];
+            std::array::from_fn(|k| (self.land(index) * 4 + if mask & (1 << k) != 0 { 4 } else { 0 }) as i16)
         })
+    }
+}
+
+impl Builder {
+    pub(super) fn quarter_corners(&self, index: usize) -> [i16; 4] {
+        self.city.quarter_corners(index)
     }
 
     pub(super) fn quarter_ground(
@@ -27,6 +33,10 @@ impl Builder {
         if !self.terrain_models || (self.city.wet(index) && self.city.quarter.is_empty()) || self.city.terrain[index] == 0x3e {
             return self.add(draws, sprite, false, sx, baseline).map(|_| ());
         }
+        // The spatial patch already contains the water/land height difference.
+        // Its local origin is land, even when classic sprites use a water anchor
+        // or a hidden-water view preserves a structure's object altitude.
+        let baseline = baseline + (self.city.object(index) - self.city.land(index)) * self.config.step();
         let edge = self.city.edge;
         let x = index as i32 / edge;
         let y = index as i32 % edge;

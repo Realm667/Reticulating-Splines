@@ -132,6 +132,14 @@ fn ramp(stops: &[Rgb], amount: f32) -> Rgb {
     lerp(stops[first], stops[first + 1], position - first as f32)
 }
 
+fn height_color(value: f32) -> Rgb {
+    if value >= 64.0 {
+        ramp(&UNDERWATER, (value - 64.0) / MAX_SHOWN_DEPTH)
+    } else {
+        ramp(&LAND_HEIGHT, value / 32.0)
+    }
+}
+
 /// Rate of growth reads as decline, steady, or growth around its middle band.
 pub fn growth_state(value: i32) -> usize {
     if value < GROWTH_DECLINE {
@@ -229,6 +237,15 @@ pub fn values(city: &City, mode: Mode) -> Vec<i32> {
                 return vec![-1; cells];
             }
 
+            if city.xqtr.present {
+                let q: Vec<[i16; 4]> = (0..cells)
+                    .map(|i| sc2k_sim::sim::quarter_terrain::corners(city, i).map(|v| v as i16))
+                    .collect();
+                return data_view::fractional_heights(&altitude, flags, &q)
+                    .into_iter()
+                    .map(|v| (v * 16.0).round() as i32)
+                    .collect();
+            }
             data_view::height_values(&altitude, flags)
         }
         Mode::Power => data_view::utility_values(flags, POWER_FLAGS.0, POWER_FLAGS.1),
@@ -246,6 +263,7 @@ pub fn mesh(city: &sc2k_render::City, mode: Mode) -> Option<DataMesh> {
         altitude: &city.altitude,
         terrain: &city.terrain,
         flags: &city.flags,
+        quarter: &city.quarter,
     };
 
     data.validate().ok()?;
@@ -261,7 +279,16 @@ fn smoothstep(low: f32, high: f32, value: f32) -> f32 {
 
 /// Draw the mesh into the viewport of `frame`, over what is there.
 pub fn draw(frame: &mut Frame, camera: &Camera, mesh: &DataMesh, values: &[i32], edge: usize, mode: Mode) {
-    let colors: Vec<Rgb> = (0..256).map(|value| color(value, mode)).collect();
+    let fractional = mesh.quarter_height && mode == Mode::Height;
+    let colors: Vec<Rgb> = (0..if fractional { 2048 } else { 256 })
+        .map(|value| {
+            if fractional {
+                height_color(value as f32 / 16.0)
+            } else {
+                color(value, mode)
+            }
+        })
+        .collect();
     let viewport = camera.viewport;
     let clip = (
         viewport.x.max(0.0),
@@ -280,7 +307,11 @@ pub fn draw(frame: &mut Frame, camera: &Camera, mesh: &DataMesh, values: &[i32],
         let (a, b, c) = (corner(triangle[0]), corner(triangle[1]), corner(triangle[2]));
         let tile = ((a.1[1] / 2.0).floor() as usize, (a.1[0] / 2.0).floor() as usize);
         let value = values.get(tile.0 * edge + tile.1).copied().unwrap_or(-1);
-        let base = if value < 0 { NO_VALUE } else { colors[value.min(255) as usize] };
+        let base = if value < 0 {
+            NO_VALUE
+        } else {
+            colors[(value as usize).min(colors.len() - 1)]
+        };
         let shade = a.2;
         fill_triangle(
             frame,

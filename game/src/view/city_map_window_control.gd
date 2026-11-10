@@ -323,7 +323,7 @@ func sync_view_mode(mode: CityViewMode.Mode) -> void:
 
 func _image_signature() -> Array:
 	var mode := current_mode()
-	var chunk_ids := PackedStringArray(["ALTM", "XBLD", "XBIT"])
+	var chunk_ids := PackedStringArray(["ALTM", "XQTR", "XBLD", "XBIT"])
 
 	if mode == "zones":
 		chunk_ids.append("XZON")

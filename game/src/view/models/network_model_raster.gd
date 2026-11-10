@@ -62,7 +62,7 @@ static func render(id: int, source: Image, palette: Sc2Palette, view := 2, prepa
 		for p: Vector3 in part.vertices:
 			var q:=Geometry.project(p)/divisor
 			low=minf(low,q.y)
-	var baseline:=ceili((17.0 if recipe.footprint==2 else 9.0)/divisor)
+	var baseline:=ceili(float(recipe.get("baseline",17.0 if recipe.footprint==2 else 9.0))/divisor)
 	var height:=maxi(extent.y,ceili(baseline-low))
 	var width:=32*int(recipe.footprint)/divisor
 	var pixels:=PackedInt32Array()
@@ -82,7 +82,7 @@ static func render(id: int, source: Image, palette: Sc2Palette, view := 2, prepa
 		var c:=palette.color(i).to_rgba32()
 		if not source_indices.has(c):
 			source_indices[c]=i
-	var origin:=Vector2(16.0/divisor,height-baseline)
+	var origin:=Vector2(float(recipe.get("origin_x",16.0))/divisor,height-baseline)
 	var texture_shift:=Vector2i(0,extent.y-height)
 	for part: Dictionary in recipe.parts:
 		var vertices: PackedVector3Array=part.vertices

@@ -1,7 +1,7 @@
 class_name CityDynamicCommandCache
 extends RefCounted
 
-const SIGNATURE_CHUNKS: PackedStringArray = ["ALTM", "XTER", "XBLD", "XZON", "XTXT", "XBIT", "XTHG"]
+const SIGNATURE_CHUNKS: PackedStringArray = ["ALTM", "XQTR", "XTER", "XBLD", "XZON", "XTXT", "XBIT", "XTHG"]
 
 # cache painter commands independently of static-region publication
 var signature: Array = []

@@ -3,7 +3,7 @@ extends RefCounted
 ## Shared rigid vehicle bodies, rasterized at the same pixel grid as the city.
 @warning_ignore_start("integer_division")
 
-enum Kind { CAR, TRUCK, BUS, ENGINE, COACH, BULLDOZER }
+enum Kind { CAR, TRUCK, BUS, ENGINE, COACH, BULLDOZER, AIRPLANE, HELICOPTER, SHIP, SAILBOAT }
 const BODY_COLORS := [Color("972713"), Color("c7c7b7"), Color("b79737"),
 	Color("376747"), Color("375777"), Color("777777")]
 const LIMIT := 2048
@@ -35,6 +35,13 @@ func frame(kind: int, variant: int, forward: Vector2, rise: float, palette: Sc2P
 		meshes[geometry_key] = geometry(shape,forward,rise)
 	var recipe: Dictionary = meshes[geometry_key].duplicate()
 	recipe.materials = swatches[color_key]
+	# Long ships and steep subway poses extend below the contact point.
+	# Reserve their full projected extent before cropping the native raster.
+	var baseline := 9
+	for part: Dictionary in recipe.parts:
+		for vertex: Vector3 in part.vertices:
+			baseline=maxi(baseline,ceili(NetworkModelGeometry.project(vertex).y)+1)
+	recipe.baseline=baseline
 	var source := Image.create(32,32,false,Image.FORMAT_RGBA8)
 	var raster := NetworkModelRaster.render(0,source,palette,2,recipe)
 	var entry: Sc2SpriteArchive.SpriteEntry = raster.entry
@@ -56,13 +63,31 @@ func frame(kind: int, variant: int, forward: Vector2, rise: float, palette: Sc2P
 		var cropped := Image.create(rect.size.x,rect.size.y,false,Image.FORMAT_RGBA8)
 		cropped.blit_rect(image,rect,Vector2i.ZERO)
 		if divisor > 1:
-			cropped.resize(rect.size.x/divisor,rect.size.y/divisor,Image.INTERPOLATE_NEAREST)
+			if kind>=Kind.AIRPLANE:
+				cropped=reduce_coverage(cropped,divisor)
+			else:
+				cropped.resize(rect.size.x/divisor,rect.size.y/divisor,Image.INTERPOLATE_NEAREST)
 			cropped.resize(rect.size.x,rect.size.y,Image.INTERPOLATE_NEAREST)
 		images.append(cropped)
 	images[0].set_meta("vehicle_model_lamps",images[2])
 	var result := {"image":images[0],"indexed":images[1],"lamps":images[2],
-		"anchor":Vector2(16,entry.height-9)-Vector2(rect.position),"recipe":recipe}
+		"anchor":Vector2(float(recipe.get("origin_x",16)),entry.height-baseline)-Vector2(rect.position),"recipe":recipe}
 	frames[key] = result
+	return result
+
+
+static func reduce_coverage(source: Image, divisor: int) -> Image:
+	var result := Image.create(source.get_width()/divisor,source.get_height()/divisor,false,Image.FORMAT_RGBA8)
+	for y in result.get_height():
+		for x in result.get_width():
+			var nearest := INF
+			for dy in divisor:
+				for dx in divisor:
+					var color := source.get_pixel(x*divisor+dx,y*divisor+dy)
+					var distance := Vector2(dx+.5-divisor*.5,dy+.5-divisor*.5).length_squared()
+					if color.a>.5 and distance<nearest:
+						result.set_pixel(x,y,color)
+						nearest=distance
 	return result
 
 
@@ -83,6 +108,11 @@ static func _materials(kind: int, variant: int, palette: Sc2Palette) -> Dictiona
 		colors.wheel = Color("470000")
 		colors.trim = Color("bfbfbf")
 	colors.train_front = Color("0000df")
+	colors.white = Color("dfdfdf")
+	colors.blue = Color("00bfbf")
+	colors.red = Color("df0000")
+	colors.hull = Color("000000")
+	colors.rotor = Color("0000df")
 	var result := {}
 	for role: String in colors:
 		var c: Color = colors[role]
@@ -102,6 +132,8 @@ static func _materials(kind: int, variant: int, palette: Sc2Palette) -> Dictiona
 
 static func geometry(kind: int, forward: Vector2, rise: float) -> Dictionary:
 	var parts: Array = []
+	if kind>=Kind.AIRPLANE:
+		return special_geometry(kind,forward,rise)
 	var length: float = [.46,.62,.74,.94,.94,.78][kind]
 	var half := length*.5
 	var width := .105 if kind == Kind.CAR else (.25 if kind == Kind.BULLDOZER else .13)
@@ -165,6 +197,112 @@ static func geometry(kind: int, forward: Vector2, rise: float) -> Dictionary:
 			var p: Vector3 = part.vertices[i]
 			part.vertices[i] = along*p.x+across*p.y+up*p.z
 	return {"parts":parts,"ports":0,"footprint":1}
+
+
+static func special_geometry(kind: int, forward: Vector2, rise: float) -> Dictionary:
+	var parts: Array = []
+	var g = NetworkModelGeometry
+	if kind==Kind.AIRPLANE:
+		# White passenger jet, cyan window band, swept wings and tall tail.
+		g.box(parts,"white",Vector3(-.88,-.09,1),Vector3(.90,.09,3.8))
+		g.face(parts,"white",PackedVector3Array([Vector3(.90,-.09,1),Vector3(1.04,0,2),Vector3(.90,.09,3.8)]))
+		for side in [-1,1]:
+			g.box(parts,"blue",Vector3(-.70,side*.09-.004,2.3),Vector3(.80,side*.09+.004,2.9))
+			g.face(parts,"white",PackedVector3Array([Vector3(.22,0,1.4),Vector3(-.22,side*.92,1.1),Vector3(-.45,side*.92,1.1),Vector3(-.25,0,1.4)]))
+			g.face(parts,"white",PackedVector3Array([Vector3(-.63,0,2.5),Vector3(-.84,side*.38,2.3),Vector3(-.95,side*.38,2.3),Vector3(-.87,0,2.5)]))
+			g.box(parts,"metal",Vector3(-.20,side*.40-.055,-.5),Vector3(.12,side*.40+.055,1.4))
+		g.face(parts,"white",PackedVector3Array([Vector3(-.95,0,2),Vector3(-.95,0,10),Vector3(-.82,0,10),Vector3(-.61,0,2)]))
+		g.box(parts,"glass",Vector3(.76,-.08,3),Vector3(.88,.08,3.85))
+	elif kind==Kind.HELICOPTER:
+		g.box(parts,"red",Vector3(-.28,-.13,1),Vector3(.30,.13,3.7))
+		g.box(parts,"glass",Vector3(.08,-.135,2.5),Vector3(.30,.135,3.75))
+		g.beam(parts,"red",Vector3(-.25,0,2),Vector3(-.78,0,3.4),1.3)
+		g.beam(parts,"red",Vector3(-.76,0,3.4),Vector3(-.76,0,6),.8)
+		g.beam(parts,"metal",Vector3(-.05,0,3),Vector3(-.05,0,6.5),.6)
+		for side in [-1,1]:
+			g.beam(parts,"metal",Vector3(-.22,side*.17,0),Vector3(.25,side*.17,0),.7)
+			g.beam(parts,"metal",Vector3(.08,side*.10,1.5),Vector3(.08,side*.17,0),.6)
+		g.box(parts,"rotor",Vector3(-.65,-.024,6.45),Vector3(.58,.024,6.55))
+		g.box(parts,"rotor",Vector3(-.074,-.55,6.45),Vector3(-.026,.55,6.55))
+	elif kind==Kind.SHIP:
+		var outline := PackedVector3Array([Vector3(-1,-.20,0),Vector3(.67,-.24,0),Vector3(1,0,0),Vector3(.67,.24,0),Vector3(-1,.20,0)])
+		g.slab(parts,"hull",outline,2)
+		for i in outline.size():
+			g.beam(parts,"red",outline[i]+Vector3(0,0,.8),outline[(i+1)%outline.size()]+Vector3(0,0,.8),1.3)
+		g.box(parts,"white",Vector3(.30,-.17,.8),Vector3(.65,.17,6.3))
+		g.box(parts,"glass",Vector3(.40,-.175,4.8),Vector3(.66,.175,5.5))
+		g.box(parts,"red",Vector3(.38,-.14,6.3),Vector3(.67,.14,7))
+		g.beam(parts,"white",Vector3(.33,0,5),Vector3(.33,0,11),.7)
+		for x in [-.76,-.43,-.10]:
+			for side in [-1,1]:
+				g.box(parts,"white",Vector3(x-.10,side*.105-.05,1),Vector3(x+.10,side*.105+.05,2.8))
+		g.beam(parts,"red",Vector3(-.8,0,1),Vector3(.3,0,1),.7)
+	else:
+		g.slab(parts,"white",PackedVector3Array([Vector3(-.33,-.08,0),Vector3(.25,-.09,0),Vector3(.38,0,0),Vector3(.25,.09,0),Vector3(-.33,.08,0)]),1)
+		g.beam(parts,"metal",Vector3(0,0,0),Vector3(0,0,11),.6)
+		g.face(parts,"red",PackedVector3Array([Vector3(0,0,10),Vector3(0,0,2),Vector3(.30,0,2)]))
+		g.face(parts,"white",PackedVector3Array([Vector3(-.02,0,8),Vector3(-.30,0,1.5),Vector3(-.02,0,1.5)]))
+	var heading := forward.normalized()
+	var angle := atan2(rise,32.0)
+	var along := Vector3(heading.x*cos(angle),heading.y*cos(angle),32*sin(angle))
+	var across := Vector3(-heading.y,heading.x,0)
+	var up := Vector3(-heading.x*sin(angle)/32,-heading.y*sin(angle)/32,cos(angle))
+	for part: Dictionary in parts:
+		for i in part.vertices.size():
+			var p: Vector3=part.vertices[i]
+			part.vertices[i]=along*p.x+across*p.y+up*p.z
+	return {"parts":parts,"ports":0,"footprint":3,"origin_x":48}
+
+
+static func kind_for_thing(type: int, state := 0) -> int:
+	return {1:Kind.AIRPLANE,2:Kind.HELICOPTER,3:Kind.SHIP,4:Kind.BULLDOZER,
+		9:Kind.SAILBOAT if state==0 else -1,10:Kind.ENGINE,11:Kind.COACH,
+		12:Kind.ENGINE,13:Kind.COACH}.get(type,-1)
+
+
+static func underground_height(city: CityState, world: Vector2) -> float:
+	var tile := Vector2i((world+Vector2(.5,.5)).floor())
+	var i := city.index_of(tile.x,tile.y)
+	if i<0:
+		return 0
+	var local := world-Vector2(tile)
+	var direction := (1 if local.x>=0 else 3) if absf(local.x)>absf(local.y) else (2 if local.y>=0 else 0)
+	var shape := UndergroundModels.profile(city,i)
+	var center := NetworkModelGeometry.surface_height(Vector2.ZERO,shape)-12
+	var z := lerpf(center,shape[4+direction],maxf(absf(local.x),absf(local.y))*2)
+	return city.land_altitude(tile.x,tile.y)+z/12.0
+
+
+static func underground_commands(city: CityState, view: int) -> Array[CityDynamicCommand]:
+	var result: Array[CityDynamicCommand]=[]
+	for record in city.thing_count():
+		var thing := city.thing(record)
+		if thing==null or thing.type not in [12,13] or city.index_of(thing.x,thing.y)<0:
+			continue
+		var tile := city.underground[city.index_of(thing.x,thing.y)]
+		if not (tile in range(1,16) or tile in [31,32,35]):
+			continue
+		if city.visible_altitude_levels<32 and underground_height(city,Vector2(thing.x,thing.y))>=city.visible_altitude_levels:
+			continue
+		var command := CityDynamicCommand.new()
+		command.record=record
+		command.sprite_id=view*500+374
+		command.depth_order=(thing.x+thing.y)*city.map_size+thing.y
+		command.train=true
+		command.static_occlusion=false
+		command.position=Vector2i(contact(city,Vector2(thing.x,thing.y)))/(4>>view)
+		result.append(command)
+	return result
+
+
+static func subway_ports(city: CityState, tile: Vector2i) -> int:
+	var i := city.index_of(tile.x,tile.y)
+	if i<0:
+		return 0
+	var id := int(city.underground[i])
+	if id in range(1,16):
+		return UndergroundModels.PORTS[id-1]
+	return {31:5,32:10,35:15}.get(id,0)
 
 
 static func bulldozer(parts: Array) -> void:

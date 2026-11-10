@@ -107,6 +107,10 @@ static func value(city: CityState, mode: CityViewMode.Mode, x: int, y: int) -> i
 	return chunk.decoded_payload[index] if index >= 0 else -1
 
 
+static func height_color(value: float) -> Color:
+	return _ramp(UNDERWATER_COLORS,(value-64.0)/MAX_SHOWN_DEPTH) if value>=64.0 else _ramp(LAND_HEIGHT_COLORS,value/32.0)
+
+
 static func color(data_value: int, mode: CityViewMode.Mode) -> Color:
 	if data_value < 0:
 		return Color("535b67")
@@ -142,6 +146,15 @@ static func _ramp(stops: PackedColorArray, amount: float) -> Color:
 
 
 static func tile_text(city: CityState, mode: CityViewMode.Mode, point: Vector2i, exact := false) -> String:
+	if mode==CityViewMode.Mode.HEIGHT and not city.quarter_heights.is_empty() and city.index_of(point.x,point.y)>=0:
+		var level := QuarterTerrain.height(city,point)
+		var result := TranslationServer.translate("Heightmap")+": "+str(level)
+		if city.is_water(point.x,point.y):
+			result=TranslationServer.translate("Terrain: %s\nWater: %s")%[str(level),str(city.water_altitude(point.x,point.y))]
+		if exact:
+			var i := city.index_of(point.x,point.y)*4
+			result+="  ["+", ".join(Array(city.quarter_heights.slice(i,i+4)).map(func(q: int) -> String: return str(q/4.0)))+"]"
+		return result
 	var number := value(city, mode, point.x, point.y)
 
 	if number < 0:
@@ -228,8 +241,14 @@ static func middle_label(mode: CityViewMode.Mode) -> String:
 
 
 # low and high labels for the gradient bar in the isometric legend
-static func range_labels(mode: CityViewMode.Mode) -> PackedStringArray:
+static func range_labels(mode: CityViewMode.Mode, fractional := false) -> PackedStringArray:
+	if fractional and mode==CityViewMode.Mode.HEIGHT:
+		return PackedStringArray(["0","32"])
 	return PackedStringArray(RANGE_LABELS.get(mode, ["Very low", "Very high"]))
+
+
+static func scale_color(mode: CityViewMode.Mode, cell: int, fractional := false) -> Color:
+	return height_color(cell*32.0/(SCALE_CELLS-1)) if fractional and mode==CityViewMode.Mode.HEIGHT else color(scale_value(mode,cell),mode)
 
 
 # named states for the legend, or an empty list for a gradient mode
@@ -249,18 +268,21 @@ static func _level_text(level: int, exact: bool) -> String:
 static func geometry_signature(city: CityState, mode := CityViewMode.Mode.NONE) -> Array:
 	var result: Array = [city.document.get_instance_id(), city.map_size, city.visible_altitude_levels, mode == CityViewMode.Mode.HEIGHT]
 
-	for id in ["ALTM", "XTER"]:
+	for id in ["ALTM", "XTER", "XQTR"]:
 		var chunk := city.document.find_chunk(id)
 		result.append(chunk.mutation_revision if chunk != null else -1)
 
 	# Clipped terrain also uses the water flag to select its visible altitude.
-	if mode == CityViewMode.Mode.HEIGHT or city.visible_altitude_levels < 32:
+	if mode == CityViewMode.Mode.HEIGHT or city.visible_altitude_levels < 32 or not city.quarter_heights.is_empty():
 		result.append(city.masked_tile_flag_signature(Sc2TileFlags.WATER))
 
 	return result
 
 
 static func value_image(city: CityState, mode: CityViewMode.Mode) -> Image:
+	if mode==CityViewMode.Mode.HEIGHT and not city.quarter_heights.is_empty():
+		var heights: PackedFloat32Array=NativeCityDataMesh.fractional_heights(city.altitude_words,city.tile_flags,city.quarter_heights)
+		return Image.create_from_data(city.map_size,city.map_size,false,Image.FORMAT_RF,heights.to_byte_array())
 	if CHUNKS.has(mode):
 		var chunk := city.document.find_chunk(CHUNKS[mode])
 		var chunk_data := chunk.decoded_payload if chunk != null else PackedByteArray()
@@ -280,11 +302,13 @@ static func value_image(city: CityState, mode: CityViewMode.Mode) -> Image:
 	return Image.create_from_data(city.map_size, city.map_size, false, Image.FORMAT_R8, data)
 
 
-static func color_image(mode: CityViewMode.Mode) -> Image:
-	var image := Image.create(256, 1, false, Image.FORMAT_RGB8)
+static func color_image(mode: CityViewMode.Mode, fractional := false) -> Image:
+	var size := 2048 if fractional and mode==CityViewMode.Mode.HEIGHT else 256
+	var image := Image.create(size, 1, false, Image.FORMAT_RGB8)
 
-	for index in 256:
-		image.set_pixel(index, 0, color(mini(index, 2) if mode in [CityViewMode.Mode.WATER, CityViewMode.Mode.POWER] else index, mode))
+	for index in size:
+		var tint := height_color(index/16.0) if size==2048 else color(mini(index, 2) if mode in [CityViewMode.Mode.WATER, CityViewMode.Mode.POWER] else index, mode)
+		image.set_pixel(index,0,tint)
 
 	return image
 
@@ -292,7 +316,7 @@ static func color_image(mode: CityViewMode.Mode) -> Image:
 static func signature(city: CityState, mode: CityViewMode.Mode) -> Array:
 	var result: Array = [city.document.get_instance_id(), city.map_size, mode, city.visible_altitude_levels]
 
-	for id in ["ALTM", "XTER", CHUNKS.get(mode, "ALTM" if mode == CityViewMode.Mode.HEIGHT else "XBIT")]:
+	for id in ["ALTM", "XTER", "XQTR", CHUNKS.get(mode, "ALTM" if mode == CityViewMode.Mode.HEIGHT else "XBIT")]:
 		var chunk := city.document.find_chunk(id)
 		result.append(chunk.mutation_revision if chunk != null else -1)
 
@@ -307,8 +331,8 @@ static func surface_polygon(city: CityState, x: int, y: int, height_view := fals
 # vertex colors only mark tops and walls. the grid shader reads each
 # tile's value through the uvs
 static func create_mesh(city: CityState, mode: CityViewMode.Mode) -> ArrayMesh:
-	var built: Dictionary = NativeCityDataMesh.build(city.map_size, city.visible_altitude_levels, mode == CityViewMode.Mode.HEIGHT,
-		city.altitude_words, city.terrain, city.tile_flags)
+	var built: Dictionary = NativeCityDataMesh.build_quarter(city.map_size, city.visible_altitude_levels, mode == CityViewMode.Mode.HEIGHT,
+		city.altitude_words, city.terrain, city.tile_flags,city.quarter_heights)
 	var mesh := ArrayMesh.new()
 
 	if built.has("error"):

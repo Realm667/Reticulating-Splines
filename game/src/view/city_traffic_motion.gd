@@ -7,7 +7,7 @@ const STEP_SECONDS := GameSpeedController.BASE_TICK_MSEC / 1000.0
 # presentation slack for asynchronous publications, without predicting a route.
 const TRAIN_BLEND_SECONDS := STEP_SECONDS * 1.5
 const OPTION_BY_TYPE := {1: "traffic_vehicles_enabled", 2: "traffic_vehicles_enabled", 3: "traffic_vehicles_enabled", 9: "traffic_vehicles_enabled",
-	10: "traffic_vehicles_enabled", 11: "traffic_vehicles_enabled", 15: "disaster_motion", 16: "traffic_vehicles_enabled"}
+	10: "traffic_vehicles_enabled", 11: "traffic_vehicles_enabled", 12: "traffic_vehicles_enabled", 13: "traffic_vehicles_enabled", 15: "disaster_motion", 16: "traffic_vehicles_enabled"}
 
 var tracks: Dictionary[int, Track] = {}
 var _signature: Array = []
@@ -20,9 +20,9 @@ func reset() -> void:
 	_observation.clear()
 
 
-func observe(city: CityState, options: Dictionary, vehicles_visible := true) -> void:
+func observe(city: CityState, options: Dictionary, vehicles_visible := true, underground_visible := false) -> void:
 	var signature := [city.document.get_instance_id(), city.compass_rotation(), city.visible_altitude_levels,
-		city.chunk_revision("ALTM"), city.chunk_revision("XTER"), city.chunk_revision("XQTR")]
+		city.chunk_revision("ALTM"), city.chunk_revision("XTER"), city.chunk_revision("XQTR"), underground_visible]
 	var observation := [signature, city.mirror_signature(["XTHG", "XTXT", "XBLD"]), vehicles_visible,
 		options.traffic_vehicles_enabled, options.disaster_enabled, options.disaster_motion]
 	if observation == _observation:
@@ -34,6 +34,8 @@ func observe(city: CityState, options: Dictionary, vehicles_visible := true) -> 
 	var seen: Dictionary[int, bool] = {}
 	for record in city.thing_count():
 		var thing := city.thing(record)
+		if thing!=null and ((thing.type in [12,13])!=underground_visible):
+			continue
 		if thing == null or not OPTION_BY_TYPE.has(thing.type) or not options[OPTION_BY_TYPE[thing.type]]:
 			continue
 		if not vehicles_visible and thing.type not in [15, 16]:
@@ -42,7 +44,7 @@ func observe(city: CityState, options: Dictionary, vehicles_visible := true) -> 
 			continue
 		# Type 9 with a state is Nessie, not a sailboat.
 		if (thing.type == 9 and thing.state != 0) or city.index_of(thing.x, thing.y) < 0 \
-				or city.text_overlay_id(thing.x, thing.y) != OverlayData.thing_id(record):
+				or (thing.type not in [12,13] and city.text_overlay_id(thing.x, thing.y) != OverlayData.thing_id(record)):
 			continue
 		seen[record] = true
 		var tile := Vector2(thing.x, thing.y) + Vector2(thing.px, thing.py) / 16.0
@@ -62,6 +64,9 @@ func observe(city: CityState, options: Dictionary, vehicles_visible := true) -> 
 			tile = Vector2(thing.x, thing.y)
 			point = Vector3((tile.x - tile.y) * 16.0 + train.screen_x,
 				(tile.x + tile.y) * 8.0 + train.screen_y - train.elevation, 0.0)
+		elif thing.type in [12,13]:
+			tile=Vector2(thing.x,thing.y)
+			point=Vector3((tile.x-tile.y)*16.0,(tile.x+tile.y)*8.0-VehicleModels.underground_height(city,tile)*12.0,0)
 		var track: Track = tracks.get(record)
 		if track == null or track.type != thing.type or track.target.distance_to(point) > 64.0:
 			# New records and teleports appear at their actual position.
@@ -78,7 +83,7 @@ func observe(city: CityState, options: Dictionary, vehicles_visible := true) -> 
 			track.target = point
 			track.target_tile = tile
 			track.elapsed = 0.0
-		track.subtile = Vector2.ZERO if thing.type in [10, 11, 15] else Vector2(thing.px - thing.py, (thing.px + thing.py) * 0.5)
+		track.subtile = Vector2.ZERO if thing.type in [10, 11, 12, 13, 15] else Vector2(thing.px - thing.py, (thing.px + thing.py) * 0.5)
 	for record in tracks.keys():
 		if not seen.has(record):
 			tracks.erase(record)
@@ -89,7 +94,7 @@ func advance(delta: float) -> bool:
 	for track: Track in tracks.values():
 		if track.current == track.target:
 			continue
-		var duration := TRAIN_BLEND_SECONDS if track.type in [10, 11] else STEP_SECONDS
+		var duration := TRAIN_BLEND_SECONDS if track.type in [10, 11, 12, 13] else STEP_SECONDS
 		track.elapsed = minf(duration, track.elapsed + maxf(delta, 0.0))
 		var weight := track.elapsed / duration
 		track.current = track.start.lerp(track.target, weight)

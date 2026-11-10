@@ -192,11 +192,15 @@ static func terrain_surface_polygon(
 	if polygon.size() != 4:
 		return polygon
 
-	if not city.quarter_heights.is_empty() and (land_surface or not city.is_water(x,y)):
+	if not city.quarter_heights.is_empty():
 		var index := city.index_of(x,y)
-		var base := city.land_altitude(x,y)*4
+		var base := TOP_MARGIN+(x+y)*HALF_HEIGHT
+		var offsets := [0,HALF_HEIGHT,TILE_HEIGHT-1,HALF_HEIGHT]
 		for corner in 4:
-			polygon[corner].y -= (city.quarter_heights[index*4+corner]-base)*ALTITUDE_STEP/4.0
+			var q := int(city.quarter_heights[index*4+corner])
+			if not land_surface and city.is_water(x,y):
+				q=maxi(q,city.water_altitude(x,y)*4)
+			polygon[corner].y=base+offsets[corner]-q*ALTITUDE_STEP/4.0
 		return polygon
 
 	var terrain := city.terrain_id(x, y)

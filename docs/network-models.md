@@ -66,6 +66,6 @@ commands for all 98 types at three native sizes and four city rotations. It also
 checks spatial bridge reflection samples in both orientations. Run the regular
 headless and renderer suites and the native workspace gates for changes here.
 
-Additional terrain angles remain a later task. This display feature does not
-introduce new slope construction rules or change the flat-only building and zone
-rules.
+Quarter heights and their construction rules are documented in
+[quarter-height-terrain.md](quarter-height-terrain.md). Underground models and
+the finite coverage matrix are documented in [model-coverage.md](model-coverage.md).

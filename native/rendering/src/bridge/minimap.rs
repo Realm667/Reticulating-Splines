@@ -32,6 +32,11 @@ impl NativeCityMinimap {
             .and_then(|v| v.try_to::<PackedInt32Array>().ok())
             .unwrap_or_default();
         let mode = request.get("mode").and_then(|v| v.try_to::<GString>().ok()).unwrap_or_default();
+        let flat = request
+            .get("quarter_heights")
+            .and_then(|v| v.try_to::<PackedInt32Array>().ok())
+            .unwrap_or_default();
+        let quarter = super::data_mesh::quarter_corners(flat.as_slice(), altitude.len()).ok()?;
         let city = minimap::MinimapCity {
             edge: int(request, "edge", 0).max(0) as usize,
             buildings: buildings.as_slice(),
@@ -40,6 +45,7 @@ impl NativeCityMinimap {
             underground: underground.as_slice(),
             altitude: altitude.as_slice(),
             data: data.as_slice(),
+            quarter: &quarter,
         };
 
         city.validate().ok()?;
@@ -66,8 +72,7 @@ impl NativeCityMinimap {
     #[func]
     fn create_image(request: VarDictionary, palette: PackedByteArray) -> Option<Gd<Image>> {
         let (edge, rgba) = Self::with_city(&request, |city, mode| {
-            let indices = minimap::indices(city, mode);
-            (minimap::image_edge(city.edge), minimap::colorize(&indices, palette.as_slice()))
+            (minimap::image_edge(city.edge), minimap::rgba(city, mode, palette.as_slice()))
         })?;
         Image::create_from_data(
             edge as i32,

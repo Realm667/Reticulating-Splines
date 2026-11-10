@@ -80,4 +80,4 @@ static func _request(city: CityState, mode: String) -> Dictionary:
 			data = chunk.decoded_payload
 
 	return {"edge": city.map_size, "buildings": city.buildings, "zones": city.zones, "flags": city.tile_flags,
-		"underground": city.underground, "altitude": city.altitude_words, "mode": mode, "data": data}
+		"underground": city.underground, "altitude": city.altitude_words, "quarter_heights":city.quarter_heights,"mode": mode, "data": data}

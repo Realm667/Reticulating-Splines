@@ -30,7 +30,8 @@ func _run() -> void:
 				var frame := models.frame(kind,1,CityLifePaths.forward(direction),12,pack.palette,divisor)
 				assert(not frame.image.is_invisible())
 				assert(frame.image.get_size()==frame.indexed.get_size() and frame.image.get_size()==frame.lamps.get_size())
-				assert(frame.image.get_width()<=32 and frame.image.get_height()<=32,"Models must fit the persistent vehicle atlas")
+				var limit := 32 if kind<VehicleModels.Kind.AIRPLANE else 96
+				assert(frame.image.get_width()<=limit and frame.image.get_height()<=limit,"Road models fit the traffic atlas; larger moving models use individual textures")
 				assert(models.frame(kind,1,CityLifePaths.forward(direction),12,pack.palette,divisor)==frame,"Unchanged poses share their raster")
 				rasters+=1
 	for mask in [5,10,15]:
@@ -54,6 +55,11 @@ func _run() -> void:
 	QuarterFixture.set_corners(city,point,[8,12,12,8])
 	assert(is_equal_approx(VehicleModels.rise_at(city,Vector2(point),Vector2.RIGHT),12))
 	assert(is_equal_approx(VehicleModels.rise_at(city,Vector2(point),Vector2.LEFT),-12))
+	city.set_underground_id(point.x,point.y,2)
+	city.set_underground_id(point.x+1,point.y,2)
+	QuarterFixture.set_corners(city,point+Vector2i.RIGHT,[28,28,28,28])
+	var edge := Vector2(point)+Vector2(.5,0)
+	assert(absf(VehicleModels.underground_height(city,edge-Vector2(.0001,0))-VehicleModels.underground_height(city,edge+Vector2(.0001,0)))<.002,"A train must cross the same shared underground edge without a height jump")
 	var before := State.capture(city.document)
 	VehicleModels.contact(city,Vector2(point))
 	assert(before==State.capture(city.document),"Pose evaluation cannot change a city or its RNG")
@@ -69,6 +75,20 @@ func _run() -> void:
 	surface.depth_order=(water_tile.x+water_tile.y)*city.map_size+water_tile.y
 	assert(CitySurfaceOcclusion.maximum_height(city,surface)==2.0,"Quarter geometry must retain the actual water receiver height")
 	var shared:=VehicleModels.new()
+	for kind in [VehicleModels.Kind.ENGINE,VehicleModels.Kind.COACH]:
+		for part: Dictionary in VehicleModels.geometry(kind,Vector2.RIGHT,0).parts:
+			for vertex: Vector3 in part.vertices:
+				assert(Vector2(vertex.y*32,vertex.z).length()<UndergroundModels.TUNNEL_RADIUS,"Train bodies need real tunnel clearance")
+	assert(12.0>UndergroundModels.TUNNEL_RADIUS+1.35,"Crossing pipes and their collars must clear the subway lining")
+	for kind in VehicleModels.Kind.size():
+		for direction in 8:
+			for rise in [-384.0,0.0,384.0]:
+				var pose := shared.frame(kind,0,CityLifePaths.forward(direction),rise,pack.palette)
+				for part: Dictionary in pose.recipe.parts:
+					for vertex: Vector3 in part.vertices:
+						assert(NetworkModelGeometry.project(vertex).y<float(pose.recipe.baseline),"A steep pose or ship bow was cropped at the raster baseline")
+	shared.frames.clear()
+	shared.meshes.clear()
 	shared.frame(VehicleModels.Kind.ENGINE,0,Vector2.RIGHT,6,pack.palette)
 	shared.frame(VehicleModels.Kind.COACH,0,Vector2.RIGHT,6,pack.palette)
 	assert(shared.meshes.size()==1,"Engines and coaches share one structural model")
@@ -146,6 +166,27 @@ func _check_application() -> void:
 	main.moving_sprites.refresh_moving_things()
 	assert(canvas.render(main,[figure],CityLifeSprites.new()))
 	assert(main.moving_sprites.vehicle_models.frames.is_empty() and canvas.vehicle_models.frames.is_empty(),"Models off must restore the existing train and road artwork")
+	main.preferences.visual_enhancements.models_enabled=true
+	var active := main.document_state.city
+	for type in [1,2,3,9]:
+		MovingFixture.write_thing(active,2,{"type":type,"x":20,"y":20,"direction":2,"z":3})
+		main.moving_sprites.vehicle_models.frames.clear()
+		main.moving_sprites.refresh_moving_things()
+		assert(not main.moving_sprites.vehicle_models.frames.is_empty(),"Actual moving commands must model thing type %d"%type)
+	active.set_underground_id(20,20,UndergroundTileIds.SUBWAY_TB)
+	main.view_state.overlay_mode=CityViewMode.Mode.UNDERGROUND
+	main.view_state.show_underground_subways=true
+	for type in [12,13]:
+		MovingFixture.write_thing(active,2,{"type":type,"x":20,"y":20,"direction":1})
+		main.moving_sprites.vehicle_models.frames.clear()
+		var saved := State.capture(active.document)
+		main.moving_sprites.refresh_moving_things()
+		assert(not main.moving_sprites.vehicle_models.frames.is_empty(),"Underground train commands must use shared rigid bodies")
+		assert(State.capture(active.document)==saved)
+	main.view_state.show_underground_subways=false
+	main.moving_sprites.vehicle_models.frames.clear()
+	main.moving_sprites.refresh_moving_things()
+	assert(main.moving_sprites.vehicle_models.frames.is_empty(),"Hidden subways must hide their model trains")
 	canvas.free()
 	main.queue_free()
 	await process_frame

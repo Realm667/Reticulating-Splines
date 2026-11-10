@@ -29,13 +29,34 @@ impl NativeDebugTiles {
         flags: PackedByteArray,
         window: Rect2i,
     ) -> VarDictionary {
+        Self::window_mesh_quarter(edge, visible, altitude, terrain, flags, window, PackedInt32Array::new())
+    }
+
+    #[func]
+    fn window_mesh_quarter(
+        edge: i64,
+        visible: i64,
+        altitude: PackedInt32Array,
+        terrain: PackedByteArray,
+        flags: PackedByteArray,
+        window: Rect2i,
+        corners: PackedInt32Array,
+    ) -> VarDictionary {
         let mut result = VarDictionary::new();
+        let quarter = match super::data_mesh::quarter_corners(corners.as_slice(), altitude.len()) {
+            Ok(q) => q,
+            Err(error) => {
+                result.set("error", &GString::from(&error));
+                return result;
+            }
+        };
         let city = DataCity {
             edge: edge.max(0) as usize,
             visible: visible as i32,
             altitude: altitude.as_slice(),
             terrain: terrain.as_slice(),
             flags: flags.as_slice(),
+            quarter: &quarter,
         };
 
         if let Err(error) = city.validate() {

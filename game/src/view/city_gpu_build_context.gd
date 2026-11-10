@@ -32,6 +32,7 @@ var error := ""
 var _layout: Array = []
 var _revision := -1
 var quarter_models := QuarterNetworkModels.new()
+var underground_models := UndergroundModels.new()
 
 
 static func tile_cache_limit() -> int:
@@ -117,12 +118,16 @@ func prepare(city: CityState, palette: Sc2Palette, sprites: Sc2SpriteArchive, vi
 	if city == null or not city.is_valid() or palette == null or not palette.is_valid() or sprites == null or not sprites.is_valid():
 		return "invalid native region assets"
 
+	var model_underground := (sprites.visual_models_enabled or not city.quarter_heights.is_empty()) \
+		and (mode==CityViewMode.Mode.UNDERGROUND or city.visible_altitude_levels<32)
 	var layout := [city.map_size, city.visible_altitude_levels, city.compass_rotation(),
 		view, mode, pipes, subways, water_mains, palette, sprites, pack_atlas, special_overlays, animation_phase, tunnels,
 		with_artwork, hd_effects, sprites.visual_revision]
 	if not city.quarter_heights.is_empty():
 		layout.append(city.document.find_chunk("XQTR").mutation_revision)
 		layout.append(city.document.find_chunk("XBLD").mutation_revision)
+	if model_underground:
+		layout.append(city.mirror_signature(["XUND","ALTM","XTER"]))
 	var configuration := CityIsometricRenderer.view_configuration(view)
 
 	if configuration == null:
@@ -170,6 +175,11 @@ func prepare(city: CityState, palette: Sc2Palette, sprites: Sc2SpriteArchive, vi
 					model_heights[id] = sprites.network_model_heights[id]
 		request["model_heights"] = model_heights
 		request["terrain_models"] = int(sprites.visual_models_enabled and mode == CityViewMode.Mode.CITY)
+		if model_underground:
+			var design := sprites.network_model_palette if sprites.network_model_palette!=null else palette
+			var underground := underground_models.prepare(city,palette,view,design)
+			artwork.merge(underground.images)
+			request["underground_models"]=underground.replacements
 		if not city.quarter_heights.is_empty() and mode == CityViewMode.Mode.CITY:
 			var prepared:=quarter_models.prepare(city,sprites,palette,view)
 			artwork.merge(prepared.images)

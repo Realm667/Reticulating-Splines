@@ -91,8 +91,8 @@ func build_window(city: CityState, target: Rect2i, signature: Array) -> void:
 	var started := Time.get_ticks_usec()
 	var grown := target.grow(maxi(target.size.x, target.size.y) / 4).intersection(Rect2i(0, 0, city.map_size, city.map_size))
 	var bounded := limited(grown, target)
-	var built := NativeDebugTiles.window_mesh(city.map_size, city.visible_altitude_levels, city.altitude_words, city.terrain,
-		city.tile_flags, bounded)
+	var built := NativeDebugTiles.window_mesh_quarter(city.map_size, city.visible_altitude_levels, city.altitude_words, city.terrain,
+		city.tile_flags, bounded,city.quarter_heights)
 	var result := ArrayMesh.new()
 
 	if not built.has("error") and not (built.vertices as PackedVector2Array).is_empty():

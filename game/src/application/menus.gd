@@ -429,7 +429,7 @@ func _set_vehicles_visible(enabled: bool) -> void:
 
 	_sync_view_controls()
 
-	if app.document_state.city != null and app.view_state.overlay_mode == CityViewMode.Mode.CITY:
+	if app.document_state.city != null and app.view_state.overlay_mode in [CityViewMode.Mode.CITY,CityViewMode.Mode.UNDERGROUND]:
 		app.moving_sprites.refresh_moving_things()
 
 	app.status_label.text = tr("Vehicles %s.") % tr("shown" if enabled else "hidden")

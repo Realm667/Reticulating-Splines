@@ -57,6 +57,24 @@ pub fn window_tops(city: &DataCity, window: TileWindow) -> WindowMesh {
         return mesh;
     }
 
+    if !city.quarter.is_empty() {
+        let data = crate::quarter_data::window(city, false, window);
+        mesh.indices = data
+            .indices
+            .chunks_exact(3)
+            .filter(|tri| data.colors[tri[0] as usize][2] == 1.0)
+            .flatten()
+            .copied()
+            .collect();
+        mesh.vertices = data.vertices;
+        mesh.uvs = data.uvs;
+        mesh.tiles = (window.x0..window.x1)
+            .flat_map(|x| (window.y0..window.y1).map(move |y| x * city.edge + y))
+            .filter(|i| city.visible(*i, false))
+            .count();
+        return mesh;
+    }
+
     let reserve = window.area() * 4;
     mesh.vertices.reserve(reserve);
     mesh.uvs.reserve(reserve);
@@ -110,6 +128,7 @@ mod tests {
             altitude: leak(altitude.to_vec()),
             terrain: leak_bytes(terrain.to_vec()),
             flags: leak_bytes(flags.to_vec()),
+            quarter: &[],
         }
     }
 
