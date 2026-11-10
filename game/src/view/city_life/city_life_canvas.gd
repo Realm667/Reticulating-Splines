@@ -6,6 +6,7 @@ extends Node2D
 
 const SHADER := preload("res://src/view/city_life/city_life.gdshader")
 const MAX_TEXTURE_EDGE := 4096
+var vehicle_models := VehicleModels.new()
 var atlas := CityLifeAtlas.new()
 var gpu: CityLifeGpu
 var gpu_enabled := DisplayServer.get_name() != "headless"
@@ -133,10 +134,21 @@ func render(app: CityApplication, figures: Array, sprites: CityLifeSprites, prep
 				if receiver_uploads >= 8:
 					return _pending_frame(app, previous_bounds)
 		var sprite := sprites.sprite(figure.walking, figure.variant, figure.direction, int(figure.distance * 8.0) % 2, figure.vehicle_kind)
-		if not _sprite_sizes.has(sprite):
-			_sprite_sizes[sprite] = sprite.get_size()
-		var size := _sprite_sizes[sprite]
-		var origin := Vector2i(figure.position.round()) - Vector2i(size.x / 2, size.y - 1)
+		var model: Dictionary = {}
+		if not figure.walking and app.preferences.visual_enhancements.models_enabled:
+			var forward := CityLifePaths.forward(figure.direction)
+			var world := lights.cached_vehicle_world(city,figure)
+			model = vehicle_models.frame(figure.vehicle_kind,figure.variant,forward,
+				VehicleModels.rise_at(city,world,forward),app.asset_state.palette,4 >> app.static_render.city_view_size())
+			sprite = model.image
+		var size := sprite.get_size()
+		# Generated frames belong to the bounded model pool. Do not keep an
+		# additional strong image reference after that pool evicts a pose.
+		if model.is_empty():
+			if not _sprite_sizes.has(sprite):
+				_sprite_sizes[sprite] = size
+			size = _sprite_sizes[sprite]
+		var origin := Vector2i(figure.position.round()) - (Vector2i(model.anchor) if not model.is_empty() else Vector2i(size.x / 2, size.y - 1))
 		if not source_bounds.intersects(Rect2i(origin, size)):
 			if receiver_uploaded or lights.prepared_receivers != receivers:
 				preparation_usec += Time.get_ticks_usec() - preparation_started
@@ -145,7 +157,7 @@ func render(app: CityApplication, figures: Array, sprites: CityLifeSprites, prep
 			continue
 		var candidates := _candidates(app, figure.tile, figure.enter)
 		var opacity := figure.opacity()
-		var shear := 0.0 if figure.walking else lights.cached_sprite_shear(city, figure.tile, figure.enter, figure.exit)
+		var shear := 0.0 if figure.walking or not model.is_empty() else lights.cached_sprite_shear(city, figure.tile, figure.enter, figure.exit)
 		if gpu_enabled:
 			var entry: Dictionary = _gpu_entries.get(figure, {})
 			if entry.is_empty():

@@ -69,7 +69,7 @@ static func render(id: int, source: Image, palette: Sc2Palette, view := 2, prepa
 	z_values.fill(NAN)
 	var roles:=PackedByteArray()
 	roles.resize(width*height)
-	var colors:=materials(palette,id)
+	var colors: Dictionary=recipe.materials if recipe.has("materials") else materials(palette,id)
 	var source_indices: Dictionary={}
 	for i in 256:
 		var c:=palette.color(i).to_rgba32()
@@ -134,6 +134,8 @@ static func render(id: int, source: Image, palette: Sc2Palette, view := 2, prepa
 					z_values[i]=maxf(0,world.z/divisor)
 					pixels[i]=index
 					roles[i]=1 if role in ["road_surface","ballast_surface","deck","ramp","pavement","ballast"] else 2
+					if role in ["headlamp","taillamp","beacon"]:
+						roles[i]=3+["headlamp","taillamp","beacon"].find(role)
 	var entry:=Sc2SpriteArchive.entry_from_indices(id+1000,width,height,pixels)
 	return {"entry":entry,"image":entry.create_image(palette).image,"depth":depths,"height":z_values,"roles":roles,"recipe":recipe}
 

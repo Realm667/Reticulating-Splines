@@ -33,6 +33,11 @@ var blend := 1.0
 var origin := Vector2i.ZERO
 var upload_bytes := 0
 var artwork_scale := 1
+var _cell := CELL
+var _art_image: Image
+var _lamp_image: Image
+var _sprites: CityLifeSprites
+var _lights: CityLifeLights
 
 
 func _init() -> void:
@@ -42,6 +47,8 @@ func _init() -> void:
 func prepare(sprites: CityLifeSprites, lights: CityLifeLights) -> void:
 	if artwork != null:
 		return
+	_sprites = sprites
+	_lights = lights
 	artwork_scale = sprites.authored.city_life_scale if sprites.authored != null else 1
 	var image := Image.create(1024 * artwork_scale, 512 * artwork_scale, false, Image.FORMAT_RGBA8)
 	var lamp_image := Image.create(1024 * artwork_scale, 512 * artwork_scale, false, Image.FORMAT_RGBA8)
@@ -61,11 +68,14 @@ func prepare(sprites: CityLifeSprites, lights: CityLifeLights) -> void:
 							var light := _scaled(sprites.lamp_image(sprite, lights, kind, direction, true), art.get_size())
 							lamp_image.blit_rect(light, Rect2i(Vector2i.ZERO, art.get_size()), point)
 						rectangles[sprite.get_instance_id()] = rect
+	_art_image = image
+	_lamp_image = lamp_image
 	artwork = ImageTexture.create_from_image(image)
 	emission = ImageTexture.create_from_image(lamp_image)
 
 
 func render(canvas: CityLifeCanvas, entries: Array[Dictionary]) -> void:
+	_include_entries(entries)
 	origin = canvas.source_bounds.position
 	upload_bytes = 0
 	var count := entries.size()
@@ -353,3 +363,55 @@ class MaskEntry extends RefCounted:
 	var image: Image
 	var origin := Vector2i.ZERO
 	var identity := 0
+
+
+func _include_entries(entries: Array[Dictionary]) -> void:
+	var changed := false
+	var resized := false
+	var needed_height := _cell.y
+	for entry in entries:
+		needed_height = maxi(needed_height,entry.sprite.get_height())
+	if needed_height > _cell.y:
+		_cell.y = nearest_po2(needed_height)
+		rectangles.clear()
+		_art_image.fill(Color.TRANSPARENT)
+		_lamp_image.fill(Color.TRANSPARENT)
+		changed = true
+	# A bounded working atlas, independently of how long a city has been viewed.
+	if rectangles.size()+entries.size() > 4096:
+		rectangles.clear()
+		_art_image.fill(Color.TRANSPARENT)
+		_lamp_image.fill(Color.TRANSPARENT)
+		changed = true
+	for entry in entries:
+		var sprite: Image = entry.sprite
+		if rectangles.has(sprite.get_instance_id()):
+			continue
+		var slot := rectangles.size()
+		var point := Vector2i(slot % 32,slot / 32)*_cell*artwork_scale
+		var art := _scaled(_sprites.master_image(sprite),sprite.get_size()*artwork_scale)
+		assert(art.get_width() <= _cell.x*artwork_scale and art.get_height() <= _cell.y*artwork_scale)
+		if point.y+art.get_height() > _art_image.get_height():
+			var old := _art_image
+			var old_lamps := _lamp_image
+			_art_image = Image.create(old.get_width(),old.get_height()*2,false,Image.FORMAT_RGBA8)
+			_lamp_image = Image.create(old.get_width(),old.get_height()*2,false,Image.FORMAT_RGBA8)
+			_art_image.blit_rect(old,Rect2i(Vector2i.ZERO,old.get_size()),Vector2i.ZERO)
+			_lamp_image.blit_rect(old_lamps,Rect2i(Vector2i.ZERO,old_lamps.get_size()),Vector2i.ZERO)
+			resized = true
+		_art_image.blit_rect(art,Rect2i(Vector2i.ZERO,art.get_size()),point)
+		var figure: CityLifeController.Figure = entry.figure
+		if not figure.walking:
+			var lamp := _sprites.lamp_image(sprite,_lights,figure.vehicle_kind,figure.direction,true)
+			if lamp != null:
+				lamp = _scaled(lamp,art.get_size())
+				_lamp_image.blit_rect(lamp,Rect2i(Vector2i.ZERO,lamp.get_size()),point)
+		rectangles[sprite.get_instance_id()] = Rect2i(point,art.get_size())
+		changed = true
+	if changed:
+		if resized:
+			artwork.set_image(_art_image)
+			emission.set_image(_lamp_image)
+		else:
+			artwork.update(_art_image)
+			emission.update(_lamp_image)

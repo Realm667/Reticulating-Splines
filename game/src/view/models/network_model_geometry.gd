@@ -328,10 +328,14 @@ static func power_routes(mask: int, corners: PackedFloat32Array, pole_height := 
 	var parts: Array = []
 	var base := surface_height(Vector2.ZERO,corners)
 	box(parts,"pole",Vector3(pole_position.x-.035,pole_position.y-.035,base),Vector3(pole_position.x+.035,pole_position.y+.035,base+pole_height))
-	if pole_position==Vector2.ZERO:
-		box(parts,"crossarm",Vector3(-0.28,-0.035,base+pole_height-2),Vector3(0.28,0.035,base+pole_height-1))
-	else:
+	if pole_position!=Vector2.ZERO:
 		beam(parts,"crossarm",Vector3(pole_position.x,pole_position.y,base+pole_height),Vector3(0,0,base+pole_height),1.1)
+	# Each cable pair needs a transverse arm at its actual attachment height.
+	# Junctions share the mast and carry one arm for each occupied axis.
+	if mask & 5:
+		box(parts,"crossarm",Vector3(-0.28,-0.035,base+pole_height-.5),Vector3(0.28,0.035,base+pole_height))
+	if mask & 10:
+		box(parts,"crossarm",Vector3(-0.035,-0.28,base+pole_height-.5),Vector3(0.035,0.28,base+pole_height))
 	for direction in 4:
 		if not mask & (1 << direction):
 			continue

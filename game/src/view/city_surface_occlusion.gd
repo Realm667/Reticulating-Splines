@@ -17,6 +17,11 @@ static func maximum_height(city: CityState, command: CityStaticCommand) -> float
 	var tile := IsometricFloatingOcclusion.depth_tile(command.depth_order, city.map_size)
 	if id in [BuildingTileIds.RAIL_BRIDGE, BuildingTileIds.RAIL_BRIDGE_PYLON]:
 		return city.water_altitude(tile.x, tile.y) + 1.0
+	if not city.quarter_heights.is_empty():
+		var index := city.index_of(tile.x,tile.y)*4
+		if index >= 0:
+			var top := float(maxi(maxi(city.quarter_heights[index],city.quarter_heights[index+1]),maxi(city.quarter_heights[index+2],city.quarter_heights[index+3])))/4.0
+			return maxf(top,city.water_altitude(tile.x,tile.y)) if city.is_water(tile.x,tile.y) else top
 	var shape := id - 256 if id >= 256 and id <= 268 else city.terrain_id(tile.x, tile.y) & 15
 	var raised := shape < IsometricConstants.TERRAIN_SURFACE_CORNER_MASKS.size() \
 		and IsometricConstants.TERRAIN_SURFACE_CORNER_MASKS[shape] != 0
@@ -51,6 +56,11 @@ static func with_ground_neighbors(city: CityState, supports: PackedInt32Array) -
 					or city.terrain_id(tile.x, tile.y) != city.terrain_id(neighbor.x, neighbor.y) \
 					or city.is_water(tile.x, tile.y) != city.is_water(neighbor.x, neighbor.y):
 				continue
+			if not city.quarter_heights.is_empty():
+				var first := city.index_of(tile.x,tile.y)*4
+				var second := city.index_of(neighbor.x,neighbor.y)*4
+				if city.quarter_heights.slice(first,first+4) != city.quarter_heights.slice(second,second+4):
+					continue
 			if city.is_water(tile.x, tile.y) and city.water_altitude(tile.x, tile.y) != city.water_altitude(neighbor.x, neighbor.y):
 				continue
 			var next := (neighbor.x + neighbor.y) * city.map_size + neighbor.y

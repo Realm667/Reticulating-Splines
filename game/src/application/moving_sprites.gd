@@ -10,6 +10,7 @@ const DynamicSpriteCanvas = preload("res://src/view/city_dynamic_sprite_canvas.g
 var app: CityApplication
 var caches: RenderCaches
 var traffic_motion := CityTrafficMotion.new()
+var vehicle_models := VehicleModels.new()
 var moving_lights := CityMovingLights.new()
 var tornado_renderer: CityTornadoRenderer
 var beam_glow: CityDisasterBeamGlow
@@ -127,8 +128,31 @@ func refresh_moving_things(view_size := -1) -> void:
 		var warm_cloud := cloud_style == 2
 		var light_allowed := VisualEnhancementOptions.detail_lights_visible(app.preferences.visual_enhancements, app.map_view.zoom_factor) \
 			or not (command.record >= 0 and _is_vehicle(int(command.record)))
+		var model: Dictionary = {}
+		var model_height := -1.0
+		var thing := app.document_state.city.thing(command.record) if command.record >= 0 else null
+		if app.preferences.visual_enhancements.models_enabled and not command.shadow and thing != null and thing.type in [4,10,11]:
+			var city := app.document_state.city
+			var track: CityTrafficMotion.Track = traffic_motion.tracks.get(command.record)
+			var world := track.tile if track != null else Vector2(thing.x,thing.y)
+			if thing.type == 4:
+				world += Vector2(thing.px,thing.py)/16.0
+			var forward := Vector2(CityLifePaths.DIRECTIONS[thing.direction & 3])
+			if thing.type in [10,11] and thing.dx in [1,3,5,7]:
+				var ports := CitySurfaceOcclusion._rail_ports(city,Vector2i(world.round()))
+				if ports in [3,6,9,12]:
+					forward = CityLifePaths.forward(4+(thing.dx-1)/2)
+			var kind := VehicleModels.Kind.BULLDOZER if thing.type == 4 else (VehicleModels.Kind.ENGINE if thing.type == 10 else VehicleModels.Kind.COACH)
+			model = vehicle_models.frame(kind,0,forward,VehicleModels.rise_at(city,world,forward),app.asset_state.palette,divisor)
+			display_position = VehicleModels.contact(city,world)-model.anchor
+			position = Vector2i(display_position.round())
+			factor = 1
+			model_height = VehicleModels.height(city,world)
 		var surface_altitude := traffic_motion.aircraft_altitude(command.record, app.document_state.city) if not command.shadow else -1.0
-		var visual_cache_key := var_to_str([view_size, factor, sprite_archive.visual_revision, transparent_shadow, toxic_cloud, warm_cloud, light_allowed, position, command.value_signature(), floori(surface_altitude + 0.00001)])
+		if not model.is_empty():
+			surface_altitude = model_height
+		var height_steps := 4 if not app.document_state.city.quarter_heights.is_empty() else 1
+		var visual_cache_key := var_to_str([view_size, factor, sprite_archive.visual_revision, transparent_shadow, toxic_cloud, warm_cloud, light_allowed, position, command.value_signature(), floori(surface_altitude*height_steps + 0.00001), model.get("image")])
 		# Include fully hidden shadows: a static change can make them visible.
 		caches.dynamic_active_keys[visual_cache_key] = true
 
@@ -140,9 +164,18 @@ func refresh_moving_things(view_size := -1) -> void:
 
 			continue
 
-		var resource := dynamic_sprite_resource(
-			sprite_archive, command.sprite_id, command.flip, divisor, factor
-		)
+		var resource: CitySpriteResource
+		if model.is_empty():
+			resource = dynamic_sprite_resource(sprite_archive,command.sprite_id,command.flip,divisor,factor)
+		else:
+			if not model.has("resource"):
+				var modeled := CitySpriteResource.new()
+				modeled.image = model.indexed
+				modeled.native_size = model.indexed.get_size()
+				modeled.texture = ImageTexture.create_from_image(modeled.image)
+				modeled.index_texture = modeled.texture
+				model.resource = modeled
+			resource = model.resource
 
 		if resource == null:
 			continue
@@ -219,7 +252,7 @@ func refresh_moving_things(view_size := -1) -> void:
 		visual.image = visual_image
 		if not command.shadow and light_allowed:
 			var light_source := moving_lights.mask(sprite_archive, command.sprite_id, resource.artwork_image != null)
-			var emission := resource.light_mask(light_source, command.flip)
+			var emission := resource.light_mask(light_source, command.flip) if model.is_empty() else resource.light_mask(model.lamps,false)
 			if visual_image == resource.image:
 				visual.emission_texture = resource.light_texture()
 			elif emission != null:
@@ -337,9 +370,9 @@ func _dynamic_occluder_image(
 	]
 	cache_key += ":shadow" if aircraft_shadow else ""
 	cache_key += ":dispatch" if preserve_dispatch else ""
-	# Surface heights are integral. Reuse a silhouette throughout the same
-	# height interval instead of rebuilding it for every fractional flight step.
-	cache_key += ":surface:%d" % floori(surface_altitude + 0.00001)
+	# Quarter cities need the same precision for silhouette reuse as for geometry.
+	var height_steps := 4 if app.document_state.city != null and not app.document_state.city.quarter_heights.is_empty() else 1
+	cache_key += ":surface:%d" % floori(surface_altitude*height_steps + 0.00001)
 	if not train_support_orders.is_empty():
 		cache_key += ":" + str(train_support_orders)
 	if caches.dynamic_occluder_cache.has(cache_key):
@@ -363,7 +396,7 @@ func _dynamic_occluder_image(
 	# Bounding boxes include transparent pixels. Combine all later silhouettes
 	# to find the foreground that actually covers the sprite.
 	var train_height := _train_support_height(train_support_orders) if is_train else -1
-	var height := float(train_height) if train_height >= 0 else surface_altitude
+	var height := surface_altitude if is_train and surface_altitude >= 0.0 else (float(train_height) if train_height >= 0 else surface_altitude)
 	var surfaces := CitySurfaceOcclusion.train_supports(app.document_state.city, train_support_orders) if train_height >= 0 else train_support_orders
 	for command in static_occlusion_candidates(bounds):
 		if aircraft_shadow and _shadow_receiver(command):

@@ -41692,8 +41692,8 @@ msgid "Terrain is too steep for infrastructure."
 msgstr "Il terreno è troppo ripido per le infrastrutture."
 
 #. Supplementary quarter-height terrain, AI-assisted translation.
-msgid "Render terrain, roads, railways, power lines and bridges from shared geometric models. Keeps the native pixel style. Unsupported graphics use their original sprites."
-msgstr "Rappresenta terreno, strade, ferrovie, linee elettriche e ponti con modelli geometrici condivisi. Mantiene lo stile a pixel originale. La grafica non supportata usa gli sprite originali."
+msgid "Render terrain, roads, railways, power lines, bridges, vehicles and trains from shared geometric models. Keeps the native pixel style. Unsupported graphics use their original sprites."
+msgstr "Mostra terreno, strade, ferrovie, linee elettriche, ponti, veicoli e treni con modelli geometrici condivisi. Mantiene lo stile pixel originale. La grafica non supportata conserva gli sprite originali."
 
 #. Supplementary quarter-terrain slope category.
 msgid "Normal"

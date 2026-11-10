@@ -32,6 +32,8 @@ func master_image(sprite_image: Image) -> Image:
 
 
 func lamp_image(sprite_image: Image, lights: CityLifeLights, kind: int, direction: int, master := false) -> Image:
+	if sprite_image.has_meta("vehicle_model_lamps"):
+		return sprite_image.get_meta("vehicle_model_lamps") as Image
 	var id := sprite_image.get_instance_id()
 	var frame := master_frames.get(id) as VisualArtwork.Frame
 	if frame == null:

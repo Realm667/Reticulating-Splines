@@ -11567,8 +11567,8 @@ msgid "Terrain is too steep for infrastructure."
 msgstr "지형이 너무 가팔라 기반 시설을 건설할 수 없습니다."
 
 #. Supplementary quarter-height terrain, AI-assisted translation.
-msgid "Render terrain, roads, railways, power lines and bridges from shared geometric models. Keeps the native pixel style. Unsupported graphics use their original sprites."
-msgstr "공유 기하 모델로 지형, 도로, 철도, 전선과 다리를 표시합니다. 원래 픽셀 스타일을 유지합니다. 지원하지 않는 그래픽은 기존 스프라이트를 사용합니다."
+msgid "Render terrain, roads, railways, power lines, bridges, vehicles and trains from shared geometric models. Keeps the native pixel style. Unsupported graphics use their original sprites."
+msgstr "지형, 도로, 철도, 송전선, 다리, 차량과 열차를 공통 기하 모델로 표시합니다. 원래 픽셀 스타일을 유지합니다. 지원하지 않는 그래픽은 기존 스프라이트를 사용합니다."
 
 #. Supplementary quarter-terrain slope category.
 msgid "Normal"

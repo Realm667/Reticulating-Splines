@@ -13,13 +13,13 @@ func sync(city: CityState) -> Dictionary[Vector2i, bool]:
 	var changed: Dictionary[Vector2i, bool] = {}
 	reset = false
 	var layout := [city.get_instance_id(), city.map_size, city.compass_rotation(), city.visible_altitude_levels]
-	var revision := [layout, city.mirror_signature(["ALTM", "XBLD", "XTER", "XZON", "XBIT"])]
+	var revision := [layout, city.mirror_signature(["ALTM", "XBLD", "XTER", "XZON", "XBIT", "XQTR"])]
 	if revision == _signature:
 		return changed
 	_signature = revision
 	# Native setters can mutate borrowed mirrors. Keep owned snapshots.
 	var planes: Array[PackedByteArray] = [city.altitude_words.to_byte_array(), city.buildings.duplicate(), city.terrain.duplicate(),
-		city.zones.duplicate(), city.tile_flags.duplicate(), city.object_altitude_overrides.to_byte_array()]
+		city.zones.duplicate(), city.tile_flags.duplicate(), city.object_altitude_overrides.to_byte_array(), city.quarter_heights.to_byte_array()]
 	reset = layout != _layout or _planes.size() != planes.size()
 	if not reset:
 		for plane in planes.size():
@@ -27,7 +27,7 @@ func sync(city: CityState) -> Dictionary[Vector2i, bool]:
 				reset = true
 				break
 			var mask := Sc2ZoneLayout.CORNERS_MASK if plane == 3 else (Sc2TileFlags.FLIPPED | Sc2TileFlags.WATER if plane == 4 else 255)
-			var indices := NativeCityChanges.changed_cells(_planes[plane], planes[plane], 4 if plane in [0, 5] else 1, mask)
+			var indices := NativeCityChanges.changed_cells(_planes[plane], planes[plane], 16 if plane == 6 else (4 if plane in [0, 5] else 1), mask)
 			if indices.size() > 1024:
 				reset = true
 				break

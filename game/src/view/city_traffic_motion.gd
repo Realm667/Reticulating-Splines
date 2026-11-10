@@ -22,7 +22,7 @@ func reset() -> void:
 
 func observe(city: CityState, options: Dictionary, vehicles_visible := true) -> void:
 	var signature := [city.document.get_instance_id(), city.compass_rotation(), city.visible_altitude_levels,
-		city.chunk_revision("ALTM"), city.chunk_revision("XTER")]
+		city.chunk_revision("ALTM"), city.chunk_revision("XTER"), city.chunk_revision("XQTR")]
 	var observation := [signature, city.mirror_signature(["XTHG", "XTXT", "XBLD"]), vehicles_visible,
 		options.traffic_vehicles_enabled, options.disaster_enabled, options.disaster_motion]
 	if observation == _observation:
