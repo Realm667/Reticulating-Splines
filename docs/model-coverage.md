@@ -12,6 +12,10 @@ share bank profiles, corner banks, open channel ports, horizontal caps and
 vertical water curtains, rather than keeping one mesh per source sprite.
 Classic shoreline codes select those profiles. With XQTR the banks also follow
 the actual corner surface; shallow bank detail does not flatten a higher slope.
+Circular lake corners join straight shores tangentially. An adjacent open water
+port at the same surface height opens a river mouth through the shallow bank
+detail. Saved XQTR ground remains authoritative, and neighboring terrain/flag
+edits invalidate the affected shore's cached model.
 Turning Models off restores the original pictures in classic cities. Fractional
 cities continue using geometry to display their saved terrain accurately.
 
@@ -93,7 +97,9 @@ in all three views, with spatial material masks and reflection receivers.
 
 The native GPU case renders all 53 codes with four profiles in 30 complete
 CPU/GPU pairs (three views, four rotations, classic/fractional cities, and hidden
-water). It also renders palette and flowing-water animation phases through the
+water). Another 24 pairs cover four connected river mouths and circular lakes in
+all rotations and views, in classic and fractional cities: 54 pairs in total.
+It also renders palette and flowing-water animation phases through the
 production shader. Rendering is checked against saved-state snapshots; test
 rotation commands are outside that read-only interval.
 

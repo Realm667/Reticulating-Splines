@@ -3,6 +3,52 @@ use super::painter::TRAFFIC;
 use super::*;
 
 #[test]
+fn shoreline_mouths_follow_neighbor_topology_and_invalidate_cached_tiles() {
+    for view in 0..3 {
+        for quarter in [false, true] {
+            for (side, (dx, dy)) in [(0, -1), (1, 0), (0, 1), (-1, 0)].into_iter().enumerate() {
+                let mut b = fixture(8, view);
+                b.terrain_models = true;
+                b.maximum_altitude = 32;
+                b.city.altitude.fill(4 | (4 << 5));
+                if quarter {
+                    b.city.quarter = vec![[16; 4]; 64];
+                }
+                let i = b.city.index(3, 3);
+                let n = b.city.index(3 + dx, 3 + dy);
+                b.city.terrain[i] = [0x32, 0x33, 0x34, 0x31][side];
+                b.city.terrain[n] = if side % 2 == 0 { 0x40 } else { 0x41 };
+                b.city.flags[i] = 4;
+                b.city.flags[n] = 4;
+                let original = b.paint(3, 3).unwrap()[0].clone();
+                assert!(
+                    b.quarter_ground_cache
+                        .iter()
+                        .any(|(k, v)| v.0 == original.image && k[18 + side] == if side % 2 == 0 { 15 } else { 16 })
+                );
+                b.collect(original.rect).unwrap();
+                b.edit_city(|city| {
+                    city.flags[n] = 0;
+                    city.terrain[n] = 0;
+                    vec![n]
+                });
+                let after = b.collect(original.rect).unwrap();
+                let replaced = after
+                    .iter()
+                    .find(|d| d.depth == original.depth && d.sprite == original.sprite)
+                    .unwrap();
+                assert_ne!(replaced.image, original.image, "Editing the river must repaint the lake bank");
+                assert!(
+                    b.quarter_ground_cache
+                        .iter()
+                        .any(|(k, v)| v.0 == replaced.image && k[18 + side] == -1)
+                );
+            }
+        }
+    }
+}
+
+#[test]
 fn connected_waterfall_caps_do_not_draw_curtains_between_equal_neighbors() {
     for view in 0..3 {
         for terrain in [0x2e, 0x3e] {

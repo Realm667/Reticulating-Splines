@@ -12,6 +12,15 @@ fn water_terrain(terrain: u8) -> bool {
     matches!(terrain, 0x10..=0x1e | 0x20..=0x2e | 0x30..=0x3e | 0x40..=0x45)
 }
 
+fn water_shape(terrain: u8) -> u8 {
+    match terrain {
+        0x20..=0x2e => terrain - 0x20,
+        0x30..=0x3e => terrain - 0x30,
+        0x40..=0x45 => terrain - 0x40 + 15,
+        _ => 0,
+    }
+}
+
 impl City {
     pub(super) fn quarter_corners(&self, index: usize) -> [i16; 4] {
         self.quarter.get(index).copied().unwrap_or_else(|| {
@@ -75,17 +84,12 @@ impl Builder {
                 i16::MIN
             },
         );
-        let shape = match terrain {
-            0x20..=0x2e => terrain - 0x20,
-            0x30..=0x3e => terrain - 0x30,
-            0x40..=0x45 => terrain - 0x40 + 15,
-            _ => 0,
-        };
+        let shape = water_shape(terrain);
         key.push(i16::from(shape) | if self.city.quarter.is_empty() { 256 } else { 0 });
         for (dx, dy) in [(0, -1), (1, 0), (0, 1), (-1, 0)] {
             let water = if x + dx >= 0 && y + dy >= 0 && x + dx < edge && y + dy < edge {
                 let n = self.city.index(x + dx, y + dy);
-                if self.city.wet(n) || water_terrain(self.city.terrain[n]) {
+                if self.city.wet(n) || (self.city.quarter.is_empty() && water_terrain(self.city.terrain[n])) {
                     let cap = i32::from(matches!(self.city.surface(x + dx, y + dy), 0x2e | 0x3e)) * 4;
                     (self.city.water(n) * 4 + cap - ground) as i16
                 } else {
@@ -95,6 +99,15 @@ impl Builder {
                 i16::MIN
             };
             key.push(water);
+        }
+        let cap = key[12].saturating_add(if shape == 14 { 4 } else { 0 });
+        for (s, (dx, dy)) in [(0, -1), (1, 0), (0, 1), (-1, 0)].into_iter().enumerate() {
+            let connected = key[12] != i16::MIN && key[14 + s] == cap;
+            key.push(if connected {
+                i16::from(water_shape(self.city.surface(x + dx, y + dy)))
+            } else {
+                -1
+            });
         }
         let (image, padding) = if let Some(value) = self.quarter_ground_cache.get(&key) {
             *value
@@ -192,13 +205,22 @@ fn vertex(k: usize, q: i16) -> Point {
 // and bank corners, not separate meshes or copies of the original pictures.
 fn bank(shape: u8, u: f32, v: f32) -> f32 {
     let edges = [v, 1.0 - u, 1.0 - v, u];
-    let corners = [u + v, 1.0 - u + v, 2.0 - u - v, u + 1.0 - v];
     let ramp = |distance: f32, width: f32| ((width - distance) / 0.10).clamp(-1.0, 1.0);
     match shape {
         1..=4 => ramp(edges[[3, 0, 1, 2][(shape - 1) as usize]], 0.10),
-        5..=8 => ramp(corners[(shape - 5) as usize], 0.70),
-        9..=12 => ramp(corners[(shape - 9) as usize], 0.23),
-        13 => ramp(edges.into_iter().fold(1.0, f32::min), 0.10).max(ramp(corners.into_iter().fold(2.0, f32::min), 0.34)),
+        5..=8 => {
+            // A circular quarter joins the neighboring straight bank at the
+            // same inset and tangent, instead of cutting the lake diagonally.
+            let centers = [[1.0, 1.0], [0.0, 1.0], [0.0, 0.0], [1.0, 0.0]];
+            let [x, y] = centers[(shape - 5) as usize];
+            (((u - x).hypot(v - y) - 0.90) / 0.10).clamp(-1.0, 1.0)
+        }
+        9..=12 => {
+            let centers = [[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]];
+            let [x, y] = centers[(shape - 9) as usize];
+            ramp((u - x).hypot(v - y), 0.23)
+        }
+        13 => (((u - 0.5).hypot(v - 0.5) - 0.40) / 0.10).clamp(-1.0, 1.0),
         15 => ramp(edges[1].min(edges[3]), 0.10),
         16 => ramp(edges[0].min(edges[2]), 0.10),
         // A narrow channel opens into a broad reach at its opposite end.
@@ -213,6 +235,38 @@ fn bank(shape: u8, u: f32, v: f32) -> f32 {
         }
         _ => -1.0,
     }
+}
+
+fn connected_bank(key: &[i16], shape: u8, u: f32, v: f32) -> f32 {
+    let mut profile = bank(shape, u, v);
+    // A neighboring open water port cuts a mouth through this tile's visual
+    // bank. Actual XQTR ground still takes precedence over this shallow detail.
+    for side in 0..4 {
+        let neighbor = key.get(18 + side).copied().unwrap_or(-1);
+        if neighbor < 0 {
+            continue;
+        }
+        let (cu, cv, cn_u, cn_v) = match side {
+            0 => (0.5, 0.0, 0.5, 1.0),
+            1 => (1.0, 0.5, 0.0, 0.5),
+            2 => (0.5, 1.0, 0.5, 0.0),
+            _ => (0.0, 0.5, 1.0, 0.5),
+        };
+        // Preserve the circular silhouette of already open corner edges.
+        if bank(shape, cu, cv) <= 0.0 || bank(neighbor as u8, cn_u, cn_v) >= 0.0 {
+            continue;
+        }
+        let (distance, nu, nv) = match side {
+            0 => (v, u, 1.0),
+            1 => (1.0 - u, 0.0, v),
+            2 => (1.0 - v, u, 0.0),
+            _ => (u, 1.0, v),
+        };
+        let mouth = bank(neighbor as u8, nu, nv);
+        let inland = ((distance - 0.40) / 0.10).clamp(-1.0, 1.0);
+        profile = profile.min(mouth.max(inland));
+    }
+    profile
 }
 
 fn ground_height(corners: &[i16], u: f32, v: f32) -> f32 {
@@ -233,7 +287,7 @@ fn raster(key: &[i16], top: &Sprite, side: &Sprite, water: &Sprite, falling: &Sp
     let bank_surface = water_q != i16::MIN && (1..=20).contains(&shape) && shape != 14;
     let bank_height = |u, v| {
         // A sub-quarter lip preserves SC2000's one-pixel shore rim.
-        let profile = f32::from(water_q) + bank(shape, u, v) * 0.25;
+        let profile = f32::from(water_q) + connected_bank(key, shape, u, v) * 0.25;
         if classic {
             profile
         } else {
@@ -603,6 +657,74 @@ mod tests {
                 assert_eq!(mask[(y * image.w + x) as usize], 1, "Soil dam on channel {shape}, sample {tick}");
             }
         }
+    }
+
+    #[test]
+    fn rounded_lake_corners_follow_a_circle_and_join_straight_shores() {
+        for step in 0..=64 {
+            let a = step as f32 / 64.0 * std::f32::consts::FRAC_PI_2;
+            assert!(bank(5, 1.0 - 0.90 * a.cos(), 1.0 - 0.90 * a.sin()).abs() < 0.00001);
+            let t = step as f32 / 64.0;
+            assert!((bank(5, 1.0, t) - bank(2, 0.5, t)).abs() < 0.00001);
+            assert!((bank(5, t, 1.0) - bank(1, t, 0.5)).abs() < 0.00001);
+        }
+        assert!(bank(5, 0.2, 0.55) > 0.0, "The arc must not collapse to the former straight chamfer");
+    }
+
+    #[test]
+    fn neighboring_water_ports_open_every_shore_mouth_without_cutting_other_banks() {
+        let (top, side, water, falling) = (solid(10), solid(20), solid(200), solid(201));
+        let mut cases = 0;
+        for (edge, shape) in [2, 3, 4, 1].into_iter().enumerate() {
+            for neighbor in 0..=20 {
+                let (nu, nv) = match edge {
+                    0 => (0.5, 1.0),
+                    1 => (0.0, 0.5),
+                    2 => (0.5, 0.0),
+                    _ => (1.0, 0.5),
+                };
+                if bank(neighbor, nu, nv) >= 0.0 {
+                    continue;
+                }
+                for classic in [0, 256] {
+                    let mut key = vec![0; 12];
+                    key.extend([0, shape | classic, 0, 0, 0, 0, -1, -1, -1, -1]);
+                    key[18 + edge] = i16::from(neighbor);
+                    let (image, padding, mask) = raster(&key, &top, &side, &water, &falling, 1);
+                    for step in 1..16 {
+                        let d = (step as f32 + 0.5) / 32.0;
+                        let (u, v) = match edge {
+                            0 => (0.5, d),
+                            1 => (1.0 - d, 0.5),
+                            2 => (0.5, 1.0 - d),
+                            _ => (d, 0.5),
+                        };
+                        assert!(connected_bank(&key, shape as u8, u, v) < 0.0);
+                        let p = project([u - 0.5, v - 0.5, 0.0]);
+                        let x = (16.0 + p[0]).floor() as i32;
+                        let y = ((image.h - 9 - padding) as f32 + p[1]).floor() as i32;
+                        assert_eq!(
+                            mask[(y * image.w + x) as usize],
+                            1,
+                            "Blocked mouth: side {edge}, neighbor {neighbor}, classic {classic}, step {step}"
+                        );
+                    }
+                    key[18 + edge] = -1;
+                    let (u, v) = match edge {
+                        0 => (0.5, 0.0),
+                        1 => (1.0, 0.5),
+                        2 => (0.5, 1.0),
+                        _ => (0.0, 0.5),
+                    };
+                    assert!(
+                        connected_bank(&key, shape as u8, u, v) > 0.0,
+                        "No opening without a connected neighbor"
+                    );
+                    cases += 1;
+                }
+            }
+        }
+        assert!(cases >= 80);
     }
 
     #[test]

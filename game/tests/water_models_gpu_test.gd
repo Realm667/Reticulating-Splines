@@ -30,6 +30,46 @@ static func fixture(quarter: bool) -> CityState:
 	return city
 
 
+static func mouth_fixture(quarter: bool) -> CityState:
+	var city := Q.fixture() if quarter else CityState.from_document(Sc2xDocument.create_empty(64,"Connected lakes").document)
+	if quarter:
+		var chunk := city.document.find_chunk("XQTR")
+		var data := chunk.decoded_payload.duplicate()
+		for i in 64*64:
+			for k in 4:
+				data[17+i*8+k*2]=16
+		chunk.set_decoded_payload(data)
+		city.resync_mirrors(["XQTR"])
+	for x in 64:
+		for y in 64:
+			city.set_land_altitude(x,y,4)
+	var steps: Array[Vector2i] = [Vector2i(0,-1),Vector2i(1,0),Vector2i(0,1),Vector2i(-1,0)]
+	for side in 4:
+		var origin := Vector2i(12+(side%2)*28,12+(side/2)*28)
+		for x in 3:
+			for y in 3:
+				var shape := 0
+				if x==0: shape=1
+				if x==2: shape=3
+				if y==0: shape=2
+				if y==2: shape=4
+				if x==0 and y==0: shape=5
+				if x==2 and y==0: shape=6
+				if x==2 and y==2: shape=7
+				if x==0 and y==2: shape=8
+				_water(city,origin+Vector2i(x,y),0x30+shape)
+		var bank := origin+Vector2i.ONE+steps[side]
+		for distance in range(1,6):
+			_water(city,bank+steps[side]*distance,[0x45,0x42,0x43,0x44][side] if distance==1 else (0x40 if side%2==0 else 0x41))
+	return city
+
+
+static func _water(city: CityState, tile: Vector2i, shape: int) -> void:
+	city.set_water_altitude(tile.x,tile.y,4)
+	city.set_tile_flag(tile.x,tile.y,Sc2TileFlags.WATER,true)
+	city.set_terrain_id(tile.x,tile.y,shape)
+
+
 func _run() -> void:
 	assert(DisplayServer.get_name()!="headless")
 	var pack := FixtureGraphics.pack()
@@ -54,10 +94,20 @@ func _run() -> void:
 			assert(State.capture(city.document)==original,"Model rendering must preserve every saved byte")
 			assert(CityRotationCommand.apply(city,true).ok)
 		await _animation(city,pack)
+		var mouths := mouth_fixture(quarter)
+		for turn in 4:
+			var original := State.capture(mouths.document)
+			for view in 3:
+				var archive := pack.large_sprites if view==2 else pack.small_medium_sprites
+				var bounds := Rect2i(Vector2i.ZERO,CityIsometricRenderer.output_size_for_view(view,64))
+				await _compare(mouths,Sc2Palette.index_encoding(),archive,bounds,view,CityViewMode.Mode.CITY,CityGpuBuildContext.new())
+				cases+=1
+			assert(State.capture(mouths.document)==original)
+			assert(CityRotationCommand.apply(mouths,true).ok)
 	for archive: Sc2SpriteArchive in [pack.large_sprites,pack.small_medium_sprites]:
 		CityNetworkModels.configure(archive,pack.palette,false)
 		CitySeasonColors.prepare(archive,pack.palette)
-	print("PASS: %d exact native CPU/GPU water-model pairs; all 53 forms, four profiles, rotations, hidden-water and palette/flow animation"%cases)
+	print("PASS: %d exact native CPU/GPU water-model pairs; all 53 forms, four profiles, connected mouths and rounded lakes in all rotations, hidden-water and palette/flow animation"%cases)
 	quit()
 
 
