@@ -24,6 +24,7 @@ const PIPE_FLOW_TAG: u8 = 52;
 const TERRAIN_ARTWORK_TAG: u8 = 53;
 const PARCEL_BORDER_TAG: u8 = 55;
 const TERRAIN_INDEXED_TAG: u8 = 54;
+const SPATIAL_WATER_TAG: u8 = 57;
 const WATERFALL_SPRITE: i32 = 284;
 
 // The least recently used tiles leave the cache above this count. Regions keep
@@ -460,7 +461,17 @@ impl Builder {
                         clipped.h as f32,
                     ];
                     // Red bit 7 disables emission on this building, not its shared atlas sprite.
-                    let color = if let Some(terrain) = self.terrain_color(&draw, false) {
+                    let color = if self.config.effects & effects::WATERFALL != 0
+                        && self.terrain_water.get(&draw.image).is_some_and(|v| v.contains(&2))
+                    {
+                        let i = crate::water_reflections::terrain_cell(&self.city, draw.depth);
+                        [
+                            byte(i32::from(SPATIAL_WATER_TAG)),
+                            byte(i.map_or(0, |i| self.city.land(i))),
+                            byte(self.config.view),
+                            1.0,
+                        ]
+                    } else if let Some(terrain) = self.terrain_color(&draw, false) {
                         terrain
                     } else if draw.emission_disabled {
                         [byte(128), 1.0, 1.0, 1.0]

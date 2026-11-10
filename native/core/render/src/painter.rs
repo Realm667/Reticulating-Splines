@@ -256,7 +256,10 @@ impl Builder {
 
             if (!developed && !composite) || hydro {
                 let ground = self.ground(i, t);
-                if ground == WATER_SIDE_SPRITE && (hydro || (c.effects & effects::WATERFALL != 0 && t == terrain::WATERFALL)) {
+                if !self.terrain_models
+                    && ground == WATER_SIDE_SPRITE
+                    && (hydro || (c.effects & effects::WATERFALL != 0 && t == terrain::WATERFALL))
+                {
                     // The original waterfall omits a few cap-edge pixels. A real
                     // water diamond below it closes pinholes between adjacent falls
                     // without changing imported artwork or extending the curtains.

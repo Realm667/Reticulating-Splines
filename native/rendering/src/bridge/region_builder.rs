@@ -287,6 +287,9 @@ impl NativeCityRegionBuilder {
                 .auxiliary
                 .entry(channel)
                 .or_insert_with(|| (auxiliary_images(&images), Default::default()));
+            if channel == 1 {
+                core.extend_terrain_seasons(sources);
+            }
             let pixels = cache.update(edge, &core.atlas.slots, &core.sprites, sources);
             let masks: Array<Gd<Image>> = pages.iter().map(|&(x, y)| atlas_page(pixels, edge, x, y)).collect();
             result.set(name, &masks);
@@ -307,6 +310,9 @@ impl NativeCityRegionBuilder {
             .auxiliary
             .entry(channel)
             .or_insert_with(|| (auxiliary_images(&images), Default::default()));
+        if channel == 1 {
+            core.extend_terrain_seasons(sources);
+        }
         let pixels = cache.update(core.atlas.edge, &core.atlas.slots, &core.sprites, sources);
         Image::create_from_data(
             core.atlas.edge,
@@ -344,7 +350,11 @@ impl NativeCityRegionBuilder {
             return None;
         }
         let draws = core.collect(rect).ok()?;
-        let pixels = sc2k_render::visual_auxiliary::raster(rect, &draws, &core.sprites.images, &auxiliary_images(&images), emission);
+        let mut masks = auxiliary_images(&images);
+        if !emission {
+            core.extend_terrain_seasons(&mut masks);
+        }
+        let pixels = sc2k_render::visual_auxiliary::raster(rect, &draws, &core.sprites.images, &masks, emission);
         Image::create_from_data(rect.w, rect.h, false, Format::RGBA8, &PackedByteArray::from(pixels.as_slice()))
     }
 

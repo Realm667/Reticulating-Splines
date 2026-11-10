@@ -4,16 +4,33 @@ The Models option uses spatial recipes projected into the existing indexed
 isometric renderer. It does not replace the whole renderer with a 3D scene.
 SC2000 supplies the design reference. Original imported artwork is not shipped.
 
-## Terrain artwork retained as sprites
+## Terrain and water
 
-Dry terrain, fractional coast surfaces and cliff faces use spatial corner
-geometry. Their palette textures still come from the loaded artwork. The
-following deliberately retain sprite artwork:
+Dry terrain, water, shores, channels and waterfalls use spatial geometry.
+Their indexed materials sample the loaded SC2000-style artwork. Water shapes
+share bank profiles, corner banks, open channel ports, horizontal caps and
+vertical water curtains, rather than keeping one mesh per source sprite.
+Classic shoreline codes select those profiles. With XQTR the banks also follow
+the actual corner surface; shallow bank detail does not flatten a higher slope.
+Turning Models off restores the original pictures in classic cities. Fractional
+cities continue using geometry to display their saved terrain accurately.
 
-- Without XQTR, classic wet tiles retain their water, shore and channel sprites.
-  Those pictures encode mixed land/water shapes which ALTM alone cannot recover.
-- Waterfall artwork retains the original animated cap and vertical water pattern.
-  This is a special water animation rather than a freely deformable cliff model.
+The water plane clips the underlying terrain. Exposed water walls join lower
+neighbors or the map boundary. Both waterfall codes (including the older coastal
+code used by dams) retain the SC2000 cap one level above the foot. Curtains repeat
+the original indexed falling-water material, including on taller exposed water
+walls. Original palette addresses keep their color cycles; the optional flowing
+water shader also follows the spatial material mask. It stops with the existing
+animation clock. No simulated water flow or saved water altitude changes.
+
+Spatial material masks match each model raster's actual dimensions and distinguish
+soil, horizontal water and falling water. Seasons, water coloring, shore-distance
+effects and paged atlases use these masks. Reflections receive only on horizontal
+water at its real cap altitude; vertical curtains do not receive flat mirrors.
+All geometry is coverage-reduced to the three existing native pixel sizes.
+
+The following retain sprite artwork:
+
 - Dam structures remain building sprites. Their terrain/water is drawn separately.
 - Zone/lot colors, trees, rubble, decorative objects, markers, shadows, pedestrian
   figures and disaster effects stay in their existing sprite/effect paths.
@@ -62,6 +79,23 @@ interpolate their existing terrain ramp; no new palette is required. Classic
 cities without XQTR keep their previous bytes and colors.
 
 ## Finite verification matrix
+
+Water-specific verification includes 10,080 material/raster configurations across
+21 shared forms, classic/fractional geometry, four quarter phases, five corner
+profiles, four water levels and all three native pixel sizes. Bank rotations,
+open channel centerlines through both ports, and the removal of internal curtains
+between equal waterfall caps are checked independently. Bank side faces follow
+their sampled profile, so raised corners cannot close an open port. The production painter covers all
+53 water-range codes, including reserved fallbacks, both water-flag states and
+classic/fractional cities: 636 selections. Model opt-out and saved maps are
+unchanged. Both waterfall codes are checked at five water levels, including 31,
+in all three views, with spatial material masks and reflection receivers.
+
+The native GPU case renders all 53 codes with four profiles in 30 complete
+CPU/GPU pairs (three views, four rotations, classic/fractional cities, and hidden
+water). It also renders palette and flowing-water animation phases through the
+production shader. Rendering is checked against saved-state snapshots; test
+rotation commands are outside that read-only interval.
 
 Coverage is factored by independent geometry, material, painter-selection and GPU
 contracts. It is not a claim to enumerate every possible arrangement of an entire

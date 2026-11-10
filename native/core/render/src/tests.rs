@@ -3,6 +3,111 @@ use super::painter::TRAFFIC;
 use super::*;
 
 #[test]
+fn connected_waterfall_caps_do_not_draw_curtains_between_equal_neighbors() {
+    for view in 0..3 {
+        for terrain in [0x2e, 0x3e] {
+            let mut b = fixture(4, view);
+            b.terrain_models = true;
+            b.city.altitude.fill(4 | (4 << 5));
+            b.city.terrain.fill(terrain);
+            b.city.flags.fill(4);
+            let draws = b.paint(1, 1).unwrap();
+            let mask = &b.terrain_water[&draws[0].image];
+            assert!(mask.contains(&1));
+            assert!(!mask.contains(&2), "Equal water caps must not insert internal falling faces");
+        }
+    }
+}
+
+#[test]
+fn every_water_terrain_uses_models_without_mutating_the_city_or_the_opt_out() {
+    let mut cases = 0;
+    for view in 0..3 {
+        for quarter in [false, true] {
+            for terrain in (0x10..=0x1e).chain(0x20..=0x3f).chain(0x40..=0x45) {
+                for wet in [false, true] {
+                    let mut b = fixture(4, view);
+                    let i = b.city.index(1, 1);
+                    b.city.altitude.fill(3 | (4 << 5));
+                    b.city.terrain[i] = terrain;
+                    b.city.flags[i] = if wet { 4 } else { 0 };
+                    if quarter {
+                        b.city.quarter = vec![[12, 13, 16, 15]; 16];
+                    }
+                    let before = b.city.altitude.clone();
+                    let original = b.paint(1, 1).unwrap();
+                    b.terrain_models = true;
+                    let models = b.paint(1, 1).unwrap();
+                    assert_eq!(models.len(), 1, "No extra sprite cap in the model path");
+                    let image = models[0].image;
+                    assert!(image >= quarter_terrain::FIRST_IMAGE);
+                    assert!(b.terrain_water.contains_key(&image));
+                    if !wet && matches!(terrain, 0x2f | 0x3f) {
+                        assert!(
+                            b.terrain_water[&image].iter().all(|v| *v == 0),
+                            "Reserved dry fallbacks must not acquire water"
+                        );
+                    }
+                    b.terrain_models = false;
+                    let restored = b.paint(1, 1).unwrap();
+                    assert_eq!(
+                        original.iter().map(|d| (d.image, d.rect)).collect::<Vec<_>>(),
+                        restored.iter().map(|d| (d.image, d.rect)).collect::<Vec<_>>()
+                    );
+                    assert_eq!(b.city.altitude, before);
+                    assert_eq!(b.city.terrain[i], terrain);
+                    cases += 1;
+                }
+            }
+        }
+    }
+    assert_eq!(cases, 636);
+}
+
+#[test]
+fn spatial_falls_receive_reflections_only_on_the_cap_even_at_the_maximum_water_level() {
+    for view in 0..3 {
+        for (water, terrain) in [0, 1, 15, 30, 31]
+            .into_iter()
+            .flat_map(|water| [0x2e, 0x3e].map(|terrain| (water, terrain)))
+        {
+            let mut b = fixture(4, view);
+            b.terrain_models = true;
+            b.maximum_altitude = 32;
+            let i = b.city.index(1, 1);
+            b.city.altitude.fill(water | (water << 5));
+            b.city.terrain[i] = terrain;
+            b.city.flags[i] = 4;
+            let draws = b.paint(1, 1).unwrap();
+            let image = draws[0].image;
+            assert!(b.terrain_water[&image].contains(&1));
+            assert!(b.terrain_water[&image].contains(&2));
+            let mut masks = HashMap::new();
+            b.extend_terrain_seasons(&mut masks);
+            assert_eq!(masks[&image].w, b.sprites.images[&image].w);
+            assert_eq!(masks[&image].h, b.sprites.images[&image].h);
+            b.config.effects = effects::WATERFALL;
+            let region = b.region(draws[0].rect).unwrap();
+            assert!(region.colors.iter().any(|c| (c[0] * 255.0).round() as u8 == 57));
+            assert!(
+                !region.colors.iter().any(|c| (c[0] * 255.0).round() as u8 == tree_shadows::TAG),
+                "Water must not be decoded as a tree shadow"
+            );
+            let pixels = b.water_pixels(draws[0].rect, &[1; 256], &HashMap::new(), &HashMap::new()).unwrap();
+            assert!(pixels.surface.chunks_exact(4).any(|p| p[3] != 0), "view {view}, water {water}");
+            for (surface, reflected) in pixels.surface.chunks_exact(4).zip(pixels.reflected.chunks_exact(4)) {
+                if surface[3] != 0 {
+                    assert_eq!(surface[0], water as u8 + 2);
+                    if surface[2] & 128 != 0 {
+                        assert_eq!(reflected[3], 0);
+                    }
+                }
+            }
+        }
+    }
+}
+
+#[test]
 fn quarter_water_and_hidden_water_use_the_same_physical_height_as_data_views() {
     for view in 0..3 {
         let mut b = fixture(8, view);
@@ -21,7 +126,8 @@ fn quarter_water_and_hidden_water_use_the_same_physical_height_as_data_views() {
                 la: [200, 255].repeat(32 * 17),
             },
         );
-        for wet in [true, false] {
+        for (wet, terrain) in [true, false].into_iter().flat_map(|wet| [0, 16].map(|terrain| (wet, terrain))) {
+            b.city.terrain[i] = terrain;
             b.city.flags[i] = if wet { 4 } else { 0 };
             b.city.objects = vec![-1; 64];
             b.city.objects[i] = 2;

@@ -34,6 +34,14 @@ fn cell(city: &City, depth: i64) -> Option<usize> {
     (x >= 0 && y >= 0 && x < i64::from(city.edge) && y < i64::from(city.edge)).then(|| city.index(x as i32, y as i32))
 }
 
+pub(super) fn terrain_cell(city: &City, depth: i64) -> Option<usize> {
+    cell(city, depth)
+}
+
+fn spatial_water_level(city: &City, i: usize) -> i32 {
+    city.water(i) + i32::from(matches!(city.surface(i as i32 / city.edge, i as i32 % city.edge), 0x2e | 0x3e))
+}
+
 fn horizontal_water(draw: &Draw, city: &City, config: Config) -> Option<usize> {
     let offset = draw.sprite - config.base();
     if !(270..=290).contains(&offset) || draw.moving || draw.shadow {
@@ -306,7 +314,12 @@ impl Builder {
         for draw in self.collect(bounds)? {
             let sprite = &self.sprites.images[&draw.image];
             let footprint = self.sprites.footprint_draw(&draw);
-            let water = horizontal_water(&footprint, &self.city, self.config);
+            let model_mask = self.terrain_water.get(&draw.image);
+            let water = if model_mask.is_some() {
+                cell(&self.city, draw.depth)
+            } else {
+                horizontal_water(&footprint, &self.city, self.config)
+            };
             let axis = water.map_or(0, |i| water_axis(&self.city, i));
             let waterfront = cell(&self.city, draw.depth).filter(|&i| {
                 let b = self.city.buildings[i];
@@ -328,17 +341,33 @@ impl Builder {
                     out.surface[dst..dst + 4].fill(0);
                     let embedded = waterfront
                         .filter(|_| (140..=166).contains(&auxiliary(seasons, &draw, sprite, x - draw.rect.x, y - draw.rect.y)[2]));
-                    if let Some(i) = water.filter(|_| water_indices[sprite.rgba[src] as usize] != 0).or(embedded) {
+                    let model_water = model_mask.map(|mask| mask[src / 4]);
+                    if let Some(i) = water
+                        .filter(|_| model_water.map_or(water_indices[sprite.rgba[src] as usize] != 0, |kind| kind != 0))
+                        .or(embedded)
+                    {
                         let cap = if embedded.is_some() {
                             Some(self.city.water(i))
+                        } else if let Some(kind) = model_water {
+                            (kind == 1).then(|| spatial_water_level(&self.city, i))
                         } else {
                             receiving_level(&footprint, &self.city, self.config, i, x, y)
                         };
-                        let side = cap.is_none() && footprint.sprite - self.config.base() == 284;
-                        let Some(level) = cap.or_else(|| side.then(|| self.city.water(i) + 1)) else {
+                        let side = model_water == Some(2) || (cap.is_none() && footprint.sprite - self.config.base() == 284);
+                        let Some(level) = cap.or_else(|| {
+                            side.then(|| {
+                                if model_water.is_some() {
+                                    spatial_water_level(&self.city, i)
+                                } else {
+                                    self.city.water(i) + 1
+                                }
+                            })
+                        }) else {
                             continue;
                         };
-                        levels[level as usize] |= !side;
+                        if let Some(present) = levels.get_mut(level as usize) {
+                            *present |= !side;
+                        }
                         out.surface[dst..dst + 4].copy_from_slice(&[
                             level as u8 + 1,
                             sprite.rgba[src],
@@ -625,6 +654,7 @@ impl Builder {
             }
             let water = horizontal_water(&draw, &self.city, self.config).is_some();
             let sprite = &self.sprites.images[&draw.image];
+            let model_mask = self.terrain_water.get(&draw.image);
             let clipped = draw.rect.clip(area);
             for y in clipped.y..clipped.y + clipped.h {
                 for x in clipped.x..clipped.x + clipped.w {
@@ -633,7 +663,9 @@ impl Builder {
                         continue;
                     }
                     let at = ((y - area.y) * area.w + x - area.x) as usize;
-                    distance[at] = if water && (water_indices[sprite.rgba[src] as usize] != 0 || offset == 270) {
+                    distance[at] = if model_mask.map_or(water && (water_indices[sprite.rgba[src] as usize] != 0 || offset == 270), |mask| {
+                        mask[src / 4] != 0
+                    }) {
                         255
                     } else {
                         0

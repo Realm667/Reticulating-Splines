@@ -48,6 +48,7 @@ const float LAST_TRAFFIC_TAG = 111.0;
 const float GRID_TAG = 48.0;
 // Waterfall art: green is the view, blue and alpha the sprite position.
 const float WATERFALL_TAG = 49.0;
+const float SPATIAL_WATER_TAG = 57.0;
 // The indexed sprite under underground HD art, for the water in its pipes.
 const float PIPE_FLOW_TAG = 52.0;
 // Green carries the actual ground altitude; other sprite classes are unchanged.
@@ -140,7 +141,7 @@ void vertex() {
 	if (building_emission < 0.5) { tag -= 128.0; }
 	parcel_border = float(tag == PARCEL_BORDER_TAG);
 	tree_shadow = float(tag == TREE_SHADOW_TAG);
-	terrain_elevation = (tag == TERRAIN_ARTWORK_TAG || tag == TERRAIN_INDEXED_TAG) ? bytes.g : -1.0;
+	terrain_elevation = (tag == TERRAIN_ARTWORK_TAG || tag == TERRAIN_INDEXED_TAG || tag == SPATIAL_WATER_TAG) ? bytes.g : -1.0;
 	artwork_kind = 0.0;
 	power_warning = 0.0;
 	artwork_frames = vec3(1.0, 8.0, 0.0);
@@ -172,6 +173,12 @@ void vertex() {
 		float divisor = exp2(2.0 - bytes.g);
 		world_position *= divisor;
 		waterfall_local = COLOR.ba * vec2(32.0, 28.0 + divisor);
+	} else if (tag == SPATIAL_WATER_TAG) {
+		waterfall_view = bytes.b;
+		world_position *= exp2(2.0 - bytes.b);
+		// The spatial material mask, rather than the old sprite outline,
+		// selects falling faces in fragment(). The cap remains horizontal.
+		waterfall_local = vec2(16.0, 1000.0);
 	} else if (tag == PIPE_FLOW_TAG) {
 		artwork_kind = 5.0;
 	}
@@ -332,6 +339,9 @@ void fragment() {
 		}
 
 		bool enhanced_tree = nature_forests_enabled && natural_mask.r > 0.5 && natural_mask.g > 0.05 && natural_mask.g < 0.35;
+		if (waterfall_view >= 0.0 && natural_mask.b > 0.2 && natural_mask.b < 0.3) {
+			COLOR.rgb = waterfall_flow(COLOR.rgb);
+		}
 		if (!enhanced_tree && hazard_draw < 0.5 && fullbright_draw < 0.5 && !indexed_power_warning && !dark_underground) {
 			COLOR.rgb = artwork_color(COLOR.rgb);
 		}

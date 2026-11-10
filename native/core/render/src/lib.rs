@@ -380,6 +380,9 @@ pub struct Builder {
     /// Underground sprite substitutions shared by relative corner profile.
     pub underground_models: HashMap<(i32, [i16; 13]), (i32, i16)>,
     quarter_ground_cache: HashMap<Vec<i16>, (u64, i32)>,
+    /// Spatial terrain texels: 0 land, 1 horizontal water, 2 vertical water.
+    terrain_water: HashMap<u64, Vec<u8>>,
+    terrain_seasons: HashMap<u64, Sprite>,
 }
 
 impl Builder {
@@ -428,6 +431,8 @@ impl Builder {
             quarter_networks: Vec::new(),
             underground_models: HashMap::new(),
             quarter_ground_cache: HashMap::new(),
+            terrain_water: HashMap::new(),
+            terrain_seasons: HashMap::new(),
         };
         // Pack all unflipped artwork once. Scrolling then seldom adds a sprite,
         // so the main thread seldom uploads a changed atlas. Tall sprites
