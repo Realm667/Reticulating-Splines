@@ -111,6 +111,38 @@ func _check_geometry() -> void:
 	for i in closed.parts.size():
 		for j in closed.parts[i].vertices.size():
 			assert(opened.parts[i].vertices[j].is_equal_approx(closed.parts[i].vertices[j]+Vector3(0,0,12)))
+	_check_truss_clearance()
+
+
+func _check_truss_clearance() -> void:
+	var passages := 0
+	for id in [BuildingTileIds.HIGHWAY_BRIDGE,BuildingTileIds.REINFORCED_HIGHWAY_BRIDGE]:
+		for flipped in [false,true]:
+			var bridge := NetworkModelGeometry.build(id,PackedFloat32Array(),flipped)
+			for kind in [VehicleModels.Kind.CAR,VehicleModels.Kind.TRUCK,VehicleModels.Kind.BUS]:
+				for forward: Vector2 in [Vector2.UP,Vector2.DOWN]:
+					var vehicle := VehicleModels.geometry(kind,forward,0)
+					var body := AABB(vehicle.parts[0].vertices[0],Vector3.ZERO)
+					for part: Dictionary in vehicle.parts:
+						for vertex: Vector3 in part.vertices:
+							body=body.expand(vertex)
+					for lane in [0.0,1.0]:
+						# Sweep both lane offsets, whole bodies and extra roof clearance.
+						var low := Vector3(lane+body.position.x-.14,-1.5+body.position.y,24+body.position.z)
+						var high := Vector3(lane+body.end.x+.14,.5+body.end.y,24+body.end.z+.75)
+						if flipped:
+							low=Vector3(low.y+1,low.x-1,low.z)
+							high=Vector3(high.y+1,high.x-1,high.z)
+						var passage := AABB(low,high-low)
+						for part: Dictionary in bridge.parts:
+							if part.role not in ["truss","truss_hanger"]:
+								continue
+							var bounds := AABB(part.vertices[0],Vector3.ZERO)
+							for vertex: Vector3 in part.vertices:
+								bounds=bounds.expand(vertex)
+							assert(not passage.intersects(bounds),"Bridge member obstructs a complete moving vehicle body: bridge %s, flip %s, kind %s, lane %s"%[id,flipped,kind,lane])
+						passages+=1
+	print("PASS: %d swept car/truck/bus passages are clear of bridge members in both orientations"%passages)
 
 
 func _check_options() -> void:

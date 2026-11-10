@@ -342,7 +342,7 @@ static func bridge_span(height: float, water: float, tower := false, rail := fal
 
 
 static func highway_truss(parts: Array, reinforced: bool) -> void:
-	# Three low transverse portals span both carriageways in the SC2000 bridge.
+	# Longitudinal trusses stand at the outside edges and in the median.
 	# Pavement has its own material: projected tower pixels are not road texture.
 	for lane in [Vector2(-.5,.45),Vector2(.55,1.5)]:
 		slab(parts,"pavement",PackedVector3Array([Vector3(lane.x,-1.5,24),Vector3(lane.y,-1.5,24),
@@ -352,20 +352,22 @@ static func highway_truss(parts: Array, reinforced: bool) -> void:
 			strip(parts,"road_paint",Vector3((lane.x+lane.y)*.5,v,24.05),Vector3((lane.x+lane.y)*.5,v+.16,24.05),.045)
 	for u in [-.48,.5,1.48]:
 		beam(parts,"curb",Vector3(u,-1.5,24.2),Vector3(u,.5,24.2),.85)
-	var us := [-.5,-.1,1.1,1.5]
+	var vs := [-1.5,-1.05,.05,.5]
 	var zs := [24.0,34.0,34.0,24.0]
-	for v in [-1.45,-.45,.45]:
+	for u in [-.48,.5,1.48]:
 		for segment in 3:
-			beam(parts,"truss",Vector3(us[segment],v,zs[segment]),Vector3(us[segment+1],v,zs[segment+1]),1.8)
-		beam(parts,"truss",Vector3(-.5,v,24),Vector3(1.5,v,24),1.6)
-		for u in [-.1,1.1]:
-			box(parts,"truss",Vector3(u-.035,v-.035,24),Vector3(u+.035,v+.035,34))
-		beam(parts,"truss_hanger",Vector3(.5,v,24),Vector3(.5,v,34),.8)
-		beam(parts,"truss",Vector3(-.1,v,24),Vector3(1.1,v,34),1.25)
-	for u in [-.1,1.1]:
-		beam(parts,"truss",Vector3(u,-1.45,34),Vector3(u,.45,34),1.65)
-	beam(parts,"truss",Vector3(-.1,-1.45,34),Vector3(1.1,-.45,34),1.3)
-	beam(parts,"truss",Vector3(-.1,-.45,34),Vector3(1.1,.45,34),1.3)
+			beam(parts,"truss",Vector3(u,vs[segment],zs[segment]),Vector3(u,vs[segment+1],zs[segment+1]),1.8)
+		beam(parts,"truss",Vector3(u,-1.5,22.3),Vector3(u,.5,22.3),1.6)
+		for v in [-1.05,.05]:
+			box(parts,"truss",Vector3(u-.025,v-.035,24),Vector3(u+.025,v+.035,34))
+		beam(parts,"truss_hanger",Vector3(u,-.5,24),Vector3(u,-.5,34),.8)
+		beam(parts,"truss",Vector3(u,-1.05,24),Vector3(u,.05,34),1.25)
+	# Cross-road members stay above the complete vehicle envelope or below deck.
+	for v in [-1.05,.05]:
+		beam(parts,"truss",Vector3(-.48,v,34),Vector3(1.48,v,34),1.65)
+		beam(parts,"truss",Vector3(-.48,v,22.3),Vector3(1.48,v,22.3),1.65)
+	beam(parts,"truss",Vector3(-.48,-1.05,34),Vector3(1.48,.05,34),1.3)
+	beam(parts,"truss",Vector3(1.48,-1.05,34),Vector3(-.48,.05,34),1.3)
 	if not reinforced:
 		for u in [0.0,1.0]:
 			box(parts,"truss",Vector3(u-.065,-.56,0),Vector3(u+.065,-.44,22))
