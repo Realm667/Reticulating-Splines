@@ -40,9 +40,9 @@ func _run() -> void:
 			if not mask & (1<<direction):
 				continue
 			var forward: Vector2 = NetworkModelGeometry.STEPS[direction]
-			var across := Vector2(-forward.y,forward.x).normalized()*.125
+			var across := Vector2(-forward.y,forward.x).normalized()*NetworkModelGeometry.POWER_CABLE_HALF_SPAN
 			for sign_value in [-1,1]:
-				var mount := Vector3(across.x*sign_value,across.y*sign_value,8)
+				var mount := Vector3(across.x*sign_value,across.y*sign_value,NetworkModelGeometry.POWER_CABLE_HEIGHT)
 				assert(parts.any(func(part: Dictionary) -> bool:
 					if part.role!="crossarm":
 						return false

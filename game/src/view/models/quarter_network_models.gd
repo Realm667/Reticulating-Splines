@@ -14,7 +14,7 @@ func prepare(city: CityState,archive: Sc2SpriteArchive,palette: Sc2Palette,view:
 	var images: Dictionary[int,Image]={}
 	var emission: Dictionary[int,Image]={}
 	var design: Sc2Palette=archive.network_model_palette if archive.network_model_palette!=null else palette
-	var signature:=design.to_rgba_bytes().hex_encode().sha256_text()+str(view)
+	var signature:=design.to_rgba_bytes().hex_encode().sha256_text()+str(view)+":"+str(CityNetworkModels.VERSION)
 	if signature!=material_signature or cache.size()>1024:
 		cache.clear()
 		material_signature=signature

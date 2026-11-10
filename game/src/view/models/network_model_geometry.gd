@@ -6,6 +6,8 @@ const T = preload("res://src/tools/shared/building_tile_ids.gd")
 const PORTS := [5, 10, 10, 5, 10, 5, 3, 6, 12, 9, 11, 7, 14, 13, 15]
 const STEPS := [Vector2(0,-0.5), Vector2(0.5,0), Vector2(0,0.5), Vector2(-0.5,0)]
 const GROUND_ROLES := ["road_surface","ballast_surface","rail","rail_web","tie","shoulder","road_edge"]
+const POWER_CABLE_HEIGHT := 8.5
+const POWER_CABLE_HALF_SPAN := .125
 
 # Geometry templates are independent of sprite IDs and material/tileset names.
 # Crossings compose these templates instead of owning another complete model.
@@ -272,8 +274,8 @@ static func portal(parts: Array, scale := 1.0, arched := true) -> void:
 		var b: float=(segment+1)*PI/8
 		var outer_a:=Vector3(-.48*cos(a),.5,6+6*sin(a))
 		var outer_b:=Vector3(-.48*cos(b),.5,6+6*sin(b))
-		var inner_a:=Vector3(-.30*cos(a),.5,6+3*sin(a))
-		var inner_b:=Vector3(-.30*cos(b),.5,6+3*sin(b))
+		var inner_a:=Vector3(-.30*cos(a),.5,6+5*sin(a))
+		var inner_b:=Vector3(-.30*cos(b),.5,6+5*sin(b))
 		var back:=Vector3(0,-1,0)
 		face(parts,"portal_ring",PackedVector3Array([outer_a,outer_b,inner_b,inner_a]))
 		face(parts,"portal_roof",PackedVector3Array([outer_b,outer_a,outer_a+back,outer_b+back]))
@@ -531,7 +533,7 @@ static func highway_paint(parts: Array, top: PackedVector3Array, ports: int, low
 static func power_routes(mask: int, corners: PackedFloat32Array, pole_height := 12.0, pole_position := Vector2.ZERO) -> Array:
 	var parts: Array = []
 	var base := surface_height(Vector2.ZERO,corners)
-	var attachment_height := minf(pole_height,8.0)
+	var attachment_height := minf(pole_height,POWER_CABLE_HEIGHT)
 	box(parts,"pole",Vector3(pole_position.x-.045,pole_position.y-.045,base),Vector3(pole_position.x+.045,pole_position.y+.045,base+pole_height))
 	if pole_position!=Vector2.ZERO:
 		beam(parts,"crossarm",Vector3(pole_position.x,pole_position.y,base+attachment_height),Vector3(0,0,base+attachment_height),1.1)
@@ -549,7 +551,7 @@ static func power_routes(mask: int, corners: PackedFloat32Array, pole_height := 
 		if not mask & (1 << direction):
 			continue
 		var edge: Vector2 = STEPS[direction]
-		var across := Vector2(-edge.y,edge.x).normalized() * .125
+		var across := Vector2(-edge.y,edge.x).normalized() * POWER_CABLE_HALF_SPAN
 		for cable in [-1,1]:
 			var previous := Vector3(across.x*cable,across.y*cable,base+attachment_height)
 			for sample in range(1,5):
@@ -564,16 +566,16 @@ static func power_routes(mask: int, corners: PackedFloat32Array, pole_height := 
 
 static func power_crossing(mask: int, corners: PackedFloat32Array) -> Array:
 	# Crossing masts stand beside the carried road/track, not in its centre.
-	var parts := power_routes(mask,corners,8)
+	var parts := power_routes(mask,corners,POWER_CABLE_HEIGHT)
 	parts=parts.filter(func(part: Dictionary) -> bool:return part.role=="cable")
 	for direction in 4:
 		if not mask&(1<<direction):
 			continue
 		var p: Vector2=STEPS[direction]*.96
 		var z := surface_height(p,corners)
-		box(parts,"pole",Vector3(p.x-.025,p.y-.025,z),Vector3(p.x+.025,p.y+.025,z+8))
+		box(parts,"pole",Vector3(p.x-.025,p.y-.025,z),Vector3(p.x+.025,p.y+.025,z+POWER_CABLE_HEIGHT))
 		var across := Vector2(-p.y,p.x).normalized()*.18
-		beam(parts,"crossarm",Vector3(p.x-across.x,p.y-across.y,z+8),Vector3(p.x+across.x,p.y+across.y,z+8),1.0)
+		beam(parts,"crossarm",Vector3(p.x-across.x,p.y-across.y,z+POWER_CABLE_HEIGHT),Vector3(p.x+across.x,p.y+across.y,z+POWER_CABLE_HEIGHT),1.0)
 	return parts
 
 
@@ -723,7 +725,7 @@ static func build(id: int, corners := PackedFloat32Array(), flipped := false) ->
 				beam(parts,"tower_brace",Vector3(-.34,-.085,33),Vector3(.34,-.085,50),.7)
 		"power_bridge":
 			for side in [-1,1]:
-				beam(parts,"cable",Vector3(side*.2,-.5,20),Vector3(side*.2,.5,20))
+				beam(parts,"cable",Vector3(side*POWER_CABLE_HALF_SPAN,-.5,12+POWER_CABLE_HEIGHT),Vector3(side*POWER_CABLE_HALF_SPAN,.5,12+POWER_CABLE_HEIGHT))
 		"highway", "highway_bridge", "highway_section":
 			footprint=2 if kind!="highway" else 1
 			mask = (5 if id % 2 else 10) if kind == "highway" else (10 if id % 2 else 5)

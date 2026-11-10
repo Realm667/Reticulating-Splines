@@ -49,6 +49,8 @@ func _run() -> void:
 	_check_geometry()
 	_check_crossing_clearance()
 	_check_shared_road_poses(pack)
+	_check_power_bridge_joins()
+	_check_rail_portal_clearance()
 	_check_options()
 	var city := CityState.from_document(EmptyCityTemplate.create(16))
 	var before := State.capture(city.document)
@@ -65,6 +67,40 @@ func _run() -> void:
 	await _check_application()
 	print("PASS: %d native model rasters, shared geometry, opt-in restoration, custom fallback, immutable city (%d ms)" % [total, Time.get_ticks_msec()-started])
 	quit()
+
+
+func _check_rail_portal_clearance() -> void:
+	for id in range(108,112):
+		var turn: int=[3,0,1,2][id-108]
+		var axis := Vector2.DOWN.rotated(turn*PI*.5)
+		var train := VehicleModels.geometry(VehicleModels.Kind.ENGINE,axis,0)
+		var envelope := AABB(Vector3(0,0,.65),Vector3.ZERO)
+		var first := true
+		for part: Dictionary in train.parts:
+			for vertex: Vector3 in part.vertices:
+				vertex+=Vector3(axis.x*.5,axis.y*.5,0)
+				if first:
+					envelope=AABB(vertex,Vector3.ZERO)
+					first=false
+				else:
+					envelope=envelope.expand(vertex)
+		for part: Dictionary in NetworkModelGeometry.build(id).parts:
+			if not str(part.role).begins_with("portal"):
+				continue
+			var bounds := AABB(part.vertices[0],Vector3.ZERO)
+			for vertex: Vector3 in part.vertices: bounds=bounds.expand(vertex)
+			assert(not bounds.grow(.00001).intersects(envelope),"The real train envelope must pass through each rail portal mouth")
+
+
+func _check_power_bridge_joins() -> void:
+	for flipped in [false,true]:
+		var bridge := NetworkModelGeometry.build(92,PackedFloat32Array(),flipped)
+		var shore := NetworkModelGeometry.build(15 if flipped else 14,PackedFloat32Array([12,12,12,12]))
+		var offset := Vector3(1,0,0) if flipped else Vector3(0,1,0)
+		for cable: Dictionary in bridge.parts:
+			var end: Vector3=(cable.vertices[1]+cable.vertices[2])*.5
+			assert(shore.parts.any(func(part: Dictionary) -> bool:
+				return part.role=="cable" and ((part.vertices[1]+part.vertices[2])*.5+offset).distance_to(end)<.0001),"Power-bridge cables must meet the shore's real cable mounts without a step")
 
 
 func _check_shared_road_poses(pack: GraphicsPack) -> void:
