@@ -6,6 +6,18 @@ extends RefCounted
 enum Kind { CAR, TRUCK, BUS, ENGINE, COACH, BULLDOZER, AIRPLANE, HELICOPTER, SHIP, SAILBOAT }
 const BODY_COLORS := [Color("0000b3"), Color("bfbfbf"), Color("df0000"),
 	Color("bfb300"), Color("007700"), Color("7f7f7f")]
+const AIRCRAFT_SHADES := {
+	"air_top":["f3f3f3","f3f3f3","c7c7c7"],
+	"air_side":["c7c7c7","dfdfdf","8f8f8f"],
+	"air_lower":["4b4b4b","676767","2f2f2f"],
+	"air_wing":["c7c7c7","dfdfdf","9f9f9f"],
+	"air_wing_root":["ababab","c7c7c7","8f8f8f"],
+	"air_edge":["575757","676767","2f2f2f"],
+	"air_leading":["f3f3f3","f3f3f3","bfbfbf"],
+	"air_engine":["9f9f9f","bfbfbf","575757"],
+	"air_intake":["2f2f2f","2f2f2f","2f2f2f"],
+	"air_tail_base":["0b53f3","1b77d3","0b53f3"],
+	"air_tail_tip":["0793d7","13b7f3","1b77d3"]}
 const LIMIT := 2048
 var frames: Dictionary = {}
 var swatches: Dictionary = {}
@@ -21,18 +33,19 @@ func frame(kind: int, variant: int, forward: Vector2, rise: float, palette: Sc2P
 	# Quarter terrain and the existing ramp geometry have exact discrete grades.
 	rise = snappedf(rise,.5)
 	var shape := Kind.ENGINE if kind == Kind.COACH else kind
-	var geometry_key := var_to_bytes([shape,forward,rise,shadow]).hex_encode()
+	var compact := kind==Kind.AIRPLANE and divisor>1
+	var geometry_key := var_to_bytes([shape,forward,rise,shadow,compact]).hex_encode()
 	var key := var_to_bytes([kind,geometry_key,variant % BODY_COLORS.size(),divisor]).hex_encode()
 	if frames.has(key):
 		return frames[key]
 	if frames.size() >= LIMIT:
 		frames.clear()
 		meshes.clear()
-	var color_key := Vector2i(kind,variant % BODY_COLORS.size())
+	var color_key := Vector3i(kind,variant % BODY_COLORS.size(),int(compact))
 	if not swatches.has(color_key):
-		swatches[color_key] = _materials(kind,variant,palette)
+		swatches[color_key] = _materials(kind,variant,palette,compact)
 	if not meshes.has(geometry_key):
-		meshes[geometry_key] = geometry(shape,forward,rise)
+		meshes[geometry_key] = geometry(shape,forward,rise,compact)
 		if shadow:
 			for part: Dictionary in meshes[geometry_key].parts:
 				for i in part.vertices.size():
@@ -140,7 +153,7 @@ static func reduce_coverage(source: Image, divisor: int) -> Image:
 	return result
 
 
-static func _materials(kind: int, variant: int, palette: Sc2Palette) -> Dictionary:
+static func _materials(kind: int, variant: int, palette: Sc2Palette, compact: bool) -> Dictionary:
 	var body: Color = BODY_COLORS[variant % BODY_COLORS.size()]
 	if kind in [Kind.ENGINE,Kind.COACH]:
 		body = Color("bfbfbf")
@@ -177,6 +190,11 @@ static func _materials(kind: int, variant: int, palette: Sc2Palette) -> Dictiona
 		result[role] = PackedInt32Array([NetworkModelRaster.nearest(palette,c),
 			NetworkModelRaster.nearest(palette,c.lightened(.18)),NetworkModelRaster.nearest(palette,c.darkened(.25))])
 	result.deck = result.body
+	if kind==Kind.AIRPLANE and not compact:
+		for role: String in AIRCRAFT_SHADES:
+			var shades: Array=AIRCRAFT_SHADES[role]
+			result[role]=PackedInt32Array([NetworkModelRaster.nearest(palette,Color(shades[0])),
+				NetworkModelRaster.nearest(palette,Color(shades[1])),NetworkModelRaster.nearest(palette,Color(shades[2]))])
 	if kind == Kind.BULLDOZER:
 		# The original machine uses an olive yellow, black tracks and dark steel.
 		var original_shades := {"body":["978313","bfb32b","6f5700"],
@@ -188,10 +206,10 @@ static func _materials(kind: int, variant: int, palette: Sc2Palette) -> Dictiona
 	return result
 
 
-static func geometry(kind: int, forward: Vector2, rise: float) -> Dictionary:
+static func geometry(kind: int, forward: Vector2, rise: float, compact := false) -> Dictionary:
 	var parts: Array = []
 	if kind>=Kind.AIRPLANE:
-		return special_geometry(kind,forward,rise)
+		return special_geometry(kind,forward,rise,compact)
 	var length: float = [.46,.62,.74,.94,.94,.78][kind]
 	var half := length*.5
 	var width := .105 if kind == Kind.CAR else (.25 if kind == Kind.BULLDOZER else .13)
@@ -257,38 +275,11 @@ static func geometry(kind: int, forward: Vector2, rise: float) -> Dictionary:
 	return {"parts":parts,"ports":0,"footprint":1}
 
 
-static func special_geometry(kind: int, forward: Vector2, rise: float) -> Dictionary:
+static func special_geometry(kind: int, forward: Vector2, rise: float, compact: bool) -> Dictionary:
 	var parts: Array = []
 	var g = NetworkModelGeometry
 	if kind==Kind.AIRPLANE:
-		# White passenger jet, cyan window band, swept wings and tall tail.
-		var rings: Array[Vector3]=[Vector3(-1.10,.025,.45),Vector3(-.94,.10,1.3),Vector3(.78,.10,1.3),Vector3(1.10,.008,.15)]
-		for section in rings.size()-1:
-			for segment in 8:
-				var face_points := PackedVector3Array()
-				for pair in [[section,segment],[section+1,segment],[section+1,segment+1],[section,segment+1]]:
-					var ring: Vector3=rings[pair[0]]
-					var angle: float=pair[1]*TAU/8.0
-					face_points.append(Vector3(ring.x,cos(angle)*ring.y,2.3+sin(angle)*ring.z))
-				g.face(parts,"white",face_points)
-		for side in [-1,1]:
-			g.box(parts,"blue",Vector3(-.85,side*.101-.003,2.3),Vector3(.78,side*.101+.003,3.25))
-			g.slab(parts,"white",PackedVector3Array([Vector3(.10,0,1.4),Vector3(-.47,side*1.25,1.2),Vector3(-.58,side*1.25,1.2),Vector3(-.15,0,1.4)]),.3)
-			g.slab(parts,"white",PackedVector3Array([Vector3(-.67,0,2.5),Vector3(-.98,side*.48,2.3),Vector3(-1.10,side*.48,2.3),Vector3(-1.0,0,2.5)]),.25)
-			g.box(parts,"metal",Vector3(-.25,side*.52-.06,-.3),Vector3(.10,side*.52+.06,1.5))
-		var fin := PackedVector3Array([Vector3(-1.02,0,2),Vector3(-1.02,0,9.5),Vector3(-.89,0,9.5),Vector3(-.67,0,2)])
-		for side in [-1,1]:
-			var skin := PackedVector3Array()
-			for point: Vector3 in fin:
-				skin.append(point+Vector3(0,side*.022,0))
-			g.face(parts,"blue",skin)
-		for edge in fin.size():
-			var a: Vector3=fin[edge]
-			var b: Vector3=fin[(edge+1)%fin.size()]
-			g.face(parts,"white",PackedVector3Array([a+Vector3(0,-.022,0),b+Vector3(0,-.022,0),b+Vector3(0,.022,0),a+Vector3(0,.022,0)]))
-		g.box(parts,"glass",Vector3(.88,-.065,2.8),Vector3(1.02,.065,3.35))
-		for side in [-1,1]:
-			g.box(parts,"nav_red" if side<0 else "nav_white",Vector3(-.60,side*1.25-.035,1.2),Vector3(-.44,side*1.25+.035,2.2))
+		aircraft(parts,forward,compact)
 	elif kind==Kind.HELICOPTER:
 		g.box(parts,"red",Vector3(-.28,-.13,1),Vector3(.30,.13,3.7))
 		g.box(parts,"glass",Vector3(.08,-.135,2.5),Vector3(.30,.135,3.75))
@@ -382,6 +373,95 @@ static func kind_for_thing(type: int, state := 0) -> int:
 	return {1:Kind.AIRPLANE,2:Kind.HELICOPTER,3:Kind.SHIP,4:Kind.BULLDOZER,
 		9:Kind.SAILBOAT if state==0 else -1,10:Kind.ENGINE,11:Kind.COACH,
 		12:Kind.ENGINE,13:Kind.COACH}.get(type,-1)
+
+
+static func aircraft(parts: Array, forward: Vector2, compact: bool) -> void:
+	var g = NetworkModelGeometry
+	# SC2000 shortens the wing chord in its near-vertical screen poses.
+	var direction := forward.normalized()
+	# Use the compact profile of this same airframe in small native glyphs.
+	# A wider fuselage and narrow paint panels alias into solid blocks there.
+	var axial := 1.0 if compact else maxf(0,2*direction.x*direction.y)
+	var root := lerpf(.20,.10,axial)
+	var sweep := lerpf(-.25,-.47,axial)
+	var chord := lerpf(.55,.25,axial)
+	var width := lerpf(.16,.10,axial)
+	var radius := lerpf(1.9,1.3,axial)
+	var rings: Array[Vector3]=[Vector3(-1.10,.025,.45),Vector3(-.94,width,radius),
+		Vector3(.78,width,radius),Vector3(1.10,.008,.15)]
+	for section in rings.size()-1:
+		for segment in 8:
+			var points := PackedVector3Array()
+			for pair in [[section,segment],[section+1,segment],[section+1,segment+1],[section,segment+1]]:
+				var ring: Vector3=rings[pair[0]]
+				var angle: float=pair[1]*TAU/8.0
+				points.append(Vector3(ring.x,cos(angle)*ring.y,2.3+sin(angle)*ring.z))
+			var role := "air_top" if segment in [1,2] else ("air_side" if segment in [0,3] else "air_lower")
+			g.face(parts,"white" if compact else role,points)
+	for side in [-1,1]:
+		var band := lerpf(3.1,2.3,axial)
+		var stripe: float=side*(width+.001)
+		g.box(parts,"blue",Vector3(-.85,stripe-.003,band),Vector3(.78,stripe+.003,band+.95))
+		# The source side poses show less of the wing beyond the fuselage.
+		var span := 1.25
+		if not compact and side*(direction.x-direction.y)<0:
+			span*=1-.25*maxf(0,-2*direction.x*direction.y)
+		var wing := PackedVector3Array([Vector3(root,0,1.4),Vector3(sweep,side*span,1.2),
+			Vector3(sweep-.11,side*span,1.2),Vector3(root-chord,0,1.4)])
+		var first := parts.size()
+		var wing_role := "white" if compact else "air_wing"
+		g.slab(parts,wing_role,wing,.3)
+		if not compact:
+			for i in range(first+1,parts.size()): parts[i].role="air_edge"
+			var root_offset := Vector3(0,0,.015)
+			g.face(parts,"air_wing_root",PackedVector3Array([wing[0]+root_offset,
+				wing[0].lerp(wing[1],.34)+root_offset,wing[3].lerp(wing[2],.34)+root_offset,wing[3]+root_offset]))
+			var offset := Vector3(0,0,.025)
+			g.face(parts,"air_leading",PackedVector3Array([wing[0]+offset,wing[1]+offset,
+				wing[1].lerp(wing[2],.22)+offset,wing[0].lerp(wing[3],.08)+offset]))
+		g.slab(parts,wing_role,PackedVector3Array([Vector3(-.67,0,2.5),Vector3(-.98,side*.48,2.3),
+			Vector3(-1.10,side*.48,2.3),Vector3(-1.0,0,2.5)]),.25)
+		if compact:
+			g.box(parts,"metal",Vector3(-.25,side*.52-.06,-.3),Vector3(.10,side*.52+.06,1.5))
+		else:
+			aircraft_engine(parts,side*.52)
+	# Two palette bands retain the original painted blue fin on a real surface.
+	var fin_height := 9.5 if compact else 14.0
+	var bands := 1 if compact else 2
+	for side in [-1,1]:
+		for band in bands:
+			var low := float(band)/bands
+			var high := float(band+1)/bands
+			var role := "blue" if compact else ("air_tail_base" if band==0 else "air_tail_tip")
+			g.face(parts,role,PackedVector3Array([
+				Vector3(-1.02,side*.022,lerpf(2,fin_height,low)),Vector3(-1.02,side*.022,lerpf(2,fin_height,high)),
+				Vector3(lerpf(-.67,-.89,high),side*.022,lerpf(2,fin_height,high)),
+				Vector3(lerpf(-.67,-.89,low),side*.022,lerpf(2,fin_height,low))]))
+	var fin := PackedVector3Array([Vector3(-1.02,0,2),Vector3(-1.02,0,fin_height),Vector3(-.89,0,fin_height),Vector3(-.67,0,2)])
+	for edge in fin.size():
+		var a: Vector3=fin[edge]
+		var b: Vector3=fin[(edge+1)%fin.size()]
+		g.face(parts,"white" if compact else "air_leading",PackedVector3Array([a+Vector3(0,-.022,0),b+Vector3(0,-.022,0),b+Vector3(0,.022,0),a+Vector3(0,.022,0)]))
+	g.box(parts,"glass",Vector3(.88,-.065,2.8),Vector3(1.02,.065,3.35))
+	for side in [-1,1]:
+		var span := 1.25
+		if not compact and side*(direction.x-direction.y)<0:
+			span*=1-.25*maxf(0,-2*direction.x*direction.y)
+		g.box(parts,"nav_red" if side<0 else "nav_white",Vector3(sweep-.13,side*span-.035,1.2),Vector3(sweep+.03,side*span+.035,2.2))
+
+
+static func aircraft_engine(parts: Array, across: float) -> void:
+	var g = NetworkModelGeometry
+	var mouth := PackedVector3Array()
+	for segment in 8:
+		var a := segment*TAU/8.0
+		var b := (segment+1)*TAU/8.0
+		var first := Vector3(0,across+cos(a)*.06,.6+sin(a)*.9)
+		var last := Vector3(0,across+cos(b)*.06,.6+sin(b)*.9)
+		g.face(parts,"air_engine" if segment<4 else "air_edge",PackedVector3Array([
+			first+Vector3(-.25,0,0),first+Vector3(.10,0,0),last+Vector3(.10,0,0),last+Vector3(-.25,0,0)]))
+		mouth.append(first+Vector3(.102,0,0))
+	g.face(parts,"air_intake",mouth)
 
 
 static func underground_height(city: CityState, world: Vector2) -> float:

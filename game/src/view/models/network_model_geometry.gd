@@ -348,7 +348,9 @@ static func ground_routes(mask: int, corners: PackedFloat32Array, rail: bool) ->
 			sleeper_distance-=length
 			for sign_value in [-1,1]:
 				beam(result,"rail_web",a+across*sign_value+Vector3(0,0,.8),b+across*sign_value+Vector3(0,0,.8),2.0)
-				beam(result,"rail",a+across*sign_value+Vector3(0,0,1.1),b+across*sign_value+Vector3(0,0,1.1),.85)
+				# The original edge-on corner poses have dark heads, with no gray glint.
+				var head_role := "rail_web" if is_zero_approx(project(b).x-project(a).x) else "rail"
+				beam(result,head_role,a+across*sign_value+Vector3(0,0,1.1),b+across*sign_value+Vector3(0,0,1.1),.85)
 		# A road or sleeper also follows the grade across its width.
 		var along := (finish-start).normalized()
 		for part_index in range(first_part,result.size()):
