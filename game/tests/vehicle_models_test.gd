@@ -72,9 +72,35 @@ func _run() -> void:
 	shared.frame(VehicleModels.Kind.ENGINE,0,Vector2.RIGHT,6,pack.palette)
 	shared.frame(VehicleModels.Kind.COACH,0,Vector2.RIGHT,6,pack.palette)
 	assert(shared.meshes.size()==1,"Engines and coaches share one structural model")
+	_check_bridge_contacts()
 	await _check_application()
 	print("PASS: rigid poses in eight directions, %d native rasters, transverse cable mounts, quarter invalidation and actual application models"%rasters)
 	quit()
+
+
+func _check_bridge_contacts() -> void:
+	var city := CityState.from_document(EmptyCityTemplate.create(32))
+	var tile := Vector2i(16,16)
+	city.set_water_altitude(tile.x,tile.y,3)
+	city.set_tile_flag(tile.x,tile.y,Sc2TileFlags.WATER,true)
+	for id in [BuildingTileIds.HIGHWAY_BRIDGE,BuildingTileIds.REINFORCED_HIGHWAY_BRIDGE,
+			BuildingTileIds.RAIL_BRIDGE,BuildingTileIds.RAIL_BRIDGE_PYLON]:
+		city.set_building_id(tile.x,tile.y,id)
+		for flipped in [false,true]:
+			city.set_tile_flag(tile.x,tile.y,Sc2TileFlags.FLIPPED,flipped)
+			var before := State.capture(city.document)
+			var rail: bool = id in [BuildingTileIds.RAIL_BRIDGE,BuildingTileIds.RAIL_BRIDGE_PYLON]
+			var level := float(city.object_altitude(tile.x,tile.y))+(1.0 if rail else 2.0)
+			assert(is_equal_approx(VehicleModels.height(city,Vector2(tile)),level),"Rigid vehicles must rest on the original bridge deck")
+			for direction in 4:
+				assert(is_equal_approx(CityLifePaths.edge_height(city,tile,direction),level))
+				if rail:
+					assert(is_equal_approx(CitySurfaceOcclusion._rail_edge_height(city,tile,direction),level),"Train pose and foreground support must agree")
+				var point := CityLifePaths.point(city,tile,direction,(direction+2)%4,.5,false)
+				var center := VehicleModels.contact(city,Vector2(tile))
+				var lane := point-center
+				assert(absf(lane.y)<=.13*8+.001,"Road figures and rigid models must share the deck elevation")
+			assert(before==State.capture(city.document),"Bridge contact evaluation cannot change the city")
 
 
 func _check_application() -> void:

@@ -155,8 +155,12 @@ static func connected(city: CityState, tile: Vector2i, direction: int, walking :
 
 static func edge_height(city: CityState, tile: Vector2i, direction: int) -> float:
 	var id := city.building_id(tile.x, tile.y)
-	if (id >= Tiles.SUSPENSION_BRIDGE_1 and id <= Tiles.RAISING_BRIDGE_CLOSED) \
-			or id in [Tiles.HIGHWAY_BRIDGE, Tiles.REINFORCED_HIGHWAY_BRIDGE]:
+	# The two-tile SC2000 truss deck is two levels above its water datum.
+	if id in [Tiles.HIGHWAY_BRIDGE, Tiles.REINFORCED_HIGHWAY_BRIDGE]:
+		return city.object_altitude(tile.x, tile.y) + 2.0
+	if id in [Tiles.RAIL_BRIDGE,Tiles.RAIL_BRIDGE_PYLON]:
+		return city.water_altitude(tile.x,tile.y) + 1.0
+	if id >= Tiles.SUSPENSION_BRIDGE_1 and id <= Tiles.RAISING_BRIDGE_CLOSED:
 		return city.object_altitude(tile.x, tile.y) + 1.0
 	var raised := 0.0
 	if id >= Tiles.HIGHWAY_ONRAMP_1 and id <= Tiles.HIGHWAY_ONRAMP_4:

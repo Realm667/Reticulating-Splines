@@ -303,7 +303,8 @@ static func ground_routes(mask: int, corners: PackedFloat32Array, rail: bool) ->
 static func bridge_span(height: float, water: float, tower := false, rail := false) -> Array:
 	assert(height > water)
 	var parts: Array = []
-	box(parts,"deck",Vector3(-0.32 if rail else -.5,-0.5,height-2),Vector3(0.32 if rail else .5,0.5,height))
+	if not rail:
+		box(parts,"deck",Vector3(-.5,-.5,height-2),Vector3(.5,.5,height))
 	for side in [] if rail else [-1,1]:
 		var u: float = side * 0.46
 		box(parts,"railing",Vector3(u-0.02,-0.5,height),Vector3(u+0.02,0.5,height+2))
@@ -328,15 +329,47 @@ static func bridge_span(height: float, water: float, tower := false, rail := fal
 				face(parts,"lintel",PackedVector3Array([Vector3(left,v,height+6),Vector3(right,v,height+6),Vector3(right,v,zb),Vector3(left,v,za)]))
 			face(parts,"lintel",PackedVector3Array([Vector3(left,-.44,za),Vector3(right,-.44,zb),Vector3(right,.44,zb),Vector3(left,.44,za)]))
 	else:
-		box(parts,"pier",Vector3(-0.07,-0.10,water),Vector3(0.07,0.10,height-2))
+		box(parts,"pier",Vector3(-0.07,-0.10,water),Vector3(0.07,0.10,height-.3 if rail else height-2))
 	if rail:
+		# Open timber-and-steel construction, with no concrete deck between ties.
 		for side in [-1,1]:
-			strip(parts,"rail_web",Vector3(side*.21,-.5,height+.16),Vector3(side*.21,.5,height+.16),.075)
-			strip(parts,"rail",Vector3(side*0.21,-0.5,height+0.3),Vector3(side*0.21,0.5,height+0.3),0.045)
-		for sleeper in 5:
-			var y: float=-.5+(sleeper+.5)/5
-			strip(parts,"tie",Vector3(-.30,y,height+.1),Vector3(.30,y,height+.1),.055)
+			box(parts,"rail_web",Vector3(side*.25-.045,-.5,height+.15),Vector3(side*.25+.045,.5,height+.7))
+			strip(parts,"rail",Vector3(side*.25,-.5,height+.85),Vector3(side*.25,.5,height+.85),.11)
+		for sleeper in 4:
+			var y: float=-.5+(sleeper+.5)/4
+			box(parts,"tie",Vector3(-.40,y-.05,height-.35),Vector3(.40,y+.05,height+.25))
 	return parts
+
+
+static func highway_truss(parts: Array, reinforced: bool) -> void:
+	# Three low transverse portals span both carriageways in the SC2000 bridge.
+	# Pavement has its own material: projected tower pixels are not road texture.
+	for lane in [Vector2(-.5,.45),Vector2(.55,1.5)]:
+		slab(parts,"pavement",PackedVector3Array([Vector3(lane.x,-1.5,24),Vector3(lane.y,-1.5,24),
+			Vector3(lane.y,.5,24),Vector3(lane.x,.5,24)]))
+		for dash in 6:
+			var v := -1.45+dash*.32
+			strip(parts,"road_paint",Vector3((lane.x+lane.y)*.5,v,24.05),Vector3((lane.x+lane.y)*.5,v+.16,24.05),.045)
+	for u in [-.48,.5,1.48]:
+		beam(parts,"curb",Vector3(u,-1.5,24.2),Vector3(u,.5,24.2),.85)
+	var us := [-.5,-.1,1.1,1.5]
+	var zs := [24.0,34.0,34.0,24.0]
+	for v in [-1.45,-.45,.45]:
+		for segment in 3:
+			beam(parts,"truss",Vector3(us[segment],v,zs[segment]),Vector3(us[segment+1],v,zs[segment+1]),1.8)
+		beam(parts,"truss",Vector3(-.5,v,24),Vector3(1.5,v,24),1.6)
+		for u in [-.1,1.1]:
+			box(parts,"truss",Vector3(u-.035,v-.035,24),Vector3(u+.035,v+.035,34))
+		beam(parts,"truss_hanger",Vector3(.5,v,24),Vector3(.5,v,34),.8)
+		beam(parts,"truss",Vector3(-.1,v,24),Vector3(1.1,v,34),1.25)
+	for u in [-.1,1.1]:
+		beam(parts,"truss",Vector3(u,-1.45,34),Vector3(u,.45,34),1.65)
+	beam(parts,"truss",Vector3(-.1,-1.45,34),Vector3(1.1,-.45,34),1.3)
+	beam(parts,"truss",Vector3(-.1,-.45,34),Vector3(1.1,.45,34),1.3)
+	if not reinforced:
+		for u in [0.0,1.0]:
+			box(parts,"truss",Vector3(u-.065,-.56,0),Vector3(u+.065,-.44,22))
+			box(parts,"pier",Vector3(u-.11,-.61,0),Vector3(u+.11,-.39,.8))
 
 
 static func highway_details(parts: Array, top: PackedVector3Array, ports: int, low: Vector2, high: Vector2, footprint: int) -> void:
@@ -472,7 +505,9 @@ static func build(id: int, corners := PackedFloat32Array(), flipped := false) ->
 			if id>=T.HIGHWAY_CURVE_1 and id<=T.HIGHWAY_CURVE_4:
 				var turn:=id-T.HIGHWAY_CURVE_1
 				top=PackedVector3Array([top[turn%4],top[(turn+1)%4],top[(turn+2)%4]])
-			if id>=T.HIGHWAY_SLOPE_1 and id<=T.HIGHWAY_SLOPE_4:
+			if kind=="highway_bridge":
+				highway_truss(parts,id==T.REINFORCED_HIGHWAY_BRIDGE)
+			elif id>=T.HIGHWAY_SLOPE_1 and id<=T.HIGHWAY_SLOPE_4:
 				var along_u: bool=(id-T.HIGHWAY_SLOPE_1)%2==0
 				for interval in [Vector2(0,.44),Vector2(.56,1)]:
 					var lane:=PackedVector3Array()
@@ -487,7 +522,7 @@ static func build(id: int, corners := PackedFloat32Array(), flipped := false) ->
 				highway_details(parts,top,mask,low,high,footprint)
 			if id in [T.HIGHWAY_STRAIGHT_1,T.HIGHWAY_STRAIGHT_2]:
 				box(parts,"support",Vector3(-.04,-.04,0),Vector3(.04,.04,10))
-			elif id!=T.REINFORCED_HIGHWAY_BRIDGE:
+			elif kind!="highway_bridge":
 				for index in [0,2]:
 					var p: Vector3=top[index]
 					var x:=lerpf(p.x,(low.x+high.x)*.5,.10)
@@ -498,23 +533,6 @@ static func build(id: int, corners := PackedFloat32Array(), flipped := false) ->
 				parts.append_array(ground_routes(10 if id%2 else 5,corners,id>=T.HIGHWAY_RAIL_CROSSING_1))
 			elif id in [T.HIGHWAY_POWER_CROSSING_1,T.HIGHWAY_POWER_CROSSING_2]:
 				parts.append_array(power_routes(10 if id%2 else 5,corners,8,Vector2(.43,-.43)))
-			if kind=="highway_bridge":
-				for u in [-.45,1.45]:
-					var chord: Array=[12.0,28.0,36.0,28.0,12.0]
-					for segment in 4:
-						var y0: float=-1.5+segment*.5
-						var y1: float=y0+.5
-						var a:=Vector3(u,y0,12)
-						var b:=Vector3(u,y1,12)
-						var ca:=Vector3(u,y0,chord[segment])
-						var cb:=Vector3(u,y1,chord[segment+1])
-						beam(parts,"truss",ca,cb,1.35)
-						beam(parts,"truss",a,ca,1.35)
-						beam(parts,"truss",a,cb,1.1)
-						beam(parts,"truss",a,b,1.35)
-				beam(parts,"truss",Vector3(-.45,-.5,36),Vector3(1.45,-.5,36),1.35)
-				for v in [-1.0,0.0]:
-					beam(parts,"truss",Vector3(-.45,v,28),Vector3(1.45,v,28),.8)
 		"onramp":
 			face(parts,"ramp_ground",PackedVector3Array([
 				Vector3(-.5,-.5,0),Vector3(.5,-.5,0),Vector3(.5,.5,0),Vector3(-.5,.5,0)]))

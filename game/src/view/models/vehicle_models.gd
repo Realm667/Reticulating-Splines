@@ -71,12 +71,12 @@ static func _materials(kind: int, variant: int, palette: Sc2Palette) -> Dictiona
 	if kind in [Kind.ENGINE,Kind.COACH]:
 		body = Color("bfbfbf")
 	elif kind == Kind.BULLDOZER:
-		body = Color("b79737")
+		body = Color("978313")
 	var colors := {"body":body,"roof":body.lightened(.12),"glass":Color("203747"),
 		"wheel":Color("101010"),"trim":Color("b7b7a7"),"headlamp":Color("eee7bf"),
 		"taillamp":Color("b71707"),"beacon":Color("3757b7"),
 		"window_frame":Color("202020"),"metal":Color("777777"),"cargo":Color("bfbfbf"),
-		"cargo_seam":Color("777777"),"track":Color("202020")}
+		"cargo_seam":Color("777777"),"track":Color("000000"),"blade":Color("3b3b3b")}
 	if kind in [Kind.ENGINE,Kind.COACH]:
 		colors.roof = Color("7f7f7f")
 		colors.glass = Color("575757")
@@ -89,17 +89,26 @@ static func _materials(kind: int, variant: int, palette: Sc2Palette) -> Dictiona
 		result[role] = PackedInt32Array([NetworkModelRaster.nearest(palette,c),
 			NetworkModelRaster.nearest(palette,c.lightened(.18)),NetworkModelRaster.nearest(palette,c.darkened(.25))])
 	result.deck = result.body
+	if kind == Kind.BULLDOZER:
+		# The original machine uses an olive yellow, black tracks and dark steel.
+		var original_shades := {"body":["978313","bfb32b","6f5700"],
+			"blade":["3b3b3b","3b3b3b","2f2f2f"],"track":["000000","2f2f2f","000000"]}
+		for role: String in original_shades:
+			var shades: Array = original_shades[role]
+			result[role] = PackedInt32Array([NetworkModelRaster.nearest(palette,Color(shades[0])),
+				NetworkModelRaster.nearest(palette,Color(shades[1])),NetworkModelRaster.nearest(palette,Color(shades[2]))])
 	return result
 
 
 static func geometry(kind: int, forward: Vector2, rise: float) -> Dictionary:
 	var parts: Array = []
-	var length: float = [.46,.62,.74,.94,.94,.95][kind]
+	var length: float = [.46,.62,.74,.94,.94,.78][kind]
 	var half := length*.5
 	var width := .105 if kind == Kind.CAR else (.25 if kind == Kind.BULLDOZER else .13)
 	var height := 2.0 if kind == Kind.CAR else (4.2 if kind == Kind.BULLDOZER else (3.7 if kind >= Kind.ENGINE else 3.0))
-	NetworkModelGeometry.box(parts,"wheel",Vector3(-half*.9,-width*.65,.25),Vector3(half*.9,width*.65,.9))
-	NetworkModelGeometry.box(parts,"body",Vector3(-half,-width,.65),Vector3(half,width,height))
+	if kind != Kind.BULLDOZER:
+		NetworkModelGeometry.box(parts,"wheel",Vector3(-half*.9,-width*.65,.25),Vector3(half*.9,width*.65,.9))
+		NetworkModelGeometry.box(parts,"body",Vector3(-half,-width,.65),Vector3(half,width,height))
 	if kind in [Kind.ENGINE,Kind.COACH]:
 		roof(parts,Vector3(-half,-width,height),Vector3(half,width,height+1.0))
 		for window in 3:
@@ -125,20 +134,7 @@ static func geometry(kind: int, forward: Vector2, rise: float) -> Dictionary:
 		NetworkModelGeometry.box(parts,"metal",Vector3(half*.63,-width-.006,.95),Vector3(half*.63+.015,width+.006,3.7))
 		NetworkModelGeometry.box(parts,"metal",Vector3(-.10,-.055,4.1),Vector3(.04,.055,4.23))
 	elif kind == Kind.BULLDOZER:
-		NetworkModelGeometry.box(parts,"body",Vector3(-.10,-.14,height),Vector3(.18,.14,7.0))
-		window_band(parts,-.085,.165,.14,4.8,6.65)
-		roof(parts,Vector3(-.12,-.16,6.9),Vector3(.20,.16,7.35))
-		NetworkModelGeometry.box(parts,"wheel",Vector3(-.28,-.13,4.1),Vector3(-.23,-.08,7.5))
-		for side in [-1,1]:
-			NetworkModelGeometry.box(parts,"track",Vector3(-half,side*.25-.065,0),Vector3(half,side*.25+.065,1.8))
-			for roller in 5:
-				var x := -half+.08+roller*(length-.16)/4
-				NetworkModelGeometry.box(parts,"metal",Vector3(x-.035,side*.25-.069,.55),Vector3(x+.035,side*.25+.069,1.1))
-		NetworkModelGeometry.face(parts,"metal",PackedVector3Array([
-			Vector3(half+.04,-.37,.3),Vector3(half+.04,.37,.3),
-			Vector3(half+.12,.37,2.5),Vector3(half+.12,-.37,2.5)]))
-		for side in [-1,1]:
-			NetworkModelGeometry.beam(parts,"metal",Vector3(.15,side*.20,1.5),Vector3(half+.07,side*.25,1.2),.7)
+		bulldozer(parts)
 	else:
 		var cab := half*.65
 		window_band(parts,-cab,cab,width,height-.65,height+.8)
@@ -151,11 +147,12 @@ static func geometry(kind: int, forward: Vector2, rise: float) -> Dictionary:
 				NetworkModelGeometry.box(parts,"wheel",Vector3(axle-.045,side*width-.025,0),Vector3(axle+.045,side*width+.025,1.1))
 				if kind in [Kind.CAR,Kind.TRUCK,Kind.BUS]:
 					NetworkModelGeometry.box(parts,"metal",Vector3(axle-.02,side*width-.028,.4),Vector3(axle+.02,side*width+.028,.75))
-	for end in [-1,1]:
-		NetworkModelGeometry.box(parts,"trim",Vector3(end*half-.012,-width,.65),Vector3(end*half+.012,width,.95))
-	for side in [-1,1]:
-		NetworkModelGeometry.box(parts,"headlamp",Vector3(half-.01,side*width*.65-.023,1),Vector3(half+.01,side*width*.65+.023,1.65))
-		NetworkModelGeometry.box(parts,"taillamp",Vector3(-half-.01,side*width*.65-.023,1),Vector3(-half+.01,side*width*.65+.023,1.6))
+	if kind != Kind.BULLDOZER:
+		for end in [-1,1]:
+			NetworkModelGeometry.box(parts,"trim",Vector3(end*half-.012,-width,.65),Vector3(end*half+.012,width,.95))
+		for side in [-1,1]:
+			NetworkModelGeometry.box(parts,"headlamp",Vector3(half-.01,side*width*.65-.023,1),Vector3(half+.01,side*width*.65+.023,1.65))
+			NetworkModelGeometry.box(parts,"taillamp",Vector3(-half-.01,side*width*.65-.023,1),Vector3(-half+.01,side*width*.65+.023,1.6))
 	# A rigid pitch rotation moves the roof, wheel axles and lamp meshes together.
 	# Horizontal coordinates are tile units, vertical coordinates native pixels.
 	var heading := forward.normalized()
@@ -168,6 +165,33 @@ static func geometry(kind: int, forward: Vector2, rise: float) -> Dictionary:
 			var p: Vector3 = part.vertices[i]
 			part.vertices[i] = along*p.x+across*p.y+up*p.z
 	return {"parts":parts,"ports":0,"footprint":1}
+
+
+static func bulldozer(parts: Array) -> void:
+	NetworkModelGeometry.box(parts,"body",Vector3(-.32,-.18,1.4),Vector3(.33,.18,3.6))
+	NetworkModelGeometry.box(parts,"body",Vector3(-.01,-.17,3.6),Vector3(.33,.17,5.0))
+	# Open operator station: upright back, dark seat and exposed controls.
+	for side in [-1,1]:
+		NetworkModelGeometry.box(parts,"body",Vector3(-.31,side*.13-.025,3.5),Vector3(-.25,side*.13+.025,8.7))
+	NetworkModelGeometry.box(parts,"body",Vector3(-.31,-.15,7.5),Vector3(-.25,.15,8.7))
+	NetworkModelGeometry.box(parts,"track",Vector3(-.25,-.10,4.3),Vector3(-.20,.10,6.3))
+	NetworkModelGeometry.box(parts,"track",Vector3(-.24,-.12,3.8),Vector3(-.04,.12,4.6))
+	NetworkModelGeometry.beam(parts,"track",Vector3(-.04,-.06,3.8),Vector3(.01,-.06,6.0),.7)
+	NetworkModelGeometry.box(parts,"track",Vector3(.10,-.15,4.8),Vector3(.14,-.11,8.8))
+	for side in [-1,1]:
+		NetworkModelGeometry.box(parts,"body",Vector3(-.28,side*.17-.035,3.6),Vector3(-.04,side*.17+.035,5.8))
+		NetworkModelGeometry.box(parts,"track",Vector3(-.39,side*.23-.07,0),Vector3(.39,side*.23+.07,1.9))
+		for roller in 3:
+			var x := -.28+roller*.28
+			NetworkModelGeometry.box(parts,"metal",Vector3(x-.045,side*.23-.073,.3),Vector3(x+.045,side*.23+.073,1.1))
+		NetworkModelGeometry.beam(parts,"blade",Vector3(.0,side*.22,1.2),Vector3(.47,side*.28,2.1),.9)
+	# Tall, concave shield with a bright cutting edge, rather than a low bumper.
+	var profile := [Vector2(.49,.2),Vector2(.45,2.0),Vector2(.44,5.0),Vector2(.48,7.0)]
+	for i in 3:
+		NetworkModelGeometry.face(parts,"blade",PackedVector3Array([
+			Vector3(profile[i].x,-.36,profile[i].y),Vector3(profile[i].x,.36,profile[i].y),
+			Vector3(profile[i+1].x,.36,profile[i+1].y),Vector3(profile[i+1].x,-.36,profile[i+1].y)]))
+	NetworkModelGeometry.box(parts,"metal",Vector3(.48,-.365,.1),Vector3(.51,.365,.65))
 
 
 static func window_band(parts: Array, first: float, last: float, width: float, low: float, high: float) -> void:

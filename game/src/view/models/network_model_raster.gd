@@ -26,6 +26,7 @@ static func materials(palette: Sc2Palette, id: int) -> Dictionary:
 		"shoulder":Color("9b8747"),"road_edge":Color("202020"),"insulator":Color("9f9f9f"),
 		"curb":Color("b7b7b7"),"guardrail":Color("202020"),"railing_post":Color("b7b7b7"),
 		"masonry_joint":Color("777777"),"tower_brace":Color("470000"),
+		"road_paint":Color("b7b7b7"),"truss_hanger":Color("777777"),
 		"portal":base,"truss":metal,"tower":metal,"tower_beam":metal,
 		"suspension_cable":Color("282828"),"hanger":metal,"roof":base,"lintel":base,
 		"ramp":base,"support":base,"signal_pole":Color("383838"),"signal":Color("d02020"),
@@ -42,6 +43,9 @@ static func materials(palette: Sc2Palette, id: int) -> Dictionary:
 		for role in ["tower","tower_beam","hanger"]:
 			result[role]=PackedInt32Array([nearest(palette,Color("972713")),
 				nearest(palette,Color("c7572b")),nearest(palette,Color("7f1707"))])
+	if id in [106,107]:
+		result.truss=PackedInt32Array([nearest(palette,Color("670700")),
+			nearest(palette,Color("972713")),nearest(palette,Color("7f1707"))])
 	return result
 
 
