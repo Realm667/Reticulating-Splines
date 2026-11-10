@@ -479,7 +479,7 @@ static func rubble(id: int, corners: PackedFloat32Array) -> Array:
 	# Loose dark debris closes the pile below the distinct rigid fragments.
 	var rim := PackedVector3Array()
 	for step in 8:
-		var p := Vector2(cos(step*PI*.25),sin(step*PI*.25))*.35
+		var p := Vector2(cos(step*PI*.25),sin(step*PI*.25))*.45
 		rim.append(Vector3(p.x,p.y,rubble_ground(p,corners)+.12))
 	var summit := Vector3(0,0,rubble_ground(Vector2.ZERO,corners)+1.9)
 	for step in 8:

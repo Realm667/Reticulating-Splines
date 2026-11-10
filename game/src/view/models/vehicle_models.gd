@@ -109,10 +109,17 @@ static func _materials(kind: int, variant: int, palette: Sc2Palette) -> Dictiona
 		colors.trim = Color("bfbfbf")
 	colors.train_front = Color("0000df")
 	colors.white = Color("dfdfdf")
-	colors.blue = Color("00bfbf")
+	colors.blue = Color("13b7f3")
 	colors.red = Color("df0000")
 	colors.hull = Color("000000")
 	colors.rotor = Color("0000df")
+	colors.rotor_blur = Color("2720ff")
+	colors.cargo_red=Color("df0000")
+	colors.cargo_blue=Color("0000b3")
+	colors.cargo_yellow=Color("bfb300")
+	colors.cargo_white=Color("dfdfdf")
+	if kind==Kind.HELICOPTER:
+		colors.glass=Color("8f8f8f")
 	var result := {}
 	for role: String in colors:
 		var c: Color = colors[role]
@@ -204,39 +211,74 @@ static func special_geometry(kind: int, forward: Vector2, rise: float) -> Dictio
 	var g = NetworkModelGeometry
 	if kind==Kind.AIRPLANE:
 		# White passenger jet, cyan window band, swept wings and tall tail.
-		g.box(parts,"white",Vector3(-.88,-.09,1),Vector3(.90,.09,3.8))
-		g.face(parts,"white",PackedVector3Array([Vector3(.90,-.09,1),Vector3(1.04,0,2),Vector3(.90,.09,3.8)]))
+		var rings: Array[Vector3]=[Vector3(-1.10,.025,.45),Vector3(-.94,.10,1.3),Vector3(.78,.10,1.3),Vector3(1.10,.008,.15)]
+		for section in rings.size()-1:
+			for segment in 8:
+				var face_points := PackedVector3Array()
+				for pair in [[section,segment],[section+1,segment],[section+1,segment+1],[section,segment+1]]:
+					var ring: Vector3=rings[pair[0]]
+					var angle: float=pair[1]*TAU/8.0
+					face_points.append(Vector3(ring.x,cos(angle)*ring.y,2.3+sin(angle)*ring.z))
+				g.face(parts,"white",face_points)
 		for side in [-1,1]:
-			g.box(parts,"blue",Vector3(-.70,side*.09-.004,2.3),Vector3(.80,side*.09+.004,2.9))
-			g.face(parts,"white",PackedVector3Array([Vector3(.22,0,1.4),Vector3(-.22,side*.92,1.1),Vector3(-.45,side*.92,1.1),Vector3(-.25,0,1.4)]))
-			g.face(parts,"white",PackedVector3Array([Vector3(-.63,0,2.5),Vector3(-.84,side*.38,2.3),Vector3(-.95,side*.38,2.3),Vector3(-.87,0,2.5)]))
-			g.box(parts,"metal",Vector3(-.20,side*.40-.055,-.5),Vector3(.12,side*.40+.055,1.4))
-		g.face(parts,"white",PackedVector3Array([Vector3(-.95,0,2),Vector3(-.95,0,10),Vector3(-.82,0,10),Vector3(-.61,0,2)]))
-		g.box(parts,"glass",Vector3(.76,-.08,3),Vector3(.88,.08,3.85))
+			g.box(parts,"blue",Vector3(-.85,side*.101-.003,2.3),Vector3(.78,side*.101+.003,3.25))
+			g.slab(parts,"white",PackedVector3Array([Vector3(.10,0,1.4),Vector3(-.47,side*1.25,1.2),Vector3(-.58,side*1.25,1.2),Vector3(-.15,0,1.4)]),.3)
+			g.slab(parts,"white",PackedVector3Array([Vector3(-.67,0,2.5),Vector3(-.98,side*.48,2.3),Vector3(-1.10,side*.48,2.3),Vector3(-1.0,0,2.5)]),.25)
+			g.box(parts,"metal",Vector3(-.25,side*.52-.06,-.3),Vector3(.10,side*.52+.06,1.5))
+		var fin := PackedVector3Array([Vector3(-1.02,0,2),Vector3(-1.02,0,9.5),Vector3(-.89,0,9.5),Vector3(-.67,0,2)])
+		for side in [-1,1]:
+			var skin := PackedVector3Array()
+			for point: Vector3 in fin:
+				skin.append(point+Vector3(0,side*.022,0))
+			g.face(parts,"blue",skin)
+		for edge in fin.size():
+			var a: Vector3=fin[edge]
+			var b: Vector3=fin[(edge+1)%fin.size()]
+			g.face(parts,"white",PackedVector3Array([a+Vector3(0,-.022,0),b+Vector3(0,-.022,0),b+Vector3(0,.022,0),a+Vector3(0,.022,0)]))
+		g.box(parts,"glass",Vector3(.88,-.065,2.8),Vector3(1.02,.065,3.35))
 	elif kind==Kind.HELICOPTER:
 		g.box(parts,"red",Vector3(-.28,-.13,1),Vector3(.30,.13,3.7))
 		g.box(parts,"glass",Vector3(.08,-.135,2.5),Vector3(.30,.135,3.75))
-		g.beam(parts,"red",Vector3(-.25,0,2),Vector3(-.78,0,3.4),1.3)
-		g.beam(parts,"red",Vector3(-.76,0,3.4),Vector3(-.76,0,6),.8)
-		g.beam(parts,"metal",Vector3(-.05,0,3),Vector3(-.05,0,6.5),.6)
+		g.box(parts,"red",Vector3(-.78,-.018,2.5),Vector3(-.25,.018,3.4))
+		g.box(parts,"red",Vector3(-.78,-.018,3.4),Vector3(-.72,.018,6))
+		for segment in 12:
+			var a := segment*TAU/12.0
+			var b := (segment+1)*TAU/12.0
+			g.beam(parts,"metal",Vector3(-.80+cos(a)*.06,-.04,4.8+sin(a)*1.8),
+				Vector3(-.80+cos(b)*.06,-.04,4.8+sin(b)*1.8),.55)
+		g.box(parts,"metal",Vector3(-.06,-.012,3),Vector3(-.04,.012,6.6))
 		for side in [-1,1]:
 			g.beam(parts,"metal",Vector3(-.22,side*.17,0),Vector3(.25,side*.17,0),.7)
 			g.beam(parts,"metal",Vector3(.08,side*.10,1.5),Vector3(.08,side*.17,0),.6)
-		g.box(parts,"rotor",Vector3(-.65,-.024,6.45),Vector3(.58,.024,6.55))
-		g.box(parts,"rotor",Vector3(-.074,-.55,6.45),Vector3(-.026,.55,6.55))
+		for part: Dictionary in parts:
+			for i in part.vertices.size():
+				part.vertices[i].x*=.88
+				part.vertices[i].y*=.65
+		# The original has a stable blue, dithered rotor sweep in every heading.
+		# A horizontal spatial disk retains that silhouette and its palette cycle.
+		for segment in 24:
+			var a := segment*TAU/24.0
+			var b := (segment+1)*TAU/24.0
+			g.face(parts,"rotor_blur",PackedVector3Array([Vector3(-.044,0,6.6),
+				Vector3(-.044+cos(a)*.50,sin(a)*.50,6.6),Vector3(-.044+cos(b)*.50,sin(b)*.50,6.6)]))
+		g.box(parts,"rotor",Vector3(-.544,-.018,6.65),Vector3(.456,.018,6.72))
+		g.box(parts,"rotor",Vector3(-.062,-.50,6.65),Vector3(-.026,.50,6.72))
 	elif kind==Kind.SHIP:
-		var outline := PackedVector3Array([Vector3(-1,-.20,0),Vector3(.67,-.24,0),Vector3(1,0,0),Vector3(.67,.24,0),Vector3(-1,.20,0)])
+		var outline := PackedVector3Array([Vector3(-1.32,-.24,0),Vector3(.90,-.29,0),Vector3(1.32,0,0),Vector3(.90,.29,0),Vector3(-1.32,.24,0)])
 		g.slab(parts,"hull",outline,2)
 		for i in outline.size():
 			g.beam(parts,"red",outline[i]+Vector3(0,0,.8),outline[(i+1)%outline.size()]+Vector3(0,0,.8),1.3)
-		g.box(parts,"white",Vector3(.30,-.17,.8),Vector3(.65,.17,6.3))
-		g.box(parts,"glass",Vector3(.40,-.175,4.8),Vector3(.66,.175,5.5))
-		g.box(parts,"red",Vector3(.38,-.14,6.3),Vector3(.67,.14,7))
-		g.beam(parts,"white",Vector3(.33,0,5),Vector3(.33,0,11),.7)
-		for x in [-.76,-.43,-.10]:
-			for side in [-1,1]:
-				g.box(parts,"white",Vector3(x-.10,side*.105-.05,1),Vector3(x+.10,side*.105+.05,2.8))
-		g.beam(parts,"red",Vector3(-.8,0,1),Vector3(.3,0,1),.7)
+		g.box(parts,"white",Vector3(-1.17,-.19,.8),Vector3(-.72,.19,5.2))
+		g.box(parts,"glass",Vector3(-1.175,-.195,3.8),Vector3(-.715,.195,4.5))
+		g.box(parts,"red",Vector3(-1.19,-.20,5.2),Vector3(-.70,.20,5.8))
+		g.beam(parts,"white",Vector3(-.84,0,4.8),Vector3(-.84,0,9),.7)
+		for row in 6:
+			for column in 3:
+				var x := -.48+row*.23
+				var y := (column-1)*.15
+				var role: String=["cargo_white","cargo_red","cargo_yellow","cargo_blue"][(row+column)%4]
+				g.box(parts,role,Vector3(x-.095,y-.06,.9),Vector3(x+.095,y+.06,2.25))
+		g.beam(parts,"red",Vector3(-.65,0,.75),Vector3(1.1,0,.75),.7)
 	else:
 		g.slab(parts,"white",PackedVector3Array([Vector3(-.33,-.08,0),Vector3(.25,-.09,0),Vector3(.38,0,0),Vector3(.25,.09,0),Vector3(-.33,.08,0)]),1)
 		g.beam(parts,"metal",Vector3(0,0,0),Vector3(0,0,11),.6)

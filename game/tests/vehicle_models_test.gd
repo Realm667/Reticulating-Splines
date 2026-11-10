@@ -93,9 +93,24 @@ func _run() -> void:
 	shared.frame(VehicleModels.Kind.COACH,0,Vector2.RIGHT,6,pack.palette)
 	assert(shared.meshes.size()==1,"Engines and coaches share one structural model")
 	_check_bridge_contacts()
+	_check_rotor_animation(pack.palette)
 	await _check_application()
 	print("PASS: rigid poses in eight directions, %d native rasters, transverse cable mounts, quarter invalidation and actual application models"%rasters)
 	quit()
+
+
+func _check_rotor_animation(palette: Sc2Palette) -> void:
+	var models := VehicleModels.new()
+	for direction in 8:
+		var pose := models.frame(VehicleModels.Kind.HELICOPTER,0,CityLifePaths.forward(direction),0,palette)
+		var animated := 0
+		for y in pose.indexed.get_height():
+			for x in pose.indexed.get_width():
+				var pixel: Color=pose.indexed.get_pixel(x,y)
+				var index := roundi(pixel.r*255)
+				if pixel.a>.5 and index in range(200,212):
+					animated+=1
+		assert(animated>16,"Every spatial heading must retain the original animated rotor sweep")
 
 
 func _check_bridge_contacts() -> void:

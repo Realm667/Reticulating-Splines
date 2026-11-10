@@ -3,6 +3,11 @@ extends RefCounted
 ## Native indexed raster from spatial components. No subpixel filtering or lighting passes.
 @warning_ignore_start("integer_division")
 const Geometry = preload("res://src/view/models/network_model_geometry.gd")
+const RUBBLE_SHADES := {
+	"rubble_timber":["735323","7b5f2b","431f07"],
+	"rubble_cut":["8f8f8f","ababab","575757"],
+	"rubble_stone":["8f8f8f","ababab","575757"],
+	"rubble_dark":["431f07","5f3b13","000000"]}
 
 static func nearest(palette: Sc2Palette, color: Color) -> int:
 	var best:=0
@@ -39,6 +44,11 @@ static func materials(palette: Sc2Palette, id: int) -> Dictionary:
 		result[role]=PackedInt32Array([nearest(palette,c),nearest(palette,c.lightened(.22)),nearest(palette,c.darkened(.25))])
 		if role in ["pole","crossarm","cable","ballast"]:
 			result[role].fill(nearest(palette,c))
+	# Original SC2000 rubble is dominated by this dark brown ramp, with gray
+	# broken ends and masonry. Generic lightening made the pile too olive/gray.
+	for role: String in RUBBLE_SHADES:
+		var shades: Array = RUBBLE_SHADES[role]
+		result[role]=PackedInt32Array([nearest(palette,Color(shades[0])),nearest(palette,Color(shades[1])),nearest(palette,Color(shades[2]))])
 	if id in range(81,86):
 		# The SC2000 suspension towers use a brighter orange-red ramp than
 		# the dark red highway truss and rail sleepers.
@@ -123,6 +133,8 @@ static func render(id: int, source: Image, palette: Sc2Palette, view := 2, prepa
 					if minf(u,minf(v,w))<-.0001:
 						continue
 					var world: Vector3=a*u+b*v+c*w
+					if role=="rotor_blur" and (x+y)%2==0:
+						continue
 					if role in ["road_surface","ballast_surface","ramp"] and (world.x<-.5 or world.x>.5 or world.y<-.5 or world.y>.5):
 						continue
 					var d: float=Geometry.depth(world)
@@ -130,6 +142,8 @@ static func render(id: int, source: Image, palette: Sc2Palette, view := 2, prepa
 					if d<depths[i]-.0001:
 						continue
 					var index:=int(swatch[tone])
+					if role=="rotor_blur":
+						index=200+posmod(x*5+y*3,12)
 					if absf(normal.z)>.001 and role in ["road_surface","deck","ramp"]:
 						index=road_marking(world,recipe.ports,id,index,palette)
 					# Authored markings are sampled only on supporting surfaces. Solid
