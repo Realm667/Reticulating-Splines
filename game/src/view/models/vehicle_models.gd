@@ -12,6 +12,11 @@ const AIRCRAFT_SHADES := {
 	"air_lower":["4b4b4b","676767","2f2f2f"],
 	"air_wing":["c7c7c7","dfdfdf","9f9f9f"],
 	"air_wing_root":["ababab","c7c7c7","8f8f8f"],
+	"air_axial_lead":["f3f3f3","f3f3f3","f3f3f3"],
+	"air_axial_mid":["c7c7c7","c7c7c7","c7c7c7"],
+	"air_axial_trail":["8f8f8f","8f8f8f","8f8f8f"],
+	"air_axial_trail_rear":["6f6f6f","6f6f6f","6f6f6f"],
+	"air_axial_root":["ababab","ababab","ababab"],
 	"air_edge":["575757","676767","2f2f2f"],
 	"air_leading":["f3f3f3","f3f3f3","bfbfbf"],
 	"air_engine":["9f9f9f","bfbfbf","575757"],
@@ -371,6 +376,16 @@ static func special_geometry(kind: int, forward: Vector2, rise: float, compact: 
 				if part.role not in ["wake","wake_foam"]:
 					p.z+=5.0
 			part.vertices[i]=along*p.x+across*p.y+up*p.z
+	if kind==Kind.AIRPLANE and not compact and axial_detail>.5:
+		# Subdivide the posed plate so direction-dependent length scaling cannot
+		# bend paint boundaries away from their supporting wing or its shadow.
+		var finished: Array=[]
+		for part: Dictionary in parts:
+			if part.has("axial_finish"):
+				aircraft_wing_finish(finished,part.vertices,part.axial_finish)
+			else:
+				finished.append(part)
+		parts=finished
 	return {"parts":parts,"ports":0,"footprint":3,"origin_x":48}
 
 
@@ -423,12 +438,15 @@ static func aircraft(parts: Array, forward: Vector2, compact: bool) -> void:
 		g.slab(parts,wing_role,wing,.3)
 		if not compact:
 			for i in range(first+1,parts.size()): parts[i].role="air_edge"
-			var root_offset := Vector3(0,0,.015)
-			g.face(parts,"air_wing_root",PackedVector3Array([wing[0]+root_offset,
-				wing[0].lerp(wing[1],.34)+root_offset,wing[3].lerp(wing[2],.34)+root_offset,wing[3]+root_offset]))
-			var offset := Vector3(0,0,.025)
-			g.face(parts,"air_leading",PackedVector3Array([wing[0]+offset,wing[1]+offset,
-				wing[1].lerp(wing[2],.22)+offset,wing[0].lerp(wing[3],.08)+offset]))
+			if detail>.5:
+				parts[first].axial_finish=rear>.5
+			else:
+				var root_offset := Vector3(0,0,.015)
+				g.face(parts,"air_wing_root",PackedVector3Array([wing[0]+root_offset,
+					wing[0].lerp(wing[1],.34)+root_offset,wing[3].lerp(wing[2],.34)+root_offset,wing[3]+root_offset]))
+				var offset := Vector3(0,0,.025)
+				g.face(parts,"air_leading",PackedVector3Array([wing[0]+offset,wing[1]+offset,
+					wing[1].lerp(wing[2],.22)+offset,wing[0].lerp(wing[3],.08)+offset]))
 		g.slab(parts,wing_role,PackedVector3Array([Vector3(-.67,0,2.5),Vector3(-.98,side*.48,2.3),
 			Vector3(-1.10,side*.48,2.3),Vector3(-1.0,0,2.5)]),.25)
 		if compact:
@@ -469,6 +487,25 @@ static func aircraft(parts: Array, forward: Vector2, compact: bool) -> void:
 		if not compact and side*(direction.x-direction.y)<0:
 			span*=1-.25*maxf(0,-2*direction.x*direction.y)
 		g.box(parts,"nav_red" if side<0 else "nav_white",Vector3(sweep-.13,side*span-.035,1.2),Vector3(sweep+.03,side*span+.035,2.2))
+
+
+
+static func aircraft_wing_finish(parts: Array, wing: PackedVector3Array, rear: bool) -> void:
+	# Original axial artwork uses a broader light panel when seen from the rear.
+	# Keep these paint facets on the same spatial wing and preserve its boundary.
+	var root_levels := [0.0,.65 if rear else .08,.75 if rear else .9,1.0]
+	var tip_levels := [0.0,.65 if rear else .08,.9,1.0]
+	var root_span := .18 if rear else .2
+	NetworkModelGeometry.face(parts,"air_axial_root",PackedVector3Array([wing[0],
+		wing[0].lerp(wing[1],root_span),wing[3].lerp(wing[2],root_span),wing[3]]))
+	for band in 3:
+		var points := PackedVector3Array()
+		for pair in [[root_span,band],[1.0,band],[1.0,band+1],[root_span,band+1]]:
+			var span: float=pair[0]
+			var t := lerpf(root_levels[int(pair[1])],tip_levels[int(pair[1])],span)
+			points.append(wing[0].lerp(wing[3],t).lerp(wing[1].lerp(wing[2],t),span))
+		var role: String=["air_axial_lead","air_axial_mid","air_axial_trail_rear" if rear else "air_axial_trail"][band]
+		NetworkModelGeometry.face(parts,role,points)
 
 
 static func aircraft_engine(parts: Array, center: Vector3, axial: float) -> void:
