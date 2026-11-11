@@ -7,6 +7,9 @@ const PORTS := G.PORTS
 const BASELINE := 45
 const TUNNEL_RADIUS := 8.0
 const TUNNEL_INNER_RADIUS := 6.5
+# The painted arch exaggerates the shell width; the train bore keeps its gauge.
+const TUNNEL_WIDTH_SCALE := 2.0
+const LINING_LIFT := .25
 const PIPE_RADIUS := 2.75
 const PIPE_COLLAR_RADIUS := 3.0
 # The crown catches light, while the underside and the lower opening fall into shadow.
@@ -14,8 +17,12 @@ const SHELL_FACETS := ["tube","tube_crown","tube_crown","tube",
 	"tube_shade","tube_base","tube_base","tube_shade"]
 const LINING_FACETS := ["lining_mid","lining_light","lining_light","lining_mid",
 	"tunnel_dark","tunnel_dark","tunnel_dark","tunnel_dark"]
-const MOUTH_FACETS := ["arch","lining_light","lining_light","arch",
+const COMPACT_MOUTH_FACETS := ["arch","lining_light","lining_light","arch",
 	"tunnel_dark","tunnel_dark","tunnel_dark","tunnel_dark"]
+const MOUTH_ALONG_X := ["arch","lining_mid","lining_light","lining_light",
+	"lining_light","lining_mid","tunnel_dark","tunnel_dark"]
+const MOUTH_ALONG_Y := ["lining_light","lining_light","lining_mid","arch",
+	"tunnel_dark","tunnel_dark","lining_mid","lining_light"]
 const TUNNEL_COLORS := {"tube_crown":"078b00","tube_shade":"075b00","tube_base":"074300",
 	"arch":"737373","lining_light":"ababab","lining_mid":"8f8f8f","tunnel_dark":"000000","subway_rail":"575757"}
 const COLORS := {"frame":"9b8747","service":"007700","water":"00bf00",
@@ -98,7 +105,8 @@ func prepare(city: CityState, palette: Sc2Palette, view: int, design: Sc2Palette
 		for id: int in ids:
 			var key := var_to_bytes([id,heights]).hex_encode()
 			if not cache.has(key):
-				var recipe := geometry(id,heights)
+				# The eight-pixel glyph needs the original compact section to keep its pixel phase.
+				var recipe := geometry(id,heights,view==0)
 				recipe.materials=swatches
 				var divisor := 4>>view
 				var source := Image.create(32/divisor,ceili((float(recipe.baseline)+8)/divisor),false,Image.FORMAT_RGBA8)
@@ -136,7 +144,7 @@ static func materials(palette: Sc2Palette) -> Dictionary:
 	return result
 
 
-static func geometry(sprite: int, heights: PackedFloat32Array) -> Dictionary:
+static func geometry(sprite: int, heights: PackedFloat32Array, compact := false) -> Dictionary:
 	var parts: Array = []
 	var points := PackedVector3Array()
 	for k in 4:
@@ -153,11 +161,11 @@ static func geometry(sprite: int, heights: PackedFloat32Array) -> Dictionary:
 	var pipe_ends := heights.slice(8,12) if heights.size()>=12 else PackedFloat32Array()
 	var pipe_depth := heights[12] if heights.size()==13 else 0.0
 	if tile>=1 and tile<=15:
-		routes(parts,PORTS[tile-1],heights,false,false,-12,subway_ends)
+		routes(parts,PORTS[tile-1],heights,false,false,-12,subway_ends,true,compact)
 	elif tile>=16 and tile<=30:
 		routes(parts,PORTS[tile-16],heights,true,watered,pipe_depth,pipe_ends)
 	elif tile in [31,32]:
-		routes(parts,5 if tile==31 else 10,heights,false,false,-12,subway_ends)
+		routes(parts,5 if tile==31 else 10,heights,false,false,-12,subway_ends,true,compact)
 		routes(parts,10 if tile==31 else 5,heights,true,watered,pipe_depth,pipe_ends)
 	elif tile==35:
 		routes(parts,15,heights,false,false,-12,subway_ends,false)
@@ -176,8 +184,17 @@ static func geometry(sprite: int, heights: PackedFloat32Array) -> Dictionary:
 	return {"parts":parts,"ports":0,"footprint":1,"baseline":baseline}
 
 
-static func routes(parts: Array, mask: int, heights: PackedFloat32Array, pipe: bool, watered: bool, depth := -12.0, ends := PackedFloat32Array(), subway_style := true) -> void:
+static func routes(parts: Array, mask: int, heights: PackedFloat32Array, pipe: bool, watered: bool, depth := -12.0, ends := PackedFloat32Array(), subway_style := true, compact := false) -> void:
 	var center := Vector3(0,0,G.surface_height(Vector2.ZERO,heights)+depth)
+	# Elbows use a different painted cutaway; retain their verified compact section.
+	var detailed := subway_style and not compact and mask not in [3,6,9,12]
+	var openings := {}
+	if not pipe and detailed and mask not in [5,10]:
+		for k in 4:
+			if mask&(1<<k):
+				var p: Vector2=G.STEPS[k]
+				var end := Vector3(p.x,p.y,ends[k] if ends.size()==4 else G.surface_height(p,heights)+depth)
+				openings[k]=tunnel_planes(center+Vector3(0,0,LINING_LIFT),end+Vector3(0,0,LINING_LIFT),TUNNEL_INNER_RADIUS,1.0)
 	for k in 4:
 		if not mask&(1<<k):
 			continue
@@ -190,17 +207,36 @@ static func routes(parts: Array, mask: int, heights: PackedFloat32Array, pipe: b
 		else:
 			# The original shows a green cylindrical shell and gray, hollow mouths.
 			# Both skins remain outside the train envelope; no end disc blocks it.
-			tube(parts,"tube",center,end,TUNNEL_RADIUS,SHELL_FACETS if subway_style else [])
-			tube(parts,"lining",center,end,TUNNEL_INNER_RADIUS,LINING_FACETS if subway_style else [])
+			var width_scale := TUNNEL_WIDTH_SCALE if detailed else 1.0
+			# Compensate half the cross-section's projected rise without moving its axis.
+			var bank := .5 if detailed else 0.0
+			var cuts := []
+			for other: int in openings:
+				if other!=k:
+					cuts.append(openings[other])
+			tube(parts,"tube",center,end,TUNNEL_RADIUS,SHELL_FACETS if subway_style else [],width_scale,bank,cuts)
+			var lift := Vector3(0,0,LINING_LIFT if detailed else 0.0)
+			tube(parts,"lining",center+lift,end+lift,TUNNEL_INNER_RADIUS,LINING_FACETS if subway_style else [],1.0,bank,cuts)
 			var axis := Vector2(end.x-center.x,end.y-center.y).normalized()
 			var normal := Vector3(-axis.y/32,axis.x/32,0)
+			normal.z=G.project(normal).y*bank
 			for segment in 8:
 				var angle := segment*PI/4
-				var a := normal*cos(angle)*TUNNEL_RADIUS+Vector3(0,0,sin(angle)*TUNNEL_RADIUS)
-				var b := normal*cos(angle+PI/4)*TUNNEL_RADIUS+Vector3(0,0,sin(angle+PI/4)*TUNNEL_RADIUS)
-				var inner := TUNNEL_INNER_RADIUS/TUNNEL_RADIUS
-				var role: String = MOUTH_FACETS[segment] if subway_style else "cut"
-				G.face(parts,role,PackedVector3Array([end+a,end+b,end+b*inner,end+a*inner]))
+				var a := normal*cos(angle)*TUNNEL_RADIUS*width_scale+Vector3(0,0,sin(angle)*TUNNEL_RADIUS)
+				var b := normal*cos(angle+PI/4)*TUNNEL_RADIUS*width_scale+Vector3(0,0,sin(angle+PI/4)*TUNNEL_RADIUS)
+				var height := TUNNEL_INNER_RADIUS
+				var inner_a := normal*cos(angle)*TUNNEL_INNER_RADIUS+Vector3(0,0,sin(angle)*height)+lift
+				var inner_b := normal*cos(angle+PI/4)*TUNNEL_INNER_RADIUS+Vector3(0,0,sin(angle+PI/4)*height)+lift
+				if detailed:
+					var rim_a := a*(7.5/TUNNEL_RADIUS)
+					var rim_b := b*(7.5/TUNNEL_RADIUS)
+					G.face(parts,"tunnel_dark",PackedVector3Array([end+a,end+b,end+rim_b,end+rim_a]))
+					var roles := MOUTH_ALONG_Y if absf(p.y)>.1 else MOUTH_ALONG_X
+					G.face(parts,roles[segment],PackedVector3Array([end+rim_a,end+rim_b,end+inner_b,end+inner_a]))
+				else:
+					var inner := TUNNEL_INNER_RADIUS/TUNNEL_RADIUS
+					var role: String=COMPACT_MOUTH_FACETS[segment] if subway_style else "cut"
+					G.face(parts,role,PackedVector3Array([end+a,end+b,end+b*inner,end+a*inner]))
 			for sign_value in [-1,1]:
 				G.beam(parts,"subway_rail" if subway_style else "rail",center+across*.09*sign_value,end+across*.09*sign_value,0.7)
 			for t in [.15,.45,.75]:
@@ -208,12 +244,76 @@ static func routes(parts: Array, mask: int, heights: PackedFloat32Array, pipe: b
 				G.beam(parts,"sleeper",at-across*.14,at+across*.14,1)
 
 
-static func tube(parts: Array, role: String, a: Vector3, b: Vector3, radius: float, facets: Array = []) -> void:
+static func tube(parts: Array, role: String, a: Vector3, b: Vector3, radius: float, facets: Array = [], width_scale := 1.0, bank := 0.0, cuts: Array = []) -> void:
 	var direction := Vector2(b.x-a.x,b.y-a.y).normalized()
-	var across := Vector3(-direction.y/32,direction.x/32,0)
+	var across := Vector3(-direction.y/32,direction.x/32,0)*width_scale
+	across.z=G.project(across).y*bank
 	for k in 8:
 		var angle := k*TAU/8
 		var next := angle+TAU/8
 		var p := across*cos(angle)*radius+Vector3(0,0,sin(angle)*radius)
 		var q := across*cos(next)*radius+Vector3(0,0,sin(next)*radius)
-		G.face(parts,facets[k] if not facets.is_empty() else role,PackedVector3Array([a+p,b+p,b+q,a+q]))
+		carved_face(parts,facets[k] if not facets.is_empty() else role,PackedVector3Array([a+p,b+p,b+q,a+q]),cuts)
+
+
+static func carved_face(parts: Array, role: String, vertices: PackedVector3Array, cuts: Array) -> void:
+	if cuts.is_empty():
+		G.face(parts,role,vertices)
+		return
+	var polygons: Array[PackedVector3Array]=[vertices]
+	for volume: Array in cuts:
+		var outside: Array[PackedVector3Array]=[]
+		for polygon: PackedVector3Array in polygons:
+			outside.append_array(outside_tunnel(polygon,volume))
+		polygons=outside
+	for polygon: PackedVector3Array in polygons:
+		G.face(parts,role,polygon)
+
+
+# Convex half-spaces follow the same octagonal section as tube(), including its grade.
+static func tunnel_planes(a: Vector3, b: Vector3, radius: float, width_scale: float) -> Array:
+	var direction := Vector2(b.x-a.x,b.y-a.y).normalized()
+	var along := Vector3(direction.x,direction.y,0)
+	var across := Vector3(-direction.y,direction.x,0)*32.0/width_scale
+	var slope := (b.z-a.z)/Vector2(b.x-a.x,b.y-a.y).length()
+	var result := [Plane(-along,-along.dot(a)),Plane(along,along.dot(b))]
+	for k in 8:
+		var angle := (k+.5)*TAU/8
+		var bank := 4.0*(-direction.y+direction.x)
+		var up := Vector3(direction.y*bank,-direction.x*bank,1)
+		var normal := across*cos(angle)+(up-along*slope)*sin(angle)
+		result.append(Plane(normal,normal.dot(a)+radius*cos(PI/8)))
+	return result
+
+
+static func outside_tunnel(polygon: PackedVector3Array, planes: Array) -> Array[PackedVector3Array]:
+	var result: Array[PackedVector3Array]=[]
+	var remaining := polygon
+	for plane: Plane in planes:
+		var outside := clip_polygon(remaining,plane,false)
+		if outside.size()>=3:
+			result.append(outside)
+		remaining=clip_polygon(remaining,plane,true)
+		if remaining.size()<3:
+			break
+	return result
+
+
+static func clip_polygon(polygon: PackedVector3Array, plane: Plane, inside: bool) -> PackedVector3Array:
+	var result := PackedVector3Array()
+	if polygon.is_empty():
+		return result
+	var previous := polygon[-1]
+	var previous_distance := plane.distance_to(previous)
+	var previous_kept := previous_distance<=.00001 if inside else previous_distance>.00001
+	for point: Vector3 in polygon:
+		var distance := plane.distance_to(point)
+		var kept := distance<=.00001 if inside else distance>.00001
+		if kept!=previous_kept:
+			result.append(previous.lerp(point,previous_distance/(previous_distance-distance)))
+		if kept:
+			result.append(point)
+		previous=point
+		previous_distance=distance
+		previous_kept=kept
+	return result
