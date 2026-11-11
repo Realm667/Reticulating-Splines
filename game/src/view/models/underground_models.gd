@@ -19,6 +19,8 @@ const LINING_FACETS := ["lining_mid","lining_light","lining_light","lining_mid",
 	"tunnel_dark","tunnel_dark","tunnel_dark","tunnel_dark"]
 const COMPACT_MOUTH_FACETS := ["arch","lining_light","lining_light","arch",
 	"tunnel_dark","tunnel_dark","tunnel_dark","tunnel_dark"]
+const DARK_LINING_FACETS := ["tunnel_dark","tunnel_dark","tunnel_dark","tunnel_dark",
+	"tunnel_dark","tunnel_dark","tunnel_dark","tunnel_dark"]
 const MOUTH_ALONG_X := ["arch","lining_mid","lining_light","lining_light",
 	"lining_light","lining_mid","tunnel_dark","tunnel_dark"]
 const MOUTH_ALONG_Y := ["lining_light","lining_light","lining_mid","arch",
@@ -185,9 +187,12 @@ static func geometry(sprite: int, heights: PackedFloat32Array, compact := false)
 
 
 static func routes(parts: Array, mask: int, heights: PackedFloat32Array, pipe: bool, watered: bool, depth := -12.0, ends := PackedFloat32Array(), subway_style := true, compact := false) -> void:
+	var first_part := parts.size()
 	var center := Vector3(0,0,G.surface_height(Vector2.ZERO,heights)+depth)
-	# Elbows use a different painted cutaway; retain their verified compact section.
-	var detailed := subway_style and not compact and mask not in [3,6,9,12]
+	# Keep the compact glyph and pipes unchanged. Elbows expose a different cut side.
+	var detailed := subway_style and not compact and not pipe
+	var elbow := detailed and mask in [3,6,9,12]
+	var green_elbow := elbow and mask in [6,9]
 	var openings := {}
 	if not pipe and detailed and mask not in [5,10]:
 		for k in 4:
@@ -216,7 +221,8 @@ static func routes(parts: Array, mask: int, heights: PackedFloat32Array, pipe: b
 					cuts.append(openings[other])
 			tube(parts,"tube",center,end,TUNNEL_RADIUS,SHELL_FACETS if subway_style else [],width_scale,bank,cuts)
 			var lift := Vector3(0,0,LINING_LIFT if detailed else 0.0)
-			tube(parts,"lining",center+lift,end+lift,TUNNEL_INNER_RADIUS,LINING_FACETS if subway_style else [],1.0,bank,cuts)
+			var inner_facets := SHELL_FACETS if green_elbow else (DARK_LINING_FACETS if elbow else LINING_FACETS)
+			tube(parts,"lining",center+lift,end+lift,TUNNEL_INNER_RADIUS,inner_facets if subway_style else [],1.0,bank,cuts)
 			var axis := Vector2(end.x-center.x,end.y-center.y).normalized()
 			var normal := Vector3(-axis.y/32,axis.x/32,0)
 			normal.z=G.project(normal).y*bank
@@ -230,9 +236,11 @@ static func routes(parts: Array, mask: int, heights: PackedFloat32Array, pipe: b
 				if detailed:
 					var rim_a := a*(7.5/TUNNEL_RADIUS)
 					var rim_b := b*(7.5/TUNNEL_RADIUS)
-					G.face(parts,"tunnel_dark",PackedVector3Array([end+a,end+b,end+rim_b,end+rim_a]))
+					var rim_role: String=SHELL_FACETS[segment] if green_elbow else ("arch" if elbow else "tunnel_dark")
+					G.face(parts,rim_role,PackedVector3Array([end+a,end+b,end+rim_b,end+rim_a]))
 					var roles := MOUTH_ALONG_Y if absf(p.y)>.1 else MOUTH_ALONG_X
-					G.face(parts,roles[segment],PackedVector3Array([end+rim_a,end+rim_b,end+inner_b,end+inner_a]))
+					var role: String=SHELL_FACETS[segment] if green_elbow else ("tunnel_dark" if elbow else roles[segment])
+					G.face(parts,role,PackedVector3Array([end+rim_a,end+rim_b,end+inner_b,end+inner_a]))
 				else:
 					var inner := TUNNEL_INNER_RADIUS/TUNNEL_RADIUS
 					var role: String=COMPACT_MOUTH_FACETS[segment] if subway_style else "cut"
@@ -242,6 +250,25 @@ static func routes(parts: Array, mask: int, heights: PackedFloat32Array, pipe: b
 			for t in [.15,.45,.75]:
 				var at := center.lerp(end,t)-Vector3(0,0,.6)
 				G.beam(parts,"sleeper",at-across*.14,at+across*.14,1)
+	if elbow and not green_elbow:
+		cutaway_elbow(parts,first_part,mask)
+
+
+# Match the original open section without moving tracks or adding an end cap.
+static func cutaway_elbow(parts: Array, first_part: int, mask: int) -> void:
+	var sign_value := 1.0 if mask==3 else -1.0
+	var plane := Plane(Vector3(-sign_value,sign_value,0),0)
+	var visible: Array = []
+	for index in range(first_part,parts.size()):
+		var part: Dictionary=parts[index]
+		if part.role in ["subway_rail","sleeper"]:
+			visible.append(part)
+		else:
+			var polygon := clip_polygon(part.vertices,plane,true)
+			if polygon.size()>=3:
+				G.face(visible,part.role,polygon)
+	parts.resize(first_part)
+	parts.append_array(visible)
 
 
 static func tube(parts: Array, role: String, a: Vector3, b: Vector3, radius: float, facets: Array = [], width_scale := 1.0, bank := 0.0, cuts: Array = []) -> void:
