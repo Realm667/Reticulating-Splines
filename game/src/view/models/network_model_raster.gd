@@ -135,7 +135,11 @@ static func render(id: int, source: Image, palette: Sc2Palette, view := 2, prepa
 			source_indices[c]=i
 	var origin:=Vector2(float(recipe.get("origin_x",16.0))/divisor,height-baseline)
 	var texture_shift:=Vector2i(0,extent.y-height)
+	# Component detail follows the requested native view, even during full-size reduction.
+	var native_view: int=recipe.get("native_view",view)
 	for part: Dictionary in recipe.parts:
+		if native_view<int(part.get("min_view",0)) or native_view>int(part.get("max_view",2)):
+			continue
 		var vertices: PackedVector3Array=part.vertices
 		var indices: PackedInt32Array=part.indices
 		var role: String=part.role
@@ -242,6 +246,7 @@ static func reduced(id: int, source: Image, palette: Sc2Palette, view: int, prep
 	var recipe := prepared
 	if id in range(50,54):
 		recipe=Geometry.build(id) if prepared.is_empty() else prepared.duplicate()
+		recipe.native_view=view
 		recipe.materials=materials(palette,id)
 		# SC2000's smaller curve glyphs omit the bright rail glint.
 		recipe.materials.rail=recipe.materials.rail_web

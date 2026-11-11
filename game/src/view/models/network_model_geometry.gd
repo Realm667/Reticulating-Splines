@@ -72,6 +72,8 @@ class Library extends RefCounted:
 			context.update(str(part.role).to_utf8_buffer())
 			context.update((part.vertices as PackedVector3Array).to_byte_array())
 			context.update((part.indices as PackedInt32Array).to_byte_array())
+			if part.has("min_view") or part.has("max_view"):
+				context.update(var_to_bytes([part.get("min_view",0),part.get("max_view",2)]))
 		return context.finish().hex_encode()
 
 
@@ -384,9 +386,20 @@ static func ground_routes(mask: int, corners: PackedFloat32Array, rail: bool) ->
 					rail_start-=grade*start_offset*sign_value
 					rail_end-=grade*end_offset*sign_value
 				beam(result,"rail_web",rail_start+Vector3(0,0,.8),rail_end+Vector3(0,0,.8),2.0)
+				if corner and not is_zero_approx(project(b).x-project(a).x):
+					result[-1].max_view=1
 				# The original edge-on corner poses have dark heads, with no gray glint.
 				var head_role := "rail_web" if is_zero_approx(project(b).x-project(a).x) else "rail"
 				beam(result,head_role,rail_start+Vector3(0,0,1.1),rail_end+Vector3(0,0,1.1),.85)
+				if corner and head_role=="rail":
+					result[-1].max_view=1
+					# The source paints the lit front web below the dark running edge.
+					var cap := Vector3(.085,.085,1.3)
+					beam(result,"rail_web",rail_start+cap,rail_end+cap,1.05)
+					result[-1].min_view=2
+					var glint := Vector3(.135,.135,1.3)
+					beam(result,"rail",rail_start+glint,rail_end+glint,.85)
+					result[-1].min_view=2
 		# A road or sleeper also follows the grade across its width.
 		var along := (finish-start).normalized()
 		for part_index in range(first_part,result.size()):
