@@ -5,7 +5,7 @@ extends RefCounted
 const T = preload("res://src/tools/shared/building_tile_ids.gd")
 const PORTS := [5, 10, 10, 5, 10, 5, 3, 6, 12, 9, 11, 7, 14, 13, 15]
 const STEPS := [Vector2(0,-0.5), Vector2(0.5,0), Vector2(0,0.5), Vector2(-0.5,0)]
-const GROUND_ROLES := ["road_surface","ballast_surface","rail","rail_web","tie","shoulder","road_edge"]
+const GROUND_ROLES := ["road_surface","ballast_surface","rail","rail_web","tie","tie_side","shoulder","road_edge"]
 const POWER_CABLE_HEIGHT := 8.5
 const POWER_CABLE_HALF_SPAN := .125
 
@@ -336,21 +336,57 @@ static func ground_routes(mask: int, corners: PackedFloat32Array, rail: bool) ->
 			if ends.size()!=2:
 				sleeper_distance=.125
 			var along := (finish-start).normalized()
-			var across := Vector3(-along.y,along.x,0) * 0.21
+			var corner := ends.size()==2 and not is_zero_approx(along.x) and not is_zero_approx(along.y)
+			var across := Vector3(-along.y,along.x,0) * (.21*sqrt(.5) if corner else .21)
 			# SC2000 leaves terrain visible between individual timber sleepers.
 			var length := start.distance_to(finish)
-			while sleeper_distance<length:
+			var pitch := .25*sqrt(.5) if corner else .25
+			if corner and is_zero_approx(project(b).x-project(a).x):
+				# Preserve SC2000's four-pixel rhythm in the foreshortened turn.
+				pitch*=2.0
+			var limit := length+.5*sqrt(.5) if corner else length
+			if corner:
+				sleeper_distance=-.375*sqrt(.5)
+				if is_zero_approx(project(b).x-project(a).x) and project(b).y<project(a).y:
+					sleeper_distance-=pitch*.5
+			while sleeper_distance<limit:
 				var p:=a.lerp(b,sleeper_distance/length)+Vector3(0,0,.7)
-				strip(result,"tie",p-across*1.6,p+across*1.6,.10)
+				var half_tie := Vector3(-along.y,along.x,0)*.25 if corner else across*1.6
+				strip(result,"tie",p-half_tie,p+half_tie,.10)
 				var top: Dictionary=result.pop_back()
-				slab(result,"tie",top.vertices,.7)
-				sleeper_distance+=.25
+				if corner:
+					var outline := PackedVector2Array()
+					for vertex: Vector3 in top.vertices:
+						outline.append(Vector2(vertex.x,vertex.y))
+					var square := PackedVector2Array([Vector2(-.5,-.5),Vector2(.5,-.5),Vector2(.5,.5),Vector2(-.5,.5)])
+					for clipped: PackedVector2Array in Geometry2D.intersect_polygons(outline,square):
+						var vertices := PackedVector3Array()
+						for xy: Vector2 in clipped:
+							var t := (xy-start).dot(along)/length
+							vertices.append(Vector3(xy.x,xy.y,lerpf(a.z,b.z,t)+.7))
+						var first_face := result.size()
+						slab(result,"tie",vertices,.7)
+						for index in range(first_face+1,result.size()):
+							result[index].role="tie_side"
+				else:
+					slab(result,"tie",top.vertices,.7)
+				sleeper_distance+=pitch
 			sleeper_distance-=length
 			for sign_value in [-1,1]:
-				beam(result,"rail_web",a+across*sign_value+Vector3(0,0,.8),b+across*sign_value+Vector3(0,0,.8),2.0)
+				var rail_start: Vector3=a+across*sign_value
+				var rail_end: Vector3=b+across*sign_value
+				if corner:
+					# The offset lines meet the tile edges at the straight track gauge.
+					# This lengthens the outside rail and shortens the inside rail.
+					var grade := Vector3(along.x,along.y,(b.z-a.z)/length)
+					var start_offset := across.x/along.x if absf(start.x)==.5 else across.y/along.y
+					var end_offset := across.x/along.x if absf(finish.x)==.5 else across.y/along.y
+					rail_start-=grade*start_offset*sign_value
+					rail_end-=grade*end_offset*sign_value
+				beam(result,"rail_web",rail_start+Vector3(0,0,.8),rail_end+Vector3(0,0,.8),2.0)
 				# The original edge-on corner poses have dark heads, with no gray glint.
 				var head_role := "rail_web" if is_zero_approx(project(b).x-project(a).x) else "rail"
-				beam(result,head_role,a+across*sign_value+Vector3(0,0,1.1),b+across*sign_value+Vector3(0,0,1.1),.85)
+				beam(result,head_role,rail_start+Vector3(0,0,1.1),rail_end+Vector3(0,0,1.1),.85)
 		# A road or sleeper also follows the grade across its width.
 		var along := (finish-start).normalized()
 		for part_index in range(first_part,result.size()):

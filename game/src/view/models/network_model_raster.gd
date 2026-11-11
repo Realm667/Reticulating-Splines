@@ -53,7 +53,7 @@ static func _build_materials(palette: Sc2Palette, id: int) -> Dictionary:
 		"surface":base,"deck":base,"railing":Color("505050"),"pier":base,"gate_pier":Color("bfbfbf"),
 		"bridge_railing":Color("000000"),
 		"pole":Color("000000"),"crossarm":Color("000000"),"cable":Color("000000"),
-		"rail":Color("9f9f9f"),"rail_web":Color("000000"),"ballast":Color("000000"),"tie":Color("670700"),
+		"rail":Color("9f9f9f"),"rail_web":Color("000000"),"ballast":Color("000000"),"tie":Color("670700"),"tie_side":Color("57330f"),
 		"shoulder":Color("735323"),"road_edge":Color("735323"),"insulator":Color("000000"),
 		"curb":Color("b7b7b7"),"guardrail":Color("202020"),"railing_post":Color("b7b7b7"),
 		"masonry_joint":Color("777777"),"tower_brace":Color("470000"),
@@ -71,6 +71,7 @@ static func _build_materials(palette: Sc2Palette, id: int) -> Dictionary:
 		if role in ["pole","crossarm","cable","suspension_cable","ballast","insulator","rail","rail_web","bridge_railing"]:
 			result[role].fill(nearest(palette,c))
 	result.tie=PackedInt32Array([nearest(palette,Color("670700")),nearest(palette,Color("000000")),nearest(palette,Color("000000"))])
+	result.tie_side=PackedInt32Array([nearest(palette,Color("57330f")),nearest(palette,Color("735323")),nearest(palette,Color("57330f"))])
 	# The SC2000 lift-gate concrete uses gray faces, not the bright generic ramp.
 	for role in ["gate_pier","roof","lintel"]:
 		result[role]=PackedInt32Array([nearest(palette,Color("8f8f8f")),
@@ -238,7 +239,19 @@ static func reduced(id: int, source: Image, palette: Sc2Palette, view: int, prep
 	var divisor := 4 >> view
 	var material: Image = source.duplicate()
 	material.resize(source.get_width()*divisor, source.get_height()*divisor, Image.INTERPOLATE_NEAREST)
-	var full := render(id, material, palette, 2, prepared)
+	var recipe := prepared
+	if id in range(50,54):
+		recipe=Geometry.build(id) if prepared.is_empty() else prepared.duplicate()
+		recipe.materials=materials(palette,id)
+		# SC2000's smaller curve glyphs omit the bright rail glint.
+		recipe.materials.rail=recipe.materials.rail_web
+		recipe.materials.tie_side=recipe.materials.tie
+		if view==0:
+			var timber := nearest(palette,Color("9b8747"))
+			var side := nearest(palette,Color("735323"))
+			recipe.materials.tie=PackedInt32Array([timber,timber,timber])
+			recipe.materials.tie_side=PackedInt32Array([side,side,side])
+	var full := render(id, material, palette, 2, recipe)
 	var original: Sc2SpriteArchive.SpriteEntry = full.entry
 	var width := original.width / divisor
 	var height := ceili(float(original.height) / divisor)
