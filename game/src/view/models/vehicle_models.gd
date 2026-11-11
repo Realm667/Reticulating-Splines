@@ -21,6 +21,8 @@ const AIRCRAFT_SHADES := {
 	"air_leading":["f3f3f3","f3f3f3","bfbfbf"],
 	"air_engine":["9f9f9f","bfbfbf","575757"],
 	"air_intake":["2f2f2f","2f2f2f","2f2f2f"],
+	"air_cheatline":["13b7f3","13b7f3","13b7f3"],
+	"air_fin_mid":["1b77d3","1b77d3","1b77d3"],
 	"air_tail_base":["0b53f3","1b77d3","0b53f3"],
 	"air_tail_tip":["0793d7","13b7f3","1b77d3"]}
 const LIMIT := 2048
@@ -376,13 +378,15 @@ static func special_geometry(kind: int, forward: Vector2, rise: float, compact: 
 				if part.role not in ["wake","wake_foam"]:
 					p.z+=5.0
 			part.vertices[i]=along*p.x+across*p.y+up*p.z
-	if kind==Kind.AIRPLANE and not compact and axial_detail>.5:
-		# Subdivide the posed plate so direction-dependent length scaling cannot
-		# bend paint boundaries away from their supporting wing or its shadow.
+	if kind==Kind.AIRPLANE and not compact:
+		# Divide the posed surfaces so paint boundaries stay on their supporting
+		# wing or fuselage after directional scaling and rigid terrain pitch.
 		var finished: Array=[]
 		for part: Dictionary in parts:
 			if part.has("axial_finish"):
 				aircraft_wing_finish(finished,part.vertices,part.axial_finish)
+			elif part.has("fuselage_finish"):
+				aircraft_fuselage_finish(finished,part.vertices)
 			else:
 				finished.append(part)
 		parts=finished
@@ -403,6 +407,7 @@ static func aircraft(parts: Array, forward: Vector2, compact: bool) -> void:
 	# A wider fuselage and narrow paint panels alias into solid blocks there.
 	var axial := 1.0 if compact else maxf(0,2*direction.x*direction.y)
 	var detail := 0.0 if compact else axial
+	var broadside := not compact and -2*direction.x*direction.y>.5
 	var rear := detail if direction.x<0 else 0.0
 	# The rear artwork projects the wider wing chord closer to the nose.
 	var wing_shift := .44*rear
@@ -423,10 +428,13 @@ static func aircraft(parts: Array, forward: Vector2, compact: bool) -> void:
 				points.append(Vector3(ring.x,cos(angle)*ring.y,2.3+sin(angle)*ring.z))
 			var role := "air_top" if segment in [1,2] else ("air_side" if segment in [0,3] else "air_lower")
 			g.face(parts,"white" if compact else role,points)
+			if broadside and section==1 and segment in [0,3]:
+				parts.back().fuselage_finish=true
 	for side in [-1,1]:
 		var band := lerpf(3.1,2.3,axial)
 		var stripe: float=side*(width+.001)
-		g.box(parts,"blue",Vector3(-.85,stripe-.003,band),Vector3(.78,stripe+.003,band+.95))
+		if not broadside:
+			g.box(parts,"blue",Vector3(-.85,stripe-.003,band),Vector3(.78,stripe+.003,band+.95))
 		# The source side poses show less of the wing beyond the fuselage.
 		var span := wing_span
 		if not compact and side*(direction.x-direction.y)<0:
@@ -454,16 +462,17 @@ static func aircraft(parts: Array, forward: Vector2, compact: bool) -> void:
 		else:
 			var engine := Vector3(wing_shift-.13*detail,side*lerpf(.52,.54,detail),lerpf(.6,.15,detail))
 			aircraft_engine(parts,engine,detail)
-	# Two palette bands retain the original painted blue fin on a real surface.
+	# Dark root, blue middle and cyan tip retain the original fin on a real surface.
 	var fin_height := 9.5 if compact else lerpf(14.0,12.5,detail)
 	var thickness := lerpf(.022,.035,detail)
 	var lit_edge := signf(direction.x)*thickness
-	var bands := 1 if compact else 2
+	var levels := [0.0,1.0] if compact else [0.0,.2,.9,1.0]
+	var bands := levels.size()-1
 	for side in [-1,1]:
 		for band in bands:
-			var low := float(band)/bands
-			var high := float(band+1)/bands
-			var role := "blue" if compact else ("air_tail_base" if band==0 else "air_tail_tip")
+			var low: float=levels[band]
+			var high: float=levels[band+1]
+			var role: String="blue" if compact else ["air_tail_base","air_fin_mid","air_tail_tip"][band]
 			g.face(parts,role,PackedVector3Array([
 				Vector3(-1.02,side*thickness,lerpf(2,fin_height,low)),Vector3(-1.02,side*thickness,lerpf(2,fin_height,high)),
 				Vector3(lerpf(-.67,-.89,high),side*thickness,lerpf(2,fin_height,high)),
@@ -506,6 +515,15 @@ static func aircraft_wing_finish(parts: Array, wing: PackedVector3Array, rear: b
 			points.append(wing[0].lerp(wing[3],t).lerp(wing[1].lerp(wing[2],t),span))
 		var role: String=["air_axial_lead","air_axial_mid","air_axial_trail_rear" if rear else "air_axial_trail"][band]
 		NetworkModelGeometry.face(parts,role,points)
+
+
+# The side-pose stripe lies on the existing curved flank, below its white crown.
+static func aircraft_fuselage_finish(parts: Array, flank: PackedVector3Array) -> void:
+	var start := (.94-.85)/(.94+.78)
+	var a := flank[0].lerp(flank[1],start)
+	var b := flank[3].lerp(flank[2],start)
+	NetworkModelGeometry.face(parts,"air_side",PackedVector3Array([flank[0],a,b,flank[3]]))
+	NetworkModelGeometry.face(parts,"air_cheatline",PackedVector3Array([a,flank[1],flank[2],b]))
 
 
 static func aircraft_engine(parts: Array, center: Vector3, axial: float) -> void:
