@@ -1,5 +1,12 @@
 [
   {
+    "id": "map_background_gpu_test",
+    "script": "tests/map_background_gpu_test.gd",
+    "domain": "rendering",
+    "lane": "native",
+    "driver": "scene-batch"
+  },
+  {
     "id": "building_upgrades_ui_test",
     "script": "tests/building_upgrades_ui_test.gd",
     "domain": "ui",

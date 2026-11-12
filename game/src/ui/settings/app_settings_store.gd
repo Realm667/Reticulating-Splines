@@ -1,7 +1,7 @@
 class_name AppSettingsStore
 extends RefCounted
 
-const MAP_BACKGROUNDS := ["classic", "graphite", "drafting_table", "atlas", "diorama"]
+const MAP_BACKGROUNDS := ["classic", "graphite", "drafting_table", "atlas", "diorama", "day_night"]
 
 const GRAPHICS_ZOOMS := [25, 50, 100, 200, 300, 400]
 const GRAPHICS_SIZES := ["Small", "Medium", "Large"]

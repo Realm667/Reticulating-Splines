@@ -6,16 +6,38 @@ var map: CityMapControl
 var style := "classic":
 	set(value):
 		style = value
+		set_process(style == "day_night")
+		_sync_day_night()
 		queue_redraw()
 
 var _fills: Dictionary[String, GradientTexture2D] = {}
 var _grain: ImageTexture
 var _shadow: ImageTexture
+var _night := 0.0
 
 
 func _ready() -> void:
 	theme_changed.connect(queue_redraw)
 	resized.connect(queue_redraw)
+	set_process(style == "day_night")
+	_sync_day_night()
+
+
+func _process(_delta: float) -> void:
+	if is_visible_in_tree():
+		_sync_day_night()
+
+
+func _sync_day_night() -> void:
+	# Follow the rendered ambient light, not rain/daytime artificial lights.
+	# The map already handles fixed time, pause, editor and disabled effects.
+	var night := 0.0
+	if is_instance_valid(map) and map.city != null:
+		night = clampf(float(map.layers.environment_parameters.get("environment_ambient_night", 0.0)), 0.0, 1.0)
+	if not is_equal_approx(night, _night):
+		_night = night
+		if style == "day_night":
+			queue_redraw()
 
 
 func refresh_shadows() -> void:
@@ -26,6 +48,10 @@ func refresh_shadows() -> void:
 func _draw() -> void:
 	var rect := Rect2(Vector2.ZERO, size)
 	match style:
+		"day_night":
+			draw_texture_rect(_fill("46545e", "303c46"), rect, false)
+			if _night > 0.0:
+				draw_texture_rect(_fill("182c42", "101b2b"), rect, false, Color(1.0, 1.0, 1.0, _night))
 		"graphite":
 			draw_texture_rect(_fill("303d47", "192127"), rect, false)
 		"drafting_table":
