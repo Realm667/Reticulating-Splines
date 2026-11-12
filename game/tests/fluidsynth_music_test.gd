@@ -91,7 +91,14 @@ func _test_midi_parsing() -> void:
 	assert(not malformed.parse(bytes) and not malformed.parse_error.is_empty(), "A truncated track is rejected")
 
 	var player := MidiSynthPlayer.new()
+	var bus_index := AudioServer.bus_count
+	AudioServer.add_bus()
+	AudioServer.set_bus_name(bus_index, &"MIDI fixture")
+	player.set_output_bus(&"MIDI fixture")
 	root.add_child(player)
+	assert(player._audio_player.bus == &"MIDI fixture", "A bus selected before ready must reach the audio player")
+	player.set_output_bus(&"Master")
+	AudioServer.remove_bus(bus_index)
 	var result := player.play_path(temporary_folder.path_join("missing.mid"), 10001)
 	assert(not result.ok and result.error.begins_with("File does not exist"))
 	assert(not player.is_track_active())

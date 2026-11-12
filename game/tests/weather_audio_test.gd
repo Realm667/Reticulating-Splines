@@ -11,6 +11,7 @@ func _run() -> void:
 	assert(AudioServer.get_driver_name() == "Dummy", "Audio checks must be silent")
 	_check_discharges()
 	var app := (load("res://main.tscn") as PackedScene).instantiate() as CityApplication
+	preload("res://tests/support/app_fixture.gd").configure(app)
 	root.add_child(app)
 	await process_frame
 	app.set_process(false)

@@ -2,9 +2,11 @@ extends RefCounted
 ## Explicit read-only assets for application tests. Preferences stay in user://.
 
 
-static func configure(main: Node, skip_menu_city := false) -> void:
+static func configure(main: Node, skip_menu_city := false, settings_path := "") -> void:
 	if skip_menu_city:
 		main.set_script(NoMenuApp)
+	if not settings_path.is_empty():
+		main.preferences.settings_path = settings_path
 	var pack := ProjectSettings.globalize_path("res://../ext/graphics")
 	assert(FileAccess.file_exists(pack.path_join("pack.json")), "Application fixture needs ext/graphics/pack.json")
 	OS.set_environment("OPENSC2K_GRAPHICS_PACK", pack)
@@ -24,6 +26,13 @@ static func configure(main: Node, skip_menu_city := false) -> void:
 			settings.set_value("audio", key, ProjectSettings.globalize_path("res://../ext/" + kind))
 
 	assert(settings.save(main.preferences.settings_path) == OK)
+
+
+static func disable_activity(settings_path: String) -> void:
+	var settings := ConfigFile.new()
+	settings.load(settings_path)
+	settings.set_value("privacy", "share_singleplayer_activity", false)
+	assert(settings.save(settings_path) == OK)
 
 
 static func wait_for_visuals(main: CityApplication) -> void:

@@ -72,6 +72,7 @@ var _idle_polls := 0
 var _skips := 0
 var _published_position := 0.0
 var _audio_player: AudioStreamPlayer
+var _output_bus: StringName = &"Master"
 var _generator: AudioStreamGenerator
 var _playback: AudioStreamGeneratorPlayback
 var _sequence: StandardMidiFile
@@ -99,6 +100,7 @@ func _ready() -> void:
 	_generator = AudioStreamGenerator.new()
 	_generator.buffer_length = BUFFER_LENGTH_SECONDS
 	_audio_player = AudioStreamPlayer.new()
+	_audio_player.bus = _output_bus
 	_audio_player.stream = _generator
 	add_child(_audio_player)
 
@@ -259,7 +261,9 @@ func is_track_active() -> bool:
 
 # only the main thread owns _audio_player, so the volume needs no lock
 func set_output_bus(bus_name: StringName) -> void:
-	_audio_player.bus = bus_name
+	_output_bus = bus_name
+	if _audio_player != null:
+		_audio_player.bus = bus_name
 
 
 func has_buffered_audio() -> bool:

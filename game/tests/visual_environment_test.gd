@@ -114,6 +114,7 @@ func _run() -> void:
 	_check_standard_brightmaps()
 	_check_zone_soil_masks()
 	var main := (load("res://main.tscn") as PackedScene).instantiate() as CityApplication
+	preload("res://tests/support/app_fixture.gd").configure(main)
 	root.add_child(main)
 	await process_frame
 	main.set_process(false)
@@ -555,6 +556,9 @@ func _check_weather_pause(main: CityApplication) -> void:
 		for kind in [CityVisualWeather.Kind.RAIN_STORM, CityVisualWeather.Kind.HEAVY_SNOW]:
 			main.simulation_state.speed_controller.speed = GameSpeedController.Speed.TURTLE
 			main.preferences.visual_enhancements.weather_fixed = kind
+			# Start a weather front, not a still-running settings preview from
+			# the preceding case. Manual cloud previews finish in real time.
+			environment.clouds.reset()
 			environment.process(0.25)
 			main.map_view.interaction.panning = true
 			assert(main.frame._simulation_suspended(), "Camera drag must still suspend simulation")
@@ -800,14 +804,16 @@ func _check_changed_light_occlusion(main: CityApplication, ground: CityNightGrou
 	var pixels: PackedByteArray = original.texture.get_image().get_data()
 	var divisor := CityIsometricRenderer.view_configuration(main.static_render.city_view_size()).divisor
 	var cover := CityStaticCommand.new()
-	cover.sprite_id = 42
+	# Use a building silhouette. Sprite 42 is a ground-level rail surface,
+	# which must not occlude lamps above its supporting ground.
+	cover.sprite_id = BuildingTileIds.POLICE_STATION
 	cover.position = (original.origin - Vector2i(32, 32)) / divisor
 	cover.size = Vector2i(128, 128) / divisor
-	cover.depth_order = 10000000
+	cover.depth_order = (tile.x + tile.y + 2) * main.document_state.city.map_size + tile.y + 1
 	var resource := CitySpriteResource.new()
 	resource.image = Image.create(128, 128, false, Image.FORMAT_RGBA8)
 	resource.image.fill(Color.WHITE)
-	var resource_key := "42:0:%d:1:%d:%d" % [divisor, archive.get_instance_id(), int(archive.water_reflections)]
+	var resource_key := "%d:0:%d:1:%d:%d" % [cover.sprite_id, divisor, archive.get_instance_id(), int(archive.water_reflections)]
 	main.render_caches.dynamic_sprite_cache[resource_key] = resource
 	var changed: Array[Rect2i] = [Rect2i(original.origin, Vector2i(64, 64))]
 	# Streamed publications report possible changes. A new actual silhouette

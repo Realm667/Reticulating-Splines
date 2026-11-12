@@ -11,7 +11,7 @@ func _run() -> void:
 	root.size = Vector2i(1280, 800)
 	var path := "user://theme-test-%d.cfg" % OS.get_process_id()
 	assert(AppSettingsStore.load_values(path).ui_theme == "dark")
-	assert(not AppSettingsStore.load_values(path).dark_underground)
+	assert(AppSettingsStore.load_values(path).dark_underground)
 	assert(AppSettingsStore.normalize_theme("invalid") == "dark")
 	var config := ConfigFile.new()
 	config.set_value("general", "ui_theme", "invalid")
@@ -144,5 +144,6 @@ func _create_main(settings_path: String) -> CityApplication:
 	var main := (load("res://main.tscn") as PackedScene).instantiate() as CityApplication
 	main.asset_state.reference_root = ProjectSettings.globalize_path("user://missing-test-originals")
 	main.preferences.settings_path = settings_path
+	preload("res://tests/support/app_fixture.gd").disable_activity(settings_path)
 	root.add_child(main)
 	return main

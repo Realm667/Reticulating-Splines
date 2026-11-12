@@ -12,7 +12,9 @@ def run(script, *arguments):
     command = [os.environ.get('GODOT', 'godot'), '--headless', '--audio-driver', 'Dummy',
                '--path', str(ROOT / 'game'), '-s', f'tools/benchmarks/{script.name}']
     command += ['--', *arguments]
-    return subprocess.run(command, capture_output=True, text=True, timeout=15)
+    # This checks inputs, not performance. Include cold engine/script startup
+    # under a parallel validation run, while keeping a bounded hang check.
+    return subprocess.run(command, capture_output=True, text=True, timeout=60)
 
 
 def main():

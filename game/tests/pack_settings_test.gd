@@ -59,10 +59,9 @@ func _run() -> void:
 	OS.set_environment("OPENSC2K_GRAPHICS_PACK", ProjectSettings.globalize_path("res://../ext/graphics"))
 	OS.set_environment("OPENSC2K_DATA_PACK", ProjectSettings.globalize_path("res://../ext/data"))
 	var main := (load("res://main.tscn") as PackedScene).instantiate()
-	preload("res://tests/support/app_fixture.gd").configure(main, true)
+	preload("res://tests/support/app_fixture.gd").configure(main, true, folder.path_join("settings.cfg"))
 	OS.set_environment("OPENSC2K_GRAPHICS_PACK", ProjectSettings.globalize_path(original_folder))
 	main.asset_state.reference_root = ProjectSettings.globalize_path("res://../references/SIMCITY2000")
-	main.preferences.settings_path = folder.path_join("settings.cfg")
 	root.add_child(main)
 	await process_frame
 	main.set_process(false)
@@ -82,8 +81,10 @@ func _run() -> void:
 		var edit: LineEdit = dialog.pack_edits[kind]
 		var old_path := edit.text
 		edit.text = "user://pending-%s/pack.json" % kind
+		edit.text_changed.emit(edit.text)
 		assert(dialog.pack_name_labels[kind].text.is_empty())
 		edit.text = old_path
+		edit.text_changed.emit(edit.text)
 		assert(dialog.pack_name_labels[kind].text == active_name)
 
 	assert(not ("soundtrack_folder" in dialog.selected_values()))

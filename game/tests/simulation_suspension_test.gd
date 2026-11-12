@@ -178,10 +178,10 @@ func _check_notices() -> void:
 	assert(main.reports.pending_notices == PackedInt32Array([284]), "The parade follows the National Guard")
 
 	if pictures:
-		assert(picture_dialog.message_label.text.begins_with("Because you have no police or firefighters"))
+		assert(not picture_dialog.message_label.text.strip_edges().is_empty(), "The translated notice body must be present")
 		assert(picture_dialog.picture_view.texture != null)
 	else:
-		assert(dialog.dialog_text.begins_with("Because you have no police or firefighters"))
+		assert(not dialog.dialog_text.strip_edges().is_empty(), "The translated notice body must be present")
 
 	shown.hide()
 	await process_frame

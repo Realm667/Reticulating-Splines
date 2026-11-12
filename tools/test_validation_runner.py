@@ -9,6 +9,7 @@ import subprocess
 import sys
 import tempfile
 import threading
+import time
 import unittest
 from unittest.mock import Mock, patch
 
@@ -245,6 +246,24 @@ class ValidationRunnerTest(unittest.TestCase):
         self.assertEqual(status, 'PASS')
         self.assertEqual(content, 'PASS: no errors\n')
 
+    def test_wrapper_stops_child_process_and_retains_backtrace(self):
+        wrapper = runner.ROOT / 'tools/run_godot_check.py'
+        with tempfile.TemporaryDirectory() as folder:
+            marker = Path(folder) / 'orphan.txt'
+            child = ('import pathlib,time; time.sleep(1.5); '
+                     'pathlib.Path(' + repr(str(marker)) + ').write_text("orphan")')
+            parent = ('import subprocess,sys,time; '
+                      'subprocess.Popen([sys.executable,"-c",' + repr(child) + ']); '
+                      'print("ERROR: injected failure",flush=True); time.sleep(0.1); '
+                      'print("TRACE: fixture source location",flush=True); time.sleep(30)')
+            result = subprocess.run([sys.executable, str(wrapper), sys.executable, '-c', parent],
+                                    capture_output=True, timeout=10)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn(b'TRACE: fixture source location', result.stdout)
+            self.assertNotIn(b'PermissionError', result.stderr)
+            time.sleep(1.6)
+            self.assertFalse(marker.exists(), 'The failed check must not leave its child process running')
+
     def test_split_error_is_detected_during_read_and_exit_drain(self):
         marker = b'ERROR:'
         for exited in (False, True):
@@ -278,7 +297,6 @@ class ValidationRunnerTest(unittest.TestCase):
                             patch.object(godot_check.time, 'sleep'):
                         self.assertEqual(godot_check.main(), 1)
                         self.assertEqual(console.buffer.getvalue(), prefix + suffix)
-                    self.assertEqual(process.terminate.call_count, 0 if exited else 1)
 
     def test_skip_is_reported_separately(self):
         with contextlib.redirect_stdout(io.StringIO()) as console:

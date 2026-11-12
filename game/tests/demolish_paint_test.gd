@@ -42,9 +42,8 @@ func _run() -> void:
 	OS.set_environment("OPENSC2K_GRAPHICS_PACK", ProjectSettings.globalize_path("res://../ext/graphics"))
 	OS.set_environment("OPENSC2K_DATA_PACK", ProjectSettings.globalize_path("res://../ext/data"))
 	var main := (load("res://main.tscn") as PackedScene).instantiate()
-	preload("res://tests/support/app_fixture.gd").configure(main, true)
+	preload("res://tests/support/app_fixture.gd").configure(main, true, "user://city-demolish-paint-test.cfg")
 	main.asset_state.reference_root = ProjectSettings.globalize_path("res://../references/SIMCITY2000")
-	main.preferences.settings_path = "user://city-demolish-paint-test.cfg"
 	root.add_child(main)
 	await process_frame
 	main.map_view.zoom_factor = 0.25
