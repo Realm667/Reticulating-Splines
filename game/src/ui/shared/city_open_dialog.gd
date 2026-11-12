@@ -24,6 +24,7 @@ var favorites: CityFavorites
 var _pending_upload := ""
 var _upload_busy := false
 var _fit_pending := true
+var scenario_mode := false
 
 
 func _ready() -> void:
@@ -115,7 +116,7 @@ func _build_sources() -> void:
 	sources.add_tab("Local saves")
 	sources.add_tab("Cloud saves")
 	sources.custom_minimum_size.y = 44
-	sources.tab_alignment = TabBar.ALIGNMENT_CENTER
+	sources.tab_alignment = TabBar.ALIGNMENT_LEFT
 	sources.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	sources.tab_changed.connect(select_source)
 	get_vbox().add_child(sources)
@@ -141,6 +142,8 @@ func bind_cloud(service: Node) -> void:
 func select_source(index: int) -> void:
 	if sources == null:
 		return
+	if scenario_mode:
+		index = 0
 	sources.set_current_tab(index)
 	for control in _local_controls:
 		control.visible = index == 0
@@ -152,6 +155,13 @@ func select_source(index: int) -> void:
 			job.cancel()
 		cloud_panel.open()
 	_fit_pending = true
+
+
+func set_scenario_mode(enabled: bool) -> void:
+	scenario_mode = enabled
+	select_source(0)
+	sources.visible = not enabled
+	save_list.set_scenario_mode(enabled)
 
 
 func _fit_bounds() -> void:

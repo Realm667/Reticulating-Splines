@@ -61,6 +61,18 @@ func _run() -> void:
 		assert(app.document_state.current_save_path.is_empty())
 		assert(app.reports.annual_review.city == app.document_state.city)
 	var city := app.document_state.city
+	app.regions.open_overview()
+	app.regions.open_conversion()
+	var conversion: QolDialog
+	for child in app.regions.window.get_children():
+		if child is QolDialog and child.visible:
+			conversion = child
+	assert(conversion != null and conversion.transient and conversion.exclusive,
+		"Region creation is owned by and modal above the overview")
+	assert(conversion.size.x <= app.regions.window.size.x and conversion.size.y <= app.regions.window.size.y,
+		"Region creation fits its actual parent window")
+	conversion.close_requested.emit()
+	app.regions.window.hide()
 	city.set_funds(1000000)
 	city.document.set_misc_u32(Sc2MiscLayout.NORMAL_POPULATION, 4000000)
 	NativeSimulationBridge.run("expanded.unlock", city, null, null, null)

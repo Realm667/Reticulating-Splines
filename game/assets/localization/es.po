@@ -31996,3 +31996,119 @@ msgstr "Archivo:"
 msgid "Filter:"
 msgstr "Filtro:"
 
+
+#. Shared Classic/Expanded terrain feature selection; supplementary RS text.
+msgid "Original city rules, 128 × 128 tiles and the full terrain feature set."
+msgstr "Reglas originales de la ciudad, 128 × 128 casillas y todas las opciones de terreno."
+
+#. Shared Classic/Expanded terrain feature selection; supplementary RS text.
+msgid "Classic features plus larger maps, regions, metropolis rewards, building upgrades and a ten-year city chronicle."
+msgstr "Funciones clásicas más mapas mayores, regiones, recompensas metropolitanas, mejoras de edificios y una crónica urbana de diez años."
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "site is not clear"
+msgstr "El terreno no está despejado"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Purchase price"
+msgstr "Precio de compra"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Funds after purchase"
+msgstr "Fondos tras la compra"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Additional administration"
+msgstr "Administración adicional"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Annual administration after purchase"
+msgstr "Administración anual tras la compra"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Per year"
+msgstr "Por año"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Flat land"
+msgstr "Terreno llano"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Slopes"
+msgstr "Pendientes"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Current artwork"
+msgstr "Gráfico actual"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Saved artwork"
+msgstr "Gráfico guardado"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Saved overlay"
+msgstr "Superposición guardada"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Changed pixels"
+msgstr "Píxeles modificados"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Loaded %s: %d objects and %d names."
+msgstr "Se ha cargado %s: %d objetos y %d nombres."
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "the active graphics set"
+msgstr "el conjunto de gráficos activo"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Landscape tile"
+msgstr "Casilla de terreno"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Rubble"
+msgstr "Escombros"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Don't Save"
+msgstr "No guardar"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Power-line tile"
+msgstr "Casilla de tendido eléctrico"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Road tile"
+msgstr "Casilla de carretera"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Rail tile"
+msgstr "Casilla de ferrocarril"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Network crossing or bridge tile"
+msgstr "Casilla de cruce o puente"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Building or zone tile"
+msgstr "Casilla de edificio o zona"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Terrain sprite"
+msgstr "Gráfico de terreno"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Underground pipe or subway sprite"
+msgstr "Gráfico de tubería o metro"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Traffic, moving-object, or effect sprite"
+msgstr "Gráfico de tráfico, objeto móvil o efecto"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "City support sprite"
+msgstr "Gráfico auxiliar de la ciudad"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Unnamed sprite %d"
+msgstr "Gráfico sin nombre %d"

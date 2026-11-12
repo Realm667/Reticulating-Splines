@@ -84,6 +84,7 @@ func process(delta: float) -> void:
 		canvas = CityLifeCanvas.new()
 		canvas.name = "CityLife"
 		map.add_child(canvas)
+		map.layers._sync_base_nodes()
 	if city.document.get_instance_id() != _city_id:
 		_spawn_cursor = -1
 		_city_id = city.document.get_instance_id()

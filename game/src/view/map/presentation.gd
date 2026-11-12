@@ -12,6 +12,7 @@ var _shake_generation := 0
 var shake_offset := Vector2.ZERO
 var upgrade_signature: Array = []
 var upgrade_markers: Array = []
+var dispatch_feedback: Array[CityDynamicVisual] = []
 
 
 func _init(control: CityMapControl) -> void:
@@ -66,6 +67,9 @@ func _draw_overlay() -> void:
 	var canvas := map.layers.overlay_layer
 	var scale := map.camera._view_scale()
 	var offset := map.camera._draw_offset(scale)
+	for marker in dispatch_feedback:
+		canvas.draw_texture_rect(marker.texture, Rect2(offset + marker.position * scale, marker.size * scale),
+			false, Color.WHITE if marker.literal_artwork else CityForegroundPalette.INDEXED_DRAW_COLOR)
 	var pending := map.navigation.placement_tile()
 	var ghost_tile := pending if pending.x >= 0 else map.hover_tile
 	var valid := (map.selection.query_preview_active() or not map.placement_validator.is_valid()
@@ -101,6 +105,8 @@ func set_city_view(
 	sign_layout_token: Array = []
 ) -> void:
 	var reset_center := map.city_source == null or map.city_source.size != source.size
+	if map.city != null and value != null and map.city.document != value.document:
+		dispatch_feedback.clear()
 	var old_center := map.source_center
 	var old_sign_scans := map.signs.sign_cache_build_count
 	var reuse_layout := (preserve_sign_cache and not sign_layout_token.is_empty()

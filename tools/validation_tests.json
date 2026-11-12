@@ -1,5 +1,18 @@
 [
   {
+    "id": "menu_motion_gpu_test",
+    "script": "tests/menu_motion_gpu_test.gd",
+    "domain": "rendering",
+    "lane": "native",
+    "driver": "scene-batch"
+  },
+  {
+    "id": "qol_followup_regressions_test",
+    "script": "tests/qol_followup_regressions_test.gd",
+    "domain": "ui",
+    "lane": "product"
+  },
+  {
     "id": "map_background_gpu_test",
     "script": "tests/map_background_gpu_test.gd",
     "domain": "rendering",

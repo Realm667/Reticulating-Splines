@@ -272,6 +272,43 @@ func _is_vehicle(record: int) -> bool:
 	return thing != null and thing.type in CityViewFilter.VEHICLE_THING_TYPES
 
 
+func show_dispatch_feedback() -> void:
+	# Show the current committed deployment while static regions publish.
+	# These UI markers do not advance simulation, allocate slots or change saves.
+	var map := app.map_view
+	map.presentation.dispatch_feedback.clear()
+	var city := app.document_state.city
+	if city == null or app.view_state.overlay_mode != CityViewMode.Mode.CITY:
+		return
+	if caches.region_cache != null and caches.region_cache.ready():
+		return
+	if caches.region_cache == null and app.static_render_state.task == null:
+		return
+	var view := app.static_render.city_view_size()
+	var config := IsometricRenderer.view_configuration(view)
+	var sprites := app.static_render.sprite_archive_for_view(view)
+	for record in city.thing_count():
+		var thing := city.thing(record)
+		if thing == null or not IsometricConstants.DISPATCH_SPRITE_OFFSETS.has(thing.type):
+			continue
+		var index := OverlayData.find(city.text_overlays, OverlayData.thing_id(record))
+		if index < 0:
+			continue
+		var point := Vector2i(index / city.map_size, index % city.map_size)
+		var sprite := config.sprite_base + int(IsometricConstants.DISPATCH_SPRITE_OFFSETS[thing.type])
+		var resource := dynamic_sprite_resource(sprites, sprite, false, config.divisor)
+		if resource == null:
+			continue
+		var entry := sprites.find_sprite(sprite)
+		var baseline := config.top_margin + (point.x + point.y) * config.half_height + config.tile_height - city.land_altitude(point.x, point.y) * config.altitude_step
+		var position := Vector2(config.side_margin + (city.map_size + point.x - point.y) * config.half_width + config.half_width - entry.width / 2, baseline - entry.height) * config.divisor
+		var marker := CityDynamicVisual.new(resource.artwork_texture if resource.artwork_image != null else resource.texture, position, Vector2(resource.native_size))
+		marker.literal_artwork = resource.artwork_image != null
+		map.presentation.dispatch_feedback.append(marker)
+	if map.layers.overlay_layer != null:
+		map.layers.overlay_layer.queue_redraw()
+
+
 # drop vehicle sounds while the vehicles layer is hidden
 func audible_sound_events(sound_events: Array[SoundEvent]) -> Array[SoundEvent]:
 	if app.view_state.show_vehicles:
@@ -537,6 +574,8 @@ func _floating_occluder_image(
 
 
 func set_static_occlusion_commands(commands: Array[CityStaticCommand], view_size: int) -> void:
+	for entry in hazard_animation.entries.values():
+		entry.mask_epoch = -1
 	if app.visual_environment != null:
 		app.visual_environment.night_lighting.invalidate_all()
 	caches.static_occlusion_commands.assign(commands)

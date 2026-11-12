@@ -10,8 +10,8 @@ func _ready() -> void:
 func show_tile(tile_id: int, tile_name: String, category: String, thumbnail: Texture2D) -> void:
 	$Content/Row/Thumbnail.texture = PixelArtTexture.wrap(thumbnail)
 	$Content/Row/Labels/Name.text = tile_name
-	$Content/Row/Labels/Category.text = "%03d · %s" % [tile_id, category]
-	tooltip_text = "%s\n%03d · %s" % [tile_name, tile_id, category]
+	$Content/Row/Labels/Category.text = "%03d · %s" % [tile_id, tr(category)]
+	tooltip_text = "%s\n%03d · %s" % [tile_name, tile_id, tr(category)]
 
 
 func _refresh_font() -> void:

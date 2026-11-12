@@ -27,7 +27,7 @@ func _notification(what: int) -> void:
 	for subtool_index: int in buttons:
 		var button := buttons[subtool_index] as Button
 		var tool := Tools.tool(shown_group, subtool_index)
-		button.text = tr(tool.name) if free_landscape else "%s\n%s" % [tr(tool.name), _tool_price(tool)]
+		_update_caption(button, tool)
 		button.tooltip_text = tool_button_tooltip(shown_group, subtool_index, not button.disabled)
 
 
@@ -274,7 +274,36 @@ func _create_button(
 	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	button.toggle_mode = true
 	button.button_group = button_group
-	button.text = tr(str(tool.name)) if free_landscape else "%s\n%s" % [tr(tool.name), _tool_price(tool)]
+	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	var caption := VBoxContainer.new()
+	caption.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	caption.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	caption.offset_left = 88
+	caption.offset_right = -12
+	caption.offset_top = 8
+	caption.offset_bottom = -8
+	caption.alignment = BoxContainer.ALIGNMENT_CENTER
+	caption.add_theme_constant_override("separation", 2)
+	button.add_child(caption)
+	var name_label := Label.new()
+	name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	name_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	caption.add_child(name_label)
+	var price_label := Label.new()
+	price_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	caption.add_child(price_label)
+	button.set_meta("tool_caption", caption)
+	_update_caption(button, tool)
+	button.theme_changed.connect(_update_caption.bind(button, tool))
+	button.resized.connect(func() -> void:
+		button.custom_minimum_size.y = maxf(52, caption.get_combined_minimum_size().y + 16))
+	button.draw.connect(func() -> void:
+		var color := button.get_theme_color("font_disabled_color" if button.disabled else "font_pressed_color" if button.button_pressed else "font_hover_color" if button.is_hovered() else "font_color")
+		if name_label.get_theme_color("font_color") != color:
+			name_label.add_theme_color_override("font_color", color)
+		var price_color := Color(color, color.a * 0.85)
+		if price_label.get_theme_color("font_color") != price_color:
+			price_label.add_theme_color_override("font_color", price_color))
 	button.clip_text = false
 	button.theme_type_variation = "ArtworkButton"
 	button.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
@@ -292,6 +321,18 @@ func _create_button(
 	button.pressed.connect(subtool_requested.emit.bind(subtool_index))
 
 	return button
+
+
+func _update_caption(button: Button, tool: ToolCatalog.Tool) -> void:
+	var caption := button.get_meta("tool_caption") as VBoxContainer
+	(caption.get_child(0) as Label).text = tr(tool.name)
+	(caption.get_child(0) as Label).add_theme_font_size_override("font_size", button.get_theme_font_size("font_size"))
+	var price := caption.get_child(1) as Label
+	price.text = _tool_price(tool)
+	price.visible = not free_landscape
+	price.add_theme_font_size_override("font_size", maxi(8, roundi(button.get_theme_font_size("font_size") * 0.85)))
+	button.accessibility_name = tr(tool.name)
+	button.custom_minimum_size.x = maxf(220, caption.get_combined_minimum_size().x + 100)
 
 
 func _tool_price(tool: ToolCatalog.Tool) -> String:

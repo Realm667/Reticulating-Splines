@@ -40,6 +40,7 @@ func open_city_dialog() -> void:
 		return
 
 	var city_directory := AppPaths.path("cities")
+	(app.city_dialogs.city_open_dialog as CityOpenDialog).set_scenario_mode(false)
 
 	if DirAccess.dir_exists_absolute(city_directory):
 		app.city_dialogs.city_open_dialog.current_dir = city_directory
@@ -57,6 +58,7 @@ func open_scenario_dialog() -> void:
 		return
 
 	var scenario_directory := AppPaths.path("scenarios")
+	(app.city_dialogs.city_open_dialog as CityOpenDialog).set_scenario_mode(true)
 
 	if DirAccess.dir_exists_absolute(scenario_directory):
 		app.city_dialogs.city_open_dialog.current_dir = scenario_directory

@@ -8,6 +8,10 @@ const PaletteView = preload("res://src/ui/shell/city_child_tool_palette.gd")
 var palette: CityChildToolPalette
 
 
+func _ready() -> void:
+	MenuMotion.bind(self)
+
+
 func _init() -> void:
 	palette = PaletteView.new()
 	palette.build()

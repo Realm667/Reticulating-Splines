@@ -33359,3 +33359,119 @@ msgstr "Arquivo:"
 msgid "Filter:"
 msgstr "Filtro:"
 
+
+#. Shared Classic/Expanded terrain feature selection; supplementary RS text.
+msgid "Original city rules, 128 × 128 tiles and the full terrain feature set."
+msgstr "Regras originais da cidade, 128 × 128 células e todas as opções de terreno."
+
+#. Shared Classic/Expanded terrain feature selection; supplementary RS text.
+msgid "Classic features plus larger maps, regions, metropolis rewards, building upgrades and a ten-year city chronicle."
+msgstr "Recursos clássicos com mapas maiores, regiões, recompensas metropolitanas, melhorias de edifícios e uma crônica de dez anos da cidade."
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "site is not clear"
+msgstr "O terreno não está livre"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Purchase price"
+msgstr "Preço de compra"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Funds after purchase"
+msgstr "Saldo após a compra"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Additional administration"
+msgstr "Administração adicional"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Annual administration after purchase"
+msgstr "Administração anual após a compra"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Per year"
+msgstr "Por ano"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Flat land"
+msgstr "Terreno plano"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Slopes"
+msgstr "Encostas"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Current artwork"
+msgstr "Gráfico atual"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Saved artwork"
+msgstr "Gráfico salvo"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Saved overlay"
+msgstr "Sobreposição salva"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Changed pixels"
+msgstr "Pixels alterados"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Loaded %s: %d objects and %d names."
+msgstr "%s carregado: %d objetos e %d nomes."
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "the active graphics set"
+msgstr "o conjunto gráfico ativo"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Landscape tile"
+msgstr "Bloco de terreno"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Rubble"
+msgstr "Entulho"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Don't Save"
+msgstr "Não salvar"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Power-line tile"
+msgstr "Bloco de linha elétrica"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Road tile"
+msgstr "Bloco de estrada"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Rail tile"
+msgstr "Bloco de ferrovia"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Network crossing or bridge tile"
+msgstr "Bloco de cruzamento ou ponte"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Building or zone tile"
+msgstr "Bloco de edifício ou zona"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Terrain sprite"
+msgstr "Imagem de terreno"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Underground pipe or subway sprite"
+msgstr "Imagem de tubulação ou metrô"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Traffic, moving-object, or effect sprite"
+msgstr "Imagem de tráfego, objeto móvel ou efeito"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "City support sprite"
+msgstr "Imagem auxiliar da cidade"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Unnamed sprite %d"
+msgstr "Imagem sem nome %d"

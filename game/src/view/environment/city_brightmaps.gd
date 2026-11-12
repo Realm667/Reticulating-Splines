@@ -50,11 +50,27 @@ static func load_archive(archive: Sc2SpriteArchive, folder: String, group: Strin
 		if image == null or image.get_size() != Vector2i(entry.width, entry.height):
 			continue
 		image.convert(Image.FORMAT_RGBA8)
+		image = window_gain(image, float(record.get("window_emission_gain", 1.0)))
 		# An explicit compatible custom mask takes precedence, including darkness.
 		archive.visual_emission_artwork.erase(id)
 		archive.visual_emission.erase(id)
 		if not image.is_invisible():
 			archive.visual_emission[id] = image
+
+
+static func window_gain(image: Image, gain: float) -> Image:
+	# Optional authored correction, after the artwork fingerprint check. Soft
+	# facade lighting stays soft; custom masks without the field stay byte exact.
+	if is_equal_approx(gain, 1.0):
+		return image
+	var corrected := image.duplicate() as Image
+	for y in corrected.get_height():
+		for x in corrected.get_width():
+			var pixel := corrected.get_pixel(x, y)
+			if pixel.a >= 0.5:
+				pixel.a = clampf(pixel.a * gain, 0.0, 1.0)
+				corrected.set_pixel(x, y, pixel)
+	return corrected
 
 
 static func atlas_masks(archive: Sc2SpriteArchive) -> Dictionary:

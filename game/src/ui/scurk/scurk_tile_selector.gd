@@ -13,6 +13,7 @@ var rows_current := false
 
 func _ready() -> void:
 	super._ready()
+	MenuMotion.bind($Popup)
 	pressed.connect(show_choices)
 	$Popup.popup_hide.connect(grab_focus)
 

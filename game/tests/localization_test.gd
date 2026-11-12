@@ -66,7 +66,7 @@ func _run() -> void:
 	root.add_child(palette)
 	palette.show_tool_group(CityToolIds.Group.WATER, null)
 	var button := palette.buttons[CityToolIds.Water.PIPES] as Button
-	assert(button.text.begins_with(tr("Water Pipes")))
+	assert(button.accessibility_name == tr("Water Pipes"))
 	assert(button.tooltip_text.contains(tr("Cost: %s").get_slice("%s", 0)))
 
 	AppLocalization.select("de")
@@ -84,7 +84,7 @@ func _run() -> void:
 	AppLocalization.select("de")
 	await _check_toolbar_layout()
 	assert(tr("Water Pipes") != "Water Pipes")
-	assert(button.text.begins_with(tr("Water Pipes")), "The existing palette updates to German")
+	assert(button.accessibility_name == tr("Water Pipes"), "The existing palette updates to German")
 	assert(button.tooltip_text.contains(tr("Cost: %s").get_slice("%s", 0)))
 	assert(tr("Fire", "budget") != tr("Fire"), "German distinguishes fire spending from a fire disaster")
 	assert((tr("Population: %s") % "12,345").contains("12,345"))
@@ -116,7 +116,7 @@ func _run() -> void:
 
 	AppLocalization.select("en")
 	await process_frame
-	assert(button.text.begins_with("Water Pipes"), "The tool buttons change with the language")
+	assert(button.accessibility_name == "Water Pipes", "The tool buttons change with the language")
 	assert(tr("Population: %s") % "12,345" == "Population: 12,345")
 	assert(ToolCatalog.tool(CityToolIds.Group.WATER, CityToolIds.Water.PIPES).id == "pipes")
 

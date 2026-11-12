@@ -8,6 +8,26 @@ func _init() -> void:
 	hide_folding = true
 
 
+static func format_timestamp(value: Variant) -> String:
+	if value == null:
+		return "—"
+	var raw := str(value).strip_edges()
+	if raw.is_empty():
+		return "—"
+	if not (value is int or value is float or raw.is_valid_float()):
+		return raw
+	var seconds := float(value)
+	if not is_finite(seconds) or seconds <= 0.0:
+		return "—"
+	var date := Time.get_datetime_dict_from_unix_time(int(seconds) + Time.get_time_zone_from_system().bias * 60)
+	var day := "%04d-%02d-%02d" % [date.year, date.month, date.day]
+	match TranslationServer.get_locale().get_slice("_", 0):
+		"de": day = "%02d.%02d.%04d" % [date.day, date.month, date.year]
+		"es", "fr", "it", "pt": day = "%02d/%02d/%04d" % [date.day, date.month, date.year]
+		"ko": day = "%04d.%02d.%02d" % [date.year, date.month, date.day]
+	return "%s %02d:%02d" % [day, date.hour, date.minute]
+
+
 func _draw() -> void:
 	var root := get_root()
 	if root == null:

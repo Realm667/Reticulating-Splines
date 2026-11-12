@@ -318,7 +318,7 @@ func zoom_blur_amount() -> float:
 		return 0.0
 	var fraction := clampf(_zoom_elapsed / ZOOM_TRANSITION_SECONDS, 0.0, 1.0)
 	var distance := minf(absf(log(_zoom_to / _zoom_from)) / log(2.0), 1.0)
-	return 0.008 * distance * 4.0 * fraction * (1.0 - fraction)
+	return 0.024 * distance * 4.0 * fraction * (1.0 - fraction)
 
 
 func zoom_anchor() -> Vector2:

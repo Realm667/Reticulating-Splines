@@ -125,6 +125,14 @@ static func unlock_everything(city: CityState, document: Sc2File) -> Result:
 
 		return result
 
+	# Expanded rewards have their own persistent grant mask. Preserve built
+	# rewards, upkeep and construction records; Classic cities gain no new rules.
+	if ExpandedRules.enabled(document):
+		var expanded := document.find_chunk("XEXP")
+		var bytes := expanded.decoded_payload.duplicate()
+		BinaryData.write_u32_be(bytes, 12, (1 << ExpandedRules.NAMES.size()) - 1)
+		expanded.set_decoded_payload(bytes)
+
 	var success := Result.new()
 	success.ok = true
 

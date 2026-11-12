@@ -11,7 +11,7 @@ func _run() -> void:
 	var newspaper := NewspaperDialog.new()
 	root.add_child(newspaper)
 	_check_page_layout(newspaper)
-	_check_reader_and_close(newspaper)
+	await _check_reader_and_close(newspaper)
 	_check_menu_and_forecast(newspaper)
 	_check_city_name_fallback(newspaper)
 	newspaper.free()
@@ -145,6 +145,13 @@ func _check_reader_and_close(newspaper: NewspaperDialog) -> void:
 	newspaper._on_cancel()
 	assert(not newspaper.reader.visible and newspaper.visible)
 	view.read_requested.emit("Title", "Text")
+	await process_frame
+	newspaper.reader.layout()
+	assert(newspaper.reader.scroll.vertical_scroll_mode == ScrollContainer.SCROLL_MODE_DISABLED)
+	view.read_requested.emit("Title", "A long paragraph for scrolling. ".repeat(500))
+	await process_frame
+	newspaper.reader.layout()
+	assert(newspaper.reader.scroll.vertical_scroll_mode == ScrollContainer.SCROLL_MODE_SHOW_ALWAYS)
 	click.position = Vector2.ONE
 	newspaper.reader._gui_input(click)
 	assert(not newspaper.reader.visible, "A click outside the story did not close it")

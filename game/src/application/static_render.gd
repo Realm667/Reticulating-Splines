@@ -35,6 +35,8 @@ func refresh_after_city_edit(command: EditCommandResult) -> void:
 
 	if not _apply_static_edit_patch(command):
 		app.map_render.refresh_map(false)
+	if command is DispatchEditResult:
+		app.moving_sprites.show_dispatch_feedback()
 
 
 func _apply_static_edit_patch(command: EditCommandResult) -> bool:
@@ -446,6 +448,7 @@ func poll_static_render() -> void:
 		return
 
 	caches.static_city_image = rendered.index_image
+	app.map_view.presentation.dispatch_feedback.clear()
 	app.moving_sprites.set_static_occlusion_commands(rendered.occlusion_commands, int(rendered.view_size))
 	caches.static_visual_signature = rendered.signature
 	caches.static_render_mode = int(rendered.render_mode) as CityViewMode.Mode

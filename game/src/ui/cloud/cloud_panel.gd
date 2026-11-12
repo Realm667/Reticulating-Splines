@@ -50,18 +50,31 @@ var browser_footer: HFlowContainer
 var _save_help: Array[Label] = []
 var library: CityCloudList
 var _account_scope := ""
+var _summary: BoxContainer
+var _workspace: BoxContainer
+var _save_details: PanelContainer
+var _selected_name: Label
 
 
 func _init() -> void:
 	column = self
 	size_flags_vertical = Control.SIZE_EXPAND_FILL
 	add_theme_constant_override("separation", 10)
-	status = _text(column, "")
-	quota = _text(column, "")
+	var summary_card := PanelContainer.new()
+	summary_card.theme_type_variation = &"InformationPanel"
+	column.add_child(summary_card)
+	_summary = BoxContainer.new()
+	_summary.add_theme_constant_override("separation", 12)
+	summary_card.add_child(_summary)
+	status = _text(_summary, "")
+	quota = _text(_summary, "")
+	quota.size_flags_stretch_ratio = 1.5
+	quota.theme_type_variation = &"HelpLabel"
 	notice = _text(column, "")
 	notice.hide()
 	tabs = TabContainer.new()
 	tabs.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	tabs.tab_alignment = TabBar.ALIGNMENT_LEFT
 	column.add_child(tabs)
 	_build_account(_page("Account"))
 	_build_saves(_page("Cloud saves"))
@@ -82,6 +95,7 @@ func _init() -> void:
 	file_dialog.filters = PackedStringArray(["*.sc2x ; SC2X", "*.sc2 ; SC2"])
 	file_dialog.file_selected.connect(_download)
 	add_child(file_dialog)
+	resized.connect(_layout_pages)
 	visibility_changed.connect(func() -> void:
 		if not visible:
 			clear_secrets())
@@ -130,6 +144,7 @@ func _activate_save(index: int) -> void:
 
 func _ready() -> void:
 	get_parent().get_viewport().size_changed.connect(_refit_visible)
+	_layout_pages.call_deferred()
 
 
 func _notification(what: int) -> void:
@@ -223,6 +238,7 @@ func _action(parent: Control, caption: String, callback: Callable) -> Button:
 	result.pressed.connect(callback)
 	parent.add_child(result)
 	result.custom_minimum_size.y = 40
+	result.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	return result
 
 
@@ -262,7 +278,8 @@ func _build_account(content: VBoxContainer) -> void:
 	remembered_access.toggled.connect(func(enabled: bool) -> void:
 		await sync.set_remember(enabled)
 		refresh())
-	_action(account_info, "Sign out", func() -> void: sync.logout())
+	var account_actions := _flow(account_info)
+	_action(account_actions, "Sign out", func() -> void: sync.logout())
 	_show_auth_fields()
 
 
@@ -332,7 +349,18 @@ func _build_saves(content: VBoxContainer) -> void:
 			refresh())
 	_save_help.append(_text(content, "Local deletion does not delete Cloud copies. Regions are stored together. Only the host can save a multiplayer game."))
 	_save_help.append(_text(content, "Cloud keeps five versions per save. Trash is removed after 30 days. Versions and trash count toward your quota."))
-	var filters := _flow(content)
+	content.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_workspace = BoxContainer.new()
+	_workspace.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_workspace.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_workspace.add_theme_constant_override("separation", 16)
+	content.add_child(_workspace)
+	var collection := VBoxContainer.new()
+	collection.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	collection.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	collection.size_flags_stretch_ratio = 2.5
+	_workspace.add_child(collection)
+	var filters := _flow(collection)
 	_action(filters, "Refresh", _refresh_cloud)
 	deleted = CheckBox.new()
 	deleted.text = "Trash"
@@ -342,20 +370,36 @@ func _build_saves(content: VBoxContainer) -> void:
 	saves = ItemList.new()
 	saves.custom_minimum_size.y = 140
 	saves.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	content.add_child(saves)
+	saves.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	collection.add_child(saves)
 	saves.item_selected.connect(_select_save)
-	details = _text(content, "Select a save.")
+	_save_details = PanelContainer.new()
+	_save_details.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_workspace.add_child(_save_details)
+	var inspection := VBoxContainer.new()
+	inspection.add_theme_constant_override("separation", 10)
+	_save_details.add_child(inspection)
+	var heading := _text(inspection, "City preview")
+	heading.theme_type_variation = &"SectionHeading"
+	_selected_name = _text(inspection, "")
+	_selected_name.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
+	_selected_name.theme_type_variation = &"SectionHeading"
+	details = _text(inspection, "Select a save.")
 	preview = TextureRect.new()
 	preview.custom_minimum_size.y = 140
 	preview.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	preview.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	preview.hide()
-	content.add_child(preview)
+	inspection.add_child(preview)
+	inspection.move_child(preview, details.get_index())
 	versions = OptionButton.new()
+	versions.fit_to_longest_item = false
+	versions.clip_text = true
+	versions.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	versions.custom_minimum_size.y = 40
 	versions.item_selected.connect(func(_index: int) -> void: _show_version_preview())
-	content.add_child(versions)
-	var buttons := _flow(content)
+	inspection.add_child(versions)
+	var buttons := _flow(inspection)
 	actions.download = _action(buttons, "Download", _choose_download)
 	actions.restore = _action(buttons, "Restore version", _confirm_restore)
 	actions.trash = _action(buttons, "Move to trash", _confirm_trash)
@@ -365,9 +409,11 @@ func _build_saves(content: VBoxContainer) -> void:
 
 
 func _build_devices(content: VBoxContainer) -> void:
+	content.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_text(content, "Revoking a device signs it out. Its local saves remain on that device.")
 	devices = ItemList.new()
 	devices.custom_minimum_size.y = 160
+	devices.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	devices.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	content.add_child(devices)
 	_action(content, "Revoke device", _confirm_revoke)
@@ -420,6 +466,7 @@ func refresh() -> void:
 		selected_head = ""
 		versions.clear()
 		version_rows.clear()
+		_selected_name.text = ""
 		details.text = tr("Select a save.")
 		preview.hide()
 	for action: Button in actions.values():
@@ -434,12 +481,22 @@ func refresh() -> void:
 	device_rows = state.get("devices", [])
 	devices.clear()
 	for device: Dictionary in device_rows:
-		devices.add_item("%s · %s%s" % [str(device.get("name", "")), str(device.get("last_seen", "")), " · " + tr("This device") if bool(device.get("current", false)) else ""])
+		devices.add_item("%s · %s%s" % [str(device.get("name", "")), CityLibraryTable.format_timestamp(device.get("last_seen")), " · " + tr("This device") if bool(device.get("current", false)) else ""])
 		if str(device.get("id", "")) == device_id:
 			devices.select(devices.item_count - 1)
 	_show_conflicts()
 	if library != null:
 		library.refresh.call_deferred()
+
+
+func _layout_pages() -> void:
+	if not is_inside_tree() or _summary == null or _workspace == null:
+		return
+	var width := get_window().size.x / maxf(get_window().content_scale_factor, 0.001)
+	_summary.vertical = width < 800
+	_workspace.vertical = width < 1000
+	_save_details.custom_minimum_size.x = 0 if _workspace.vertical else 280
+	preview.custom_minimum_size.y = 100 if _workspace.vertical else 180
 
 
 func _save_status(item: Dictionary) -> String:
@@ -480,7 +537,7 @@ func _select_save(index: int) -> void:
 	if bool(result.get("ok", false)):
 		version_rows = result.get("versions", [])
 		for version: Dictionary in version_rows:
-			versions.add_item("%s · %s" % [str(version.get("created_at", "")), str(version.get("device_name", ""))])
+			versions.add_item("%s · %s" % [CityLibraryTable.format_timestamp(version.get("created_at")), str(version.get("device_name", ""))])
 		if not version_rows.is_empty():
 			_show_version_preview()
 	for action: Button in actions.values():
@@ -491,7 +548,8 @@ func _select_save(index: int) -> void:
 
 func _show_save_metadata(item: Dictionary) -> void:
 	var metadata: Dictionary = item.get("metadata", {})
-	details.text = "%s\n" % str(item.get("name", "")) + tr("Year: %s · Population: %s\nUpdated: %s · Device: %s") % [str(metadata.get("year", "—")), str(metadata.get("population", "—")), str(item.get("updated_at", "—")), str(item.get("device_name", "—"))]
+	_selected_name.text = str(item.get("name", ""))
+	details.text = tr("Year: %s · Population: %s\nUpdated: %s · Device: %s") % [str(metadata.get("year", "—")), str(metadata.get("population", "—")), CityLibraryTable.format_timestamp(item.get("updated_at")), str(item.get("device_name", "—"))]
 	_set_preview(str(metadata.get("preview", "")))
 	if not version_rows.is_empty():
 		_show_version_preview()
@@ -508,7 +566,7 @@ func _show_version_preview() -> void:
 			break
 	if version.get("metadata", {}) is Dictionary:
 		metadata.merge(version.get("metadata", {}), true)
-	details.text = tr("Year: %s · Population: %s\nUpdated: %s · Device: %s") % [str(metadata.get("year", "—")), str(metadata.get("population", "—")), str(version.get("created_at", "—")), str(version.get("device_name", "—"))]
+	details.text = tr("Year: %s · Population: %s\nUpdated: %s · Device: %s") % [str(metadata.get("year", "—")), str(metadata.get("population", "—")), CityLibraryTable.format_timestamp(version.get("created_at")), str(version.get("device_name", "—"))]
 	_set_preview(str(metadata.get("preview", "")))
 
 

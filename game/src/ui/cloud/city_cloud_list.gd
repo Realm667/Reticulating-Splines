@@ -52,7 +52,7 @@ func refresh() -> void:
 	clear()
 	for col in columns:
 		set_column_title(col, tr(TITLES[col]))
-	set_column_title(0, "★")
+	set_column_title(0, "")
 	var root := create_item()
 	var indices := range(panel.save_rows.size())
 	indices.sort_custom(_before)
@@ -65,7 +65,7 @@ func refresh() -> void:
 		item.set_button_color(0, 0, Color("f5cd62") if favorites.contains(key) else get_theme_color("font_color"))
 		item.set_auto_translate_mode(1, Node.AUTO_TRANSLATE_MODE_DISABLED)
 		item.set_text(1, str(row.get("name", "")))
-		item.set_text(2, str(row.get("updated_at", "—")))
+		item.set_text(2, format_timestamp(row.get("updated_at")))
 		var kind := str(row.get("metadata", {}).get("kind", ""))
 		item.set_text(3, tr("Multiplayer") if kind == "multiplayer" else tr("Single-player") if kind in ["city", "region"] else tr("Unknown"))
 		var expanded: Variant = panel.sync.cloud_expanded(str(row.get("id", "")), str(row.get("head", ""))) if panel.sync != null and panel.sync.has_method("cloud_expanded") else null

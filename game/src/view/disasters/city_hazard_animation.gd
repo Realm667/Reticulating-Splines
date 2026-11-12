@@ -188,6 +188,18 @@ func _refresh_mask(entry: Entry) -> void:
 	entry.visual.texture = ImageTexture.create_from_image(image)
 
 
+func invalidate_occlusion(changes: Array[Rect2i]) -> bool:
+	var invalidated := false
+	for entry: Entry in entries.values():
+		var bounds := Rect2i(Vector2i(entry.visual.position), Vector2i(entry.visual.size))
+		for changed in changes:
+			if bounds.intersects(changed):
+				entry.mask_epoch = -1
+				invalidated = true
+				break
+	return invalidated
+
+
 class Entry extends RefCounted:
 	var animation := CitySpriteFrameBlend.new()
 	var start_opacity := 0.0

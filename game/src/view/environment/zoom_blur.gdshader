@@ -11,8 +11,8 @@ void fragment() {
 	vec2 hi = lo + extent - SCREEN_PIXEL_SIZE;
 	vec2 center = lo + anchor * (extent - SCREEN_PIXEL_SIZE);
 	vec2 pixels = (SCREEN_UV - center) / SCREEN_PIXEL_SIZE * amount;
-	// A small physical-pixel cap keeps high-DPI and large views equally subtle.
-	pixels *= min(1.0, 2.25 / max(length(pixels), 0.000001));
+	// A bounded streak remains visible during the short camera transition.
+	pixels *= min(1.0, 9.0 / max(length(pixels), 0.000001));
 	vec2 step_uv = pixels * SCREEN_PIXEL_SIZE;
 	vec3 color = texture(city_screen, SCREEN_UV).rgb * 0.35;
 	color += texture(city_screen, clamp(SCREEN_UV - step_uv, lo, hi)).rgb * 0.125;

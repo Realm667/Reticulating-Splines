@@ -294,8 +294,8 @@ func _rules_changed(index: int) -> void:
 	water_input.set_value_no_signal(terrain.water)
 	trees_input.set_value_no_signal(terrain.trees)
 	for key in feature_inputs:
-		feature_inputs[key].set_pressed_no_signal(expanded and key in terrain.features)
-		feature_inputs[key].visible = expanded
+		feature_inputs[key].set_pressed_no_signal(key in terrain.features)
+		feature_inputs[key].visible = true
 	size_input.visible = expanded
 	classic_size.visible = not expanded
 	$Center/NewCityDialog/Content/Body/Preview/ExpandedFeatures.visible = expanded
@@ -308,8 +308,8 @@ func _rules_changed(index: int) -> void:
 	game_type_input.set_item_disabled(1, not expanded)
 	if not expanded:
 		game_type_input.select(0)
-	rules_description.text = ("Classic features plus larger maps, regions, additional terrain types, metropolis rewards, building upgrades and a ten-year city chronicle."
-		if expanded else "Original city rules, 128 × 128 tiles and classic terrain generation.")
+	rules_description.text = ("Classic features plus larger maps, regions, metropolis rewards, building upgrades and a ten-year city chronicle."
+		if expanded else "Original city rules, 128 × 128 tiles and the full terrain feature set.")
 	_region_type_changed(game_type_input.selected)
 	_refresh_feature_constraints()
 	preview_requested.emit()
@@ -419,8 +419,6 @@ func _random_name() -> void:
 
 func selected_features() -> Array[String]:
 	var result: Array[String] = []
-	if _active_rules != 1:
-		return result
 	for key in feature_inputs:
 		if feature_inputs[key].button_pressed:
 			result.append(key)

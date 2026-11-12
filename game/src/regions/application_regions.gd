@@ -23,6 +23,7 @@ var neighbor_details: RegionOverviewDetails
 var create_button: Button
 var return_button: Button
 var details: Label
+var purchase_details: RegionPurchaseDetails
 var preview: TextureRect
 var buy_button: Button
 var open_button: Button
@@ -152,6 +153,7 @@ func _build_window() -> void:
 	window.wrap_controls = false
 	window.min_size = Vector2i(300, 300)
 	app.add_child(window)
+	window.gui_embed_subwindows = app.get_viewport().gui_embed_subwindows
 	var scroll := ScrollContainer.new()
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -183,6 +185,9 @@ func _build_window() -> void:
 	window.column.remove_child(details)
 	window.column.add_child(selection_panel)
 	selection_panel.add_child(details)
+	purchase_details = RegionPurchaseDetails.new()
+	purchase_details.hide()
+	window.column.add_child(purchase_details)
 	window.column.add_child(HSeparator.new())
 	neighbor_details = RegionOverviewDetails.new()
 	window.column.add_child(neighbor_details)
@@ -200,7 +205,9 @@ func _build_window() -> void:
 	confirmation.title = "Buy city area"
 	confirmation.get_label().autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	confirmation.get_label().custom_minimum_size = Vector2(240, 0)
-	app.add_child(confirmation)
+	window.add_child(confirmation)
+	confirmation.transient = true
+	confirmation.exclusive = true
 	confirmation.confirmed.connect(_purchase)
 	if not app.coop.session.command_resolved.is_connected(_command_resolved):
 		app.coop.session.command_resolved.connect(_command_resolved)
@@ -409,6 +416,9 @@ static func _cell_summary(position: Vector2i, state: Dictionary) -> Dictionary:
 
 
 func _select(position: Vector2i) -> void:
+	details.get_parent().show()
+	details.theme_type_variation = &""
+	purchase_details.hide()
 	selected = position
 	quote.clear()
 	preview.texture = null
@@ -437,11 +447,13 @@ func _select(position: Vector2i) -> void:
 	else:
 		if not campaign.adjacent(LOCAL_OWNER, position):
 			details.text = tr("Choose an available city area next to your own territory.")
+			details.theme_type_variation = &"ErrorLabel"
 			refresh()
 			return
 		var result := campaign.offer(position)
 		if not result.ok:
 			details.text = tr(result.error)
+			details.theme_type_variation = &"ErrorLabel"
 		else:
 			quote = result
 			quote["cell"] = [position.x, position.y]
@@ -473,6 +485,8 @@ func _show_quote() -> void:
 	details.text += "\n" + tr("Annual administration after purchase: %s\nFunds after purchase: %s") % [
 		BudgetReport.currency(int(state.get("administration", 0)) + RegionRules.ANNUAL_ADMINISTRATION),
 		BudgetReport.currency(int(state.get("funds", 0)) - int(quote.price))]
+	details.get_parent().hide()
+	purchase_details.show_offer(quote, int(state.get("funds", 0)), int(state.get("administration", 0)))
 
 
 func _show_owned_city(item: Dictionary, annual_balance: int) -> void:
@@ -659,7 +673,9 @@ func open_conversion() -> void:
 		sizes.add_item("%d × %d" % [value, value], value)
 	sizes.select(1)
 	dialog.column.add_child(sizes)
-	app.add_child(dialog)
+	window.add_child(dialog)
+	dialog.transient = true
+	dialog.exclusive = true
 	var actions := HFlowContainer.new()
 	dialog.column.add_child(actions)
 	dialog.button(actions, "Create a region", func() -> void:
@@ -717,7 +733,11 @@ func _convert_local(edge: int) -> bool:
 
 
 func _popup_fitted(dialog: Window, preferred: Vector2i) -> void:
-	var available := (Vector2i(app.get_viewport_rect().size) - Vector2i(24, 48)).max(Vector2i(1, 1))
+	var owner := dialog.get_parent().get_viewport()
+	var area := owner.get_visible_rect().size
+	if owner is Window:
+		area = Vector2(owner.size) / maxf(owner.content_scale_factor, 0.001)
+	var available := (Vector2i(area) - Vector2i(24, 48)).max(Vector2i(1, 1))
 	dialog.min_size = Vector2i(240, 180).min(available)
 	dialog.max_size = available
 	dialog.popup_centered(preferred.min(available))

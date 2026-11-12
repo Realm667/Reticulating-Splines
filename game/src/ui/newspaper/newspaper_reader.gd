@@ -16,6 +16,7 @@ const TITLE_SIDE := 30.0
 const TITLE_GAP := 22.0
 const TEXT_SIZE := 15
 const TEXT_LINE := 18.75
+const SCROLL_GAP := 16
 const CLOSE_SIZE := Vector2(28.0, 28.0)
 const CLOSE_MARGIN := 10.0
 
@@ -62,6 +63,21 @@ func _init() -> void:
 	scroll = ScrollContainer.new()
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	panel.add_child(scroll)
+	var bar := scroll.get_v_scroll_bar()
+	bar.custom_minimum_size.x = 10
+	for style_name in ["scroll", "scroll_focus", "grabber", "grabber_highlight", "grabber_pressed"]:
+		var bar_style := StyleBoxFlat.new()
+		bar_style.bg_color = Color("735b3d", 0.14 if style_name.begins_with("scroll") else 0.48 if style_name == "grabber" else 0.72)
+		bar_style.set_corner_radius_all(3)
+		bar_style.content_margin_left = 5
+		bar_style.content_margin_right = 5
+		bar_style.content_margin_top = 12 if not style_name.begins_with("scroll") else 0
+		bar_style.content_margin_bottom = bar_style.content_margin_top
+		bar.add_theme_stylebox_override(style_name, bar_style)
+	var text_margin := MarginContainer.new()
+	text_margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	text_margin.add_theme_constant_override("margin_right", SCROLL_GAP)
+	scroll.add_child(text_margin)
 
 	text_label = Label.new()
 	text_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_FILL
@@ -72,7 +88,7 @@ func _init() -> void:
 	text_label.add_theme_color_override("font_color", INK)
 	text_label.add_theme_constant_override("line_spacing",
 		int(TEXT_LINE - NewspaperFonts.body().get_height(TEXT_SIZE)))
-	scroll.add_child(text_label)
+	text_margin.add_child(text_label)
 
 	close_button = Button.new()
 	close_button.text = "×"
@@ -117,10 +133,20 @@ static func pre_line(text: String) -> String:
 func layout() -> void:
 	var width := minf(MAX_WIDTH, size.x * AREA_SHARE.x)
 	var inner := width - PADDING * 2.0
-	var title_height := _text_height(title_label.text, NewspaperFonts.headline(), TITLE_SIZE, inner - TITLE_SIDE * 2.0,
-		TITLE_LINE)
-	var text_height := _text_height(text_label.text, NewspaperFonts.body(), TEXT_SIZE, inner, TEXT_LINE)
-	var height := minf(size.y * AREA_SHARE.y, PADDING * 2.0 + title_height + TITLE_GAP + text_height)
+	title_label.size.x = maxf(1.0, inner - TITLE_SIDE * 2.0)
+	var title_height := ceilf(title_label.get_minimum_size().y)
+	text_label.size.x = maxf(1.0, inner - SCROLL_GAP)
+	var text_height := ceilf(text_label.get_minimum_size().y)
+	var chrome := PADDING * 2.0 + title_height + TITLE_GAP
+	var maximum := floorf(size.y * AREA_SHARE.y)
+	var needs_scroll := text_height > maxf(0.0, maximum - chrome)
+	# Measure with the same font, spacing and width as the visible Label.
+	# A speculative scrollbar must not narrow a fitting article into overflow.
+	scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_ALWAYS if needs_scroll else ScrollContainer.SCROLL_MODE_DISABLED
+	if needs_scroll:
+		text_label.size.x = maxf(1.0, inner - SCROLL_GAP - scroll.get_v_scroll_bar().get_combined_minimum_size().x)
+		text_height = ceilf(text_label.get_minimum_size().y)
+	var height := minf(maximum, chrome + text_height)
 	panel.size = Vector2(width, height)
 	panel.position = ((size - panel.size) / 2.0).round()
 	title_label.position = Vector2(PADDING + TITLE_SIDE, PADDING)

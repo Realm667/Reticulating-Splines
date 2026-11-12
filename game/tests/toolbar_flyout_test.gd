@@ -34,8 +34,10 @@ func _run() -> void:
 	await process_frame
 	var road_button := toolbar.toolbar_buttons[CityToolIds.Group.ROADS]
 	await _click(road_button.get_global_rect().get_center())
-	assert(not toolbar.hold_menu.visible, "A short click selects the remembered tool without opening a menu")
-	await _hold(road_button.get_global_rect().get_center())
+	assert(toolbar.hold_menu.visible, "A short click opens the menu without a hold delay")
+	toolbar.hold_menu.hide()
+	await process_frame
+	await _click(road_button.get_global_rect().get_center())
 	await process_frame
 	await process_frame
 	await process_frame
@@ -64,7 +66,7 @@ func _run() -> void:
 		await process_frame
 		assert(view.encloses(Rect2i(toolbar.hold_menu.position, toolbar.hold_menu.size)), "The laid-out power menu must fit a small window")
 		toolbar.hold_menu.hide()
-	await _hold(toolbar.toolbar_buttons[CityToolIds.Group.ROADS].get_global_rect().get_center())
+	await _click(toolbar.toolbar_buttons[CityToolIds.Group.ROADS].get_global_rect().get_center())
 	await process_frame
 	toolbar.set_landscape_editor(true)
 	assert(not toolbar.hold_menu.visible)
@@ -73,14 +75,6 @@ func _run() -> void:
 	await process_frame
 	print("PASS: flyout outside-click capture, next-click recovery, edge placement and editor dismissal")
 	quit()
-
-
-func _hold(point: Vector2) -> void:
-	await _mouse_button(point, true)
-	await create_timer(CityToolbar.HOLD_SECONDS + 0.05).timeout
-	assert(toolbar.hold_menu.visible, "Holding opens the submenu before release")
-	await _mouse_button(point, false)
-	assert(toolbar.hold_menu.visible, "Releasing the opening hold keeps the submenu available")
 
 
 func _click(point: Vector2) -> void:

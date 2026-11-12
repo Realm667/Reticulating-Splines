@@ -11546,3 +11546,119 @@ msgstr "파일:"
 msgid "Filter:"
 msgstr "필터:"
 
+
+#. Shared Classic/Expanded terrain feature selection; supplementary RS text.
+msgid "Original city rules, 128 × 128 tiles and the full terrain feature set."
+msgstr "기본 도시 규칙, 128 × 128 타일 및 모든 지형 기능."
+
+#. Shared Classic/Expanded terrain feature selection; supplementary RS text.
+msgid "Classic features plus larger maps, regions, metropolis rewards, building upgrades and a ten-year city chronicle."
+msgstr "기본 기능에 더 큰 지도, 지역, 대도시 보상, 건물 업그레이드 및 10년 도시 연대기를 추가합니다."
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "site is not clear"
+msgstr "건설 부지가 비어 있지 않습니다"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Purchase price"
+msgstr "구매 가격"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Funds after purchase"
+msgstr "구매 후 자금"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Additional administration"
+msgstr "추가 관리비"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Annual administration after purchase"
+msgstr "구매 후 연간 관리비"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Per year"
+msgstr "연간"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Flat land"
+msgstr "평지"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Slopes"
+msgstr "경사지"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Current artwork"
+msgstr "현재 그래픽"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Saved artwork"
+msgstr "저장된 그래픽"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Saved overlay"
+msgstr "저장된 오버레이"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Changed pixels"
+msgstr "변경된 픽셀"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Loaded %s: %d objects and %d names."
+msgstr "%s 불러옴: 오브젝트 %d개, 이름 %d개."
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "the active graphics set"
+msgstr "활성 그래픽 세트"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Landscape tile"
+msgstr "지형 타일"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Rubble"
+msgstr "잔해"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Don't Save"
+msgstr "저장 안 함"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Power-line tile"
+msgstr "송전선 타일"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Road tile"
+msgstr "도로 타일"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Rail tile"
+msgstr "철도 타일"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Network crossing or bridge tile"
+msgstr "교차로나 다리 타일"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Building or zone tile"
+msgstr "건물이나 구역 타일"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Terrain sprite"
+msgstr "지형 스프라이트"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Underground pipe or subway sprite"
+msgstr "지하 수도관이나 지하철 스프라이트"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Traffic, moving-object, or effect sprite"
+msgstr "교통, 이동 물체 또는 효과 스프라이트"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "City support sprite"
+msgstr "도시 보조 스프라이트"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Unnamed sprite %d"
+msgstr "이름 없는 스프라이트 %d"

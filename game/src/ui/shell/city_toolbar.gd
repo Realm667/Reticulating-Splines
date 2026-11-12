@@ -54,7 +54,6 @@ const LANDSCAPE_TOOL_ORDER := [
 const Tools = preload("res://src/tools/shared/tool_catalog.gd")
 const HoldMenu = preload("res://src/ui/shell/city_tool_hold_menu.gd")
 const ToolbarIcons = preload("res://src/ui/shell/city_toolbar_icons.gd")
-const HOLD_SECONDS := 0.45
 # data view list id of the zones view, after the data mode ids
 const ZONES_VIEW_ID := 1000
 const GROUP_ICON_REGIONS := [
@@ -78,9 +77,6 @@ var regenerate_button: Button
 var landscape_buttons: Dictionary = {}
 var data_view_input: OptionButton
 var hold_menu: CityToolHoldMenu
-var _hold_generation := 0
-var _held_group := -1
-var _hold_opened := false
 var _current_city: CityState
 var _icon_provider := Callable()
 var _selected_subtool := 0
@@ -158,7 +154,6 @@ func _ready() -> void:
 	hold_menu.popup_hide.connect(_on_flyout_closed)
 	visibility_changed.connect(func() -> void:
 		if not is_visible_in_tree():
-			_end_group_hold()
 			hold_menu.hide())
 	if is_inside_tree():
 		get_viewport().size_changed.connect(hold_menu.hide)
@@ -231,6 +226,7 @@ func _build_classic_controls() -> void:
 	layers_popup = PopupPanel.new()
 	layers_popup.theme = AppUiTheme.current()
 	add_child(layers_popup)
+	MenuMotion.bind(layers_popup)
 	var scroll := ScrollContainer.new()
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	layers_popup.add_child(scroll)
@@ -342,7 +338,10 @@ func show_tool_group(
 
 	_current_city = city
 	_icon_provider = icon_provider
-	hold_menu.hide()
+	# Async map/style refreshes may reapply this same group after the press.
+	# Rebuilding its contents must not dismiss the menu the player just opened.
+	if child_palette.shown_group != group_index or landscape_editor or land_mode:
+		hold_menu.hide()
 	if land_mode:
 		return 0
 
@@ -444,9 +443,6 @@ func _add_group_button(
 	button.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	button.vertical_icon_alignment = VERTICAL_ALIGNMENT_CENTER
 	button.text = str(group_index + 1) if button.icon == null else ""
-	button.button_down.connect(_begin_group_hold.bind(group_index))
-	button.button_up.connect(_end_group_hold)
-	button.mouse_exited.connect(_cancel_group_hold)
 	button.pressed.connect(_activate_group.bind(group_index))
 	if group_index < CityToolIds.Group.SIGNS or group_index == CityToolIds.Group.QUERY:
 		button.draw.connect(func() -> void:
@@ -508,41 +504,16 @@ func sync_view_mode(mode: CityViewMode.Mode, zones_view := false) -> void:
 		view_mode_buttons[key].set_pressed_no_signal(key == mode)
 
 
-func _begin_group_hold(group_index: int) -> void:
-	_hold_generation += 1
-	_held_group = group_index
-	_hold_opened = false
-
-	if (group_index >= CityToolIds.Group.SIGNS and group_index != CityToolIds.Group.QUERY) or not is_inside_tree():
-		return
-
-	get_tree().create_timer(HOLD_SECONDS).timeout.connect(
-		_show_held_group.bind(group_index, _hold_generation)
-	)
-
-
-func _end_group_hold() -> void:
-	_hold_generation += 1
-	_held_group = -1
-
-
-func _cancel_group_hold() -> void:
-	if not _hold_opened:
-		_end_group_hold()
-
-
 func _activate_group(group_index: int) -> void:
-	if _hold_opened:
-		_hold_opened = false
-
-		return
-
 	hold_menu.hide()
 	group_requested.emit(group_index)
+	if group_index < CityToolIds.Group.SIGNS or group_index == CityToolIds.Group.QUERY:
+		if not landscape_editor and not land_mode:
+			_open_group_menu(group_index)
 
 
 func _open_group_menu(group_index: int) -> void:
-	if landscape_editor or land_mode or not is_inside_tree() or toolbar_buttons[group_index].disabled:
+	if landscape_editor or land_mode or not is_inside_tree() or not is_visible_in_tree() or toolbar_buttons[group_index].disabled:
 		return
 	if child_palette.shown_group != group_index or child_tool_buttons.size() < 2:
 		return
@@ -552,19 +523,7 @@ func _open_group_menu(group_index: int) -> void:
 	hold_menu.show_palette(_selected_subtool, anchor)
 
 
-func _show_held_group(group_index: int, generation: int) -> void:
-	if generation != _hold_generation or _held_group != group_index:
-		return
-	if not is_visible_in_tree() or landscape_editor or land_mode or toolbar_buttons[group_index].disabled:
-		return
-
-	_hold_opened = true
-	group_requested.emit(group_index)
-	_open_group_menu(group_index)
-
-
 func set_landscape_editor(enabled: bool) -> void:
-	_end_group_hold()
 	landscape_editor = enabled
 	start_city_button.visible = enabled
 	regenerate_button.visible = enabled

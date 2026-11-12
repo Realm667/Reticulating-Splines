@@ -323,6 +323,9 @@ func _sync_base_nodes() -> void:
 	var position := 0
 	var ordered: Array[Node] = [base_layer, tree_fade, water_layer]
 	ordered.append_array(ground_receivers)
+	for child in map.get_children():
+		if child is CityLifeCanvas:
+			ordered.append(child)
 	ordered.append(dynamic_canvas)
 	for layer: Node in ordered:
 		if layer != null:

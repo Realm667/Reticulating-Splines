@@ -12,6 +12,37 @@ const WATERED_TERRAIN := 0x1d3
 const WHITE_PALETTE_INDEX := 0xff
 
 
+static func clean_wireframe(source: Image, indexed: bool) -> Image:
+	# Some original wireframes contain one or two disconnected grey pixels.
+	# Correct only that exact monochrome wireframe pattern, never pipe art,
+	# source sprite data, SCURK edits with additional colors, or global grey tones.
+	if source == null:
+		return source
+	var specks: Array[Vector2i] = []
+	var wire_color := Color.TRANSPARENT
+	for y in source.get_height():
+		for x in source.get_width():
+			var pixel := source.get_pixel(x, y)
+			if pixel.a < 0.5:
+				continue
+			var index := roundi(pixel.r * 255)
+			var grey := index in [155, 156] if indexed else (is_equal_approx(pixel.r, pixel.g) and is_equal_approx(pixel.g, pixel.b) and index in [199, 215])
+			if grey:
+				specks.append(Vector2i(x, y))
+				if specks.size() > 2:
+					return source
+			elif wire_color.a == 0:
+				wire_color = pixel
+			elif not pixel.is_equal_approx(wire_color):
+				return source
+	if specks.is_empty() or wire_color.a == 0:
+		return source
+	var result := source.duplicate() as Image
+	for point in specks:
+		result.set_pixelv(point, Color.TRANSPARENT)
+	return result
+
+
 static func create_image(
 	city: CityState,
 	palette: Sc2Palette,

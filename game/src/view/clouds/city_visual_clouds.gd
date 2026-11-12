@@ -100,7 +100,7 @@ func process(delta: float, phase_elapsed: float, active: bool, light: Color, dar
 	drift = Vector2(fposmod(drift.x, FIELD_SPAN), fposmod(drift.y, FIELD_SPAN))
 	var target := body_opacity(app.map_view.zoom_factor) if clouds_enabled else 0.0
 	# A paused weather clock freezes drift, not the camera's cloud visibility.
-	opacity = move_toward(opacity, target, maxf(delta, 0.0) * 3.0) if _initialized and _zoom == app.map_view.zoom_factor else target
+	opacity = move_toward(opacity, target, maxf(delta, 0.0) / CityMapCamera.ZOOM_TRANSITION_SECONDS) if _initialized else target
 	_zoom = app.map_view.zoom_factor
 	var city := app.document_state.city
 	var edge := city.map_size

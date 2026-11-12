@@ -23,6 +23,7 @@ var _cancelled := false
 var _mutex := Mutex.new()
 var _sort_column := 1
 var _descending := false
+var scenario_mode := false
 
 
 func configure(owner_dialog: FileDialog) -> void:
@@ -90,7 +91,7 @@ func _notification(what: int) -> void:
 func _translate() -> void:
 	for column in columns:
 		set_column_title(column, tr(TITLES[column]))
-	set_column_title(0, "★")
+	set_column_title(0, "")
 
 
 func _process(delta: float) -> void:
@@ -204,15 +205,15 @@ func _draw_rows() -> void:
 			item.add_button(0, STAR, 0, false, tr("Remove from favorites") if _favorite(row) else tr("Add to favorites"))
 			item.set_button_color(0, 0, Color("f5cd62") if _favorite(row) else get_theme_color("font_color"))
 		if row.get("modified", 0) > 0:
-			var date := Time.get_datetime_dict_from_unix_time(int(row.modified) + Time.get_time_zone_from_system().bias * 60)
-			item.set_text(2, "%04d-%02d-%02d %02d:%02d" % [date.year, date.month, date.day, date.hour, date.minute])
+			item.set_text(2, format_timestamp(row.modified))
 		if not row.directory:
 			item.set_text(3, tr("Multiplayer") if row.get("multiplayer", false) else (tr("Single-player") if row.has("multiplayer") else tr("Unknown")))
 			item.set_text(4, tr("Yes") if row.get("region", false) else (tr("No") if row.has("region") else tr("Unknown")))
 			item.set_text(5, tr("Expanded") if row.get("expanded", false) else (tr("Classic") if row.has("expanded") else tr("Unknown")))
 			var availability: int = row.cloud
-			item.set_text(6, tr("Yes") if availability == 1 else (tr("No") if availability == 0 else tr("Unknown")))
-			item.set_tooltip_text(6, tr("Cloud availability refers to the linked save in the current account."))
+			if not scenario_mode:
+				item.set_text(6, tr("Yes") if availability == 1 else (tr("No") if availability == 0 else tr("Unknown")))
+				item.set_tooltip_text(6, tr("Cloud availability refers to the linked save in the current account."))
 		if native_list.is_selected(row.index):
 			item.select(0)
 			ensure_cursor_is_visible()
@@ -228,6 +229,16 @@ func _refresh_star_colors() -> void:
 			var starred := favorites != null and favorites.contains(CityFavorites.local_key(str(item.get_metadata(1))))
 			item.set_button_color(0, 0, Color("f5cd62") if starred else get_theme_color("font_selected_color" if item == get_selected() else "font_color"))
 		item = item.get_next()
+
+
+func set_scenario_mode(enabled: bool) -> void:
+	scenario_mode = enabled
+	clear()
+	columns = TITLES.size() - int(enabled)
+	if _sort_column >= columns:
+		_sort_column = 1
+	_translate()
+	_draw_rows()
 
 
 func _before(a: Dictionary, b: Dictionary) -> bool:
@@ -322,7 +333,7 @@ func _open_context(path: String, screen_position: Vector2i) -> void:
 	if not DirAccess.dir_exists_absolute(_context_path):
 		context.add_item(tr("Remove from favorites") if favorites != null and favorites.contains(CityFavorites.local_key(_context_path)) else tr("Add to favorites"), 1)
 		var available := int(cloud.local_availability(_context_path)) if cloud != null else -1
-		if available != 1:
+		if available != 1 and not scenario_mode:
 			context.add_item(tr("Upload to Cloud"), 2)
 			context.set_item_disabled(context.get_item_index(2), cloud == null or not _rows.any(func(row: Dictionary) -> bool: return row.path == _context_path and row.has("multiplayer") and not row.multiplayer and str(row.path).get_extension().to_lower() != "cty"))
 	context.add_separator()

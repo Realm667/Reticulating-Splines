@@ -42,6 +42,7 @@ static func key_hint(key: int) -> String:
 
 
 func bind() -> void:
+	MenuMotion.bind(self)
 	if about_to_popup.is_connected(_layout_hints):
 		return
 	base_end_padding = get_theme_constant("item_end_padding")

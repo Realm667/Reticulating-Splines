@@ -42226,3 +42226,119 @@ msgstr "Fichier :"
 msgid "Filter:"
 msgstr "Filtre :"
 
+
+#. Shared Classic/Expanded terrain feature selection; supplementary RS text.
+msgid "Original city rules, 128 × 128 tiles and the full terrain feature set."
+msgstr "Règles originales de la ville, 128 × 128 cases et toutes les options de terrain."
+
+#. Shared Classic/Expanded terrain feature selection; supplementary RS text.
+msgid "Classic features plus larger maps, regions, metropolis rewards, building upgrades and a ten-year city chronicle."
+msgstr "Fonctions classiques, avec des cartes plus grandes, des régions, des récompenses métropolitaines, des améliorations de bâtiments et une chronique de la ville sur dix ans."
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "site is not clear"
+msgstr "Le terrain n’est pas dégagé"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Purchase price"
+msgstr "Prix d’achat"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Funds after purchase"
+msgstr "Trésorerie après achat"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Additional administration"
+msgstr "Administration supplémentaire"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Annual administration after purchase"
+msgstr "Administration annuelle après achat"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Per year"
+msgstr "Par an"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Flat land"
+msgstr "Terrain plat"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Slopes"
+msgstr "Pentes"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Current artwork"
+msgstr "Graphisme actuel"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Saved artwork"
+msgstr "Graphisme enregistré"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Saved overlay"
+msgstr "Superposition enregistrée"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Changed pixels"
+msgstr "Pixels modifiés"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Loaded %s: %d objects and %d names."
+msgstr "%s chargé : %d objets et %d noms."
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "the active graphics set"
+msgstr "le jeu de graphismes actif"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Landscape tile"
+msgstr "Case de terrain"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Rubble"
+msgstr "Décombres"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Don't Save"
+msgstr "Ne pas enregistrer"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Power-line tile"
+msgstr "Case de ligne électrique"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Road tile"
+msgstr "Case de route"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Rail tile"
+msgstr "Case de voie ferrée"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Network crossing or bridge tile"
+msgstr "Case de croisement ou de pont"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Building or zone tile"
+msgstr "Case de bâtiment ou de zone"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Terrain sprite"
+msgstr "Graphisme de terrain"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Underground pipe or subway sprite"
+msgstr "Graphisme de canalisation ou de métro"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Traffic, moving-object, or effect sprite"
+msgstr "Graphisme de circulation, d’objet mobile ou d’effet"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "City support sprite"
+msgstr "Graphisme auxiliaire de la ville"
+
+#. Supplementary interface translation, QOL review 2026-11-12.
+msgid "Unnamed sprite %d"
+msgstr "Graphisme sans nom %d"

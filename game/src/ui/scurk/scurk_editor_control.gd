@@ -249,8 +249,8 @@ func _bind_session_document(path := "") -> void:
 	_update_history_buttons()
 	_update_title()
 	_set_status(
-		"Loaded %s: %d objects and %d names."
-		% [source_path.get_file() if not source_path.is_empty() else "the active graphics set", ids.size(), tile_set.names.size()]
+		tr("Loaded %s: %d objects and %d names.")
+		% [source_path.get_file() if not source_path.is_empty() else tr("the active graphics set"), ids.size(), tile_set.names.size()]
 	)
 
 	if pick_copy_control != null and pick_copy_control.visible:

@@ -59,6 +59,11 @@ func set_patterns(value: Array[PackedInt32Array]) -> void:
 		button.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 		for state in ["normal", "hover", "pressed", "hover_pressed", "disabled", "focus"]:
 			button.add_theme_color_override("icon_%s_color" % state, Color.WHITE)
+		for state in ["normal", "hover", "pressed", "hover_pressed", "disabled"]:
+			var background := button.get_theme_stylebox(state).duplicate() as StyleBoxFlat
+			if background != null:
+				background.bg_color = Color("e6e3d9") if state == "normal" else Color("fff8e7")
+				button.add_theme_stylebox_override(state, background)
 		button.pressed.connect(_select_button.bind(index))
 		var texture := ImageTexture.create_from_image(Image.create(8, 8, false, Image.FORMAT_RGBA8))
 		button.icon = PixelArtTexture.wrap(texture)

@@ -260,6 +260,11 @@ func _check_hazard_transitions(app: CityApplication) -> void:
 	assert(is_equal_approx(app.disaster_effects._opacity(smoke), 0.5), "Fire smoke and lighting share the start envelope")
 	app.moving_sprites.refresh_moving_things()
 	assert(entry.visual.texture == texture, "Subframes reuse the indexed atlas and foreground mask")
+	var published := Rect2i(Vector2i(entry.visual.position), Vector2i(entry.visual.size))
+	assert(animation.invalidate_occlusion([published]) and entry.mask_epoch == -1,
+		"Published dispatch silhouettes invalidate intersecting fire masks even within the same render epoch")
+	app.moving_sprites.refresh_moving_things()
+	assert(entry.mask_epoch == app.static_render_state.epoch, "The next foreground refresh consumes the new silhouette")
 	options.pause_freezes = true
 	app.simulation_state.speed_controller.speed = GameSpeedController.Speed.PAUSED
 	var phase := entry.animation.phase

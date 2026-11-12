@@ -114,4 +114,4 @@ static func tile_name(tile_id: int, custom_names: Dictionary = {}) -> String:
 	if not custom.is_empty():
 		return custom
 	var original := QueryStrings.tile_name(tile_id)
-	return original if not original.is_empty() else "Unnamed sprite %d" % tile_id
+	return TranslationServer.translate(original) if not original.is_empty() else TranslationServer.translate("Unnamed sprite %d") % tile_id

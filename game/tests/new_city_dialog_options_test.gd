@@ -18,11 +18,11 @@ func _run() -> void:
 	assert(terrain.size == 128 and not terrain.native_maps and not terrain.smooth_slopes)
 	assert(terrain.features.is_empty() and dialog.year_input.item_count == 4 and dialog.difficulty_input.item_count == 3)
 	for key in dialog.feature_inputs:
-		assert(not dialog.feature_inputs[key].visible)
-	# Hidden Expanded controls cannot leak into Classic generation.
+		assert(dialog.feature_inputs[key].visible)
+	# Shared terrain features retain Classic map size and original city rules.
 	dialog.size_input.select(dialog.size_input.get_item_index(512))
 	dialog.feature_inputs.bay.set_pressed_no_signal(true)
-	assert(dialog.terrain_options().size == 128 and dialog.terrain_options().features.is_empty())
+	assert(dialog.terrain_options().size == 128 and dialog.terrain_options().features == ["bay"])
 	dialog.hills_input.value = 7
 	dialog.city_name_input.text = "Test City"
 	dialog.year_input.select(3)
@@ -50,7 +50,7 @@ func _run() -> void:
 	assert(dialog.region_edge() == 3)
 	dialog.rules_tabs.current_tab = 0
 	assert(dialog.region_edge() == 0 and not dialog.region_size_input.visible)
-	assert(dialog.terrain_options().hills == 7 and dialog.terrain_options().features.is_empty())
+	assert(dialog.terrain_options().hills == 7 and dialog.terrain_options().features == ["bay"])
 	assert(not dialog.river_input.disabled)
 	dialog.rules_tabs.current_tab = 1
 	terrain = dialog.terrain_options()

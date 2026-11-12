@@ -132,6 +132,8 @@ func prepare(city: CityState, palette: Sc2Palette, sprites: Sc2SpriteArchive, vi
 		for id: int in sprites.entries_by_id:
 			if (id >= configuration.sprite_base and id < configuration.sprite_base + 500) or (id >= ExpandedRules.FIRST_SPRITE and id < ExpandedRules.FIRST_SPRITE + 1500 and (id - ExpandedRules.FIRST_SPRITE) / 500 == view) or (id >= BuildingVariants.FIRST and id % BuildingVariants.SPAN / 500 == view):
 				artwork[id] = CityIsometricRenderer.sprite_image(sprites, palette, images, id, false)
+				if mode == CityViewMode.Mode.UNDERGROUND and id % 500 >= 0x131 and id % 500 <= 0x13e:
+					artwork[id] = CityUndergroundView.clean_wireframe(artwork[id], palette.is_index_encoding)
 		if (sprites.visual_nature_enabled or sprites.visual_terrain_enabled) and mode == CityViewMode.Mode.CITY:
 			for id: int in sprites.visual_nature:
 				var shadow_template := id >= CityNatureArtwork.SHADOW_FIRST and id < CityNatureArtwork.SHADOW_FIRST + 6

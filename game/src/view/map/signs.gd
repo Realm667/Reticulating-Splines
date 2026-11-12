@@ -107,7 +107,7 @@ func _ensure_sign_entries() -> void:
 	sign_entries_city = map.city
 	sign_entries_zoom = map.zoom_factor
 	sign_cache_build_count += 1
-	var view_index := sign_view_index(map.zoom_factor)
+	var view_index := Renderer.VIEW_LARGE
 	var configuration := Renderer.view_configuration(view_index)
 	var divisor := configuration.divisor
 	# each tile routine passes the bottom of the ground sprite, and the sign
@@ -146,7 +146,7 @@ func _ensure_sign_entries() -> void:
 			label_text, HORIZONTAL_ALIGNMENT_LEFT, -1, roundi(font_size)
 		).x)
 		var anchor := polygon[0] + anchor_drop
-		var source_multiplier := maxf(1.0, 1.0 / map.zoom_factor)
+		var source_multiplier := 1.0
 		var layout := sign_layout(
 			anchor, native_width * source_multiplier,
 			view_index, source_multiplier,
@@ -180,8 +180,8 @@ func _draw_signs(scale: float, offset: Vector2) -> void:
 		return
 
 	_ensure_sign_entries()
-	var view_index := sign_view_index(map.zoom_factor)
-	var display_multiplier := sign_display_multiplier(map.zoom_factor) * map.map_pixel_ratio
+	var view_index := Renderer.VIEW_LARGE
+	var display_multiplier := scale
 	if AppUiTheme.selected == "classic_dos":
 		for entry in sign_entries:
 			_draw_dos_sign(entry, (offset + entry.anchor * scale).round(), display_multiplier)
@@ -239,7 +239,7 @@ static func sign_view_index(zoom: float) -> int:
 
 
 static func sign_display_multiplier(zoom: float) -> float:
-	return maxf(1.0, zoom)
+	return zoom
 
 
 static func sign_layout(
@@ -307,10 +307,10 @@ class Layout extends RefCounted:
 
 func _draw_dos_sign(entry: Entry, origin: Vector2, multiplier: float) -> void:
 	var font := AppUiTheme.current().default_font
-	var font_size := maxi(7, roundi(11 * multiplier))
+	var font_size := maxi(1, roundi(11 * multiplier))
 	var width := ceilf(font.get_string_size(entry.label, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x)
 	var height := ceilf(font.get_height(font_size))
-	var panel := Rect2(origin + Vector2(-width * 0.5 - 3, -height - 28 * multiplier), Vector2(width + 6, height + 4))
+	var panel := Rect2(origin + Vector2(-width * 0.5 - 3 * multiplier, -height - 28 * multiplier), Vector2(width + 6 * multiplier, height + 4 * multiplier))
 	panel.position = panel.position.round()
 	if not panel.expand(origin).intersects(Rect2(Vector2.ZERO, map.size)):
 		return
@@ -320,5 +320,5 @@ func _draw_dos_sign(entry: Entry, origin: Vector2, multiplier: float) -> void:
 	map.draw_line(panel.position, Vector2(panel.position.x, panel.end.y), Color.WHITE)
 	map.draw_line(Vector2(panel.position.x, panel.end.y), panel.end, Color("404040"))
 	map.draw_line(Vector2(panel.end.x, panel.position.y), panel.end, Color("404040"))
-	map.draw_string(font, panel.position + Vector2(3, 2 + font.get_ascent(font_size)), entry.label,
+	map.draw_string(font, panel.position + Vector2(3 * multiplier, 2 * multiplier + font.get_ascent(font_size)), entry.label,
 		HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, Color.BLACK)

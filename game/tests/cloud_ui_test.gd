@@ -186,6 +186,13 @@ func _file_dialogs(service: FakeCloud) -> void:
 	picker.select_source(0)
 	assert(picker.cloud_panel.password.text.is_empty())
 	assert(picker.current_path == local_path and picker.get_ok_button().visible and picker._body.visible)
+	picker.set_scenario_mode(true)
+	picker.select_source(1)
+	assert(not picker.sources.visible and not picker.cloud_panel.visible and picker.get_ok_button().visible,
+		"Scenario selection never enters the Cloud library")
+	assert(picker.save_list.columns == CitySaveList.TITLES.size() - 1, "Scenario table excludes Cloud availability")
+	picker.set_scenario_mode(false)
+	assert(picker.sources.visible and picker.save_list.columns == CitySaveList.TITLES.size())
 	picker.select_source(1)
 	var loaded: Array = []
 	picker.file_selected.connect(func(path: String) -> void: loaded.append(path))
@@ -205,6 +212,9 @@ func _file_dialogs(service: FakeCloud) -> void:
 	for frame in 6:
 		await process_frame
 	assert(save.size.x <= 396 and save.size.y <= 552, "Wrapped Cloud help cannot inflate the save dialog")
+	var layout_bounds := Rect2(Vector2.ZERO, Vector2(save.size) / save.content_scale_factor)
+	for control in [save.manage, save.get_ok_button(), save.cloud_enabled, save.get_cancel_button()]:
+		assert(layout_bounds.encloses(control.get_global_rect()), "Save footer actions remain inside a narrow window: %s" % control.get_global_rect())
 	var layout_height := save.size.y / save.content_scale_factor
 	assert(save.cloud_enabled.get_global_rect().end.y < layout_height,
 		"Cloud controls must fit: %s / %s; body=%s; root=%s; max=%s; embedded=%s; native=%s" % [save.cloud_enabled.get_global_rect(), save.size, save.get_vbox().size, root.size, save.max_size, save.is_embedded(), save.force_native])

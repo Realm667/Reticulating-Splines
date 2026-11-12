@@ -331,6 +331,8 @@ func poll_region_cache() -> void:
 
 		return
 
+	if caches.region_cache.ready():
+		app.map_view.presentation.dispatch_feedback.clear()
 	caches.static_display_city = caches.region_cache.display_city
 	var foreground_changed := _invalidate_region_foregrounds(caches.region_cache.foreground_changes,
 		caches.region_cache.occluder_changes,
@@ -355,6 +357,7 @@ func _invalidate_region_foregrounds(changes: Array[Rect2i], occluder_changes: Ar
 	if app.city_life.canvas != null:
 		app.city_life.canvas.invalidate_occlusion(occluder_changes if lighting_changes == null else lighting_changes, caches.region_cache)
 	app.disaster_effects.invalidate_occlusion(occluder_changes)
+	invalidated = app.moving_sprites.hazard_animation.invalidate_occlusion(occluder_changes) or invalidated
 	if app.visual_environment != null:
 		app.visual_environment.night_lighting.invalidate_regions(occluder_changes if lighting_changes == null else lighting_changes)
 

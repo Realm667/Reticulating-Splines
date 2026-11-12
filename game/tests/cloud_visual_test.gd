@@ -43,7 +43,7 @@ func _run() -> void:
 	var engine := main.simulation_state.simulation_engine
 	var rng_before := [engine.random.state, engine.lfsr_random.state, engine.game_random.state]
 	main.map_view.zoom_factor = 0.25
-	main.visual_environment.process(0.0)
+	main.visual_environment.process(CityMapCamera.ZOOM_TRANSITION_SECONDS)
 	var clouds := main.visual_environment.clouds
 	assert(clouds.parameters.cloud_enabled and clouds.layer.visible)
 	var camera_bounds := main.map_view.camera_view_rect
@@ -70,6 +70,10 @@ func _run() -> void:
 		main.visual_environment.process(1.0)
 		assert(clouds.drift.is_equal_approx(CityVisualClouds.WIND * VisualEnhancementOptions.speed_factor(speed)))
 	main.map_view.zoom_factor = 1.0
+	main.visual_environment.process(0.0)
+	assert(clouds.opacity > 0.99, "Changing zoom must not instantly hide clouds")
+	main.visual_environment.process(CityMapCamera.ZOOM_TRANSITION_SECONDS * 0.5)
+	assert(clouds.opacity > 0.0 and clouds.opacity < 1.0, "Clouds fade while zooming, also with simulation paused")
 	main.visual_environment.process(1.0)
 	assert(not clouds.layer.visible and clouds.parameters.cloud_enabled)
 	var hidden_drift: Vector2 = clouds.material.get_shader_parameter("cloud_drift")

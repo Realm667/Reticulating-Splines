@@ -3,6 +3,7 @@ extends Node
 
 
 func _ready() -> void:
+	MenuMotion.watch(get_tree())
 	get_tree().node_added.connect(_node_added)
 
 
