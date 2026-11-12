@@ -8,7 +8,7 @@ func _initialize() -> void:
 func _run() -> void:
 	for hdr in [false, true]:
 		await _check(hdr)
-	print("PASS: radial dawn/dusk hue, motion, smooth fade, sidebar coverage, sharp overlays, off/resize and cleanup in SDR/HDR")
+	print("PASS: cool/warm veils and rays, smooth clock motion, highlight protection, intensity, fresh screen copy, sidebar coverage, sharp overlays, off/resize and cleanup in SDR/HDR")
 	quit()
 
 
@@ -22,6 +22,9 @@ func _check(hdr: bool) -> void:
 	outside.color = Color.RED
 	outside.size = Vector2(viewport.size)
 	viewport.add_child(outside)
+	var stale_copy := BackBufferCopy.new()
+	stale_copy.copy_mode = BackBufferCopy.COPY_MODE_VIEWPORT
+	viewport.add_child(stale_copy)
 	var map := CityMapControl.new()
 	map.position = Vector2(20, 20)
 	map.size = Vector2(360, 260)
@@ -49,10 +52,36 @@ func _check(hdr: bool) -> void:
 	var left := dawn.get_pixel(55, 110)
 	assert(left.b > left.r and left.r > original.get_pixel(55, 110).r)
 	assert(dawn.get_pixel(55, 110) != original.get_pixel(55, 110), "Map below sidebar must receive the same glow")
-	assert(dawn.get_pixel(365, 260) == original.get_pixel(365, 260))
+	assert(absf(dawn.get_pixel(365, 260).b - original.get_pixel(365, 260).b) < 0.004)
 	assert(dawn.get_pixel(48, 88) == Color.GREEN, "Map overlay must remain sharp and untinted")
 	assert(dawn.get_pixel(10, 110) == Color.RED, "Effect must stay inside city view")
-	assert(absf(dawn.get_pixel(80, 125).b - dawn.get_pixel(60, 145).b) < 0.005, "Radial distance must use pixels, not stretched UV axes")
+	assert(left.r < 0.4, "Must sample the fresh dark city, not the earlier red screen copy")
+	options.day_glow_intensity = 0.5
+	glow.update(map, true, options, 7.0)
+	await RenderingServer.frame_post_draw
+	var half := viewport.get_texture().get_image().get_pixel(55, 110)
+	assert(half.b > original.get_pixel(55, 110).b and half.b < left.b)
+	options.day_glow_intensity = 0.0
+	glow.update(map, true, options, 7.0)
+	assert(not glow.rect.visible and glow.copy.copy_mode == BackBufferCopy.COPY_MODE_DISABLED)
+	await RenderingServer.frame_post_draw
+	assert(viewport.get_texture().get_image().get_data() == original.get_data())
+	options.day_glow_intensity = 1.0
+	ground.color = Color(0.9, 0.9, 0.9)
+	glow.update(map, false, options, 7.0)
+	await RenderingServer.frame_post_draw
+	var bright_base := viewport.get_texture().get_image().get_pixel(55, 110)
+	glow.update(map, true, options, 7.0)
+	await RenderingServer.frame_post_draw
+	var bright := viewport.get_texture().get_image().get_pixel(55, 110)
+	assert(bright.b >= bright_base.b and bright.b < 0.98)
+	assert(bright.b - bright_base.b < (left.b - original.get_pixel(55, 110).b) * 0.25, "Bright facades need much less lift than dark ground")
+	options.sunrise_strength = 1.0
+	glow.update(map, true, options, 7.0)
+	await RenderingServer.frame_post_draw
+	assert(viewport.get_texture().get_image().get_pixel(55, 110).b < 0.99, "Maximum settings must preserve highlight headroom")
+	ground.color = Color(0.1, 0.1, 0.1)
+	options.sunrise_strength = 0.25
 	glow.update(map, true, options, 6.5)
 	await RenderingServer.frame_post_draw
 	var dawn_early := viewport.get_texture().get_image()
@@ -89,6 +118,7 @@ func _check(hdr: bool) -> void:
 	glow.update(map, true, options, 19.0)
 	assert(glow.rect.visible)
 	glow.update(map, false, options, 7.0)
+	assert(glow.copy.copy_mode == BackBufferCopy.COPY_MODE_DISABLED)
 	await RenderingServer.frame_post_draw
 	assert(viewport.get_texture().get_image().get_data() == original.get_data())
 	options.day_enabled = false

@@ -92,6 +92,7 @@ func _run() -> void:
 	save.visual_enhancements.sunrise_enabled = false
 	save.visual_enhancements.sunset_strength = 0.65
 	save.visual_enhancements.day_glow_hours = 3.0
+	save.visual_enhancements.day_glow_intensity = 0.37
 	save.visual_enhancements.disaster_blending = false
 	save.visual_enhancements.tree_shadows_enabled = false
 	save.visual_enhancements.merge({"tilt_shift_enabled": true, "tilt_shift_strength": 0.65,
@@ -175,6 +176,10 @@ func _run() -> void:
 	main.preferences.visual_enhancements.weather_mode = 0
 	main.settings.open_settings_dialog()
 	var tab := main.main_overlays.settings_dialog.visual_tab
+	tab.sun_intensity_slider.value = 37.0
+	assert(main.preferences.visual_enhancements.day_glow_intensity == 0.37)
+	assert((tab.controls.day_glow_intensity as SpinBox).value == 37.0)
+	tab.sun_intensity_slider.value = 100.0
 	tab.terrain_strength_slider.value = 25.0
 	assert(main.preferences.visual_enhancements.nature_terrain_strength == 0.25)
 	main.visual_environment.process(0.0)
@@ -451,6 +456,12 @@ func _check_sun_glow(main: CityApplication) -> void:
 	assert(early.center.x == 1.0 and late.center.x == 1.0 and early.center.y < late.center.y)
 	assert(early.color.r > early.color.b)
 	assert(CitySunGlow.at_hour(31.0, options) == CitySunGlow.at_hour(7.0, options))
+	var peak: float = CitySunGlow.at_hour(7.0, options).strength
+	options.day_glow_intensity = 0.5
+	assert(is_equal_approx(CitySunGlow.at_hour(7.0, options).strength, peak * 0.5))
+	options.day_glow_intensity = 1.0
+	assert(CitySunGlow.at_hour(6.1, options).core_factor < CitySunGlow.at_hour(7.0, options).core_factor)
+	assert(CitySunGlow.at_hour(7.9, options).core_factor < CitySunGlow.at_hour(7.0, options).core_factor)
 	main.preferences.visual_enhancements = options
 	main.visual_environment.configure()
 	var glow := main.visual_environment.sun_glow

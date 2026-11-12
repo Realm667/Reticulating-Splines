@@ -41787,3 +41787,11 @@ msgstr "Grafica ausiliaria della città"
 #. Supplementary interface translation, QOL review 2026-11-12.
 msgid "Unnamed sprite %d"
 msgstr "Grafica senza nome %d"
+
+#. AI-assisted supplementary translation: sun overlay.
+msgid "Sun overlay intensity"
+msgstr "Intensità dell’effetto solare"
+
+#. AI-assisted supplementary translation: sun overlay.
+msgid "Overall strength of the cool sunrise and warm sunset overlays, including soft rays. Protects bright surfaces. 0% disables the overlay."
+msgstr "Intensità complessiva degli effetti freddi dell’alba e caldi del tramonto, inclusi i raggi soffusi. Protegge le superfici chiare. Lo 0% disattiva l’effetto."

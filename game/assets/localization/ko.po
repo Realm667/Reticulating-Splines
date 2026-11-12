@@ -11662,3 +11662,11 @@ msgstr "도시 보조 스프라이트"
 #. Supplementary interface translation, QOL review 2026-11-12.
 msgid "Unnamed sprite %d"
 msgstr "이름 없는 스프라이트 %d"
+
+#. AI-assisted supplementary translation: sun overlay.
+msgid "Sun overlay intensity"
+msgstr "태양 오버레이 강도"
+
+#. AI-assisted supplementary translation: sun overlay.
+msgid "Overall strength of the cool sunrise and warm sunset overlays, including soft rays. Protects bright surfaces. 0% disables the overlay."
+msgstr "은은한 광선을 포함한 차가운 일출 및 따뜻한 일몰 효과의 전체 강도입니다. 밝은 표면을 보호합니다. 0%로 설정하면 오버레이가 꺼집니다."

@@ -45,6 +45,7 @@ const FIELDS := [
 	["day_hour", "Fixed hour", "number", 12.0, 0.0, 23.99, 0.25],
 	["day_seconds", "Full cycle (seconds at Turtle)", "number", 600.0, 60.0, 7200.0, 30.0],
 	["day_lut_strength", "Time of day LUT strength", "number", 0.5, 0.0, 1.0, 0.05],
+	["day_glow_intensity", "Sun overlay intensity", "number", 1.0, 0.0, 1.0, 0.01],
 	["sunrise_enabled", "Sunrise glow", "bool", true],
 	["sunrise_strength", "Sunrise brightness", "number", 0.25, 0.0, 1.0, 0.05],
 	["sunset_enabled", "Sunset glow", "bool", true],

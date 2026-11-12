@@ -9,7 +9,7 @@ signal export_requested
 const SECTIONS := [
 	["Day & Night", "Set the time of day and the appearance of the night.",
 		["day_enabled", "day_mode", "day_hour", "day_seconds", "day_lut_strength", "night_strength",
-		"sunrise_enabled", "sunrise_strength", "sunset_enabled", "sunset_strength", "day_glow_radius", "day_glow_hours"]],
+		"day_glow_intensity", "sunrise_enabled", "sunrise_strength", "sunset_enabled", "sunset_strength", "day_glow_radius", "day_glow_hours"]],
 	["Lighting", "Building, vehicle and street lights. Keep lights on during the day with the daytime override.",
 		["brightmaps", "night_daytime_enabled", "rain_lights_enabled", "rain_light_strength", "night_light_strength", "night_ambient", "night_glow", "night_ground", "detail_lights_min_zoom"]],
 	["Seasons", "Follow the city calendar, run a visual cycle or choose one season.",
@@ -28,7 +28,7 @@ const SECTIONS := [
 		["tilt_shift_enabled", "tilt_shift_strength", "tilt_shift_edge", "tilt_shift_transition"]],
 	["Tileset Shuffle", "Mix Reticulating Splines and original SC2000 buildings. Apply shuffles the selection again. Runways, piers, hydro and wind power plants always use SC2000 graphics.", []],
 ]
-const PERCENT_FIELDS := ["sunrise_strength", "sunset_strength", "day_glow_radius", "artwork_color_strength", "tilt_shift_strength", "tilt_shift_edge", "tilt_shift_transition", "nature_terrain_strength", "day_lut_strength", "night_strength", "season_transition", "season_lut_strength",
+const PERCENT_FIELDS := ["day_glow_intensity", "sunrise_strength", "sunset_strength", "day_glow_radius", "artwork_color_strength", "tilt_shift_strength", "tilt_shift_edge", "tilt_shift_transition", "nature_terrain_strength", "day_lut_strength", "night_strength", "season_transition", "season_lut_strength",
 	"season_water_strength", "weather_strength", "weather_lut_strength", "cloud_density", "fog_density", "cloud_shadow_strength",
 	"disaster_strength", "disaster_lights", "disaster_shake"]
 const LABELS := {
@@ -47,6 +47,7 @@ const LABELS := {
 	"lut_path": "Custom color filter (LUT PNG)", "brightmap_folder": "Custom light masks (brightmaps)",
 }
 const HINTS := {
+	"day_glow_intensity": "Overall strength of the cool sunrise and warm sunset overlays, including soft rays. Protects bright surfaces. 0% disables the overlay.",
 	"sunrise_enabled": "A white and cool blue glow moves from middle left to upper left around 07:00. Fades out during rain, snow and storms over 1.5 seconds.",
 	"sunset_enabled": "A white and warm orange glow moves from upper right to middle right around 19:00. Fades out during rain, snow and storms over 1.5 seconds.",
 	"day_glow_radius": "Radius as a percentage of the shorter side of the city view. Interface elements stay unchanged.",
@@ -103,6 +104,7 @@ const HINTS := {
 var building_mix_panel: BuildingMixPanel
 var controls: Dictionary = {}
 var terrain_strength_slider: HSlider
+var sun_intensity_slider: HSlider
 var filling := false
 var host_controls_tree_growth := false
 var pages: Array[VBoxContainer] = []
@@ -262,7 +264,7 @@ func _add_field(page: VBoxContainer, field: Array) -> void:
 		control.custom_minimum_size.x = 155
 	control.tooltip_text = HINTS.get(key, "")
 	row.tooltip_text = control.tooltip_text
-	if key in ["nature_terrain_strength", "artwork_color_strength"]:
+	if key in ["nature_terrain_strength", "artwork_color_strength", "day_glow_intensity"]:
 		var spin := control as SpinBox
 		var slider := HSlider.new()
 		slider.min_value = spin.min_value
@@ -275,6 +277,8 @@ func _add_field(page: VBoxContainer, field: Array) -> void:
 		row.add_child(slider)
 		if key == "nature_terrain_strength":
 			terrain_strength_slider = slider
+		elif key == "day_glow_intensity":
+			sun_intensity_slider = slider
 		control.custom_minimum_size.x = 90
 	row.add_child(control)
 	controls[key] = control
@@ -384,6 +388,9 @@ func _update_availability() -> void:
 				available = values.day_enabled and values.sunset_enabled
 			"day_glow_radius", "day_glow_hours":
 				available = values.day_enabled and (values.sunrise_enabled or values.sunset_enabled)
+			"day_glow_intensity":
+				available = values.day_enabled and (values.sunrise_enabled or values.sunset_enabled)
+				sun_intensity_slider.editable = available
 			"nature_terrain_strength":
 				available = values.nature_terrain_enabled
 				terrain_strength_slider.editable = available
