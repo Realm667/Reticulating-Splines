@@ -110,7 +110,12 @@ func _run() -> void:
 	audio.handle_application_focus_in(true)
 	var resumed_metrics: Dictionary = audio.music_player.debug_metrics()
 	assert(resumed_metrics.position_seconds >= midi_position and not resumed_metrics.paused)
-	audio.free()
+	# Stop active playback and flush its queued notifications before releasing
+	# the owner, as in the other asynchronous audio fixtures.
+	audio.stop_music()
+	await process_frame
+	audio.queue_free()
+	await process_frame
 	var config := "user://shuffle-test.cfg"
 	var shuffle_options := AppSettingsStore.SaveOptions.new()
 	shuffle_options.graphics_source = "auto"
