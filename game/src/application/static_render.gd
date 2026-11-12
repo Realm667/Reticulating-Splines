@@ -27,6 +27,8 @@ func _init(application: CityApplication) -> void:
 
 
 func refresh_after_city_edit(command: EditCommandResult) -> void:
+	if command.command_type == "demolish":
+		app.disaster_effects.collapse.prepare(app.disaster_effects, command.effect_events)
 	app.map_view.presentation.set_upgrade_city(app.document_state.city)
 	app.assets.refresh_scurk_artwork()
 

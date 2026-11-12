@@ -49,6 +49,7 @@ var earthquake_blur := CityEarthquakeBlur.new()
 var _cloud_styles: Dictionary[Vector2i, int] = {}
 var _cloud_context := 0
 var _tornado_sites: Dictionary[Vector2i, int] = {}
+var collapse := CityCollapseEffects.new()
 
 
 func _init(application: CityApplication) -> void:
@@ -80,6 +81,7 @@ func process(delta: float) -> void:
 	var frozen: bool = options.pause_freezes and controller != null and \
 		(controller.speed == GameSpeedController.Speed.PAUSED or (not app.coop.active() and app.frame._simulation_suspended()))
 	var elapsed := clampf(delta, 0.0, 0.25)
+	collapse.process(self, elapsed, frozen)
 	if not frozen:
 		clock += elapsed
 		if _shake_remaining > 0.0:
@@ -139,6 +141,7 @@ func _sync_city() -> void:
 
 
 func _clear() -> void:
+	collapse.clear()
 	if _shake_remaining > 0.0 and app.map_view != null:
 		app.map_view.presentation.shake_offset = Vector2.ZERO
 		app.map_view.layers._sync_base_layer()
@@ -499,6 +502,7 @@ func _update_material(visual: Visual) -> void:
 
 
 func invalidate_occlusion(changes: Array[Rect2i]) -> void:
+	collapse.invalidate()
 	for visual in markers.values():
 		for rect in changes:
 			if rect.intersects(Rect2i(Vector2i(visual.sprite.position), EXTENT)):
@@ -550,6 +554,8 @@ func consume_effects(events: Array[EffectEvent], simulation: bool) -> Array[Effe
 		# Completed structure events already carry their common drawing anchor.
 		# Derive cosmetic footprint size from those events, never from changed city tiles.
 		var side := clampf(sqrt(float(sites.size())), 1.0, 4.0)
+		if collapse.start(self, depth, location, side, maxf(0.0, first_frame * 0.1), simulation):
+			continue
 		var size_scale := Vector2(side, 1.0 + (side - 1.0) * 0.75)
 		if not _pulse(DUST, depth, location, 1.05 + (side - 1.0) * 0.12,
 				maxf(0.0, first_frame * 0.1), not simulation, size_scale):

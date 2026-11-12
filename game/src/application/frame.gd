@@ -192,6 +192,7 @@ func consume_simulation_result(result: SimulationTickResult) -> void:
 	)
 
 	if map_refresh_requested:
+		app.disaster_effects.collapse.prepare(app.disaster_effects, result.effect_events)
 		app.map_render.refresh_map(false)
 		app.simulation_state.simulation_map_dirty = false
 	elif result.base_ticks > 0:

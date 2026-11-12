@@ -1,11 +1,63 @@
 extends "res://tests/support/scene_test_case.gd"
 
 
+func _check_collapse() -> void:
+	var viewport := SubViewport.new()
+	viewport.size = Vector2i(144, 192)
+	viewport.transparent_bg = true
+	viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	root.add_child(viewport)
+	var art := Image.create(64, 120, false, Image.FORMAT_RGBA8)
+	art.fill(Color(0.2, 0.6, 0.8))
+	var quad := ColorRect.new()
+	quad.size = viewport.size
+	var material := ShaderMaterial.new()
+	material.shader = CityCollapseEffects.SHADER
+	material.set_shader_parameter("artwork", ImageTexture.create_from_image(art))
+	material.set_shader_parameter("extent", Vector2(viewport.size))
+	material.set_shader_parameter("art_size", Vector2(art.get_size()))
+	material.set_shader_parameter("art_origin", Vector2(40, 16))
+	material.set_shader_parameter("ground", Vector2(72, 132))
+	quad.material = material
+	viewport.add_child(quad)
+	for kind in [0, 1, 2]:
+		material.set_shader_parameter("kind", kind)
+		material.set_shader_parameter("age", 0.0)
+		await RenderingServer.frame_post_draw
+		var initial := viewport.get_texture().get_image()
+		assert(initial.get_pixel(72, 20).a > 0.95)
+		material.set_shader_parameter("age", 0.35)
+		await RenderingServer.frame_post_draw
+		var moving := viewport.get_texture().get_image()
+		assert(moving.get_data() != initial.get_data())
+		assert(moving.get_pixel(0, 0).a < 0.01)
+		if kind > 0:
+			assert(moving.get_pixel(72, 17).a < 0.01, "Sinking must move the roof down without stretching it")
+		var mask := Image.create(144, 192, false, Image.FORMAT_RGBA8)
+		mask.fill(Color.WHITE)
+		material.set_shader_parameter("foreground", ImageTexture.create_from_image(mask))
+		material.set_shader_parameter("has_foreground", true)
+		await RenderingServer.frame_post_draw
+		assert(viewport.get_texture().get_image().is_invisible(), "Foreground must cover old artwork, dust and debris")
+		material.set_shader_parameter("has_foreground", false)
+		material.set_shader_parameter("age", 2.2)
+		await RenderingServer.frame_post_draw
+		assert(viewport.get_texture().get_image().is_invisible(), "No old tile or fragments may remain")
+	material.set_shader_parameter("age", 0.5)
+	material.set_shader_parameter("water", true)
+	await RenderingServer.frame_post_draw
+	assert(not viewport.get_texture().get_image().is_invisible())
+	viewport.queue_free()
+	await process_frame
+	print("PASS: collapse artwork reuse, flat/raised/building motion, foreground masking, water and complete expiry")
+
+
 func _initialize() -> void:
 	call_deferred("_run")
 
 
 func _run() -> void:
+	await _check_collapse()
 	var viewport := SubViewport.new()
 	viewport.size = CityDisasterEffects.EXTENT
 	viewport.transparent_bg = true

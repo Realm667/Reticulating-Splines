@@ -38,6 +38,22 @@ func _run() -> void:
 	var random_before := [engine.random.state, engine.lfsr_random.state, engine.game_random.state]
 	var effects := app.disaster_effects
 	var tile := Vector2i(64, 64)
+	assert(CityCollapseEffects.style(1029) == 0 and CityCollapseEffects.style(1044) == 0)
+	assert(CityCollapseEffects.style(1014) == 0 and CityCollapseEffects.style(1073) == 1)
+	assert(CityCollapseEffects.style(1087) == 1 and CityCollapseEffects.style(1187) == 2)
+	assert(not CityCollapseEffects.is_structure(199256), "Prepared ground must never replace the captured building")
+	assert(not CityCollapseEffects.is_structure(1256) and not CityCollapseEffects.is_structure(1005))
+	assert(CityCollapseEffects.is_structure(3001187) and CityCollapseEffects.style(3001073) == 1)
+	assert(CityCollapseEffects.is_structure(ExpandedRules.FIRST_SPRITE + 1000))
+	var retained := Image.create(32, 80, false, Image.FORMAT_RGBA8)
+	retained.fill(Color.WHITE)
+	effects.collapse.pending[tile] = {"image": retained, "origin": CityDisasterEffects.ground_point(city, tile) - Vector2(16, 72), "style": 2, "water": false}
+	assert(effects.collapse.start(effects, tile, CityDisasterEffects.ground_point(city, tile), 1.0, 0.0, false))
+	effects.collapse.process(effects, 0.2, true)
+	assert(effects.collapse.playing[0].age > 0.0, "Player collapse must finish while paused")
+	for i in 12:
+		effects.collapse.process(effects, 0.2, true)
+	assert(effects.collapse.playing.is_empty())
 	for marker in [0xff, 0xfc, 0xfb, 0xfd, 0xfe]:
 		effects.begin_commands()
 		var command := CityDynamicCommand.new()

@@ -131,6 +131,10 @@ func start_disaster_at(id: int, point: Vector2i) -> DisasterReportResult:
 
 	app.tool_state.last_edit_command = null
 	app.simulation_state.simulation_map_dirty = false
+	var collapse_events: Array[EffectEvent] = result.effect_events.duplicate()
+	if result.first_update != null:
+		collapse_events.append_array(result.first_update.effect_events)
+	app.disaster_effects.collapse.prepare(app.disaster_effects, collapse_events)
 	app.map_render.refresh_map(false)
 
 	# a disaster enables the Emergency tool
