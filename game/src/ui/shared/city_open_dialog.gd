@@ -20,15 +20,26 @@ var sources: TabBar
 var cloud_panel: CloudPanel
 var _local_controls: Array[Control] = []
 var save_list: CitySaveList
+var favorites: CityFavorites
+var _pending_upload := ""
+var _upload_busy := false
+var _fit_pending := true
 
 
 func _ready() -> void:
 	use_native_dialog = false
+	wrap_controls = false
 	mode_overrides_title = false
 	title = "Open City"
 	display_mode = FileDialog.DISPLAY_LIST
+	set_customization_flag_enabled(FileDialog.CUSTOMIZATION_FAVORITES, false)
+	set_customization_flag_enabled(FileDialog.CUSTOMIZATION_RECENT, false)
+	favorites = CityFavorites.new()
 	save_list = CitySaveList.new()
 	save_list.configure(self)
+	save_list.bind_favorites(favorites)
+	save_list.upload_requested.connect(_upload_city)
+	_translate_navigation.call_deferred()
 	var navigation: HSplitContainer
 	for child in get_vbox().get_children():
 		if child is HSplitContainer:
@@ -89,7 +100,11 @@ func _ready() -> void:
 	rows.add_child(preview_status)
 	visibility_changed.connect(_visibility_changed)
 	get_parent().get_viewport().size_changed.connect(_layout_preview)
+	get_parent().get_viewport().size_changed.connect(_fit_bounds)
+	size_changed.connect(func() -> void: _fit_pending = true)
+	get_vbox().minimum_size_changed.connect(func() -> void: _fit_pending = true)
 	_build_sources()
+	_fit_bounds()
 
 
 func _build_sources() -> void:
@@ -107,6 +122,7 @@ func _build_sources() -> void:
 	get_vbox().move_child(sources, 0)
 	cloud_panel = CloudPanel.new()
 	cloud_panel.configure_browser()
+	cloud_panel.bind_favorites(favorites)
 	get_vbox().add_child(cloud_panel)
 	cloud_panel.close_requested.connect(hide)
 	cloud_panel.downloaded.connect(func(path: String) -> void:
@@ -117,6 +133,7 @@ func _build_sources() -> void:
 
 func bind_cloud(service: Node) -> void:
 	cloud_panel.bind(service)
+	service.changed.connect(_resume_upload)
 	if save_list != null:
 		save_list.bind_cloud(service)
 
@@ -134,6 +151,30 @@ func select_source(index: int) -> void:
 		if job != null:
 			job.cancel()
 		cloud_panel.open()
+	_fit_pending = true
+
+
+func _fit_bounds() -> void:
+	var viewport := get_parent().get_viewport()
+	var area := Vector2i(viewport.get_visible_rect().size)
+	if viewport is Window:
+		area = Vector2i(Vector2(viewport.size) / maxf(viewport.content_scale_factor, 0.001))
+	max_size = Vector2i(maxi(1, area.x - 24), maxi(1, area.y - 48))
+	if size.x > max_size.x or size.y > max_size.y:
+		size = size.min(max_size)
+	_fit_pending = true
+
+
+func _fit_content() -> void:
+	# Bound the body independently of dynamic previews and Cloud page minima.
+	# Let the page's ScrollContainer handle overflow instead of growing the window.
+	var panel := get_theme_stylebox("panel", "AcceptDialog")
+	var footer := get_ok_button().get_parent_control()
+	var margin := Vector2(panel.get_content_margin(SIDE_LEFT), panel.get_content_margin(SIDE_TOP))
+	var end_margin := Vector2(panel.get_content_margin(SIDE_RIGHT), panel.get_content_margin(SIDE_BOTTOM)
+		+ footer.get_combined_minimum_size().y + get_theme_constant("buttons_separation", "AcceptDialog"))
+	get_vbox().position = margin
+	get_vbox().size = (Vector2(size) / maxf(content_scale_factor, 0.001) - margin - end_margin).max(Vector2.ONE)
 
 
 func _layout_preview() -> void:
@@ -156,10 +197,19 @@ func _visibility_changed() -> void:
 	if not visible and cloud_panel != null:
 		cloud_panel.clear_secrets()
 	if visible:
+		favorites.reload()
+		display_mode = FileDialog.DISPLAY_LIST
+		_translate_navigation.call_deferred()
 		_layout_preview()
+		_fit_bounds()
+	else:
+		_pending_upload = ""
 
 
 func _process(_delta: float) -> void:
+	if visible and _fit_pending:
+		_fit_pending = false
+		_fit_content()
 	if preview_panel == null:
 		return
 	if visible and job != null and _job_path == selected_path and not job.cancelled():
@@ -204,6 +254,42 @@ func _process(_delta: float) -> void:
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_TRANSLATION_CHANGED and preview_details != null:
 		_update_details()
+		_translate_navigation.call_deferred()
+
+
+func _translate_navigation() -> void:
+	# Engine-owned labels do not all use the game's central TranslationServer.
+	for label in get_vbox().find_children("*", "Label", true, false):
+		if label.auto_translate_mode != Node.AUTO_TRANSLATE_MODE_DISABLED and label.text in ["Directories & Files:", "Path:", "File:", "Filter:"]:
+			label.set_meta("city_library_source", label.text)
+		if label.has_meta("city_library_source"):
+			label.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
+			label.text = tr(str(label.get_meta("city_library_source")))
+
+
+func _upload_city(path: String) -> void:
+	if _upload_busy or cloud_panel.sync == null:
+		return
+	if cloud_panel.sync.snapshot().get("account", {}).is_empty():
+		_pending_upload = path
+		select_source(1)
+		return
+	_upload_busy = true
+	var result: Dictionary = await cloud_panel.sync.upload_local_file(path)
+	_upload_busy = false
+	if not is_instance_valid(self) or not visible:
+		return
+	cloud_panel.notice.text = tr("Waiting to upload") if result.ok else tr(CloudPanel.error_message(str(result.get("error", ""))))
+	cloud_panel.notice.show()
+	select_source(1)
+
+
+func _resume_upload() -> void:
+	if not visible or _pending_upload.is_empty() or cloud_panel.sync == null or cloud_panel.sync.snapshot().get("account", {}).is_empty():
+		return
+	var path := _pending_upload
+	_pending_upload = ""
+	_upload_city.call_deferred(path)
 
 
 func _update_details() -> void:

@@ -60,9 +60,8 @@ func _fit_bounds() -> void:
 	max_size = Vector2i(maxi(1, area.x - 24), maxi(1, area.y - 48))
 	if size.x > max_size.x or size.y > max_size.y:
 		size = Vector2i(mini(size.x, max_size.x), mini(size.y, max_size.y))
-	var sidebar := area.x >= 600
-	set_customization_flag_enabled(FileDialog.CUSTOMIZATION_FAVORITES, sidebar)
-	set_customization_flag_enabled(FileDialog.CUSTOMIZATION_RECENT, sidebar)
+	set_customization_flag_enabled(FileDialog.CUSTOMIZATION_FAVORITES, false)
+	set_customization_flag_enabled(FileDialog.CUSTOMIZATION_RECENT, false)
 	_fit_content.call_deferred()
 
 
@@ -93,6 +92,7 @@ func prepare_cloud(path: String, may_save := true) -> void:
 	saved_path = path
 	host_allowed = may_save
 	cloud_enabled.set_pressed_no_signal(sync != null and sync.is_enabled(path))
+	cloud_enabled.tooltip_text = "Enable Cloud for this copy. A new filename creates a separate Cloud city. Leave unchecked for a local copy."
 	_refresh_cloud()
 
 

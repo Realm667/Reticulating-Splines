@@ -269,10 +269,12 @@ func _check_save_list() -> void:
 	var directory := OS.get_temp_dir().path_join("city-save-list-%d" % OS.get_process_id())
 	assert(DirAccess.make_dir_recursive_absolute(directory.path_join("nested")) == OK)
 	var paths: Array[String] = []
-	for kind in ["city", "region", "multiplayer", "legacy"]:
+	for kind in ["city", "region", "multiplayer", "legacy", "expanded"]:
 		var document: Sc2File = EmptyCityTemplate.create(128) if kind == "legacy" else Sc2xDocument.create_empty(32, kind).document
 		if kind == "region":
 			document.sc2x_extra_entries[RegionCampaign.ENTRY] = "{}".to_utf8_buffer()
+		if kind == "expanded":
+			assert(ExpandedRules.enable(document).is_empty())
 		if kind == "multiplayer":
 			document.sc2x_extra_entries[CityPreviewInfo.MULTIPLAYER_ENTRY] = JSON.stringify({
 				"version": 1, "members": {"host": {}}, "shared": {"mode": "region"},
@@ -313,37 +315,63 @@ func _check_save_list() -> void:
 		assert(row.modified > 0)
 		assert(row.multiplayer == (row.name == "multiplayer.sc2x"))
 		assert(row.region == (row.name in ["region.sc2x", "multiplayer.sc2x"]))
+		assert(row.expanded == (row.name == "expanded.sc2x"), "Expanded comes from rules, not map size")
 	var first := list.get_root().get_first_child()
-	assert(DirAccess.dir_exists_absolute(directory.path_join(first.get_text(0))), "Folders stay above files")
+	assert(DirAccess.dir_exists_absolute(directory.path_join(first.get_text(1))), "Folders stay above files")
 	var item := first
-	while item != null and item.get_text(0) != "city.sc2x":
+	while item != null and item.get_text(1) != "city.sc2x":
 		item = item.get_next()
-	assert(item != null and item.get_text(4) == list.tr("Yes"))
+	assert(item != null and item.get_text(6) == list.tr("Yes"))
+	assert(item.get_text(5) == list.tr("Classic"))
+	var favorite_key := CityFavorites.local_key(paths[0])
+	list._star_clicked(item, 0, 0, MOUSE_BUTTON_LEFT)
+	await process_frame
+	assert(CityFavorites.new(dialog.favorites.path).contains(favorite_key), "City stars survive reopening the library")
+	assert(not dialog.is_customization_flag_enabled(FileDialog.CUSTOMIZATION_FAVORITES))
+	assert(not dialog.is_customization_flag_enabled(FileDialog.CUSTOMIZATION_RECENT))
+	item = list.get_root().get_first_child()
+	while item != null and item.get_text(1) != "city.sc2x":
+		item = item.get_next()
 	item.select(0)
 	list._selected()
 	assert(dialog.current_file == "city.sc2x", "The detailed list must select the native file, not a sorted row index")
 	list._sort(1, MOUSE_BUTTON_LEFT)
 	assert(dialog.current_file == "city.sc2x")
+	list._open_context(paths[1], Vector2i.ZERO)
+	assert(list.context.get_item_index(2) >= 0 and not list.context.is_item_disabled(list.context.get_item_index(2)), "Unlinked local city offers Cloud transfer")
+	var uploads: Array[String] = []
+	# This test owns row routing; the isolated CloudSync test owns file transfer.
+	list.upload_requested.disconnect(dialog._upload_city)
+	list.upload_requested.connect(func(path: String) -> void: uploads.append(path))
+	list._context_action(2)
+	assert(uploads == [paths[1]], "Context upload retains the right-clicked path after sorting")
+	list.context.hide()
 	dialog.display_mode = FileDialog.DISPLAY_THUMBNAILS
 	list._process(0.2)
 	assert(not list.visible and list.native_list.visible, "Thumbnail browsing remains available")
 	dialog.display_mode = FileDialog.DISPLAY_LIST
 	list._process(0.2)
 	var folder := list.get_root().get_first_child()
-	while folder != null and folder.get_text(0) != "nested":
+	while folder != null and folder.get_text(1) != "nested":
 		folder = folder.get_next()
 	assert(folder != null)
 	folder.select(0)
 	list._selected()
 	list._activated()
 	assert(dialog.current_dir.trim_suffix("/") == directory.path_join("nested"), "Double-click must retain native folder navigation")
+	list._context_action(2)
+	assert(uploads.size() == 1, "Navigating invalidates an old context action")
 	cloud.account = {}
 	cloud.changed.emit()
 	assert(cloud.local_availability(paths[0]) == -1, "Signing out clears account-specific availability")
 	for locale in ["de", "es", "fr", "it", "ko", "pt_BR", "en"]:
 		AppLocalization.select(locale)
 		list._translate()
-		assert(list.get_column_title(1) == list.tr("Date modified"))
+		assert(list.get_column_title(2) == list.tr("Date modified"))
+	dialog.display_mode = FileDialog.DISPLAY_THUMBNAILS
+	dialog.hide()
+	dialog.popup_centered(Vector2i(1200, 720))
+	assert(dialog.display_mode == FileDialog.DISPLAY_LIST, "Every opening defaults to list view")
 	dialog.hide()
 	dialog.queue_free()
 	cloud.queue_free()

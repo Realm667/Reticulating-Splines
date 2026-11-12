@@ -46,7 +46,7 @@ func persist() -> bool:
 	return true
 
 
-func enqueue(path: String, bytes: PackedByteArray, metadata: Dictionary) -> Dictionary:
+func enqueue(path: String, bytes: PackedByteArray, metadata: Dictionary, expanded: Variant = null) -> Dictionary:
 	var binding: Dictionary = state.bindings.get(path, {})
 	if not binding.get("enabled", false):
 		return {"ok": true, "skipped": true}
@@ -65,6 +65,8 @@ func enqueue(path: String, bytes: PackedByteArray, metadata: Dictionary) -> Dict
 		"sha256": sha, "size": bytes.size(), "metadata": metadata.duplicate(true),
 		"save_id": binding.get("save_id", ""), "base_revision": binding.get("revision"),
 		"upload_id": "", "status": "queued", "error": ""}
+	if expanded is bool:
+		job["expanded"] = expanded
 	state.jobs.append(job)
 	if not persist():
 		state.jobs.pop_back()

@@ -2,6 +2,7 @@ extends SceneTree
 
 var failures := 0
 var location := ""
+var multiplayer_bytes := PackedByteArray()
 
 
 func _initialize() -> void:
@@ -51,9 +52,70 @@ func _run() -> void:
 	check(interrupted.open(location, "endpoint|account-a") and interrupted.state.jobs.size() == 1, "interrupted manifest replacement recovers")
 	await _test_sync(encoded.data)
 	_test_complete_units()
+	await _test_browser_upload(encoded.data)
 	_test_bounded_cache()
 	print("Cloud sync tests: %d failure(s)" % failures)
 	quit(1 if failures else 0)
+
+
+func _test_browser_upload(bytes: PackedByteArray) -> void:
+	var sync := CloudSync.new()
+	root.add_child(sync)
+	sync.configure(location.path_join("browser"), "http://127.0.0.1:18763/api/cloud/v1")
+	sync.transport.free()
+	var fake := FakeTransport.new()
+	fake.offline = true
+	fake.token = "browser-test-token"
+	sync.transport = fake
+	sync.add_child(fake)
+	sync.account = {"id": "browser"}
+	sync.queue = CloudQueue.new()
+	check(sync.queue.open(location.path_join("browser"), "browser"), "browser queue")
+	var path := sync._local_path(location.path_join("selected-city.SC2"))
+	check(CloudQueue.atomic_bytes(path, bytes), "selected browser fixture")
+	check((await sync.upload_local_file(path)).ok, "selected local file queued without loading a live city")
+	await sync.pump()
+	check(sync.queue.state.jobs.size() == 1 and sync.queue.bytes(sync.queue.state.jobs[0]) == bytes, "browser upload uses exact selected bytes")
+	check(sync.queue.state.jobs[0].expanded == false, "verified Classic rules travel with the queued version, outside server metadata")
+	check(FileAccess.get_file_as_bytes(path) == bytes, "upload leaves original city unchanged")
+	check(sync.is_enabled(path), "browser upload enables future saves")
+	check(sync.city_status(path) == "Cloud: Saved offline", "offline city status")
+	var duplicate := await sync.upload_local_file(path)
+	check(duplicate.ok and duplicate.get("error", "").is_empty() and sync.queue.state.jobs.size() == 1, "repeated browser transfer deduplicates without a false storage error")
+	sync.queue.state.jobs[0].status = "conflict"
+	check(sync.city_status(path) == "Cloud: Choose version", "conflict status has priority")
+	var invalid := path + ".invalid"
+	CloudQueue.atomic_bytes(invalid, "invalid city".to_utf8_buffer())
+	check(not (await sync.upload_local_file(invalid)).ok and not sync.is_enabled(invalid), "invalid browser file cannot become enabled")
+	var multiplayer := path + ".multiplayer"
+	CloudQueue.atomic_bytes(multiplayer, multiplayer_bytes)
+	check((await sync.upload_local_file(multiplayer)).get("error") == "host_only", "browser cannot assert multiplayer host authority")
+	check(not sync.is_enabled(multiplayer) and sync.queue.state.jobs.size() == 1, "rejected multiplayer transfer leaves queue and binding unchanged")
+	var original_queue := sync.queue
+	var refusing := RefusingQueue.new()
+	check(refusing.open(location.path_join("browser-refusing"), "browser"), "refusing browser queue")
+	refusing.refuse = true
+	sync.queue = refusing
+	check(not (await sync.upload_local_file(path)).ok and not sync.is_enabled(path), "failed manifest write rolls back browser opt-in")
+	check(refusing.state.jobs.is_empty(), "failed browser upload never publishes a partial job")
+	sync.queue = original_queue
+	var pending := {}
+	_capture_browser_upload(sync, path, pending)
+	sync._epoch += 1
+	while not pending.has("result"):
+		await process_frame
+	check(pending.result.get("error") == "cancelled", "account change cancels a prepared browser upload")
+	var closing := {}
+	_capture_browser_upload(sync, path, closing)
+	root.remove_child(sync)
+	while not closing.has("result"):
+		await process_frame
+	check(closing.result.get("error") == "cancelled" and sync._file_tasks.is_empty(), "leaving the tree joins file workers and cancels publication")
+	sync.free()
+
+
+func _capture_browser_upload(sync: CloudSync, path: String, output: Dictionary) -> void:
+	output.result = await sync.upload_local_file(path)
 
 
 func _test_bounded_cache() -> void:
@@ -137,6 +199,7 @@ func _test_complete_units() -> void:
 	var checkpoint := session.city_checkpoint()
 	check(checkpoint.error.is_empty(), "host checkpoint captured")
 	var mp_bytes: PackedByteArray = checkpoint.document.serialize(true).data
+	multiplayer_bytes = mp_bytes.duplicate()
 	var before: PackedByteArray = mp_bytes.duplicate()
 	var mp_checked := CloudSnapshot.inspect(mp_bytes)
 	check(mp_checked.ok and mp_checked.metadata.kind == "multiplayer", "full multiplayer checkpoint validated")
@@ -202,6 +265,7 @@ func _test_sync(bytes: PackedByteArray) -> void:
 	var destination := location.path_join("download.sc2x")
 	check((await sync.download("s1", "r1", destination)).ok, "download verifies and atomically writes")
 	check(FileAccess.get_file_as_bytes(destination) == bytes, "download byte identity")
+	check(sync.cloud_expanded("s1", "r1") == false and sync.cloud_expanded("s1", "unseen-head") == null, "Cloud rules are shown only for the verified revision")
 	check(not (await sync.download("s1", "r1", destination)).ok, "existing local branch not overwritten")
 	fake.corrupt_download = true
 	check(not (await sync.download("s1", "r1", location.path_join("bad.sc2x"))).ok, "corrupt download blocked")

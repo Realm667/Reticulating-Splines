@@ -11477,3 +11477,72 @@ msgstr "건물 확장 2단계"
 #: src/ui/startup/new_city_terrain_dialog.tscn
 msgid "Upgrade eligible facilities through the building query. Stage 1 requires a population record of 25,000 and the year 1920; stage 2 requires 100,000 and 1950. Construction takes time, keeps the existing service running and increases capacity and, where applicable, upkeep."
 msgstr "건물 조회에서 확장 가능한 시설을 개선할 수 있습니다. 1단계는 최고 인구 25,000명과 1920년, 2단계는 100,000명과 1950년이 필요합니다. 공사에는 시간이 걸리며 기존 서비스는 계속 운영됩니다. 용량이 늘어나고 해당 시설의 유지비도 증가합니다."
+
+#. City library and seamless Cloud saves; supplementary RS text.
+msgid "City name"
+msgstr "도시 이름"
+
+#. City library and seamless Cloud saves; supplementary RS text.
+msgid "Remove from favorites"
+msgstr "즐겨찾기에서 제거"
+
+#. City library and seamless Cloud saves; supplementary RS text.
+msgid "Directories & Files:"
+msgstr "폴더 및 파일:"
+
+#. City library and seamless Cloud saves; supplementary RS text.
+msgid "Path:"
+msgstr "경로:"
+
+#. City library and seamless Cloud saves; supplementary RS text.
+msgid "Upload to Cloud"
+msgstr "클라우드에 업로드"
+
+#. City library and seamless Cloud saves; supplementary RS text.
+msgid "Show in file manager"
+msgstr "파일 관리자에서 표시"
+
+#. City library and seamless Cloud saves; supplementary RS text.
+msgid "Copy path"
+msgstr "경로 복사"
+
+#. City library and seamless Cloud saves; supplementary RS text.
+msgid "Enable Cloud for this copy. A new filename creates a separate Cloud city. Leave unchecked for a local copy."
+msgstr "이 사본에 클라우드를 사용합니다. 새 파일 이름은 별도의 클라우드 도시를 만듭니다. 로컬 사본을 저장하려면 선택을 해제하세요."
+
+#. City library and seamless Cloud saves; supplementary RS text.
+msgid "Saved locally first. Open Cloud to manage versions, connection problems or conflicts."
+msgstr "먼저 로컬에 저장합니다. 클라우드를 열어 버전, 연결 문제 또는 충돌을 관리하세요."
+
+#. City library and seamless Cloud saves; supplementary RS text.
+msgid "Cloud: Choose version"
+msgstr "클라우드: 버전 선택"
+
+#. City library and seamless Cloud saves; supplementary RS text.
+msgid "Cloud: Uploading…"
+msgstr "클라우드: 업로드 중…"
+
+#. City library and seamless Cloud saves; supplementary RS text.
+msgid "Cloud: Saved offline"
+msgstr "클라우드: 오프라인 저장됨"
+
+#. City library and seamless Cloud saves; supplementary RS text.
+msgid "Cloud: Waiting to upload"
+msgstr "클라우드: 업로드 대기 중"
+
+#. City library and seamless Cloud saves; supplementary RS text.
+msgid "Cloud: Needs attention"
+msgstr "클라우드: 확인 필요"
+
+#. City library and seamless Cloud saves; supplementary RS text.
+msgid "Cloud: Up to date"
+msgstr "클라우드: 최신 상태"
+
+#. City library and seamless Cloud saves; supplementary RS text.
+msgid "File:"
+msgstr "파일:"
+
+#. City library and seamless Cloud saves; supplementary RS text.
+msgid "Filter:"
+msgstr "필터:"
+

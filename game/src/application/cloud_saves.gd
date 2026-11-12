@@ -9,6 +9,7 @@ var task := -1
 var job: Dictionary = {}
 var last_signature: Array = []
 var pending_opt_in := ""
+var status_button: Button
 
 func _init(application: CityApplication) -> void:
 	app = application
@@ -25,6 +26,16 @@ func initialize() -> void:
 		if enabled:
 			saved(path))
 	app.cloud_ui.downloaded.connect(func(path: String) -> void: app.city_files.load_city(path))
+	status_button = Button.new()
+	status_button.custom_minimum_size.y = 24
+	status_button.clip_text = true
+	status_button.text = "Cloud"
+	status_button.tooltip_text = "Cloud synchronization"
+	status_button.pressed.connect(func() -> void: app.cloud_ui.open())
+	status_button.hide()
+	app.add_child(status_button)
+	app.startup_finished.connect(func() -> void:
+		status_button.reparent(app.city_status_bar.get_node("Metrics")))
 	app.cloud.start()
 
 func choose(path: String, enabled: bool) -> void:
@@ -60,6 +71,10 @@ func process(delta: float) -> void:
 		job.clear()
 	var path: String = app.coop.multiplayer_save_path if app.coop.active() else app.document_state.current_save_path
 	app.cloud_ui.set_current_path(path)
+	var cloud_status := app.cloud.city_status(path)
+	status_button.visible = not cloud_status.is_empty()
+	status_button.text = tr("Cloud") if app.get_viewport().get_visible_rect().size.x < 1100 else tr(cloud_status)
+	status_button.tooltip_text = tr(cloud_status) + "\n" + tr("Saved locally first. Open Cloud to manage versions, connection problems or conflicts.")
 	elapsed += delta
 	if elapsed < 300.0 or task >= 0 or path.is_empty() or not app.cloud.is_enabled(path):
 		return

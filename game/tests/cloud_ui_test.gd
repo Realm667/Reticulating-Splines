@@ -11,6 +11,9 @@ class FakeCloud extends Node:
 	func snapshot() -> Dictionary:
 		return data.duplicate(true)
 
+	func favorite_scope() -> String:
+		return "fake|" + str(data.account.get("email", ""))
+
 	func is_enabled(_path: String) -> bool:
 		return enabled
 
@@ -164,12 +167,21 @@ func _file_dialogs(service: FakeCloud) -> void:
 	await process_frame
 	var local_path := picker.current_path
 	picker.select_source(1)
+	picker.size = Vector2i(390, 520)
+	for frame in 6:
+		await process_frame
 	await process_frame
 	assert(picker.cloud_panel.visible and not picker.get_ok_button().visible)
 	assert(not picker._body.visible and picker.cloud_panel.saves.item_count == 1)
+	assert(picker.cloud_panel.library != null and not picker.cloud_panel.saves.visible, "Cloud uses the same city-table interaction")
+	var cloud_item := picker.cloud_panel.library.get_root().get_first_child()
+	picker.cloud_panel.library._star_clicked(cloud_item, 0, 0, MOUSE_BUTTON_LEFT)
+	await process_frame
+	assert(CityFavorites.new(picker.favorites.path).contains(CityFavorites.cloud_key(service, "a")), "Cloud city favorites persist per account")
 	assert(picker.cloud_panel.actions.download.get_parent() == picker.cloud_panel.browser_footer,
 		"Load and version selection stay outside the scrollable library")
 	assert(picker.cloud_panel.get_combined_minimum_size().x <= 396, "Embedded Cloud controls fit a narrow touchscreen")
+	assert(picker.get_cancel_button().get_global_rect().end.y <= picker.size.y / picker.content_scale_factor, "Cloud library cannot push Close outside the dialog")
 	picker.cloud_panel.password.text = "clear-on-source-switch"
 	picker.select_source(0)
 	assert(picker.cloud_panel.password.text.is_empty())
@@ -177,9 +189,7 @@ func _file_dialogs(service: FakeCloud) -> void:
 	picker.select_source(1)
 	var loaded: Array = []
 	picker.file_selected.connect(func(path: String) -> void: loaded.append(path))
-	picker.cloud_panel.saves.select(0)
-	await picker.cloud_panel._select_save(0)
-	await picker.cloud_panel._choose_download()
+	await picker.cloud_panel._activate_save(0)
 	assert(loaded.size() == 1 and not picker.visible, "Cloud load returns a verified local path through the normal city loader")
 	assert(Sc2File.load_path(loaded[0]).is_valid())
 	assert(str(loaded[0]).begins_with(AppPaths.path("cloud") + "/"), "Cloud downloads stay outside the local city library")

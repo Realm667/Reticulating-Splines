@@ -11807,3 +11807,72 @@ msgstr ""
 #: src/ui/startup/new_city_terrain_dialog.tscn
 msgid "Upgrade eligible facilities through the building query. Stage 1 requires a population record of 25,000 and the year 1920; stage 2 requires 100,000 and 1950. Construction takes time, keeps the existing service running and increases capacity and, where applicable, upkeep."
 msgstr ""
+
+#. City library and seamless Cloud saves; supplementary RS text.
+msgid "City name"
+msgstr ""
+
+#. City library and seamless Cloud saves; supplementary RS text.
+msgid "Remove from favorites"
+msgstr ""
+
+#. City library and seamless Cloud saves; supplementary RS text.
+msgid "Directories & Files:"
+msgstr ""
+
+#. City library and seamless Cloud saves; supplementary RS text.
+msgid "Path:"
+msgstr ""
+
+#. City library and seamless Cloud saves; supplementary RS text.
+msgid "Upload to Cloud"
+msgstr ""
+
+#. City library and seamless Cloud saves; supplementary RS text.
+msgid "Show in file manager"
+msgstr ""
+
+#. City library and seamless Cloud saves; supplementary RS text.
+msgid "Copy path"
+msgstr ""
+
+#. City library and seamless Cloud saves; supplementary RS text.
+msgid "Enable Cloud for this copy. A new filename creates a separate Cloud city. Leave unchecked for a local copy."
+msgstr ""
+
+#. City library and seamless Cloud saves; supplementary RS text.
+msgid "Saved locally first. Open Cloud to manage versions, connection problems or conflicts."
+msgstr ""
+
+#. City library and seamless Cloud saves; supplementary RS text.
+msgid "Cloud: Choose version"
+msgstr ""
+
+#. City library and seamless Cloud saves; supplementary RS text.
+msgid "Cloud: Uploading…"
+msgstr ""
+
+#. City library and seamless Cloud saves; supplementary RS text.
+msgid "Cloud: Saved offline"
+msgstr ""
+
+#. City library and seamless Cloud saves; supplementary RS text.
+msgid "Cloud: Waiting to upload"
+msgstr ""
+
+#. City library and seamless Cloud saves; supplementary RS text.
+msgid "Cloud: Needs attention"
+msgstr ""
+
+#. City library and seamless Cloud saves; supplementary RS text.
+msgid "Cloud: Up to date"
+msgstr ""
+
+#. City library and seamless Cloud saves; supplementary RS text.
+msgid "File:"
+msgstr ""
+
+#. City library and seamless Cloud saves; supplementary RS text.
+msgid "Filter:"
+msgstr ""
+

@@ -21,6 +21,8 @@ var _elapsed := 0.0
 var _pumping := false
 var _epoch := 0
 var _account_key := ""
+var _file_tasks: Array[int] = []
+var _closing := false
 
 
 func configure(storage_path := "", endpoint := CloudTransport.DEFAULT_ENDPOINT) -> void:
@@ -218,6 +220,108 @@ func is_enabled(path: String) -> bool:
 	return queue != null and queue.state.bindings.get(_local_path(path), {}).get("enabled", false)
 
 
+func favorite_scope() -> String:
+	return transport.endpoint + "|" + str(account.get("id", "")) if transport != null else str(account.get("id", ""))
+
+
+func cloud_expanded(save_id: String, revision: String) -> Variant:
+	if queue != null and not save_id.is_empty() and not revision.is_empty():
+		for binding: Dictionary in queue.state.bindings.values():
+			if binding.get("save_id") == save_id and binding.get("revision") == revision and binding.get("expanded") is bool:
+				return binding.expanded
+	return null
+
+
+## Browser uploads inspect the selected file, never the live city or its host rights.
+func upload_local_file(path: String) -> Dictionary:
+	if queue == null or account.is_empty():
+		return _report({"ok": false, "error": "unauthorized"})
+	path = _local_path(path)
+	var epoch := _epoch
+	var work := {}
+	# The worker captures only immutable input and its result container, never
+	# the service Node. Closing the app must join it before scripts are released.
+	var task := WorkerThreadPool.add_task(func() -> void: work.result = CloudSync._read_upload(path))
+	_file_tasks.append(task)
+	var tree := get_tree()
+	while not _closing and not WorkerThreadPool.is_task_completed(task):
+		await tree.process_frame
+	if _closing:
+		return {"ok": false, "error": "cancelled"}
+	WorkerThreadPool.wait_for_task_completion(task)
+	_file_tasks.erase(task)
+	if _closing or epoch != _epoch:
+		return {"ok": false, "error": "cancelled"}
+	var checked: Dictionary = work.result
+	if not checked.ok:
+		return _report(checked)
+	# A file browser has no authority to assert that this user owns an MP host seat.
+	if checked.metadata.kind == "multiplayer":
+		return _report({"ok": false, "error": "host_only"})
+	var existed: bool = queue.state.bindings.has(path)
+	var old: Dictionary = queue.state.bindings.get(path, {}).duplicate(true)
+	var binding := old.duplicate(true)
+	binding.enabled = true
+	queue.state.bindings[path] = binding
+	var result := queue.enqueue(path, checked.bytes, checked.metadata, checked.expanded)
+	if result.ok and result.get("skipped", false):
+		var persisted := queue.persist()
+		result = {"ok": persisted, "error": "" if persisted else "storage_error"}
+	if not result.ok:
+		if existed:
+			queue.state.bindings[path] = old
+		else:
+			queue.state.bindings.erase(path)
+	else:
+		pump.call_deferred()
+	return _report(result)
+
+
+func _exit_tree() -> void:
+	_closing = true
+	_epoch += 1
+	for task in _file_tasks:
+		WorkerThreadPool.wait_for_task_completion(task)
+	_file_tasks.clear()
+
+
+static func _read_upload(path: String) -> Dictionary:
+	var file := FileAccess.open(path, FileAccess.READ)
+	if file == null:
+		return {"ok": false, "error": "storage_error"}
+	if file.get_length() <= 0 or file.get_length() > Sc2xDocument.MAX_ARCHIVE_BYTES:
+		return {"ok": false, "error": "invalid_save"}
+	var bytes := file.get_buffer(file.get_length())
+	var checked := CloudSnapshot.inspect(bytes)
+	if not checked.ok:
+		return {"ok": false, "error": checked.error}
+	return {"ok": true, "bytes": bytes, "metadata": checked.metadata, "expanded": ExpandedRules.enabled(checked.document)}
+
+
+## Only queued versions of this file contribute to its in-game status.
+func city_status(path: String) -> String:
+	if path.is_empty() or not is_enabled(path):
+		return ""
+	path = _local_path(path)
+	var waiting := false
+	for job: Dictionary in queue.state.jobs:
+		if job.path != path:
+			continue
+		if job.status == "conflict":
+			return "Cloud: Choose version"
+		if job.status == "uploading":
+			return "Cloud: Uploading…"
+		if job.status in ["queued", "retry"]:
+			waiting = true
+	if status == "offline":
+		return "Cloud: Saved offline"
+	if waiting:
+		return "Cloud: Waiting to upload"
+	if not error.is_empty() or status != "connected":
+		return "Cloud: Needs attention"
+	return "Cloud: Up to date"
+
+
 ## -1 means the account's current availability cannot be established locally.
 func local_availability(path: String) -> int:
 	if account.is_empty() or queue == null:
@@ -241,7 +345,7 @@ func saved(path: String, bytes: PackedByteArray, metadata: Dictionary = {}) -> D
 		return _report(checked)
 	if checked.metadata.kind == "multiplayer" and not metadata.get("host_authorized", false):
 		return _report({"ok": false, "error": "host_only"})
-	var result := queue.enqueue(path, bytes.duplicate(), checked.metadata)
+	var result := queue.enqueue(path, bytes.duplicate(), checked.metadata, ExpandedRules.enabled(checked.document))
 	changed.emit()
 	if result.ok:
 		pump.call_deferred()
@@ -251,6 +355,8 @@ func saved(path: String, bytes: PackedByteArray, metadata: Dictionary = {}) -> D
 func download(save_id: String, revision: String, path: String) -> Dictionary:
 	var epoch := _epoch
 	var versions := await list_versions(save_id)
+	if epoch != _epoch:
+		return {"ok": false, "error": "cancelled"}
 	if not versions.ok:
 		return versions
 	var version: Dictionary = {}
@@ -282,7 +388,7 @@ func download(save_id: String, revision: String, path: String) -> Dictionary:
 		return _report({"ok": false, "error": "storage_error"})
 	if queue != null:
 		queue.state.bindings[_local_path(path)] = {"enabled": true, "save_id": save_id,
-			"revision": revision, "last_sha256": version.sha256}
+			"revision": revision, "last_sha256": version.sha256, "expanded": ExpandedRules.enabled(checked.document)}
 		if not queue.persist():
 			return _report({"ok": false, "error": "storage_error", "path": path})
 	return _report({"ok": true, "error": "", "path": path})
@@ -359,7 +465,7 @@ func pump() -> void:
 			break
 		job.status = "done"
 		var binding: Dictionary = current.state.bindings[job.path]
-		binding.merge({"save_id": job.save_id, "revision": result.revision, "last_sha256": job.sha256}, true)
+		binding.merge({"save_id": job.save_id, "revision": result.revision, "last_sha256": job.sha256, "expanded": job.get("expanded")}, true)
 		# Later local snapshots share this exact predecessor chain, never a
 		# revision from an independently changed remote branch.
 		for later: Dictionary in current.state.jobs:

@@ -25,6 +25,7 @@ static func from_archive(archive_data: Dictionary) -> Dictionary:
 	if not parsed.ok:
 		return {}
 	var info := {"city_name": parsed.metadata.city_name, "map_size": parsed.metadata.map_size}
+	info.expanded = archive_data.sizes.has(Sc2xDocument.entry_name("XEXP"))
 	_read_misc(info, data.get("MISC.bin", PackedByteArray()))
 	_read_multiplayer(info, archive_data.sizes.has(MULTIPLAYER_ENTRY), data.get(MULTIPLAYER_ENTRY, PackedByteArray()))
 	return info
@@ -34,6 +35,7 @@ static func from_document(document: Sc2File) -> Dictionary:
 	if document == null or not document.is_valid():
 		return {}
 	var info := {"city_name": document.city_name(), "map_size": document.map_size}
+	info.expanded = ExpandedRules.enabled(document)
 	var misc := document.find_chunk("MISC")
 	if misc != null:
 		_read_misc(info, misc.decoded_payload)

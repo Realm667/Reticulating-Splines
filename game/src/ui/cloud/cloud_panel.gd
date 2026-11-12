@@ -48,6 +48,8 @@ var downloading := false
 var close_action: Button
 var browser_footer: HFlowContainer
 var _save_help: Array[Label] = []
+var library: CityCloudList
+var _account_scope := ""
 
 
 func _init() -> void:
@@ -104,6 +106,26 @@ func configure_browser() -> void:
 	actions.download.text = "Load city"
 	tabs.tab_changed.connect(func(index: int) -> void: browser_footer.visible = index == 1)
 	browser_footer.visible = tabs.current_tab == 1
+	saves.item_activated.connect(_activate_save)
+
+
+func bind_favorites(store: CityFavorites) -> void:
+	if library != null:
+		return
+	library = CityCloudList.new()
+	saves.get_parent().add_child(library)
+	saves.get_parent().move_child(library, saves.get_index())
+	library.configure(self, store)
+	saves.hide()
+
+
+func _activate_save(index: int) -> void:
+	if index < 0 or index >= save_rows.size() or downloading:
+		return
+	var id := str(save_rows[index].get("id", ""))
+	await _select_save(index)
+	if selected_save == id and not _revision().is_empty():
+		await _choose_download()
 
 
 func _ready() -> void:
@@ -355,6 +377,14 @@ func refresh() -> void:
 	if sync == null:
 		return
 	state = sync.snapshot()
+	var scope := str(state.get("account", {}).get("id", "")) + "|" + str(state.get("account", {}).get("email", ""))
+	if scope != _account_scope:
+		_account_scope = scope
+		request_generation += 1
+		selected_save = ""
+		selected_head = ""
+		version_rows.clear()
+		versions.clear()
 	var signed_in := not (state.get("account", {}) as Dictionary).is_empty()
 	account_form.visible = not signed_in
 	account_info.visible = signed_in
@@ -408,6 +438,8 @@ func refresh() -> void:
 		if str(device.get("id", "")) == device_id:
 			devices.select(devices.item_count - 1)
 	_show_conflicts()
+	if library != null:
+		library.refresh.call_deferred()
 
 
 func _save_status(item: Dictionary) -> String:

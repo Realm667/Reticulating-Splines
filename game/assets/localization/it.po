@@ -41602,3 +41602,72 @@ msgstr "Due livelli di ampliamento"
 #: src/ui/startup/new_city_terrain_dialog.tscn
 msgid "Upgrade eligible facilities through the building query. Stage 1 requires a population record of 25,000 and the year 1920; stage 2 requires 100,000 and 1950. Construction takes time, keeps the existing service running and increases capacity and, where applicable, upkeep."
 msgstr "Amplia le strutture compatibili dalla scheda dell’edificio. Il livello 1 richiede un record di 25.000 abitanti e l’anno 1920; il livello 2, 100.000 e il 1950. I lavori richiedono tempo e mantengono il servizio attuale. Aumentano la capacità e, dove previsto, la manutenzione."
+
+#. City library and seamless Cloud saves; supplementary RS text.
+msgid "City name"
+msgstr "Nome della città"
+
+#. City library and seamless Cloud saves; supplementary RS text.
+msgid "Remove from favorites"
+msgstr "Rimuovi dai preferiti"
+
+#. City library and seamless Cloud saves; supplementary RS text.
+msgid "Directories & Files:"
+msgstr "Cartelle e file:"
+
+#. City library and seamless Cloud saves; supplementary RS text.
+msgid "Path:"
+msgstr "Percorso:"
+
+#. City library and seamless Cloud saves; supplementary RS text.
+msgid "Upload to Cloud"
+msgstr "Carica nel Cloud"
+
+#. City library and seamless Cloud saves; supplementary RS text.
+msgid "Show in file manager"
+msgstr "Mostra nel gestore file"
+
+#. City library and seamless Cloud saves; supplementary RS text.
+msgid "Copy path"
+msgstr "Copia percorso"
+
+#. City library and seamless Cloud saves; supplementary RS text.
+msgid "Enable Cloud for this copy. A new filename creates a separate Cloud city. Leave unchecked for a local copy."
+msgstr "Attiva il Cloud per questa copia. Un nuovo nome file crea una città Cloud separata. Deseleziona per una copia locale."
+
+#. City library and seamless Cloud saves; supplementary RS text.
+msgid "Saved locally first. Open Cloud to manage versions, connection problems or conflicts."
+msgstr "Salvataggio locale prima del caricamento. Apri il Cloud per gestire versioni, problemi di connessione o conflitti."
+
+#. City library and seamless Cloud saves; supplementary RS text.
+msgid "Cloud: Choose version"
+msgstr "Cloud: scegli versione"
+
+#. City library and seamless Cloud saves; supplementary RS text.
+msgid "Cloud: Uploading…"
+msgstr "Cloud: caricamento…"
+
+#. City library and seamless Cloud saves; supplementary RS text.
+msgid "Cloud: Saved offline"
+msgstr "Cloud: salvato offline"
+
+#. City library and seamless Cloud saves; supplementary RS text.
+msgid "Cloud: Waiting to upload"
+msgstr "Cloud: in attesa di caricamento"
+
+#. City library and seamless Cloud saves; supplementary RS text.
+msgid "Cloud: Needs attention"
+msgstr "Cloud: intervento necessario"
+
+#. City library and seamless Cloud saves; supplementary RS text.
+msgid "Cloud: Up to date"
+msgstr "Cloud: aggiornato"
+
+#. City library and seamless Cloud saves; supplementary RS text.
+msgid "File:"
+msgstr "File:"
+
+#. City library and seamless Cloud saves; supplementary RS text.
+msgid "Filter:"
+msgstr "Filtro:"
+
