@@ -31,9 +31,16 @@ func _run() -> void:
 		for view in 3:
 			var archive: Sc2SpriteArchive = pack.large_sprites if view == 2 else pack.small_medium_sprites
 			ExpandedGraphics.apply(archive)
+			for kind in 8:
+				var entry := archive.find_sprite(ExpandedRules.FIRST_SPRITE + view * 500 + kind)
+				var decoded := entry.decode_indices()
+				assert(decoded.ok)
+				for index in decoded.pixels:
+					assert(not (index >= 171 and index <= 219) and not (index >= 224 and index <= 239),
+						"Reward %d view %d uses reserved animation index %d" % [kind, view, index])
 			CityBrightmaps.load_archive(archive, "", "large" if view == 2 else "small_medium")
 			var context := CityGpuBuildContext.new()
-			assert(context.prepare(city, pack.palette, archive, view).is_empty())
+			assert(context.prepare(city, Sc2Palette.index_encoding(), archive, view).is_empty())
 			for kind in 8:
 				await _check(city, pack.palette, archive, context, kind, view)
 	print("PASS: all eight reward GPU quads, day/night/power, RS/SC2K and three views")
@@ -53,7 +60,7 @@ func _check(city: CityState, palette: Sc2Palette, archive: Sc2SpriteArchive, con
 			found = true
 	assert(found, "Missing reward draw %d view %d" % [kind, view])
 	var bounds := Rect2i(position - Vector2i(8, 8), Vector2i(216, 144))
-	var result := context.render(city, palette, archive, bounds, view, CityViewMode.Mode.CITY, true, true, 0, -1, true, true)
+	var result := context.render(city, Sc2Palette.index_encoding(), archive, bounds, view, CityViewMode.Mode.CITY, true, true, 0, -1, true, true)
 	assert(result.ok, result.error)
 	var viewport := SubViewport.new()
 	viewport.size = bounds.size
@@ -68,6 +75,9 @@ func _check(city: CityState, palette: Sc2Palette, archive: Sc2SpriteArchive, con
 	mesh.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	var material := ShaderMaterial.new()
 	material.shader = CityMapControl.PALETTE_CYCLE_SHADER
+	material.set_shader_parameter("palette_lookup_all", true)
+	material.set_shader_parameter("palette_cycle_enabled", true)
+	material.set_shader_parameter("animated_palette", ImageTexture.create_from_image(palette.animation_image(0)))
 	material.set_shader_parameter("artwork_view_divisor", float(4 >> view))
 	material.set_shader_parameter("environment_emission", ImageTexture.create_from_image(result.emission_image))
 	material.set_shader_parameter("environment_has_emission", true)
@@ -76,6 +86,11 @@ func _check(city: CityState, palette: Sc2Palette, archive: Sc2SpriteArchive, con
 	await RenderingServer.frame_post_draw
 	var day := viewport.get_texture().get_image()
 	assert(not day.is_invisible())
+	for tick in [1, 7, 8, 15, 16]:
+		material.set_shader_parameter("animated_palette", ImageTexture.create_from_image(palette.animation_image(tick)))
+		await RenderingServer.frame_post_draw
+		assert(day.get_data() == viewport.get_texture().get_image().get_data(),
+			"Reward %d view %d changes color at palette tick %d" % [kind, view, tick])
 	material.set_shader_parameter("environment_enabled", true)
 	material.set_shader_parameter("environment_night", 1.0)
 	material.set_shader_parameter("environment_tint", Vector3(0.28, 0.34, 0.52))

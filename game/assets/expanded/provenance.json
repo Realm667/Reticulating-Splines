@@ -4,7 +4,7 @@
   "delivery_date": "2026-11-09",
   "source_delivery": "exp-glass-lighting-20261108, with approved opera variant D from exp-opera-d-final-20261109",
   "original_game_pixels_included": false,
-  "palette_data": "Indexed JSON is derived from each delivered PNG using the existing standalone graphics palette. Views use nearest-neighbor sampling. PNG and brightmap bytes are unchanged from GFX.",
+  "palette_data": "Indexed JSON uses static slots of the standalone SC2000-compatible palette; reserved fast indices 171-219 and slow indices 224-239 are excluded. Authored PNG masters and brightmap bytes remain unchanged. Views use nearest-neighbor sampling.",
   "asset_license": "No separate asset license grant is made by this integration; project asset licensing decisions remain applicable.",
   "assets": [
     {
@@ -72,5 +72,10 @@
       "sha256": "c1f7dfee9486639fd5af676e53f8ca3b18839f1e2c5e80880f3eb3b080a49b84"
     }
   ],
-  "opera_revision": "Variant D and its soft facade/dome brightmap approved by Daniel on 2026-11-09."
+  "opera_revision": "Variant D and its soft facade/dome brightmap approved by Daniel on 2026-11-09.",
+  "static_palette_revision": {
+    "date": "2026-11-13",
+    "reason": "Prevent accidental color cycling on the eight metropolis rewards",
+    "method": "Replace only reserved-cycle indices with the closest static palette RGB (weighted squared distance R:2 G:4 B:3); preserve transparent indices, dimensions and all other indices."
+  }
 }
