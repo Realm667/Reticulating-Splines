@@ -34,10 +34,10 @@ func _run() -> void:
 	await process_frame
 	var road_button := toolbar.toolbar_buttons[CityToolIds.Group.ROADS]
 	await _click(road_button.get_global_rect().get_center())
-	assert(toolbar.hold_menu.visible, "A short click opens the menu without a hold delay")
+	assert(not toolbar.hold_menu.visible, "A single click uses the remembered tool without opening choices")
 	toolbar.hold_menu.hide()
 	await process_frame
-	await _click(road_button.get_global_rect().get_center())
+	await _click(road_button.get_global_rect().get_center(), true)
 	await process_frame
 	await process_frame
 	await process_frame
@@ -77,12 +77,12 @@ func _run() -> void:
 	quit()
 
 
-func _click(point: Vector2) -> void:
-	await _mouse_button(point, true)
+func _click(point: Vector2, double := false) -> void:
+	await _mouse_button(point, true, double)
 	await _mouse_button(point, false)
 
 
-func _mouse_button(point: Vector2, down: bool) -> void:
+func _mouse_button(point: Vector2, down: bool, double := false) -> void:
 	var motion := InputEventMouseMotion.new()
 	motion.position = point
 	Input.parse_input_event(motion)
@@ -90,6 +90,7 @@ func _mouse_button(point: Vector2, down: bool) -> void:
 	event.position = point
 	event.button_index = MOUSE_BUTTON_LEFT
 	event.pressed = down
+	event.double_click = double and down
 	Input.parse_input_event(event)
 	await process_frame
 	await process_frame

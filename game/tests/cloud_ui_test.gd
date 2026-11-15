@@ -175,9 +175,12 @@ func _file_dialogs(service: FakeCloud) -> void:
 	assert(not picker._body.visible and picker.cloud_panel.saves.item_count == 1)
 	assert(picker.cloud_panel.library != null and not picker.cloud_panel.saves.visible, "Cloud uses the same city-table interaction")
 	var cloud_item := picker.cloud_panel.library.get_root().get_first_child()
+	assert(cloud_item.get_button(0, 0).get_image().get_pixel(9, 9).a < 0.1, "An inactive favorite is an outline")
 	picker.cloud_panel.library._star_clicked(cloud_item, 0, 0, MOUSE_BUTTON_LEFT)
 	await process_frame
 	assert(CityFavorites.new(picker.favorites.path).contains(CityFavorites.cloud_key(service, "a")), "Cloud city favorites persist per account")
+	cloud_item = picker.cloud_panel.library.get_root().get_first_child()
+	assert(cloud_item.get_button(0, 0).get_image().get_pixel(9, 9).a > 0.9, "An active favorite has a filled center")
 	assert(picker.cloud_panel.actions.download.get_parent() == picker.cloud_panel.browser_footer,
 		"Load and version selection stay outside the scrollable library")
 	assert(picker.cloud_panel.get_combined_minimum_size().x <= 396, "Embedded Cloud controls fit a narrow touchscreen")

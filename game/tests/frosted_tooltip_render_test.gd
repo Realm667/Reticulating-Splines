@@ -7,12 +7,19 @@ func _initialize() -> void:
 
 func _run() -> void:
 	assert(DisplayServer.get_name() != "headless", "Tooltip pixels need a native renderer")
+	root.size = Vector2i(900, 700)
+	root.content_scale_mode = Window.CONTENT_SCALE_MODE_DISABLED
+	root.content_scale_size = Vector2i.ZERO
+	root.content_scale_factor = 1.0
 	AppUiTheme.select("light", true)
 	var viewport := SubViewport.new()
-	viewport.size = Vector2i(384, 288)
+	viewport.size = Vector2i(640, 480)
 	viewport.gui_embed_subwindows = true
 	viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
-	root.add_child(viewport)
+	var container := SubViewportContainer.new()
+	container.size = Vector2(viewport.size)
+	root.add_child(container)
+	container.add_child(viewport)
 	var background := Checker.new()
 	background.size = Vector2(viewport.size)
 	viewport.add_child(background)
@@ -55,17 +62,37 @@ func _run() -> void:
 	modal_background.color = Color(1, 0, 0)
 	modal_background.size = Vector2(dialog.size)
 	dialog.add_child(modal_background)
-	dialog.popup(Rect2i(24, 24, 320, 240))
+	dialog.popup(Rect2i(220, 140, 320, 240))
 	var nested := _make_popup(dialog)
-	nested.popup(Rect2i(64, 48, 224, 160))
+	nested.popup(Rect2i(284, 188, 224, 160))
 	await _frames(3)
 	var modal_image := viewport.get_texture().get_image()
+	area = Rect2i(300, 220, 128, 64)
 	tint = AppUiTheme.current().get_stylebox("panel", "TooltipPanel").bg_color
 	expected = modal_background.color.lerp(Color(tint, 1.0), tint.a)
 	assert(_distance(_average(modal_image, area), expected) < 0.025, "A dialog tooltip must sample the dialog surface")
+	assert(_distance(modal_image.get_pixel(96, 96), modal_image.get_pixel(100, 96)) > 0.5,
+		"An offset dialog tooltip must not paint the unrelated area at its local coordinates")
 	nested.hide()
 	await _frames(2)
 	assert(_distance(_average(viewport.get_texture().get_image(), area), modal_background.color) < 0.01)
+	# Compare the frosted overlay with Godot's own opaque tooltip placement
+	# when both the owner and tooltip use a doubled interface scale.
+	dialog.content_scale_factor = 2.0
+	nested.content_scale_factor = 2.0
+	(nested.get_child(0) as Label).custom_minimum_size = Vector2(90, 50)
+	AppUiTheme.select("dark", false)
+	nested.popup(Rect2i(244, 164, 200, 120))
+	await _frames(3)
+	var opaque_tint := Color(AppUiTheme.current().get_stylebox("panel", "TooltipPanel").bg_color, 1.0)
+	var native_bounds := _color_bounds(viewport.get_texture().get_image(), opaque_tint)
+	assert(native_bounds.size.x > 40 and native_bounds.size.y > 20, "Native scaled tooltip must be visible")
+	AppUiTheme.select("dark", true)
+	await _frames(3)
+	tint = AppUiTheme.current().get_stylebox("panel", "TooltipPanel").bg_color
+	expected = modal_background.color.lerp(Color(tint, 1.0), tint.a)
+	assert(_distance(_average(viewport.get_texture().get_image(), native_bounds.grow(-4)), expected) < 0.025,
+		"Scaled frosted tooltip must align with the engine's native tooltip")
 	viewport.free()
 	await process_frame
 	print("PASS: native tooltip blur, placement panels, live backgrounds, opaque fallback, nested dialogs and stable frames")
@@ -136,6 +163,16 @@ func _contrast(image: Image, area: Rect2i) -> float:
 
 func _distance(first: Color, second: Color) -> float:
 	return maxf(absf(first.r - second.r), maxf(absf(first.g - second.g), absf(first.b - second.b)))
+
+
+func _color_bounds(image: Image, color: Color) -> Rect2i:
+	var bounds := Rect2i()
+	for y in image.get_height():
+		for x in image.get_width():
+			if _distance(image.get_pixel(x, y), color) < 0.01:
+				var pixel := Rect2i(x, y, 1, 1)
+				bounds = pixel if not bounds.has_area() else bounds.merge(pixel)
+	return bounds
 
 
 @warning_ignore_start("integer_division")

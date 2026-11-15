@@ -18,10 +18,51 @@ func _bind_popup(reference: WeakRef) -> void:
 	var popup := reference.get_ref() as PopupPanel
 	if popup == null or not popup.is_inside_tree():
 		return
-	wrap_labels(popup, popup.get_parent().get_viewport().get_visible_rect().size.x / popup.content_scale_factor)
+	var viewport := _embedding_viewport(popup)
+	var available := float(viewport.size.x) if viewport is Window else viewport.get_visible_rect().size.x
+	wrap_labels(popup, available / popup.content_scale_factor)
 	popup.reset_size()
+	popup.size_changed.connect(_reposition_popup.bind(weakref(popup)))
+	_reposition_popup.call_deferred(weakref(popup))
 	var effect := preload("res://src/ui/shared/frosted_tooltip.gd").new()
 	popup.add_child(effect)
+
+
+func _embedding_viewport(popup: PopupPanel) -> Viewport:
+	var viewport := popup.get_parent().get_viewport()
+	while not viewport.gui_embed_subwindows and viewport.get_parent() != null:
+		viewport = viewport.get_parent().get_viewport()
+	return viewport
+
+
+func _reposition_popup(reference: WeakRef) -> void:
+	var popup := reference.get_ref() as PopupPanel
+	if popup == null or not popup.is_inside_tree() or not popup.visible:
+		return
+	var owner := popup.get_parent() as Control
+	if owner == null or not popup.is_embedded():
+		return
+	# Godot positions the original, unwrapped text before this deferred setup.
+	# After wrapping, fit the new size near its actual trigger instead of
+	# retaining the distant position chosen for the original long line.
+	var viewport := _embedding_viewport(popup)
+	var area := viewport.get_final_transform() * viewport.get_visible_rect()
+	var source := owner.get_viewport()
+	var point := owner.get_local_mouse_position()
+	if not Rect2(Vector2.ZERO, owner.size).has_point(point):
+		point = owner.size * 0.5
+	var anchor := source.get_final_transform() * (owner.get_global_transform_with_canvas() * point)
+	if source != viewport and source is Window:
+		anchor += Vector2(source.position)
+	var offset: Vector2 = ProjectSettings.get_setting("display/mouse_cursor/tooltip_position_offset", Vector2(16, 16))
+	offset *= popup.content_scale_factor
+	var position := anchor + offset
+	var extent := Vector2(popup.size)
+	position.x = clampf(position.x, area.position.x, maxf(area.position.x, area.end.x - extent.x))
+	if position.y + extent.y > area.end.y:
+		position.y = anchor.y - offset.y - extent.y
+	position.y = clampf(position.y, area.position.y, maxf(area.position.y, area.end.y - extent.y))
+	popup.position = Vector2i(position.round())
 
 
 func _bind_panel(reference: WeakRef) -> void:

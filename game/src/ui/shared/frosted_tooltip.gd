@@ -71,7 +71,12 @@ func _refresh_visibility() -> void:
 func _sync_geometry() -> void:
 	if _surface == null:
 		return
+	# Embedded Window positions are already in the outer viewport's pixels.
+	# Convert those pixels to the overlay canvas once; do not add owner offsets
+	# or multiply the owner and tooltip scales together.
+	var viewport := _layer.custom_viewport as Viewport
+	var pixels_to_canvas := viewport.get_final_transform().affine_inverse()
 	var scale_factor := _popup.content_scale_factor
-	_surface.position = Vector2(_popup.position)
-	_surface.scale = Vector2.ONE * scale_factor
+	_surface.position = pixels_to_canvas * Vector2(_popup.position)
+	_surface.scale = pixels_to_canvas.get_scale() * scale_factor
 	_surface.size = Vector2(_popup.size) / scale_factor

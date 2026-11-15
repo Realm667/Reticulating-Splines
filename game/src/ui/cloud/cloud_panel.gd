@@ -10,7 +10,6 @@ var column: VBoxContainer
 var load_directly := false
 var sync: Node
 var state: Dictionary = {}
-var tabs: TabContainer
 var status: Label
 var quota: Label
 var notice: Label
@@ -54,6 +53,13 @@ var _summary: BoxContainer
 var _workspace: BoxContainer
 var _save_details: PanelContainer
 var _selected_name: Label
+var _board: BoxContainer
+var _sidebar: VBoxContainer
+var _save_section: VBoxContainer
+var _account_card: PanelContainer
+var _devices_card: PanelContainer
+var _save_card: PanelContainer
+var _inspection: BoxContainer
 
 
 func _init() -> void:
@@ -72,13 +78,32 @@ func _init() -> void:
 	quota.theme_type_variation = &"HelpLabel"
 	notice = _text(column, "")
 	notice.hide()
-	tabs = TabContainer.new()
-	tabs.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	tabs.tab_alignment = TabBar.ALIGNMENT_LEFT
-	column.add_child(tabs)
-	_build_account(_page("Account"))
-	_build_saves(_page("Cloud saves"))
-	_build_devices(_page("Devices"))
+	var board_scroll := ScrollContainer.new()
+	board_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	board_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	column.add_child(board_scroll)
+	_board = BoxContainer.new()
+	_board.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_board.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_board.add_theme_constant_override("separation", 16)
+	board_scroll.add_child(_board)
+	var save_content := _page("Cloud saves", _board)
+	_save_section = save_content.get_parent().get_parent()
+	_save_card = _save_section.get_parent()
+	_save_card.size_flags_stretch_ratio = 2.0
+	_build_saves(save_content)
+	_sidebar = VBoxContainer.new()
+	_sidebar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_sidebar.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_sidebar.add_theme_constant_override("separation", 16)
+	_board.add_child(_sidebar)
+	var account_content := _page("Account", _sidebar)
+	_account_card = account_content.get_parent().get_parent().get_parent()
+	_account_card.size_flags_vertical = Control.SIZE_FILL
+	_build_account(account_content)
+	var device_content := _page("Devices", _sidebar)
+	_devices_card = device_content.get_parent().get_parent().get_parent()
+	_build_devices(device_content)
 	close_action = _action(column, "Close", func() -> void: close_requested.emit())
 	confirm = ConfirmationDialog.new()
 	confirm.dialog_autowrap = true
@@ -113,13 +138,11 @@ func configure_browser() -> void:
 	for help in _save_help:
 		help.hide()
 	browser_footer = HFlowContainer.new()
-	add_child(browser_footer)
+	_save_section.add_child(browser_footer)
 	versions.reparent(browser_footer)
 	versions.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	actions.download.reparent(browser_footer)
 	actions.download.text = "Load city"
-	tabs.tab_changed.connect(func(index: int) -> void: browser_footer.visible = index == 1)
-	browser_footer.visible = tabs.current_tab == 1
 	saves.item_activated.connect(_activate_save)
 
 
@@ -173,7 +196,6 @@ func bind(service: Node) -> void:
 func open() -> void:
 	theme = AppUiTheme.current()
 	refresh()
-	tabs.current_tab = 0 if (state.get("account", {}) as Dictionary).is_empty() else 1
 	if sync != null and not (state.get("account", {}) as Dictionary).is_empty():
 		sync.refresh()
 
@@ -195,11 +217,21 @@ func confirm_exit(callback: Callable) -> void:
 	callback.call()
 
 
-func _page(caption: String) -> VBoxContainer:
+func _page(caption: String, parent: Control) -> VBoxContainer:
+	var card := PanelContainer.new()
+	card.theme_type_variation = &"UtilityPanel"
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	card.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	parent.add_child(card)
+	var frame := VBoxContainer.new()
+	frame.add_theme_constant_override("separation", 10)
+	card.add_child(frame)
+	var heading := _text(frame, caption)
+	heading.theme_type_variation = &"SectionHeading"
 	var scroll := ScrollContainer.new()
-	scroll.name = caption
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	tabs.add_child(scroll)
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	frame.add_child(scroll)
 	var content := VBoxContainer.new()
 	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	content.add_theme_constant_override("separation", 10)
@@ -351,6 +383,7 @@ func _build_saves(content: VBoxContainer) -> void:
 	_save_help.append(_text(content, "Cloud keeps five versions per save. Trash is removed after 30 days. Versions and trash count toward your quota."))
 	content.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_workspace = BoxContainer.new()
+	_workspace.vertical = true
 	_workspace.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_workspace.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_workspace.add_theme_constant_override("separation", 16)
@@ -376,9 +409,12 @@ func _build_saves(content: VBoxContainer) -> void:
 	_save_details = PanelContainer.new()
 	_save_details.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_workspace.add_child(_save_details)
+	_inspection = BoxContainer.new()
+	_inspection.add_theme_constant_override("separation", 12)
+	_save_details.add_child(_inspection)
 	var inspection := VBoxContainer.new()
-	inspection.add_theme_constant_override("separation", 10)
-	_save_details.add_child(inspection)
+	inspection.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_inspection.add_child(inspection)
 	var heading := _text(inspection, "City preview")
 	heading.theme_type_variation = &"SectionHeading"
 	_selected_name = _text(inspection, "")
@@ -390,8 +426,8 @@ func _build_saves(content: VBoxContainer) -> void:
 	preview.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	preview.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	preview.hide()
-	inspection.add_child(preview)
-	inspection.move_child(preview, details.get_index())
+	_inspection.add_child(preview)
+	_inspection.move_child(preview, 0)
 	versions = OptionButton.new()
 	versions.fit_to_longest_item = false
 	versions.clip_text = true
@@ -485,6 +521,7 @@ func refresh() -> void:
 		if str(device.get("id", "")) == device_id:
 			devices.select(devices.item_count - 1)
 	_show_conflicts()
+	_layout_pages()
 	if library != null:
 		library.refresh.call_deferred()
 
@@ -494,9 +531,13 @@ func _layout_pages() -> void:
 		return
 	var width := get_window().size.x / maxf(get_window().content_scale_factor, 0.001)
 	_summary.vertical = width < 800
-	_workspace.vertical = width < 1000
-	_save_details.custom_minimum_size.x = 0 if _workspace.vertical else 280
-	preview.custom_minimum_size.y = 100 if _workspace.vertical else 180
+	_board.vertical = width < 1000
+	_save_card.custom_minimum_size.y = 320 if _board.vertical else 0
+	_sidebar.custom_minimum_size.x = 0 if _board.vertical else 260
+	_account_card.custom_minimum_size.y = 200 if not account_form.visible else 360
+	_devices_card.custom_minimum_size.y = 220
+	_inspection.vertical = _board.vertical
+	preview.custom_minimum_size = Vector2(0, 100) if _board.vertical else Vector2(150, 120)
 
 
 func _save_status(item: Dictionary) -> String:

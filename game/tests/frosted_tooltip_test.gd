@@ -11,7 +11,10 @@ func _run() -> void:
 	var viewport := SubViewport.new()
 	viewport.size = Vector2i(640, 480)
 	viewport.gui_embed_subwindows = true
-	root.add_child(viewport)
+	var container := SubViewportContainer.new()
+	container.size = Vector2(viewport.size)
+	root.add_child(container)
+	container.add_child(viewport)
 	var app := Control.new()
 	app.size = Vector2(viewport.size)
 	app.theme = AppUiTheme.current()
@@ -65,7 +68,7 @@ func _run() -> void:
 	var inner := Button.new()
 	inner.position = Vector2(32, 32)
 	inner.size = Vector2(100, 40)
-	inner.tooltip_text = "Nested tooltip test"
+	inner.tooltip_text = "Nearby city soundscape. ".repeat(12)
 	dialog.add_child(inner)
 	dialog.popup(Rect2i(200, 160, 300, 180))
 	await process_frame
@@ -76,6 +79,13 @@ func _run() -> void:
 	assert(nested_effect != null)
 	var nested_layer := nested_effect.get("_layer") as CanvasLayer
 	assert(nested_layer.custom_viewport == viewport, "Nested tooltips must sample the containing viewport")
+	var nested_surface := nested_effect.get("_surface") as PanelContainer
+	var actual_origin := nested_surface.position
+	var native_origin := Vector2(nested.position)
+	assert(actual_origin.distance_to(native_origin) < 1.0, "The tooltip backdrop must coincide with the native tooltip in an offset dialog")
+	var trigger := Vector2(dialog.position) + inner.get_rect().get_center()
+	assert(Rect2(Vector2(nested.position), Vector2(nested.size)).grow(32).has_point(trigger),
+		"A wrapped tooltip must remain near its actual trigger")
 	_assert_sharp_labels(nested_effect.get("_surface"))
 	await _test_panel(app)
 	await _test_wrapping()

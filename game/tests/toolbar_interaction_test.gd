@@ -86,16 +86,22 @@ func _run() -> void:
 		await process_frame
 		assert(toolbar.child_tool_scroll.scroll_vertical == 0)
 
-	# A click opens immediately and keeps the remembered tool.
+	# One click restores the remembered tool; only a double click opens choices.
 	var sidebar_width := toolbar.size.x
 	toolbar.toolbar_buttons[6].pressed.emit()
-	assert(toolbar.hold_menu.visible and main.tool_state.selected_group == 6)
+	assert(not toolbar.hold_menu.visible and main.tool_state.selected_group == 6)
 	assert(main.tool_state.selected_subtool == 1, "A click restores the last highway tool")
 	assert(toolbar.size.x == sidebar_width)
 	toolbar.hold_menu.hide()
 	await process_frame
 	toolbar.toolbar_buttons[7].pressed.emit()
-	assert(toolbar.hold_menu.visible and main.tool_state.selected_group == 7)
+	assert(not toolbar.hold_menu.visible and main.tool_state.selected_group == 7)
+	var double_click := InputEventMouseButton.new()
+	double_click.button_index = MOUSE_BUTTON_LEFT
+	double_click.pressed = true
+	double_click.double_click = true
+	toolbar.toolbar_buttons[7].gui_input.emit(double_click)
+	assert(toolbar.hold_menu.visible)
 	assert(toolbar.hold_menu.palette.buttons.size() == toolbar.child_tool_buttons.size())
 	var subway_button := toolbar.hold_menu.palette.buttons[1] as Button
 	assert(subway_button.icon != null)
@@ -110,6 +116,10 @@ func _run() -> void:
 	await process_frame
 	await process_frame
 	assert(main.tool_state.selected_subtool == 1 and toolbar.child_tool_buttons[1].button_pressed)
+	assert(not toolbar.hold_menu.visible)
+	toolbar.toolbar_buttons[7].gui_input.emit(double_click)
+	await process_frame
+	await process_frame
 	assert(toolbar.hold_menu.visible)
 	assert(toolbar.hold_menu.gui_get_focus_owner() == toolbar.child_tool_buttons[1])
 	var escape := InputEventKey.new()

@@ -4,6 +4,7 @@ extends CityLibraryTable
 
 signal upload_requested(path: String)
 const STAR := preload("res://src/ui/shared/city_star.svg")
+const FILLED_STAR := preload("res://src/ui/shared/city_star_filled.svg")
 const TITLES := ["Favorite", "File name", "Date modified", "Game mode", "Multi-region", "Expanded", "Cloud"]
 var dialog: FileDialog
 var native_list: ItemList
@@ -202,8 +203,7 @@ func _draw_rows() -> void:
 		item.set_icon(1, native_list.get_item_icon(row.index))
 		item.set_icon_modulate(1, native_list.get_item_icon_modulate(row.index))
 		if not row.directory:
-			item.add_button(0, STAR, 0, false, tr("Remove from favorites") if _favorite(row) else tr("Add to favorites"))
-			item.set_button_color(0, 0, Color("f5cd62") if _favorite(row) else get_theme_color("font_color"))
+			item.add_button(0, FILLED_STAR if _favorite(row) else STAR, 0, false, tr("Remove from favorites") if _favorite(row) else tr("Add to favorites"))
 		if row.get("modified", 0) > 0:
 			item.set_text(2, format_timestamp(row.modified))
 		if not row.directory:
@@ -227,7 +227,8 @@ func _refresh_star_colors() -> void:
 	while item != null:
 		if item.get_button_count(0) > 0:
 			var starred := favorites != null and favorites.contains(CityFavorites.local_key(str(item.get_metadata(1))))
-			item.set_button_color(0, 0, Color("f5cd62") if starred else get_theme_color("font_selected_color" if item == get_selected() else "font_color"))
+			item.set_button(0, 0, FILLED_STAR if starred else STAR)
+			item.set_button_color(0, 0, get_theme_color("font_selected_color" if item == get_selected() else "font_color"))
 		item = item.get_next()
 
 

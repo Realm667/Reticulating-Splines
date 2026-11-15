@@ -507,9 +507,6 @@ func sync_view_mode(mode: CityViewMode.Mode, zones_view := false) -> void:
 func _activate_group(group_index: int) -> void:
 	hold_menu.hide()
 	group_requested.emit(group_index)
-	if group_index < CityToolIds.Group.SIGNS or group_index == CityToolIds.Group.QUERY:
-		if not landscape_editor and not land_mode:
-			_open_group_menu(group_index)
 
 
 func _open_group_menu(group_index: int) -> void:
@@ -557,12 +554,23 @@ func _watch_buttons(node: Node) -> void:
 # A click with the help key asks for the help of the button and does not
 # press it. The gui_input signal comes before the button reads the click
 func _on_button_gui_input(event: InputEvent, button: BaseButton) -> void:
+	var group := toolbar_buttons.find(button)
+	var has_children := group >= 0 and not button.disabled and (group < CityToolIds.Group.SIGNS or group == CityToolIds.Group.QUERY)
+	if has_children and event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_DOWN:
+		button.accept_event()
+		button.pressed.emit()
+		_open_group_menu(group)
+		return
 	var mouse := event as InputEventMouseButton
 
 	if mouse == null or mouse.button_index != MOUSE_BUTTON_LEFT or not mouse.pressed:
 		return
 
 	if not control_bindings.modifier_held("button_help_modifier", event):
+		if has_children and mouse.double_click:
+			button.accept_event()
+			button.pressed.emit()
+			_open_group_menu(group)
 		return
 
 	var topic := help_topic(button)

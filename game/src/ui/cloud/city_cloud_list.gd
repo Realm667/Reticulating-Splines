@@ -61,8 +61,7 @@ func refresh() -> void:
 		var item := create_item(root)
 		var key := CityFavorites.cloud_key(panel.sync, str(row.get("id", "")))
 		item.set_metadata(0, {"index": index, "id": row.get("id", ""), "key": key})
-		item.add_button(0, CitySaveList.STAR, 0, key.is_empty(), tr("Remove from favorites") if favorites.contains(key) else tr("Add to favorites"))
-		item.set_button_color(0, 0, Color("f5cd62") if favorites.contains(key) else get_theme_color("font_color"))
+		item.add_button(0, CitySaveList.FILLED_STAR if favorites.contains(key) else CitySaveList.STAR, 0, key.is_empty(), tr("Remove from favorites") if favorites.contains(key) else tr("Add to favorites"))
 		item.set_auto_translate_mode(1, Node.AUTO_TRANSLATE_MODE_DISABLED)
 		item.set_text(1, str(row.get("name", "")))
 		item.set_text(2, format_timestamp(row.get("updated_at")))
@@ -85,7 +84,8 @@ func _refresh_star_colors() -> void:
 	var item := get_root().get_first_child()
 	while item != null:
 		var key := str(item.get_metadata(0).key)
-		item.set_button_color(0, 0, Color("f5cd62") if favorites.contains(key) else get_theme_color("font_selected_color" if item == get_selected() else "font_color"))
+		item.set_button(0, 0, CitySaveList.FILLED_STAR if favorites.contains(key) else CitySaveList.STAR)
+		item.set_button_color(0, 0, get_theme_color("font_selected_color" if item == get_selected() else "font_color"))
 		item = item.get_next()
 
 
