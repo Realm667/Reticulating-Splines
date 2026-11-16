@@ -54,6 +54,7 @@ const LANDSCAPE_TOOL_ORDER := [
 const Tools = preload("res://src/tools/shared/tool_catalog.gd")
 const HoldMenu = preload("res://src/ui/shell/city_tool_hold_menu.gd")
 const ToolbarIcons = preload("res://src/ui/shell/city_toolbar_icons.gd")
+const HOLD_SECONDS := 0.35
 # data view list id of the zones view, after the data mode ids
 const ZONES_VIEW_ID := 1000
 const GROUP_ICON_REGIONS := [
@@ -82,6 +83,9 @@ var _icon_provider := Callable()
 var _selected_subtool := 0
 var _group_subtools: Dictionary = {}
 var _dismiss_mouse_buttons := 0
+var _hold_generation := 0
+var _hold_group := -1
+var _held_menu_group := -1
 var toolbar_art: Image
 var toolbar_buttons: Array[Button] = []
 var rotate_counter_clockwise_button: Button
@@ -154,8 +158,10 @@ func _ready() -> void:
 	hold_menu.popup_hide.connect(_on_flyout_closed)
 	visibility_changed.connect(func() -> void:
 		if not is_visible_in_tree():
+			_cancel_hold()
 			hold_menu.hide())
 	if is_inside_tree():
+		get_viewport().size_changed.connect(_cancel_hold)
 		get_viewport().size_changed.connect(hold_menu.hide)
 	start_city_button.pressed.connect(start_city_requested.emit)
 	var tool_button_group := ButtonGroup.new()
@@ -278,6 +284,10 @@ func _sync_classic_layout() -> void:
 
 
 func _input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed:
+		_cancel_hold()
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and not event.pressed:
+		_cancel_hold()
 	# PopupPanel dismisses before forwarding an outside click to this viewport.
 	# Consume that complete gesture so closing the menu cannot also build a tile.
 	if _dismiss_mouse_buttons != 0 and event is InputEventMouse:
@@ -308,6 +318,8 @@ func _input(event: InputEvent) -> void:
 
 
 func _on_flyout_closed() -> void:
+	if not Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+		_held_menu_group = -1
 	_dismiss_mouse_buttons = Input.get_mouse_button_mask()
 	if _dismiss_mouse_buttons != 0:
 		get_viewport().set_input_as_handled()
@@ -322,6 +334,8 @@ func group_icon(group_index: int) -> Texture2D:
 
 
 func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_WINDOW_FOCUS_OUT:
+		_cancel_hold()
 	if what == NOTIFICATION_TRANSLATION_CHANGED:
 		for group: int in _group_subtools:
 			_refresh_group_icon(group)
@@ -444,6 +458,9 @@ func _add_group_button(
 	button.vertical_icon_alignment = VERTICAL_ALIGNMENT_CENTER
 	button.text = str(group_index + 1) if button.icon == null else ""
 	button.pressed.connect(_activate_group.bind(group_index))
+	button.mouse_exited.connect(func() -> void:
+		if _hold_group == group_index:
+			_cancel_hold())
 	if group_index < CityToolIds.Group.SIGNS or group_index == CityToolIds.Group.QUERY:
 		button.draw.connect(func() -> void:
 			var corner := button.size - Vector2(4, 4)
@@ -505,8 +522,39 @@ func sync_view_mode(mode: CityViewMode.Mode, zones_view := false) -> void:
 
 
 func _activate_group(group_index: int) -> void:
+	# The hold already selected this group. Its original mouse release must
+	# not select it again and dismiss the popup that just opened.
+	if _held_menu_group == group_index:
+		return
 	hold_menu.hide()
 	group_requested.emit(group_index)
+
+
+func _cancel_hold() -> void:
+	_hold_generation += 1
+	_hold_group = -1
+
+
+func _start_hold(group_index: int) -> void:
+	_cancel_hold()
+	_held_menu_group = -1
+	_hold_group = group_index
+	get_tree().create_timer(HOLD_SECONDS, true, false, true).timeout.connect(
+		_finish_hold.bind(_hold_generation, group_index), CONNECT_ONE_SHOT)
+
+
+func _finish_hold(generation: int, group_index: int) -> void:
+	if generation != _hold_generation or _hold_group != group_index:
+		return
+	_cancel_hold()
+	if not Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT) or landscape_editor or land_mode or not is_visible_in_tree():
+		return
+	var button := toolbar_buttons[group_index]
+	if button.disabled or not button.is_visible_in_tree():
+		return
+	button.pressed.emit()
+	_held_menu_group = group_index
+	_open_group_menu(group_index)
 
 
 func _open_group_menu(group_index: int) -> void:
@@ -521,6 +569,7 @@ func _open_group_menu(group_index: int) -> void:
 
 
 func set_landscape_editor(enabled: bool) -> void:
+	_cancel_hold()
 	landscape_editor = enabled
 	start_city_button.visible = enabled
 	regenerate_button.visible = enabled
@@ -554,6 +603,9 @@ func _watch_buttons(node: Node) -> void:
 # A click with the help key asks for the help of the button and does not
 # press it. The gui_input signal comes before the button reads the click
 func _on_button_gui_input(event: InputEvent, button: BaseButton) -> void:
+	if event is InputEventKey and event.pressed:
+		_cancel_hold()
+		_held_menu_group = -1
 	var group := toolbar_buttons.find(button)
 	var has_children := group >= 0 and not button.disabled and (group < CityToolIds.Group.SIGNS or group == CityToolIds.Group.QUERY)
 	if has_children and event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_DOWN:
@@ -568,9 +620,13 @@ func _on_button_gui_input(event: InputEvent, button: BaseButton) -> void:
 
 	if not control_bindings.modifier_held("button_help_modifier", event):
 		if has_children and mouse.double_click:
+			_cancel_hold()
+			_held_menu_group = -1
 			button.accept_event()
 			button.pressed.emit()
 			_open_group_menu(group)
+		elif has_children:
+			_start_hold(group)
 		return
 
 	var topic := help_topic(button)
