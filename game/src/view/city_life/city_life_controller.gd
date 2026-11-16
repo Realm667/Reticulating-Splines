@@ -31,9 +31,10 @@ var _deferred_render := false
 var _buckets: Dictionary[Vector2i, Array] = {}
 var _bus_signature: Array = []
 var _bus_tiles: Dictionary[Vector2i, bool] = {}
-var _path_signature: Array = []
+var _path_geometry := CityLifeGeometry.new()
 var _paths: Dictionary[Vector3i, CityLifePaths.Segment] = {}
 var _tile_cache := CityLifeTiles.new()
+var _tile_caches: Dictionary[int, CityLifeTiles] = {}
 var _spawn_counts: Dictionary[Vector3i, int] = {}
 var _spawn_entries: Array[int] = []
 var _spawn_cursor := -1
@@ -59,6 +60,8 @@ func individual_cars_visible() -> bool:
 
 func process(delta: float) -> void:
 	var started := Time.get_ticks_usec()
+	if canvas != null:
+		canvas.release_retired_masks()
 	var map := app.map_view
 	if map == null:
 		return
@@ -89,6 +92,7 @@ func process(delta: float) -> void:
 		_spawn_cursor = -1
 		_city_id = city.document.get_instance_id()
 		figures.clear()
+		_tile_caches.clear()
 		_geometry_signature.clear()
 		_serial = 0
 		random.seed = 0x5343324b
@@ -96,13 +100,13 @@ func process(delta: float) -> void:
 		city.compass_rotation(), city.visible_altitude_levels]
 	var rebuilt_view := false
 	var viewport := Rect2i(map.visible_source_rect().grow(96))
-	if geometry != _geometry_signature or not _viewport.encloses(viewport):
+	if geometry != _geometry_signature or not _viewport.encloses(viewport) or _tile_cache.collecting:
 		_spawn_cursor = -1
 		var changed_geometry := geometry != _geometry_signature
 		var changed_view := _geometry_signature.is_empty() or geometry.slice(3) != _geometry_signature.slice(3)
 		_geometry_signature = geometry
 		_viewport = viewport.grow(96)
-		_collect_tiles(city)
+		_collect_tiles(city, 1000)
 		if changed_view:
 			rebuilt_view = true
 			_render_elapsed = UPDATE_SECONDS
@@ -112,7 +116,8 @@ func process(delta: float) -> void:
 			if canvas != null:
 				canvas.hide()
 		elif changed_geometry:
-			_revalidate_lanes(city)
+			var changed := _sync_path_geometry(city)
+			_revalidate_lanes(city, null if _path_geometry.reset else changed)
 		_activity_signature.clear()
 	var activity := [city.chunk_revision("XPOP"), city.chunk_revision("XTRF"), options.life_cars_enabled,
 		options.life_people_enabled, options.life_car_amount, options.life_people_amount, app.view_state.show_vehicles]
@@ -135,7 +140,7 @@ func process(delta: float) -> void:
 	elapsed = VisualEnhancementOptions.animation_delta(elapsed, options, speed)
 	_elapsed += elapsed
 	_spawn_elapsed += elapsed
-	if _spawn_cursor >= 0 or _spawn_elapsed >= 0.8:
+	if not _tile_cache.collecting and (_spawn_cursor >= 0 or _spawn_elapsed >= 0.8):
 		if _spawn_cursor < 0:
 			_spawn_elapsed = 0.0
 		_spawn(city, options, SPAWN_TILES_PER_FRAME)
@@ -144,9 +149,11 @@ func process(delta: float) -> void:
 		advanced = true
 		# Catch up in bounded steps so a slow frame cannot jump across junctions.
 		var remaining := minf(_elapsed, 0.5)
+		var prepare := true
 		while remaining > 0.0:
 			var step := minf(remaining, UPDATE_SECONDS)
-			_advance(city, step)
+			_advance(city, step, prepare)
+			prepare = false
 			remaining -= step
 		_elapsed = 0.0
 	_fade(fade_elapsed)
@@ -193,8 +200,14 @@ func _sync_traffic(enhanced: bool) -> void:
 		app.map_render.refresh_map()
 
 
-func _collect_tiles(city: CityState) -> void:
-	tiles.assign(_tile_cache.collect(city, _viewport))
+func _collect_tiles(city: CityState, budget_usec := 0) -> void:
+	# Keep projected roads in each of the four coordinate spaces. The owned
+	# geometry snapshot still detects edits made while a direction was hidden.
+	var direction := city.compass_rotation()
+	if not _tile_caches.has(direction):
+		_tile_caches[direction] = CityLifeTiles.new()
+	_tile_cache = _tile_caches[direction]
+	tiles.assign(_tile_cache.collect(city, _viewport, budget_usec))
 	figures = figures.filter(func(f: Figure) -> bool: return _viewport.has_point(Vector2i(f.position)))
 
 
@@ -268,10 +281,10 @@ func _spawn(city: CityState, options: Dictionary, tile_limit := 0) -> bool:
 	return false
 
 
-func _revalidate_lanes(city: CityState) -> void:
+func _revalidate_lanes(city: CityState, changed: Variant = null) -> void:
 	# Simulation updates anywhere in the city must not reset all visible traffic.
 	for figure in figures:
-		if figure.retiring:
+		if figure.retiring or (changed != null and not changed.has(figure.tile)):
 			continue
 		var ports := CityLifePaths.ports(city, figure.tile)
 		if not (ports & (1 << figure.enter)) or not (ports & (1 << figure.exit)) \
@@ -335,11 +348,21 @@ func _vehicle_kind(tile: Vector2i) -> int:
 	return CityLifeSprites.Vehicle.CAR
 
 
-func _advance(city: CityState, elapsed: float) -> void:
-	var path_signature := [city.mirror_signature(["ALTM", "XBLD", "XTER", "XZON", "XBIT"]), city.compass_rotation()]
-	if path_signature != _path_signature:
+func _sync_path_geometry(city: CityState) -> Dictionary[Vector2i, bool]:
+	var changed := _path_geometry.sync(city)
+	if _path_geometry.reset:
 		_paths.clear()
-		_path_signature = path_signature
+	elif not changed.is_empty():
+		for key in _paths.keys():
+			if changed.has(Vector2i(key.x, key.y)):
+				_paths.erase(key)
+	return changed
+
+
+func _advance(city: CityState, elapsed: float, prepare := true) -> void:
+	# Substeps share geometry and the incrementally maintained spatial buckets.
+	if prepare:
+		_sync_path_geometry(city)
 	if _paths.size() > 4096:
 		var occupied: Dictionary[Vector2i, bool] = {}
 		for figure in figures:
@@ -352,7 +375,8 @@ func _advance(city: CityState, elapsed: float) -> void:
 			removed += 1
 			if removed >= 64:
 				break
-	_rebuild_buckets()
+	if prepare:
+		_rebuild_buckets()
 	for figure in figures:
 		figure.age += elapsed
 		if figure.age >= figure.lifetime:
@@ -378,7 +402,7 @@ func _advance(city: CityState, elapsed: float) -> void:
 		if old_bucket != _bucket(position):
 			_buckets[old_bucket].erase(figure)
 			_bucket_add(figure)
-		figure.diagonal = CityLifePaths.diagonal(city, figure.tile)
+		figure.diagonal = path.diagonal
 		figure.direction = figure.heading()
 		if progress < 1.0:
 			continue

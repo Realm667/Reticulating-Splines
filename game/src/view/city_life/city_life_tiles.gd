@@ -9,9 +9,12 @@ var points: Dictionary[int, Vector2i] = {}
 var tiles: Array[Vector2i] = []
 var viewport := Rect2i()
 var search := Rect2i()
+var collecting := false
+var _indices := PackedInt32Array()
+var _cursor := 0
 
 
-func collect(city: CityState, bounds: Rect2i) -> Array[Vector2i]:
+func collect(city: CityState, bounds: Rect2i, budget_usec := 0) -> Array[Vector2i]:
 	var changed := geometry.sync(city)
 	var rebuild := geometry.reset or bounds != viewport
 	if geometry.reset:
@@ -31,13 +34,26 @@ func collect(city: CityState, bounds: Rect2i) -> Array[Vector2i]:
 			_update(city, tile, index)
 			affected = true
 	if rebuild:
+		collecting = true
+		_cursor = 0
+		_indices = CityLifePaths.candidate_indices(city, search.position, search.end - Vector2i.ONE)
 		for index in points.keys():
 			if not search.has_point(Vector2i(index / city.map_size, index % city.map_size)):
 				points.erase(index)
-		for index in CityLifePaths.candidate_indices(city, search.position, search.end - Vector2i.ONE):
+	var completed := false
+	if collecting:
+		var deadline := Time.get_ticks_usec() + budget_usec
+		while _cursor < _indices.size():
+			var index := _indices[_cursor]
+			_cursor += 1
 			if not points.has(index):
 				_update(city, Vector2i(index / city.map_size, index % city.map_size), index)
-	if rebuild or affected:
+			if budget_usec > 0 and Time.get_ticks_usec() >= deadline:
+				return []
+		collecting = false
+		_indices.clear()
+		completed = true
+	if completed or affected:
 		tiles.clear()
 		var indices := points.keys()
 		indices.sort()

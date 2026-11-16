@@ -224,13 +224,15 @@ class Segment extends RefCounted:
 	var base: Vector2
 	var low: float
 	var high: float
+	var diagonal: bool
 	var straight: bool
 	var walking: bool
 
 
 	func _init(city: CityState, tile: Vector2i, enter: int, exit: int, is_walking: bool) -> void:
 		walking = is_walking
-		straight = exit == (enter + 2) % 4 or CityLifePaths.diagonal(city, tile)
+		diagonal = CityLifePaths.diagonal(city, tile)
+		straight = exit == (enter + 2) % 4 or diagonal
 		var incoming := -Vector2(DIRECTIONS[enter])
 		var outgoing := Vector2(DIRECTIONS[exit])
 		var lane := 0.39 if walking else 0.13

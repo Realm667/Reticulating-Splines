@@ -35,6 +35,10 @@ var _occlusion_banks: Dictionary[int, Dictionary] = {}
 var _visible_regions: Array[Vector2i] = []
 var _emission_active := false
 var include_cached_regions := false
+var clip_fixture_masks := false
+const RETIRED_MASK_BYTES := 32 * 1024 * 1024
+var _retired_masks: Array[Image] = []
+var _retired_mask_bytes := 0
 
 
 func _init() -> void:
@@ -188,12 +192,13 @@ func render(app: CityApplication, figures: Array, sprites: CityLifeSprites, prep
 	if light_active:
 		(road_layer as CityLifeHeadlights).render(city, figures, lights, source_bounds.position,
 			func(tile: Vector2i, enter: int) -> Array: return _light_candidates(app, tile, enter), receiver_inputs,
-			gpu_enabled and interpolation < 1.0 and bool(app.preferences.visual_enhancements.traffic_vehicles_enabled))
+			gpu_enabled and (interpolation < 1.0 or not (road_layer as CityLifeHeadlights)._published) and bool(app.preferences.visual_enhancements.traffic_vehicles_enabled))
 	if gpu_enabled:
 		if gpu == null:
 			gpu = CityLifeGpu.new()
 			gpu.prepare(sprites, lights)
-		gpu.render(self, entries)
+		# The budgeted preparation above already validated these exact entries.
+		gpu.render(self, entries, preparation_budget_usec > 0)
 	else:
 		atlas.compose(bounds, entries, light_active)
 	if light_active and gpu == null:
@@ -265,24 +270,35 @@ func sync_view(app: CityApplication) -> void:
 
 
 func prepare_lights(app: CityApplication, figures: Array, budget_usec := 1500) -> void:
-	if not gpu_enabled or road_layer == null or figures.is_empty() or app.visual_environment.night > 0.0:
+	if not gpu_enabled or road_layer == null or figures.is_empty():
 		return
 	if not VisualEnhancementOptions.detail_lights_visible(app.preferences.visual_enhancements, app.map_view.zoom_factor):
 		return
 	var started := Time.get_ticks_usec()
 	var city := app.document_state.city
+	# Preparation may run before render selects a newly rotated/zoomed bank.
+	# Never synchronize the old bank against another coordinate space.
+	if _occlusion_signature.is_empty() or _occlusion_signature[0] != city.document.get_instance_id() \
+			or _occlusion_signature[1] != app.static_render_state.epoch \
+			or _occlusion_signature[3] != app.static_render.city_view_size() \
+			or _occlusion_signature[5] != city.compass_rotation():
+		return
 	lights.sync_geometry(city)
 	var headlights := road_layer as CityLifeHeadlights
-	var vehicles := 0
-	for figure: CityLifeController.Figure in figures:
-		vehicles += int(not figure.walking)
-	if headlights.groups.size() * CityLifeHeadlights.GROUP_SIZE < vehicles:
-		headlights._add_group()
-		return
+	var can_upload := app.visual_environment.night <= 0.0 or not headlights._published
+	if can_upload:
+		var vehicles := 0
+		for figure: CityLifeController.Figure in figures:
+			vehicles += int(not figure.walking)
+		if headlights.groups.size() * CityLifeHeadlights.GROUP_SIZE < vehicles:
+			headlights._add_group()
+			return
 	# Warm cache hits are cheap. Scan far enough to keep up with moving cars,
 	# while retaining the time limit and a separate cap on texture transfers.
 	var uploads := 0
-	for index in figures.size():
+	# A bounded round-robin visits every figure without repeating an entire
+	# warm 600-figure sweep on each intervening interpolation frame.
+	for index in mini(figures.size(), 96):
 		_light_preparation_cursor %= figures.size()
 		var figure: CityLifeController.Figure = figures[_light_preparation_cursor]
 		_light_preparation_cursor += 1
@@ -293,7 +309,10 @@ func prepare_lights(app: CityApplication, figures: Array, budget_usec := 1500) -
 			if surface.is_empty():
 				surface = lights.surface(city, figure.tile, figure.enter, figure.direction,
 					func(tile: Vector2i, enter: int) -> Array: return _light_candidates(app, tile, enter), false)
-			uploads += int(headlights.prepare_surface(figure, surface))
+			# Once visible, warm CPU receivers only. A live GPU slot still belongs
+			# to the old published origin until the next complete light batch.
+			if can_upload:
+				uploads += int(headlights.prepare_surface(figure, surface))
 		if uploads >= 8 or Time.get_ticks_usec() - started >= budget_usec:
 			break
 
@@ -383,7 +402,7 @@ func _candidates(app: CityApplication, tile: Vector2i, enter: int = 0) -> Array:
 	_occluder_bounds[key] = bounds
 	# The figure shader samples exactly this 128-pixel mask. Do not compose
 	# complete tall buildings only to crop them again in CityLifeGpu.render().
-	var clip := Rect2i(bounds.position - Vector2i(32, 32), Vector2i(128, 128)) if gpu_enabled and not include_cached_regions else Rect2i()
+	var clip := Rect2i(bounds.position - Vector2i(32, 32), Vector2i(128, 128)) if (gpu_enabled and not include_cached_regions) or clip_fixture_masks else Rect2i()
 	_occluders[key] = merged_occluders(candidates, clip)
 	return _occluders[key]
 
@@ -410,33 +429,86 @@ func invalidate_occlusion(changes: Array[Rect2i], source: RefCounted = null) -> 
 	# and directions invalidate their own masks when their regions publish edits.
 	# Calls without a source retain the full invalidation used by CPU views.
 	if source == null or _occlusion_signature.is_empty() or _occlusion_signature[2] == source:
-		_invalidate_bank(changes, _occluders, _occluder_bounds, _light_occluders, lights)
+		_invalidate_bank(changes, _occluders, _occluder_bounds, _light_occluders, lights, _retire_masks)
 	for bank: Dictionary in _occlusion_banks.values():
 		if bank.lights != lights and (source == null or bank.signature[2] == source):
-			_invalidate_bank(changes, bank.occluders, bank.bounds, bank.light_occluders, bank.lights)
+			_invalidate_bank(changes, bank.occluders, bank.bounds, bank.light_occluders, bank.lights, _retire_masks)
 
 
 static func _invalidate_bank(changes: Array[Rect2i], occluders: Dictionary, bounds: Dictionary,
-		light_occluders: Dictionary, receivers: CityLifeLights) -> void:
+		light_occluders: Dictionary, receivers: CityLifeLights, retire: Callable) -> void:
 	if changes.is_empty() or bounds.is_empty():
 		return
 	var invalidated := {}
-	for key in bounds:
+	if changes.size() * bounds.size() > 1024:
+		# Query published areas once instead of comparing every retained mask
+		# with every area. Rebuild from the exact current bank: pruning and
+		# hidden-direction edits cannot leave stale index entries behind.
+		var keys := bounds.keys()
+		var rectangles := PackedInt32Array()
+		rectangles.resize(keys.size() * 4)
+		for index in keys.size():
+			var area: Rect2i = bounds[keys[index]]
+			rectangles[index * 4] = area.position.x
+			rectangles[index * 4 + 1] = area.position.y
+			rectangles[index * 4 + 2] = area.size.x
+			rectangles[index * 4 + 3] = area.size.y
+		var grid := NativeRectIndex.build(rectangles, 1, 128)
 		for changed in changes:
-			if bounds[key].intersects(changed):
-				invalidated[key] = true
-				break
+			for index in grid.candidates(changed):
+				var key: Vector3i = keys[index]
+				if not invalidated.has(key) and bounds[key].intersects(changed):
+					invalidated[key] = true
+	else:
+		for key in bounds:
+			for changed in changes:
+				if bounds[key].intersects(changed):
+					invalidated[key] = true
+					break
 	for key in invalidated:
+		# Remove stale lookup entries immediately; reclaim their image storage
+		# in small portions instead of freeing an entire district in this frame.
+		retire.call(occluders.get(key, []))
+		retire.call(light_occluders.get(key, []))
+		retire.call(receivers.visible_roads.get(key, []))
+		retire.call(receivers.visible_roads.get(key + Vector3i(0, 0, 2), []))
 		occluders.erase(key)
 		bounds.erase(key)
 		light_occluders.erase(key)
 		receivers.visible_roads.erase(key)
 		receivers.visible_roads.erase(key + Vector3i(0, 0, 2))
+	if invalidated.is_empty():
+		return
 	for key in receivers.surfaces.keys():
 		for dependency in receivers.surfaces[key].occlusion_keys:
 			if invalidated.has(dependency):
+				retire.call([receivers.surfaces[key]])
 				receivers.surfaces.erase(key)
 				break
+
+
+func _retire_masks(parts: Array) -> void:
+	for part: Dictionary in parts:
+		var image: Image = part.get("image")
+		if image == null:
+			continue
+		var bytes := image.get_data_size()
+		# Bound retained CPU storage, including bursts during city edits.
+		while not _retired_masks.is_empty() and _retired_mask_bytes + bytes > RETIRED_MASK_BYTES:
+			_retired_mask_bytes -= _retired_masks.back().get_data_size()
+			_retired_masks.pop_back()
+		if bytes <= RETIRED_MASK_BYTES:
+			_retired_masks.append(image)
+			_retired_mask_bytes += bytes
+
+
+func release_retired_masks(budget_usec := 500) -> void:
+	var started := Time.get_ticks_usec()
+	while not _retired_masks.is_empty():
+		_retired_mask_bytes -= _retired_masks.back().get_data_size()
+		_retired_masks.pop_back()
+		if Time.get_ticks_usec() - started >= budget_usec:
+			break
 
 
 static func merged_occluders(candidates: Array, clip := Rect2i()) -> Array:
@@ -618,6 +690,6 @@ func _trim_inactive_banks(budget_bytes := 128 * 1024 * 1024) -> void:
 				continue
 			var changed: Array[Rect2i] = [bank.bounds[key]]
 			var previous_count: int = bank.occluders.size()
-			_invalidate_bank(changed, bank.occluders, bank.bounds, bank.light_occluders, receivers)
+			_invalidate_bank(changed, bank.occluders, bank.bounds, bank.light_occluders, receivers, _retire_masks)
 			retained -= (previous_count - bank.occluders.size()) * 128 * 128 * 4
 			removed += 1

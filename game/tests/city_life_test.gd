@@ -99,6 +99,20 @@ func _check_incremental_spawn(city: CityState) -> void:
 			assert([a.tile, a.enter, a.exit, a.walking, a.vehicle_kind, a.variant, a.position, a.speed, a.lifetime] ==
 				[b.tile, b.enter, b.exit, b.walking, b.vehicle_kind, b.variant, b.position, b.speed, b.lifetime],
 				"Incremental spawn changed an unchanged candidate")
+	# Catch-up substeps must preserve positions, lane decisions and local RNG.
+	for frame in 40:
+		var prepare := true
+		for step in [0.08, 0.08, 0.013]:
+			whole._advance(city, step)
+			sliced._advance(city, step, prepare)
+			prepare = false
+			assert(whole.random.state == sliced.random.state)
+			for i in whole.figures.size():
+				var a := whole.figures[i]
+				var b := sliced.figures[i]
+				assert([a.tile, a.enter, a.exit, a.position, a.progress, a.distance, a.age, a.wait, a.retiring, a.direction, a.diagonal] ==
+					[b.tile, b.enter, b.exit, b.position, b.progress, b.distance, b.age, b.wait, b.retiring, b.direction, b.diagonal],
+					"Shared substep preparation changed figure movement")
 	# A pending wave must also terminate safely if its candidate set disappears.
 	sliced.figures.clear()
 	assert(not sliced._spawn(city, options, 1))

@@ -11,6 +11,8 @@ const MAX_CACHED := 32768
 const MAX_TEXTURE_BYTES := 96 * 1024 * 1024
 const BUFFER_MARGIN := 160.0
 const BUILD_BUDGET := 128
+const DRAW_BATCH_SIZE := 64
+const DRAW_BATCH_THRESHOLD := 128
 var profiles: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(PROFILES))
 var roads := CityLifeLights.new()
 var masker := CityLifeCanvas.new()
@@ -27,7 +29,15 @@ var geometry: Array = []
 var dirty: Dictionary[Vector2i, bool] = {}
 var last_used: Dictionary[Vector2i, int] = {}
 var collection := 0
+var collection_active := false
+var _collection_indices := PackedInt32Array()
+var _collection_cursor := 0
+var _collection_points: Dictionary[Vector2i, Vector2] = {}
+var _collection_tiles: Array[Vector2i] = []
 var texture_users: Dictionary[int, Dictionary] = {}
+var _receiver_grid: NativeRectIndex
+var _receiver_keys: Array[Vector2i] = []
+var _receiver_grid_dirty := true
 var texture_bytes := 0
 var texture_budget := MAX_TEXTURE_BYTES
 var discovery_active := false
@@ -48,6 +58,18 @@ var unseen: Dictionary[Vector2i, bool] = {}
 var fade_view := Rect2()
 var fade_revision := -1
 var fade_pending := false
+var _draw_batches: Array[Array] = []
+var _batch_tiles: Array[Vector2i] = []
+var _tile_batches: Dictionary[Vector2i, int] = {}
+
+
+class DrawBatch extends Node2D:
+	var receiver: CityNightGround
+	var tiles: Array[Vector2i] = []
+	var layer := 0
+
+	func _draw() -> void:
+		receiver._draw_receivers(self, tiles, layer)
 
 
 func _init() -> void:
@@ -57,6 +79,9 @@ func _init() -> void:
 	material = shader
 	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	masker.include_cached_regions = true
+	# The 64-pixel receiver and its small fixtures fit inside the 128-pixel
+	# mask window. Tall buildings outside it cannot cover any sampled pixel.
+	masker.clip_fixture_masks = true
 	add_child(masker)
 	masker.hide()
 	fixtures.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
@@ -72,7 +97,15 @@ func _init() -> void:
 
 
 func reset() -> void:
+	_clear_draw_batches()
+	_receiver_grid = null
+	_receiver_keys.clear()
+	_receiver_grid_dirty = true
 	fixture_points.clear()
+	collection_active = false
+	_collection_indices.clear()
+	_collection_points.clear()
+	_collection_tiles.clear()
 	discovery_active = false
 	discovery_indices.clear()
 	discovered.clear()
@@ -109,6 +142,8 @@ func sync(app: CityApplication, strength: float, elapsed := 0.0, prepare := fals
 	clock = fposmod(clock + maxf(elapsed, 0.0), 14.0)
 	if floori(clock) != previous_second:
 		signals.queue_redraw()
+		for batch in _draw_batches:
+			batch[2].queue_redraw()
 	fixtures.modulate.a = smoothstep(0.0, 0.25, strength)
 	var map := app.map_view
 	var city := app.document_state.city
@@ -134,6 +169,7 @@ func sync(app: CityApplication, strength: float, elapsed := 0.0, prepare := fals
 	var shape := [app.view_state.surface_visibility.duplicate()]
 	if roads.geometry_reset or geometry != shape:
 		fixture_points.clear()
+		collection_active = false
 		geometry = shape
 		invalidate_all()
 		bounds = Rect2i()
@@ -143,17 +179,24 @@ func sync(app: CityApplication, strength: float, elapsed := 0.0, prepare := fals
 			begin_city_discovery(city)
 	elif not changed.is_empty():
 		_update_tiles(city, changed)
+		if collection_active:
+			collection_active = false
+			bounds = Rect2i()
 	var next := Rect2i(map.visible_source_rect().grow(BUFFER_MARGIN))
 	if prepare_entire_city:
 		next = _city_bounds(city)
+	var started := Time.get_ticks_usec()
 	if not bounds.encloses(next.grow(-BUFFER_MARGIN * 0.5)) or bounds.get_area() > next.get_area() * 2:
 		bounds = next
-		_collect(city)
-	var started := Time.get_ticks_usec()
-	if discovery_active:
+		collection_active = false
+		_collect(city, mini(1000, maxi(1, budget_usec / 2)))
+	elif collection_active:
+		_collect(city, mini(1000, maxi(1, budget_usec / 2)))
+	if discovery_active and budget_usec > 0:
 		discover_city_step(city, maxi(100, budget_usec / 4))
 	var built := 0
-	var attempts := mini(BUILD_BUDGET, pending.size())
+	var attempts := 0 if collection_active or budget_usec <= 0 else mini(BUILD_BUDGET, pending.size())
+	templates.defer_updates = true
 	# Refresh in place: an old complete texture remains until its replacement is ready.
 	while attempts > 0:
 		var tile := pending[cursor]
@@ -175,6 +218,10 @@ func sync(app: CityApplication, strength: float, elapsed := 0.0, prepare := fals
 		dirty.erase(tile)
 		if Time.get_ticks_usec() - started > budget_usec:
 			break
+	# A page may receive several small lights in this portion. Upload the
+	# completed pixels once, before any retained draw command samples them.
+	templates.flush()
+	templates.defer_updates = false
 	if cursor > 0:
 		pending = pending.slice(cursor)
 		cursor = 0
@@ -217,16 +264,10 @@ func _update_tiles(city: CityState, changed: Dictionary[Vector2i, bool]) -> void
 	_refresh_signals()
 
 
-func _collect(city: CityState) -> void:
-	for tile in visible_tiles:
-		if not cache.has(tile):
-			last_used.erase(tile)
-	visible_tiles.clear()
-	visible_keys.clear()
-	if not resident:
-		pending.clear()
-		queued.clear()
-	cursor = 0
+func _begin_collection(city: CityState) -> void:
+	# Keep the complete visible set until its replacement is ready. Signals
+	# and fade redraws can run while discovery is spread across frames.
+	_collection_tiles.clear()
 	var first := Vector2i(city.map_size, city.map_size)
 	var last := Vector2i.ZERO
 	for corner in [bounds.position, bounds.end, Vector2i(bounds.end.x, bounds.position.y), Vector2i(bounds.position.x, bounds.end.y)]:
@@ -238,16 +279,42 @@ func _collect(city: CityState) -> void:
 			last = last.max(point + Vector2i(2, 2))
 	first = first.max(Vector2i.ZERO)
 	last = last.min(Vector2i.ONE * (city.map_size - 1))
-	var points: Dictionary[Vector2i, Vector2] = {}
-	for index in CityLifePaths.candidate_indices(city, first, last):
+	_collection_indices = CityLifePaths.candidate_indices(city, first, last)
+	_collection_cursor = 0
+	_collection_points.clear()
+	collection_active = true
+
+
+func _collect(city: CityState, budget_usec := 0) -> void:
+	if not collection_active:
+		_begin_collection(city)
+	var deadline := Time.get_ticks_usec() + budget_usec
+	while _collection_cursor < _collection_indices.size():
+		var index := _collection_indices[_collection_cursor]
+		_collection_cursor += 1
 		var tile := Vector2i(index / city.map_size, index % city.map_size)
 		# Collect every fixture in this area at every zoom. The cache budget may
 		# evict offscreen receivers, but must never change the street layout.
 		var point := fixture_point(city, tile)
 		if point.is_finite() and bounds.has_point(Vector2i(point)):
-			visible_tiles.append(tile)
-			visible_keys[tile] = true
-			points[tile] = point
+			_collection_tiles.append(tile)
+			_collection_points[tile] = point
+		if budget_usec > 0 and Time.get_ticks_usec() >= deadline:
+			return
+	collection_active = false
+	_collection_indices.clear()
+	for tile in visible_tiles:
+		if not cache.has(tile):
+			last_used.erase(tile)
+	visible_tiles.assign(_collection_tiles)
+	_collection_tiles.clear()
+	visible_keys.clear()
+	for tile in visible_tiles:
+		visible_keys[tile] = true
+	if not resident:
+		pending.clear()
+		queued.clear()
+	cursor = 0
 	collection += 1
 	for tile in visible_tiles:
 		last_used[tile] = collection
@@ -255,7 +322,7 @@ func _collect(city: CityState) -> void:
 	# New visible receivers take priority over the prefetch border.
 	var center := Vector2(bounds.get_center())
 	visible_tiles.sort_custom(func(a: Vector2i, b: Vector2i) -> bool:
-		return points[a].distance_squared_to(center) < points[b].distance_squared_to(center))
+		return _collection_points[a].distance_squared_to(center) < _collection_points[b].distance_squared_to(center))
 	for tile in visible_tiles:
 		if not cache.has(tile) or dirty.has(tile):
 			_enqueue(tile)
@@ -267,16 +334,21 @@ func _collect(city: CityState) -> void:
 func _entry_textures(entry: Dictionary) -> Dictionary:
 	var result := {}
 	for texture: Texture2D in [entry.texture, entry.fixtures]:
-		result[texture.get_instance_id()] = texture
+		var storage: Texture2D = texture.atlas if texture is AtlasTexture else texture
+		result[storage.get_instance_id()] = storage
 	for signal_light: Dictionary in entry.signals:
 		for texture: Texture2D in signal_light.lenses:
-			result[texture.get_instance_id()] = texture
+			var storage: Texture2D = texture.atlas if texture is AtlasTexture else texture
+			result[storage.get_instance_id()] = storage
 	return result
 
 
 func _store(tile: Vector2i, entry: Dictionary) -> void:
+	var rebuild_index: bool = _receiver_grid_dirty or not cache.has(tile) or cache[tile].origin != entry.origin
 	_release(tile)
 	cache[tile] = entry
+	_redraw_batch(tile)
+	_receiver_grid_dirty = rebuild_index
 	if fades != null and fades.peek(tile, fade_edge, fade_rotation) == CityLightFade.UNSEEN:
 		unseen[tile] = true
 		fade_pending = true
@@ -295,6 +367,8 @@ func _release(tile: Vector2i) -> void:
 	unseen.erase(tile)
 	if not cache.has(tile):
 		return
+	_redraw_batch(tile)
+	_receiver_grid_dirty = true
 	for id: int in _entry_textures(cache[tile]):
 		if not texture_users.has(id):
 			continue
@@ -346,12 +420,23 @@ func invalidate_all() -> void:
 func invalidate_regions(changes: Array[Rect2i]) -> void:
 	if changes.is_empty():
 		return
-	for tile in cache:
-		var receiver := Rect2i(cache[tile].origin, Vector2i(64, 64))
-		for changed in changes:
-			if receiver.intersects(changed):
+	if _receiver_grid_dirty:
+		_receiver_keys.assign(cache.keys())
+		var rectangles := PackedInt32Array()
+		rectangles.resize(_receiver_keys.size() * 4)
+		for index in _receiver_keys.size():
+			var origin: Vector2i = cache[_receiver_keys[index]].origin
+			rectangles[index * 4] = origin.x
+			rectangles[index * 4 + 1] = origin.y
+			rectangles[index * 4 + 2] = 64
+			rectangles[index * 4 + 3] = 64
+		_receiver_grid = NativeRectIndex.build(rectangles, 1, 128)
+		_receiver_grid_dirty = false
+	for changed in changes:
+		for index in _receiver_grid.candidates(changed):
+			var tile := _receiver_keys[index]
+			if not dirty.has(tile) and Rect2i(cache[tile].origin, Vector2i(64, 64)).intersects(changed):
 				_mark_dirty(tile)
-				break
 
 
 func _forget_helpers(tile: Vector2i) -> void:
@@ -433,28 +518,95 @@ func _build(app: CityApplication, tile: Vector2i) -> Dictionary:
 		var occluders := CityLifeCanvas.scaled_occluders(masker._candidates(app, tile, part.enter), roads.raster_scale, Rect2i(origin, Vector2i(64, 64)))
 		var visible := CityLifeCanvas.visible_sprite(part.image, origin * roads.raster_scale, occluders)
 		image.blit_rect_mask(visible, visible, Rect2i(0, 0, edge, edge), Vector2i.ZERO)
-	var result := CityNightFixtures.build(app, tile, origin,
-		CityNightFixtures.street_layout(city, tile, int(profiles.street.spacing)), masker, templates.texture, roads.raster_scale)
+	var result := templates.fixtures(app, tile, origin,
+		CityNightFixtures.street_layout(city, tile, int(profiles.street.spacing)), masker, roads.raster_scale)
 	result.merge({"texture": templates.texture(image), "origin": origin})
 	return result
 
 
 func _draw() -> void:
-	for tile in visible_tiles:
-		if cache.has(tile):
-			var texture: Texture2D = cache[tile].texture
-			draw_texture_rect(texture, Rect2(cache[tile].origin, texture.get_size() / roads.raster_scale), false, _fade_color(tile))
+	if _draw_batches.is_empty():
+		_draw_receivers(self, visible_tiles, 0)
 
 
 func _draw_fixtures() -> void:
-	for tile in visible_tiles:
+	if _draw_batches.is_empty():
+		_draw_receivers(fixtures, visible_tiles, 1)
+
+
+func _draw_receivers(canvas: CanvasItem, tiles: Array[Vector2i], layer: int) -> void:
+	for tile in tiles:
 		if not cache.has(tile):
 			continue
 		var entry: Dictionary = cache[tile]
-		fixtures.draw_texture_rect(entry.fixtures, Rect2(entry.origin, entry.fixtures.get_size() / roads.raster_scale), false, _fade_color(tile))
+		if layer == 2:
+			for signal_light: Dictionary in entry.signals:
+				var lens := CityNightFixtures.signal_lens(tile, signal_light.axis, clock)
+				canvas.draw_texture_rect(signal_light.lenses[lens], Rect2(signal_light.origin, Vector2(9, 11)), false, _fade_color(tile))
+		else:
+			var texture: Texture2D = entry.texture if layer == 0 else entry.fixtures
+			canvas.draw_texture_rect(texture, Rect2(entry.origin, texture.get_size() / roads.raster_scale), false, _fade_color(tile))
+
+
+func _clear_draw_batches() -> void:
+	for batch in _draw_batches:
+		for canvas: DrawBatch in batch:
+			canvas.free()
+	_draw_batches.clear()
+	_batch_tiles.clear()
+	_tile_batches.clear()
+
+
+func _sync_draw_batches() -> bool:
+	if visible_tiles.size() < DRAW_BATCH_THRESHOLD:
+		if not _draw_batches.is_empty():
+			_clear_draw_batches()
+			queue_redraw()
+			fixtures.queue_redraw()
+		return false
+	if _batch_tiles == visible_tiles:
+		return true
+	# Preserve the exact command order, including overlapping receivers.
+	# Only the groups touched by a new texture/fade need rebuilding later.
+	_tile_batches.clear()
+	_batch_tiles.assign(visible_tiles)
+	var count := (visible_tiles.size() + DRAW_BATCH_SIZE - 1) / DRAW_BATCH_SIZE
+	while _draw_batches.size() > count:
+		for canvas: DrawBatch in _draw_batches.pop_back():
+			canvas.free()
+	while _draw_batches.size() < count:
+		var batch: Array = []
+		for layer in 3:
+			var canvas := DrawBatch.new()
+			canvas.receiver = self
+			canvas.layer = layer
+			canvas.use_parent_material = true
+			canvas.show_behind_parent = layer != 2
+			(self if layer == 0 else (fixtures if layer == 1 else signals)).add_child(canvas)
+			batch.append(canvas)
+		_draw_batches.append(batch)
+	for index in count:
+		var tiles: Array[Vector2i] = visible_tiles.slice(index * DRAW_BATCH_SIZE, (index + 1) * DRAW_BATCH_SIZE)
+		for tile in tiles:
+			_tile_batches[tile] = index
+		for canvas: DrawBatch in _draw_batches[index]:
+			canvas.tiles = tiles
+			canvas.queue_redraw()
+	queue_redraw()
+	fixtures.queue_redraw()
+	signals.queue_redraw()
+	return true
+
+
+func _redraw_batch(tile: Vector2i) -> void:
+	if _tile_batches.has(tile):
+		for canvas: DrawBatch in _draw_batches[_tile_batches[tile]]:
+			canvas.queue_redraw()
 
 
 func _refresh_signals() -> void:
+	if _sync_draw_batches():
+		return
 	signal_tiles.clear()
 	for tile in visible_tiles:
 		if cache.has(tile) and not cache[tile].signals.is_empty():
@@ -463,10 +615,8 @@ func _refresh_signals() -> void:
 
 
 func _draw_signals() -> void:
-	for tile in signal_tiles:
-		for signal_light: Dictionary in cache[tile].signals:
-			var lens := CityNightFixtures.signal_lens(tile, signal_light.axis, clock)
-			signals.draw_texture_rect(signal_light.lenses[lens], Rect2(signal_light.origin, Vector2(9, 11)), false, _fade_color(tile))
+	if _draw_batches.is_empty():
+		_draw_receivers(signals, signal_tiles, 2)
 
 
 func sync_fade_clock() -> void:
@@ -494,10 +644,12 @@ func start_visible_fades(view: Rect2) -> void:
 	for tile: Vector2i in unseen.keys():
 		if fades.peek(tile, fade_edge, fade_rotation) != CityLightFade.UNSEEN:
 			unseen.erase(tile)
+			_redraw_batch(tile)
 			started = true
 		elif Rect2(cache[tile].origin, Vector2(64, 64)).intersects(view):
 			fades.birth(tile, fade_edge, fade_rotation)
 			unseen.erase(tile)
+			_redraw_batch(tile)
 			started = true
 	if started:
 		queue_redraw()
@@ -530,8 +682,20 @@ func discover_city_step(city: CityState, budget_usec: int) -> void:
 	discovery_indices.clear()
 
 
+func _has_sources(city: CityState, tile: Vector2i) -> bool:
+	# Discovery needs only existence, not allocated copies of every light profile.
+	if not CityNightFixtures.street_layout(city, tile, int(profiles.street.spacing)).is_empty():
+		return true
+	for direction in 4:
+		var neighbor: Vector2i = tile + CityLifePaths.DIRECTIONS[direction]
+		if city.index_of(neighbor.x, neighbor.y) >= 0 and profiles.entrances.has(str(city.building_id(neighbor.x, neighbor.y))) \
+				and city.land_altitude(tile.x, tile.y) == city.land_altitude(neighbor.x, neighbor.y):
+			return true
+	return false
+
+
 func fixture_point(city: CityState, tile: Vector2i) -> Vector2:
 	if not fixture_points.has(tile):
-		var eligible := city.index_of(tile.x, tile.y) >= 0 and CityLifePaths.ports(city, tile) != 0 and city.land_altitude(tile.x, tile.y) < city.visible_altitude_levels and not sources(city, tile).is_empty()
+		var eligible := city.index_of(tile.x, tile.y) >= 0 and CityLifePaths.ports(city, tile) != 0 and city.land_altitude(tile.x, tile.y) < city.visible_altitude_levels and _has_sources(city, tile)
 		fixture_points[tile] = CityLifePaths.point(city, tile, 0, 2, 0.5, false) if eligible else Vector2.INF
 	return fixture_points[tile]

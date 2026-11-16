@@ -114,6 +114,22 @@ func required_variants() -> Array[int]:
 	return result
 
 
+func required_light_views() -> Array[int]:
+	var result: Array[int] = []
+	var options := app.preferences.visual_enhancements
+	var visibility := app.view_state.surface_visibility
+	if options.night_ground <= 0.0 or not visibility.networks or not visibility.buildings:
+		return result
+	for zoom: float in CityMapConstants.ZOOM_LEVELS:
+		if not VisualEnhancementOptions.detail_lights_visible(options, zoom):
+			continue
+		var view := mini(2, AppSettingsStore.graphics_size_at_zoom(app.preferences.effective_zoom_graphics(), roundi(zoom * 100), app.preferences.effective_overview_graphics()))
+		if view not in result:
+			result.append(view)
+	result.sort()
+	return result
+
+
 func _index(view: int) -> int:
 	# Zoom callbacks run before the figure controller updates the original
 	# archives. Select the current view directly, never last frame's traffic.
@@ -222,8 +238,9 @@ func select_direction() -> void:
 	lighting_started = false
 	preparing_lights.clear()
 	ready = true
+	var light_views := required_light_views()
 	for index in stages:
-		ready = ready and banks[index].prefetch_ready() and prepared_light_views.has(index / 2)
+		ready = ready and banks[index].prefetch_ready() and (index / 2 not in light_views or prepared_light_views.has(index / 2))
 	busy = not ready
 	if ready:
 		app.city_dialogs.visual_preparation_progress.hide()
@@ -251,7 +268,12 @@ func _select_variants() -> void:
 	if banks.size() != VARIANTS:
 		return
 	var required := _preparation_variants()
-	if stages == required:
+	var missing_lights := false
+	if not busy:
+		var light_views := required_light_views()
+		for index in required:
+			missing_lights = missing_lights or (index / 2 in light_views and not prepared_light_views.has(index / 2))
+	if stages == required and not missing_lights:
 		return
 	# A zoom mapping or decorative traffic choice selects existing banks. It
 	# does not change their pixels, archive identity or in-flight job layout.
@@ -354,7 +376,10 @@ func _prepare_step() -> void:
 	# Ongoing simulation repaints must not starve initial preparation. Every
 	# area must exist; newer generations continue through the normal updater.
 	if cache.prefetch_covered():
-		if not prepared_light_views.has(preparing_view) and VisualEnhancementOptions.detail_lights_visible(app.preferences.visual_enhancements, app.map_view.zoom_factor):
+		var needs_lights := preparing_view in required_light_views()
+		if needs_lights and not prepared_light_views.has(preparing_view):
+			if not work_budget.available():
+				return
 			var lighting := app.visual_environment.night_lighting
 			lighting._select_ground(preparing_view)
 			var ground := lighting.ground
@@ -366,8 +391,9 @@ func _prepare_step() -> void:
 				if _prepare_whole_city():
 					ground.begin_city_discovery(app.document_state.city)
 				lighting_started = true
-			ground.sync(app, 0.0, 0.0, true, maxi(1, work_budget.remaining()))
-			if ground.discovery_active:
+			else:
+				ground.sync(app, 0.0, 0.0, true, maxi(1, work_budget.remaining()))
+			if ground.discovery_active or ground.collection_active:
 				return
 			preparing_lights.assign(ground.discovered if _prepare_whole_city() else ground.visible_tiles)
 			var built_lights := 0
@@ -381,7 +407,8 @@ func _prepare_step() -> void:
 				_progress((stage + fraction) / total, detail)
 				return
 		_prepare_gpu_draw(cache)
-		prepared_light_views[preparing_view] = true
+		if needs_lights:
+			prepared_light_views[preparing_view] = true
 		cache.prepare_entire_city = false
 		cache._viewport_valid = false
 		cache.update_viewport(app.map_view.visible_source_rect())

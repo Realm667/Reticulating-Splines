@@ -65,13 +65,14 @@ func prepare(sprites: CityLifeSprites, lights: CityLifeLights) -> void:
 	emission = ImageTexture.create_from_image(lamp_image)
 
 
-func render(canvas: CityLifeCanvas, entries: Array[Dictionary]) -> void:
+func render(canvas: CityLifeCanvas, entries: Array[Dictionary], masks_prepared := false) -> void:
 	origin = canvas.source_bounds.position
 	upload_bytes = 0
 	var count := entries.size()
 	while groups.size() * GROUP < count:
 		add_group(canvas)
-	prepare_masks(canvas, entries)
+	if not masks_prepared:
+		prepare_masks(canvas, entries)
 	if _mask_binding_changed:
 		for node in groups + emissions:
 			if is_instance_valid(node):
@@ -87,10 +88,13 @@ func render(canvas: CityLifeCanvas, entries: Array[Dictionary]) -> void:
 	var streams := NativeVisualRaster.figure_buffers(entries, rectangles, mask_origins, mask_layers, origin, artwork_scale, GROUP)
 	for group in streams.size() / 2:
 		buffers[group] = streams[group * 2]
-		data[group] = streams[group * 2 + 1]
-		data[group].resize(GROUP * 16)
+		# Keep one writable packed array; nested writes detach a shared array
+		# repeatedly while it is still referenced by the native stream list.
+		var parameters: PackedFloat32Array = streams[group * 2 + 1]
+		parameters.resize(GROUP * 16)
 		for slot in mini(GROUP, count - group * GROUP):
-			data[group][GROUP * 12 + slot * 4] = entries[group * GROUP + slot].get("shear", 0.0)
+			parameters[GROUP * 12 + slot * 4] = entries[group * GROUP + slot].get("shear", 0.0)
+		data[group] = parameters
 	for index in groups.size():
 		var visible_count := clampi(count - index * GROUP, 0, GROUP)
 		groups[index].multimesh.visible_instance_count = visible_count
@@ -139,7 +143,6 @@ func prepare_masks(canvas: CityLifeCanvas, entries: Array[Dictionary], budget_us
 	var preparation_usec := 0
 	var complete := true
 	for index in count:
-		var started := Time.get_ticks_usec()
 		var prepared := false
 		var entry := entries[index]
 		var figure: CityLifeController.Figure = entry.figure
@@ -147,6 +150,9 @@ func prepare_masks(canvas: CityLifeCanvas, entries: Array[Dictionary], budget_us
 		var candidates: Array = entry.occluders
 		var version: int = candidates[0].image.get_instance_id() if not candidates.is_empty() else 0
 		var cached: MaskEntry = cropped.get(key)
+		if cached != null and cached.version == version and identities[cached.slot] == cached.identity:
+			continue
+		var started := Time.get_ticks_usec()
 		if cached == null:
 			if _next_mask_slot >= MASK_CAPACITY and not live_ready:
 				for current: Dictionary in entries:

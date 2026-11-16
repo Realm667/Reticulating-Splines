@@ -23,6 +23,9 @@ func _process(delta: float) -> void:
 	var eligible: bool = app.preferences.visual_enhancements.get("idle_saving_enabled", true) and not app.coop.active()
 	eligible = eligible and controller != null and controller.speed == GameSpeedController.Speed.PAUSED
 	eligible = eligible and app.preferences.visual_enhancements.pause_freezes and quiet_seconds >= 2.0
+	# Paused does not mean idle while graphics are being prepared. A 15 FPS
+	# cap also makes the cooperative loader mistake deliberate waits for load.
+	eligible = eligible and not app.visual_preparation.busy
 	eligible = eligible and not (app.photo_mode != null and app.photo_mode.capturing)
 	if not eligible:
 		restore()

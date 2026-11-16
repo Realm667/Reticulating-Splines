@@ -65,7 +65,9 @@ static func signal_directions(city: CityState, tile: Vector2i) -> Array[int]:
 		if CityLifePaths.connected(city, tile, direction):
 			result.append(direction)
 	# Disconnected junction artwork is not a working intersection.
-	return result if result.size() >= 3 else []
+	if result.size() < 3:
+		result.clear()
+	return result
 
 
 static func signal_lens(tile: Vector2i, axis: int, seconds: float) -> int:

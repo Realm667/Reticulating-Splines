@@ -27,8 +27,18 @@ func _check_photo_and_idle(app: CityApplication) -> void:
 	var previous_limit := Engine.max_fps
 	Engine.max_fps = 60
 	app.frame.select_speed(GameSpeedController.Speed.PAUSED)
+	var preparing := app.visual_preparation.busy
+	app.visual_preparation.busy = true
+	idle._process(2.1)
+	assert(Engine.max_fps == 60, "Paused graphics preparation must not be throttled")
+	app.visual_preparation.busy = false
 	idle._process(2.1)
 	assert(Engine.max_fps == 15)
+	app.visual_preparation.busy = true
+	idle._process(0.1)
+	assert(Engine.max_fps == 60, "New background preparation must restore the frame limit")
+	app.visual_preparation.busy = false
+	idle._process(2.1)
 	idle._input(InputEventMouseMotion.new())
 	assert(Engine.max_fps == 60)
 	idle._process(2.1)
@@ -40,6 +50,7 @@ func _check_photo_and_idle(app: CityApplication) -> void:
 	idle._process(2.1)
 	assert(Engine.max_fps == 10, "Idle saving must not raise a lower user limit")
 	idle.restore()
+	app.visual_preparation.busy = preparing
 	Engine.max_fps = previous_limit
 	idle.free()
 

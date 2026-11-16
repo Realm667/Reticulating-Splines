@@ -33,6 +33,13 @@ func _run() -> void:
 	main.preferences.use_classic_zoom_graphics = true
 	main.preferences.zoom_graphics = [0, 1, 2, 2, 2, 2]
 	assert(prepare.required_variants() == [0, 3, 5], "Preload only the variants reachable at configured zooms")
+	assert(prepare.required_light_views() == [0, 1, 2])
+	main.preferences.visual_enhancements.detail_lights_min_zoom = 2
+	assert(prepare.required_light_views() == [1, 2], "Do not prepare lights in graphics sizes below the lighting threshold")
+	main.preferences.visual_enhancements.night_ground = 0.0
+	assert(prepare.required_light_views().is_empty())
+	main.preferences.visual_enhancements.night_ground = 45.0
+	main.preferences.visual_enhancements.detail_lights_min_zoom = 0
 	main.preferences.zoom_graphics = [1, 2, 2, 2, 2, 2]
 	assert(prepare.required_variants() == [0, 2, 5])
 	main.preferences.visual_enhancements.life_cars_enabled = false
@@ -112,6 +119,14 @@ func _run() -> void:
 	# Selecting already warm graphics must not close banks or cancel their work.
 	var retained_banks := prepare.banks.duplicate()
 	var retained_archives := prepare.archives.duplicate()
+	main.preferences.visual_enhancements.detail_lights_min_zoom = 2
+	prepare.prepared_light_views.clear()
+	await _finish_preparation(main)
+	assert(prepare.prepared_light_views.keys() == [2], "Skipped light views must remain available for later preparation")
+	main.preferences.visual_enhancements.detail_lights_min_zoom = 0
+	await _finish_preparation(main)
+	assert(prepare.prepared_light_views.size() == 3, "Changing the threshold must warm newly reachable lights")
+	assert(prepare.banks == retained_banks and prepare.archives == retained_archives)
 	main.preferences.zoom_graphics = [2, 2, 2, 2, 2, 2]
 	await _finish_preparation(main)
 	main.preferences.zoom_graphics = [1, 2, 2, 2, 2, 2]

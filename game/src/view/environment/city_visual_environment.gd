@@ -299,7 +299,9 @@ func process(delta: float) -> void:
 			# Restore or remove moving emission masks even when simulation is paused.
 			app.moving_sprites.refresh_moving_things()
 	# Appearance fades finish in real time, also when the simulation is paused.
-	night_lighting.process(active, night, options, elapsed * factor, maxf(delta, 0.0))
+	var work_budget := app.visual_preparation.work_budget
+	var lighting_budget := mini(2000, work_budget.remaining()) if work_budget.deadline > 0 else 2000
+	night_lighting.process(active, night, options, elapsed * factor, maxf(delta, 0.0), lighting_budget)
 	if clouds.layer != null and clouds.layer.visible:
 		app.map_view.layers._apply_environment(clouds.material)
 	sun_glow.advance_weather(not options.weather_enabled or weather.kind == CityVisualWeather.Kind.SUNNY, delta)

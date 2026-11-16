@@ -1,5 +1,7 @@
 extends SceneTree
 
+const CityRotation = preload("res://src/tools/city/city_rotation_command.gd")
+
 @warning_ignore_start("integer_division")
 
 
@@ -9,16 +11,147 @@ func _initialize() -> void:
 	_check_local_invalidation()
 	_check_zoom_banks()
 	_check_source_invalidation()
+	_check_dense_occlusion_invalidation()
+	_check_retired_masks()
+	_check_night_preparation()
 	_check_surface_budget()
 	_check_network_search()
 	_check_geometry_changes()
 	_check_path_segments()
+	_check_path_invalidation()
 	_check_local_tiles()
+	_check_bounded_collection()
+	_check_receiver_index()
 	_check_atlas_pixels()
 	_check_incremental_eviction()
 	_check_publication_budget()
 	print("PASS: exact city-life artwork/emission pixels, road coordinates, local occlusion invalidation and bounded light reuse")
 	quit()
+
+
+func _check_night_preparation() -> void:
+	var app := CityApplication.new()
+	app.map_view = CityMapControl.new()
+	app.map_view.zoom_factor = 1.0
+	var city := load("res://tests/city_life_test.gd").fixture() as CityState
+	app.document_state.city = city
+	app.visual_environment.night = 1.0
+	var canvas := CityLifeCanvas.new()
+	canvas.gpu_enabled = true
+	var headlights := CityLifeHeadlights.new()
+	headlights._published = true
+	canvas._occlusion_signature = [city.document.get_instance_id(), app.static_render_state.epoch, null,
+		app.static_render.city_view_size(), 0, city.compass_rotation()]
+	canvas.road_layer = headlights
+	canvas.add_child(headlights)
+	var figure := CityLifeController.Figure.new()
+	figure.tile = Vector2i(64, 64)
+	figure.enter = 0
+	figure.exit = 2
+	figure.direction = 2
+	for y in range(64, 67):
+		canvas._light_occluders[Vector3i(64, y, 0)] = []
+	canvas.prepare_lights(app, [figure], 100000)
+	assert(canvas.lights.prepared_receivers == 1, "Nighttime headlight preparation did not progress")
+	assert(headlights.groups.is_empty() and headlights.images.is_empty() and headlights.slots.is_empty(),
+		"Night preparation must not change the published GPU receiver slots")
+	var cached: Dictionary = canvas.lights.surfaces.values()[0]
+	var reference := CityLifeLights.new().surface(city, figure.tile, figure.enter, figure.direction, Callable(), false)
+	assert(cached.image.get_data() == reference.image.get_data())
+	canvas._occlusion_signature[5] = (city.compass_rotation() + 1) % 4
+	figure.tile = Vector2i(64, 65)
+	canvas.prepare_lights(app, [figure], 100000)
+	assert(canvas.lights.prepared_receivers == 1 and canvas.lights.surfaces.values()[0] == cached,
+		"Preparation changed an inactive directional bank before render selected the new view")
+	canvas.free()
+	app.map_view.free()
+	app.free()
+
+
+func _check_retired_masks() -> void:
+	var canvas := CityLifeCanvas.new()
+	var mask := Image.create(256, 256, false, Image.FORMAT_RGBA8)
+	var key := Vector3i(1, 2, 0)
+	canvas._occluders[key] = [{"image": mask, "origin": Vector2i.ZERO}]
+	canvas._occluder_bounds[key] = Rect2i(0, 0, 256, 256)
+	canvas.lights.surfaces[Vector4i(1, 2, 0, 0)] = {"image": mask, "occlusion_keys": [key]}
+	canvas.invalidate_occlusion([Rect2i(0, 0, 1, 1)])
+	assert(canvas._occluders.is_empty() and canvas.lights.surfaces.is_empty(), "Retirement retained stale lookup entries")
+	assert(canvas._retired_masks.size() == 2)
+	for index in 200:
+		canvas._retire_masks([{"image": mask}])
+		assert(canvas._retired_mask_bytes <= CityLifeCanvas.RETIRED_MASK_BYTES)
+	var pending := canvas._retired_masks.size()
+	canvas.release_retired_masks(0)
+	assert(canvas._retired_masks.size() == pending - 1, "A zero allowance must release one image and yield")
+	canvas.release_retired_masks(1000000)
+	assert(canvas._retired_masks.is_empty() and canvas._retired_mask_bytes == 0)
+	canvas.free()
+
+
+func _check_dense_occlusion_invalidation() -> void:
+	var canvas := CityLifeCanvas.new()
+	var changes: Array[Rect2i] = []
+	for index in 5000:
+		var key := Vector3i(index / 100, index % 100, index % 2)
+		canvas._occluder_bounds[key] = Rect2i((index / 100) * 32 - 800, (index % 100) * 24 - 1200, 64, 48)
+		canvas._occluders[key] = []
+		canvas._light_occluders[key] = []
+		canvas.lights.visible_roads[key] = []
+		canvas.lights.visible_roads[key + Vector3i(0, 0, 2)] = []
+		canvas.lights.surfaces[Vector4i(key.x, key.y, key.z, 0)] = {"occlusion_keys": [key]}
+	for index in 80:
+		changes.append(Rect2i(index * 53 - 1000, index * 31 - 1300, 32, 48))
+	changes.append(changes[0])
+	var expected := canvas._occluder_bounds.duplicate()
+	var started := Time.get_ticks_usec()
+	for key in canvas._occluder_bounds:
+		for changed in changes:
+			if canvas._occluder_bounds[key].intersects(changed):
+				expected.erase(key)
+				break
+	var reference_usec := Time.get_ticks_usec() - started
+	started = Time.get_ticks_usec()
+	canvas.invalidate_occlusion(changes)
+	var indexed_usec := Time.get_ticks_usec() - started
+	assert(canvas._occluder_bounds == expected, "Indexed publication changed exact mask invalidation")
+	assert(canvas._occluders.size() == expected.size() and canvas._light_occluders.size() == expected.size())
+	assert(canvas.lights.surfaces.size() == expected.size() and canvas.lights.visible_roads.size() == expected.size() * 2)
+	for key in expected:
+		assert(canvas.lights.surfaces.has(Vector4i(key.x, key.y, key.z, 0)) and canvas.lights.visible_roads.has(key))
+	canvas.invalidate_occlusion(changes)
+	assert(canvas._occluder_bounds == expected, "Repeated publication removed unrelated masks")
+	print("OCCLUSION_INDEX reference_us=", reference_usec, " indexed_us=", indexed_usec)
+	canvas.free()
+
+
+func _check_path_invalidation() -> void:
+	var city := load("res://tests/city_life_test.gd").fixture() as CityState
+	var life := CityLifeController.new(null)
+	life._sync_path_geometry(city)
+	var near := Vector3i(64, 64, 4)
+	var far := Vector3i(20, 20, 4)
+	for key in [near, far]:
+		life._paths[key] = CityLifePaths.Segment.new(city, Vector2i(key.x, key.y), 0, 2, false)
+	var retained := life._paths.duplicate()
+	city.set_tile_flag(64, 64, Sc2TileFlags.POWERED, true)
+	assert(life._sync_path_geometry(city).is_empty())
+	assert(life._paths == retained, "A power/status update discarded unchanged lane geometry")
+	city.set_land_altitude(64, 65, 3)
+	assert(life._sync_path_geometry(city).has(Vector2i(64, 64)))
+	assert(not life._paths.has(near) and life._paths[far] == retained[far], "Local slope edits discarded distant paths or retained stale neighbors")
+	var refreshed := CityLifePaths.Segment.new(city, Vector2i(64, 64), 0, 2, false)
+	for step in 21:
+		assert(refreshed.point(step / 20.0).is_equal_approx(CityLifePaths.point(city, Vector2i(64, 64), 0, 2, step / 20.0, false)))
+	assert(CityRotation.apply(city, true).ok)
+	life._sync_path_geometry(city)
+	assert(life._paths.is_empty(), "Rotation retained paths in the previous coordinate space")
+	# Catch-up shares buckets, but must retain the original eviction rate.
+	for index in 5000:
+		life._paths[Vector3i(index, 0, 0)] = refreshed
+	life._advance(city, 0.01, false)
+	assert(life._paths.size() == 5000 - 64, "Catch-up stopped pruning unoccupied paths")
+
 
 
 func _check_atlas_pixels() -> void:
@@ -82,6 +215,100 @@ func _check_local_tiles() -> void:
 					expected.append(tile)
 		assert(cache.collect(city, bounds) == expected, "Local road updates changed eligible tiles or spawn order at step %d" % step)
 		assert(cache.collect(city, bounds) == expected, "Warm road reuse changed eligible tiles")
+
+
+func _check_bounded_collection() -> void:
+	var city := load("res://tests/city_life_test.gd").fixture() as CityState
+	var bounds := Rect2i(0, 0, 5000, 4000)
+	var roads := CityLifeTiles.new()
+	var selected := roads.collect(city, bounds, 1)
+	assert(roads.collecting and selected.is_empty(), "Cold discovery must yield before publishing a partial spawn list")
+	city.set_building_id(64, 64, BuildingTileIds.EMPTY)
+	var steps := 0
+	while roads.collecting:
+		selected = roads.collect(city, bounds, 1)
+		steps += 1
+		assert(steps < city.map_size * city.map_size)
+	assert(selected == CityLifeTiles.new().collect(city, bounds), "Edits during collection left stale lanes or changed spawn order")
+	var life := CityLifeController.new(null)
+	life._viewport = bounds
+	var original: CityLifeTiles
+	for turn in 8:
+		if turn == 6:
+			city.set_land_altitude(64, 63, 4)
+		life._collect_tiles(city)
+		assert(life.tiles == CityLifeTiles.new().collect(city, bounds), "Retained direction ignored a hidden edit")
+		if turn == 0:
+			original = life._tile_cache
+		elif turn == 4:
+			assert(life._tile_cache == original, "Returning to a direction discarded its road cache")
+		assert(CityRotation.apply(city, false).ok)
+	assert(life._tile_caches.size() == 4)
+	var ground := CityNightGround.new()
+	var reference := CityNightGround.new()
+	ground.bounds = bounds
+	reference.bounds = bounds
+	ground._collect(city, 1)
+	assert(ground.collection_active, "Cold fixture discovery did not yield")
+	steps = 0
+	while ground.collection_active:
+		ground._collect(city, 1)
+		steps += 1
+		assert(steps < city.map_size * city.map_size)
+	reference._collect(city)
+	assert(ground.visible_tiles == reference.visible_tiles, "Budgeted discovery changed light placement or priority")
+	assert(ground.pending == reference.pending and ground.queued == reference.queued)
+	var retained := ground.visible_tiles.duplicate()
+	ground.bounds.position += Vector2i(128, 64)
+	ground._collect(city, 1)
+	assert(ground.collection_active and ground.visible_tiles == retained, "Discovery exposed a partial draw list")
+	ground.reset()
+	assert(not ground.collection_active and ground._collection_indices.is_empty())
+	ground.free()
+	reference.free()
+
+
+func _check_receiver_index() -> void:
+	var ground := CityNightGround.new()
+	ground.resident = true
+	var texture := ImageTexture.create_from_image(Image.create(1, 1, false, Image.FORMAT_RGBA8))
+	for index in 5000:
+		var tile := Vector2i(index / 50, index % 50)
+		ground._store(tile, {"texture": texture, "fixtures": texture, "signals": [], "origin": tile * Vector2i(96, 40) - Vector2i(200, 300)})
+	var changes: Array[Rect2i] = []
+	for index in 80:
+		changes.append(Rect2i((index * 117) % 9600 - 200, (index * 53) % 2000 - 300, 33, 65))
+	for step in 3:
+		if step == 1:
+			var index := ground._receiver_grid
+			ground._store(Vector2i.ZERO, ground.cache[Vector2i.ZERO].duplicate())
+			assert(not ground._receiver_grid_dirty and ground._receiver_grid == index, "Pixel refresh rebuilt unchanged spatial geometry")
+		elif step == 2:
+			ground._release(Vector2i.ZERO)
+			var moved: Dictionary = ground.cache[Vector2i.ONE].duplicate()
+			moved.origin = Vector2i(-200, -300)
+			ground._store(Vector2i.ONE, moved)
+			ground._store(Vector2i(-1, -1), moved.duplicate())
+		var expected := {}
+		var started := Time.get_ticks_usec()
+		for tile in ground.cache:
+			for changed in changes:
+				if Rect2i(ground.cache[tile].origin, Vector2i(64, 64)).intersects(changed):
+					expected[tile] = true
+					break
+		var scan_usec := Time.get_ticks_usec() - started
+		ground.dirty.clear()
+		ground.pending.clear()
+		ground.queued.clear()
+		started = Time.get_ticks_usec()
+		ground.invalidate_regions(changes)
+		var indexed_usec := Time.get_ticks_usec() - started
+		assert(ground.dirty == expected, "Spatial query missed or over-invalidated a moved/removed/boundary receiver")
+		print("RECEIVER_INDEX step=%d scan_usec=%d indexed_usec=%d matches=%d" % [step, scan_usec, indexed_usec, expected.size()])
+	ground.reset()
+	ground.invalidate_regions(changes)
+	assert(ground.dirty.is_empty())
+	ground.free()
 
 
 func _check_path_segments() -> void:

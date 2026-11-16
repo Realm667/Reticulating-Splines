@@ -45,7 +45,7 @@ func reset() -> void:
 		receiver.clock = 0.0
 
 
-func process(active: bool, night: float, options: Dictionary, elapsed := 0.0, presentation_elapsed := 0.0) -> void:
+func process(active: bool, night: float, options: Dictionary, elapsed := 0.0, presentation_elapsed := 0.0, budget_usec := 4000) -> void:
 	fades.advance(presentation_elapsed)
 	detail_enabled = VisualEnhancementOptions.detail_lights_visible(options, app.map_view.zoom_factor)
 	var enabled := active and night > 0.001 and app.map_view.city_source != null
@@ -65,7 +65,10 @@ func process(active: bool, night: float, options: Dictionary, elapsed := 0.0, pr
 	# A fresh lighting activation still needs a one-second fade at dusk or when
 	# the player enables street lighting, including while simulation is paused.
 	street_activation = minf(1.0, street_activation + maxf(presentation_elapsed, 0.0) / CityLightFade.DURATION) if street_enabled else 0.0
-	ground.sync(app, night * float(options.night_ground) / 100.0 * smoothstep(0.0, 1.0, street_activation) if street_enabled else 0.0, elapsed, prepare)
+	# Share the frame's background allowance with map/preload work. Drawing
+	# retained lights continues even when no receiver-building time remains.
+	ground.sync(app, night * float(options.night_ground) / 100.0 * smoothstep(0.0, 1.0, street_activation) if street_enabled else 0.0,
+		elapsed, prepare, budget_usec)
 	var before: Control = app.visual_environment.clouds.layer
 	if before == null:
 		before = app.visual_environment.weather.layer
