@@ -2806,7 +2806,7 @@
         128,
         154
       ],
-      "lightmap": "lights/1255.png",
+      "lightmap": "animation/1255/0-light.png",
       "animation": {
         "format": "rgba",
         "fps": 8,
