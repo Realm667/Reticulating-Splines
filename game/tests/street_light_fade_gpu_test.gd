@@ -8,6 +8,7 @@ func _initialize() -> void:
 func _run() -> void:
 	await _check_light_atlas()
 	await _check_draw_batches()
+	await _check_fade_batches()
 	await _check_soft_edges()
 	for zoom in [0.1, 0.25, 0.5, 1.0]:
 		await _check_zoom(zoom)
@@ -146,6 +147,52 @@ func _check_draw_batches() -> void:
 		elif step == 1:
 			assert(counters[0][0] == 3 and counters[1][0] == 0 and counters[2][0] == 0,
 				"A local light edit rebuilt unrelated command groups")
+	for viewport in views:
+		viewport.queue_free()
+	await process_frame
+
+
+func _check_fade_batches() -> void:
+	var views: Array[SubViewport] = []
+	var grounds: Array[CityNightGround] = []
+	var image := Image.create(8, 8, false, Image.FORMAT_RGBA8)
+	image.fill(Color(0.8, 0.4, 0.1, 0.7))
+	var texture := ImageTexture.create_from_image(image)
+	for variant in 2:
+		var viewport := SubViewport.new()
+		viewport.size = Vector2i(256, 160)
+		viewport.transparent_bg = true
+		viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+		root.add_child(viewport)
+		views.append(viewport)
+		var ground := CityNightGround.new()
+		ground.fades = CityLightFade.new()
+		ground.fades.advance(17.0)
+		viewport.add_child(ground)
+		grounds.append(ground)
+		(ground.material as ShaderMaterial).set_shader_parameter("strength", 0.7)
+		for index in 140:
+			var tile := Vector2i(index % 20, index / 20)
+			ground._store(tile, {"texture": texture, "fixtures": texture, "origin": tile * Vector2i(10, 12), "signals": []})
+			ground.visible_tiles.append(tile)
+		ground._sync_draw_batches()
+	for phase in 3:
+		var view := Rect2(0, 0, 90 if phase == 0 else 256, 160)
+		var reference := grounds[0]
+		for tile: Vector2i in reference.unseen.keys():
+			if reference.fades.peek(tile, 128, 0) != CityLightFade.UNSEEN or Rect2(reference.cache[tile].origin, Vector2(64, 64)).intersects(view):
+				reference.fades.birth(tile, 128, 0)
+				reference.unseen.erase(tile)
+				reference._redraw_batch(tile)
+		grounds[1].start_visible_fades(view)
+		assert(reference.fades.starts == grounds[1].fades.starts and reference.fades.revision == grounds[1].fades.revision,
+			"Grouped activation changed first-visible light timestamps")
+		for ground in grounds:
+			ground.fades.advance(0.3)
+			ground.sync_fade_clock()
+		await RenderingServer.frame_post_draw
+		assert(views[0].get_texture().get_image().get_data() == views[1].get_texture().get_image().get_data(),
+			"Grouped fade activation changed GPU pixels")
 	for viewport in views:
 		viewport.queue_free()
 	await process_frame

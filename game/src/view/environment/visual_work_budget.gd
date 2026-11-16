@@ -8,6 +8,7 @@ extends RefCounted
 const UPLOAD_LIMIT := 4 * 1024 * 1024
 var allowance_usec := 1500
 var deadline := 0
+var frame_started := 0
 var upload_bytes := 0
 var region_usec := 250.0
 
@@ -17,7 +18,8 @@ func begin_frame(delta: float) -> void:
 		allowance_usec = maxi(250, allowance_usec / 2)
 	elif delta < 0.017:
 		allowance_usec = mini(2000, allowance_usec + 50)
-	deadline = Time.get_ticks_usec() + allowance_usec
+	frame_started = Time.get_ticks_usec()
+	deadline = frame_started + allowance_usec
 	upload_bytes = 0
 
 

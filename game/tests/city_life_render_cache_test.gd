@@ -22,6 +22,8 @@ func _initialize() -> void:
 	_check_local_tiles()
 	_check_bounded_collection()
 	_check_receiver_index()
+	_check_bounded_light_edits()
+	_check_shared_geometry()
 	_check_atlas_pixels()
 	_check_incremental_eviction()
 	_check_publication_budget()
@@ -81,12 +83,26 @@ func _check_retired_masks() -> void:
 	for index in 200:
 		canvas._retire_masks([{"image": mask}])
 		assert(canvas._retired_mask_bytes <= CityLifeCanvas.RETIRED_MASK_BYTES)
-	var pending := canvas._retired_masks.size()
-	canvas.release_retired_masks(0)
-	assert(canvas._retired_masks.size() == pending - 1, "A zero allowance must release one image and yield")
-	canvas.release_retired_masks(1000000)
+	canvas.release_retired_masks()
 	assert(canvas._retired_masks.is_empty() and canvas._retired_mask_bytes == 0)
+	assert(canvas._retirement_task >= 0, "Retirement was not transferred to the worker")
+	# Retiring one reference must leave another live user's pixels intact.
+	assert(mask.get_size() == Vector2i(256, 256))
+	for index in 200:
+		canvas._retire_masks([{"image": mask}])
+		assert(canvas._retired_mask_bytes <= CityLifeCanvas.RETIRED_MASK_BYTES)
+	# Deletion must also reap a still-running task; no canvas access occurs
+	# inside the static worker callback.
 	canvas.free()
+	assert(mask.get_size() == Vector2i(256, 256))
+	var closing := CityLifeCanvas.new()
+	var disposable := Image.create(512, 512, false, Image.FORMAT_RGBA8)
+	var witness: WeakRef = weakref(disposable)
+	closing._retire_masks([{"image": disposable}])
+	disposable = null
+	closing.release_retired_masks()
+	closing.free()
+	assert(witness.get_ref() == null, "Closing the canvas leaked the worker-owned image")
 
 
 func _check_dense_occlusion_invalidation() -> void:
@@ -266,6 +282,72 @@ func _check_bounded_collection() -> void:
 	assert(not ground.collection_active and ground._collection_indices.is_empty())
 	ground.free()
 	reference.free()
+
+
+func _check_shared_geometry() -> void:
+	var city := CityState.from_document(EmptyCityTemplate.create(128))
+	var first := CityLifeGeometry.new()
+	var second := CityLifeGeometry.new()
+	var hidden := CityLifeGeometry.new()
+	first.sync(city)
+	second.sync(city)
+	hidden.sync(city)
+	city.set_building_id(10, 20, BuildingTileIds.ROAD_STRAIGHT_1)
+	var changed := first.sync(city)
+	var copy := second.sync(city)
+	assert(copy == changed and not second.reset)
+	copy.clear()
+	assert(not changed.is_empty(), "A consumer mutated another cache's geometry delta")
+	city.set_building_id(60, 70, BuildingTileIds.ROAD_STRAIGHT_1)
+	first.sync(city)
+	second.sync(city)
+	var delayed := hidden.sync(city)
+	assert(delayed.has(Vector2i(10, 20)) and delayed.has(Vector2i(60, 70)), "Hidden cache lost an intermediate edit")
+	assert(first.sync(city).is_empty())
+	CityRotation.apply(city, true)
+	first.sync(city)
+	second.sync(city)
+	assert(first.reset and second.reset, "Shared geometry reused a different coordinate space")
+	for index in 8:
+		city.set_building_id(index, 30, BuildingTileIds.ROAD_STRAIGHT_1)
+		first.sync(city)
+	assert(CityLifeGeometry._recent.size() <= CityLifeGeometry.SHARED_TRANSITIONS)
+
+
+func _check_bounded_light_edits() -> void:
+	var city := CityState.from_document(EmptyCityTemplate.create(128))
+	var ground := CityNightGround.new()
+	ground.bounds = Rect2i(-10000, -10000, 20000, 20000)
+	ground.resident = true
+	var changed: Dictionary[Vector2i, bool] = {}
+	for index in 160:
+		var tile := Vector2i(20 + index / 20, 20 + index % 20)
+		city.set_land_altitude(tile.x, tile.y, 0)
+		city.set_terrain_id(tile.x, tile.y, 0)
+		city.set_building_id(tile.x, tile.y, BuildingTileIds.ROAD_CROSSROADS)
+		changed[tile] = true
+		ground.fixture_points[tile] = Vector2.INF
+	ground._update_tiles(changed)
+	ground._update_tiles(changed)
+	assert(ground._edited_tiles.size() == 160 and ground.fixture_points.is_empty(), "Edits were duplicated or retained stale points")
+	ground._apply_tile_updates(city, 0)
+	assert(ground._edited_keys.size() == 144, "Expired budget did not yield after the bounded minimum")
+	var removed := Vector2i(27, 39)
+	city.set_building_id(removed.x, removed.y, 0)
+	ground._update_tiles({removed: true})
+	for portion in 12:
+		ground._apply_tile_updates(city, 0)
+	assert(ground._edited_keys.is_empty() and ground._edited_tiles.is_empty())
+	var reference := CityNightGround.new()
+	for tile in changed:
+		var point := reference.fixture_point(city, tile)
+		assert(ground.fixture_point(city, tile) == point)
+		assert(ground.visible_keys.has(tile) == point.is_finite(), "Queued update did not converge to the latest geometry")
+	ground._update_tiles(changed)
+	ground.reset()
+	assert(ground._edited_tiles.is_empty() and ground._edited_keys.is_empty(), "City reset retained pending edits")
+	reference.free()
+	ground.free()
 
 
 func _check_receiver_index() -> void:

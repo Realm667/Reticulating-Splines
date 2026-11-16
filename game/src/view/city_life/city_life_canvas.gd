@@ -39,6 +39,7 @@ var clip_fixture_masks := false
 const RETIRED_MASK_BYTES := 32 * 1024 * 1024
 var _retired_masks: Array[Image] = []
 var _retired_mask_bytes := 0
+var _retirement_task := -1
 
 
 func _init() -> void:
@@ -502,13 +503,34 @@ func _retire_masks(parts: Array) -> void:
 			_retired_mask_bytes += bytes
 
 
-func release_retired_masks(budget_usec := 500) -> void:
-	var started := Time.get_ticks_usec()
-	while not _retired_masks.is_empty():
-		_retired_mask_bytes -= _retired_masks.back().get_data_size()
-		_retired_masks.pop_back()
-		if Time.get_ticks_usec() - started >= budget_usec:
-			break
+func release_retired_masks() -> void:
+	if _retirement_task >= 0:
+		if not WorkerThreadPool.is_task_completed(_retirement_task):
+			return
+		WorkerThreadPool.wait_for_task_completion(_retirement_task)
+		_retirement_task = -1
+	if _retired_masks.is_empty():
+		return
+	# Freeing even one large CPU image can exceed a frame's time allowance.
+	# Transfer sole ownership of this container; the worker only drops image
+	# references, never mutates pixels, GPU resources, or nodes. At most one
+	# 32 MiB batch is in flight, in addition to the bounded pending container.
+	var retired := _retired_masks
+	_retired_masks = []
+	_retired_mask_bytes = 0
+	_retirement_task = WorkerThreadPool.add_task(CityLifeCanvas._release_mask_images.bind(retired), false, "Retire city masks")
+
+
+static func _release_mask_images(retired: Array[Image]) -> void:
+	retired.clear()
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_PREDELETE and _retirement_task >= 0:
+		# Every pool task must be reaped, including when its canvas is replaced
+		# before the next process call. Normal frames only reap completed tasks.
+		WorkerThreadPool.wait_for_task_completion(_retirement_task)
+		_retirement_task = -1
 
 
 static func merged_occluders(candidates: Array, clip := Rect2i()) -> Array:

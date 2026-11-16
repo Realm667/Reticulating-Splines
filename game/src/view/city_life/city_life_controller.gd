@@ -178,6 +178,10 @@ func process(delta: float) -> void:
 	# Use remaining CPU headroom after either movement or body publication,
 	# without adding work to an already expensive figure frame.
 	var preparation_headroom := 8000 - int(Time.get_ticks_usec() - started)
+	var frame_started := app.visual_preparation.work_budget.frame_started
+	if frame_started > 0:
+		# Earlier map/light preparation consumes the same main-thread headroom.
+		preparation_headroom = mini(preparation_headroom, 8000 - int(Time.get_ticks_usec() - frame_started))
 	if preparation_headroom >= 500 and canvas.texture != null:
 		canvas.prepare_lights(app, figures, mini(1500, preparation_headroom))
 

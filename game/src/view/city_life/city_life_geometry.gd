@@ -7,6 +7,8 @@ var reset := false
 var _signature: Array = []
 var _layout: Array = []
 var _planes: Array[PackedByteArray] = []
+static var _recent: Array[Dictionary] = []
+const SHARED_TRANSITIONS := 4
 
 
 func sync(city: CityState) -> Dictionary[Vector2i, bool]:
@@ -16,6 +18,17 @@ func sync(city: CityState) -> Dictionary[Vector2i, bool]:
 	var revision := [layout, city.mirror_signature(["ALTM", "XBLD", "XTER", "XZON", "XBIT"])]
 	if revision == _signature:
 		return changed
+	# Several presentation caches observe the same completed city revision.
+	# Reuse that exact before/after comparison, retaining owned byte snapshots.
+	# A hidden direction with an older revision still compares its own history.
+	for transition in _recent:
+		if transition.before == _signature and transition.after == revision:
+			_signature = revision
+			_layout = layout
+			_planes = transition.planes
+			reset = transition.reset
+			return transition.changed.duplicate()
+	var previous := _signature
 	_signature = revision
 	# Native setters can mutate borrowed mirrors. Keep owned snapshots.
 	var planes: Array[PackedByteArray] = [city.altitude_words.to_byte_array(), city.buildings.duplicate(), city.terrain.duplicate(),
@@ -38,4 +51,8 @@ func sync(city: CityState) -> Dictionary[Vector2i, bool]:
 						changed[tile + Vector2i(x, y)] = true
 	_planes = planes
 	_layout = layout
+	_recent.append({"before": previous, "after": revision, "planes": planes,
+		"changed": changed.duplicate(), "reset": reset})
+	if _recent.size() > SHARED_TRANSITIONS:
+		_recent.pop_front()
 	return changed

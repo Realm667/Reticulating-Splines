@@ -61,6 +61,9 @@ var fade_pending := false
 var _draw_batches: Array[Array] = []
 var _batch_tiles: Array[Vector2i] = []
 var _tile_batches: Dictionary[Vector2i, int] = {}
+var _edited_tiles: Array[Vector2i] = []
+var _edited_keys: Dictionary[Vector2i, bool] = {}
+var _edit_cursor := 0
 
 
 class DrawBatch extends Node2D:
@@ -97,6 +100,9 @@ func _init() -> void:
 
 
 func reset() -> void:
+	_edited_tiles.clear()
+	_edited_keys.clear()
+	_edit_cursor = 0
 	_clear_draw_batches()
 	_receiver_grid = null
 	_receiver_keys.clear()
@@ -135,6 +141,7 @@ func reset() -> void:
 
 
 func sync(app: CityApplication, strength: float, elapsed := 0.0, prepare := false, budget_usec := 4000) -> void:
+	var started := Time.get_ticks_usec()
 	visible = strength > 0.001 and app.view_state.surface_visibility.networks and app.view_state.surface_visibility.buildings
 	if not visible and not prepare:
 		return
@@ -168,6 +175,9 @@ func sync(app: CityApplication, strength: float, elapsed := 0.0, prepare := fals
 	var changed := roads.sync_geometry(city)
 	var shape := [app.view_state.surface_visibility.duplicate()]
 	if roads.geometry_reset or geometry != shape:
+		_edited_tiles.clear()
+		_edited_keys.clear()
+		_edit_cursor = 0
 		fixture_points.clear()
 		collection_active = false
 		geometry = shape
@@ -178,14 +188,16 @@ func sync(app: CityApplication, strength: float, elapsed := 0.0, prepare := fals
 			# Only that reset needs another city-wide discovery pass.
 			begin_city_discovery(city)
 	elif not changed.is_empty():
-		_update_tiles(city, changed)
+		_update_tiles(changed)
 		if collection_active:
 			collection_active = false
 			bounds = Rect2i()
 	var next := Rect2i(map.visible_source_rect().grow(BUFFER_MARGIN))
 	if prepare_entire_city:
 		next = _city_bounds(city)
-	var started := Time.get_ticks_usec()
+	# Geometry edits share the receiver budget. Large simulation publications
+	# must not recompute hundreds of fixture positions before the clock starts.
+	_apply_tile_updates(city, started + mini(750, maxi(0, budget_usec)))
 	if not bounds.encloses(next.grow(-BUFFER_MARGIN * 0.5)) or bounds.get_area() > next.get_area() * 2:
 		bounds = next
 		collection_active = false
@@ -195,7 +207,7 @@ func sync(app: CityApplication, strength: float, elapsed := 0.0, prepare := fals
 	if discovery_active and budget_usec > 0:
 		discover_city_step(city, maxi(100, budget_usec / 4))
 	var built := 0
-	var attempts := 0 if collection_active or budget_usec <= 0 else mini(BUILD_BUDGET, pending.size())
+	var attempts := 0 if collection_active or budget_usec <= 0 or Time.get_ticks_usec() - started >= budget_usec else mini(BUILD_BUDGET, pending.size())
 	templates.defer_updates = true
 	# Refresh in place: an old complete texture remains until its replacement is ready.
 	while attempts > 0:
@@ -241,11 +253,22 @@ func _city_bounds(city: CityState) -> Rect2i:
 	return Rect2i(Vector2i.ZERO, CityIsometricRenderer.output_size_for_view(2, city.map_size)).grow(160)
 
 
-func _update_tiles(city: CityState, changed: Dictionary[Vector2i, bool]) -> void:
+func _update_tiles(changed: Dictionary[Vector2i, bool]) -> void:
 	for tile in changed:
 		if cache.has(tile):
 			_mark_dirty(tile, true)
 		fixture_points.erase(tile)
+		if not _edited_keys.has(tile):
+			_edited_tiles.append(tile)
+			_edited_keys[tile] = true
+
+
+func _apply_tile_updates(city: CityState, deadline: int) -> void:
+	var processed := 0
+	while _edit_cursor < _edited_tiles.size():
+		var tile := _edited_tiles[_edit_cursor]
+		_edit_cursor += 1
+		_edited_keys.erase(tile)
 		var point := fixture_point(city, tile)
 		var has_fixture := point.is_finite()
 		var in_view := has_fixture and bounds.has_point(Vector2i(point))
@@ -259,9 +282,21 @@ func _update_tiles(city: CityState, changed: Dictionary[Vector2i, bool]) -> void
 			last_used[tile] = collection
 			if not cache.has(tile) or dirty.has(tile):
 				_enqueue(tile)
-	queue_redraw()
-	fixtures.queue_redraw()
-	_refresh_signals()
+		processed += 1
+		# A small minimum keeps edits progressing when the background allowance
+		# is exhausted. Repeated edits coalesce and always read the newest city.
+		if processed >= 16 and Time.get_ticks_usec() >= deadline:
+			break
+	if _edit_cursor == _edited_tiles.size():
+		_edited_tiles.clear()
+		_edit_cursor = 0
+	elif _edit_cursor >= 1024:
+		_edited_tiles = _edited_tiles.slice(_edit_cursor)
+		_edit_cursor = 0
+	if processed > 0:
+		queue_redraw()
+		fixtures.queue_redraw()
+		_refresh_signals()
 
 
 func _begin_collection(city: CityState) -> void:
@@ -641,16 +676,21 @@ func start_visible_fades(view: Rect2) -> void:
 	fade_view = view
 	fade_pending = false
 	var started := false
+	var batches: Dictionary[int, bool] = {}
 	for tile: Vector2i in unseen.keys():
-		if fades.peek(tile, fade_edge, fade_rotation) != CityLightFade.UNSEEN:
-			unseen.erase(tile)
-			_redraw_batch(tile)
-			started = true
-		elif Rect2(cache[tile].origin, Vector2(64, 64)).intersects(view):
+		if fades.peek(tile, fade_edge, fade_rotation) == CityLightFade.UNSEEN:
+			if not Rect2(cache[tile].origin, Vector2(64, 64)).intersects(view):
+				continue
 			fades.birth(tile, fade_edge, fade_rotation)
-			unseen.erase(tile)
-			_redraw_batch(tile)
-			started = true
+		unseen.erase(tile)
+		if _tile_batches.has(tile):
+			batches[_tile_batches[tile]] = true
+		started = true
+	# Each group owns up to 64 tiles and three retained draw lists. Rebuild
+	# each affected list once, with the same per-tile first-visible timestamps.
+	for index in batches:
+		for canvas: DrawBatch in _draw_batches[index]:
+			canvas.queue_redraw()
 	if started:
 		queue_redraw()
 		fixtures.queue_redraw()
