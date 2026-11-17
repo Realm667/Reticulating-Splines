@@ -185,12 +185,17 @@ func _read_rows(rows: Array[Dictionary]) -> void:
 func _draw_rows() -> void:
 	if not is_instance_valid(native_list):
 		return
+	# Restoring the highlighted row is presentation only. Emitting selection
+	# here would overwrite a filename the player has typed since selecting it.
+	var was_blocking := is_blocking_signals()
+	set_block_signals(true)
 	clear()
 	var root := create_item()
 	var rows := _rows.duplicate()
 	for row: Dictionary in rows:
 		if int(row.index) >= native_list.item_count or native_list.get_item_text(row.index) != row.name:
 			_signature.clear()
+			set_block_signals(was_blocking)
 			return
 		row.cloud = int(cloud.local_availability(row.path)) if cloud != null and cloud.has_method("local_availability") else -1
 	rows.sort_custom(_before)
@@ -218,6 +223,7 @@ func _draw_rows() -> void:
 			item.select(0)
 			ensure_cursor_is_visible()
 	_refresh_star_colors()
+	set_block_signals(was_blocking)
 
 
 func _refresh_star_colors() -> void:

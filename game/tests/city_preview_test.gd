@@ -337,6 +337,24 @@ func _check_save_list() -> void:
 	assert(dialog.current_file == "city.sc2x", "The detailed list must select the native file, not a sorted row index")
 	list._sort(1, MOUSE_BUTTON_LEFT)
 	assert(dialog.current_file == "city.sc2x")
+	# Metadata and favorite refreshes are passive: they must not replace a
+	# typed filename with the native list's previously selected city.
+	var typed := directory.path_join("expanded.sc2x")
+	dialog.get_line_edit().text = typed
+	list._draw_rows()
+	assert(dialog.get_line_edit().text == typed, "Passive row redraw must preserve the typed absolute path")
+	var opened: Array[String] = []
+	dialog.file_selected.connect(func(path: String) -> void: opened.append(path))
+	dialog.get_ok_button().pressed.emit()
+	await process_frame
+	assert(opened == [typed], "Open must honor the typed path instead of the old selected row")
+	dialog.popup_centered(Vector2i(1200, 720))
+	dialog.current_dir = directory
+	deadline = Time.get_ticks_msec() + 10000
+	while (list._rows.size() < 5 or list._task >= 0 or not list._rows.any(func(row: Dictionary) -> bool: return row.has("region"))) and Time.get_ticks_msec() < deadline:
+		list._process(0.2)
+		await process_frame
+	assert(list._task < 0 and list._rows.size() >= 5, "Reopened list metadata did not finish")
 	list._open_context(paths[1], Vector2i.ZERO)
 	assert(list.context.get_item_index(2) >= 0 and not list.context.is_item_disabled(list.context.get_item_index(2)), "Unlinked local city offers Cloud transfer")
 	var uploads: Array[String] = []
