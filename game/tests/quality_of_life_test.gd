@@ -34,6 +34,19 @@ func _check_photo_and_idle(app: CityApplication) -> void:
 	app.visual_preparation.busy = false
 	idle._process(2.1)
 	assert(Engine.max_fps == 15)
+	# Both overlay dialogs and modeless city windows remain interactive while
+	# the city is paused; closing them restores idle saving, not a permanent cap.
+	for dialog: Node in [app.main_overlays.settings_dialog, app.main_overlays.about_dialog,
+			app.city_dialogs.graph_window, app.city_dialogs.new_city_dialog]:
+		if dialog == app.main_overlays.settings_dialog:
+			app.settings.open_settings_dialog()
+		else:
+			dialog.show()
+		idle._process(2.1)
+		assert(Engine.max_fps == 60, "An open dialog must restore normal presentation cadence")
+		dialog.hide()
+		idle._process(2.1)
+		assert(Engine.max_fps == 15, "Closing %s must retain paused-map saving" % dialog.name)
 	app.visual_preparation.busy = true
 	idle._process(0.1)
 	assert(Engine.max_fps == 60, "New background preparation must restore the frame limit")
