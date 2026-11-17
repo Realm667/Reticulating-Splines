@@ -68,6 +68,45 @@ func _check_photo_and_idle(app: CityApplication) -> void:
 	idle.free()
 
 
+func _check_effects_volume(app: CityApplication, box: MusicBoxDialog) -> void:
+	var effects: HSlider
+	for slider in box.find_children("*", "HSlider", true, false):
+		if slider != box.volume:
+			effects = slider
+	assert(effects != null)
+	var previous_volume := app.preferences.effects_volume
+	effects.value = 20.0
+	box._save_effects()
+	box.hide()
+	app.settings.open_settings_dialog()
+	var settings := app.main_overlays.settings_dialog
+	assert(is_equal_approx(settings.effects_slider.value, 20.0))
+	settings.effects_slider.value = 81.0
+	assert(is_equal_approx(app.preferences.effects_volume, 0.81))
+	settings.hide()
+	box.open()
+	assert(is_equal_approx(effects.value, 81.0), "Reopening Music box must reflect the current shared effects volume")
+	assert(not box._effects_dirty, "Refreshing effects volume must not schedule a settings write")
+	app.settings.open_settings_dialog()
+	settings.effects_slider.value = 34.0
+	box._process(0.0)
+	assert(is_equal_approx(effects.value, 34.0), "An open Music box must follow effects changes from Settings")
+	assert(not box._effects_dirty)
+	settings.hide()
+	effects.value = 45.0
+	assert(box._effects_dirty, "Player slider edits must still use debounced saving")
+	box._process(0.6)
+	assert(not box._effects_dirty)
+	var saved := ConfigFile.new()
+	assert(saved.load(app.preferences.settings_path) == OK)
+	assert(is_equal_approx(float(saved.get_value("audio", "effects_volume")), 0.45))
+	app.settings.open_settings_dialog()
+	assert(is_equal_approx(settings.effects_slider.value, 45.0))
+	settings.effects_slider.value = previous_volume * 100.0
+	settings.hide()
+	box.hide()
+
+
 func _initialize() -> void:
 	_run.call_deferred()
 
@@ -112,6 +151,7 @@ func _run() -> void:
 	assert(options.get_item_index(CityMenuBar.MENU_PHOTO_MODE) >= 0)
 	options.id_pressed.emit(ApplicationQualityOfLife.MENU_MUSIC_BOX)
 	assert(qol.music_box.visible, "The real Options menu must open the music box after loading a city")
+	_check_effects_volume(app, qol.music_box)
 	qol.music_box.hide()
 	app.reports.on_windows_menu(4)
 	await process_frame

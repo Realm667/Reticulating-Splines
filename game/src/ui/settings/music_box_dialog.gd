@@ -41,6 +41,7 @@ var remove_favorite: Button
 var move_favorite: Button
 var player_settings: TabContainer
 var volume: HSlider
+var effects: HSlider
 var active := false
 var _playing_favorites := false
 var _fade: Tween
@@ -145,7 +146,7 @@ func _init(application: CityApplication) -> void:
 	var effects_label := Label.new()
 	effects_label.text = "Sound effects volume"
 	levels.add_child(effects_label)
-	var effects := HSlider.new()
+	effects = HSlider.new()
 	effects.custom_minimum_size.x = 140
 	effects.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	effects.max_value = 100.0
@@ -426,6 +427,7 @@ func _refresh_favorites() -> void:
 
 
 func open() -> void:
+	effects.set_value_no_signal(app.preferences.effects_volume * 100.0)
 	_refresh_soundfont()
 	_refresh_playback_mode()
 	rescan()
@@ -627,6 +629,7 @@ func _recover_failed_playback() -> void:
 func _process(delta: float) -> void:
 	if playback == null:
 		return
+	effects.set_value_no_signal(app.preferences.effects_volume * 100.0)
 	if _effects_dirty:
 		_effects_save_delay -= delta
 		if _effects_save_delay <= 0.0:
