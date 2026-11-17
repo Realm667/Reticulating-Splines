@@ -4,6 +4,7 @@ extends RefCounted
 @warning_ignore_start("integer_division")
 
 var reset := false
+var edited: Dictionary[Vector2i, bool] = {}
 var _signature: Array = []
 var _layout: Array = []
 var _planes: Array[PackedByteArray] = []
@@ -13,6 +14,7 @@ const SHARED_TRANSITIONS := 4
 
 func sync(city: CityState) -> Dictionary[Vector2i, bool]:
 	var changed: Dictionary[Vector2i, bool] = {}
+	edited = {}
 	reset = false
 	var layout := [city.get_instance_id(), city.map_size, city.compass_rotation(), city.visible_altitude_levels]
 	var revision := [layout, city.mirror_signature(["ALTM", "XBLD", "XTER", "XZON", "XBIT"])]
@@ -27,6 +29,7 @@ func sync(city: CityState) -> Dictionary[Vector2i, bool]:
 			_layout = layout
 			_planes = transition.planes
 			reset = transition.reset
+			edited = transition.edited.duplicate()
 			return transition.changed.duplicate()
 	var previous := _signature
 	_signature = revision
@@ -46,13 +49,14 @@ func sync(city: CityState) -> Dictionary[Vector2i, bool]:
 				break
 			for index in indices:
 				var tile := Vector2i(index / city.map_size, index % city.map_size)
+				edited[tile] = true
 				for x in range(-1, 2):
 					for y in range(-1, 2):
 						changed[tile + Vector2i(x, y)] = true
 	_planes = planes
 	_layout = layout
 	_recent.append({"before": previous, "after": revision, "planes": planes,
-		"changed": changed.duplicate(), "reset": reset})
+		"changed": changed.duplicate(), "edited": edited.duplicate(), "reset": reset})
 	if _recent.size() > SHARED_TRANSITIONS:
 		_recent.pop_front()
 	return changed

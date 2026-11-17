@@ -15,7 +15,7 @@ var _cursor := 0
 
 
 func collect(city: CityState, bounds: Rect2i, budget_usec := 0) -> Array[Vector2i]:
-	var changed := geometry.sync(city)
+	geometry.sync(city)
 	var rebuild := geometry.reset or bounds != viewport
 	if geometry.reset:
 		points.clear()
@@ -25,14 +25,19 @@ func collect(city: CityState, bounds: Rect2i, budget_usec := 0) -> Array[Vector2
 	# Changes are applied even outside the viewport: a later pan must not reuse
 	# an old center for an edited bridge or ramp.
 	var affected := false
-	for tile in changed:
+	# Eligibility and the projected center read only this cell's geometry.
+	# Lane connections and receivers still use the expanded neighbor set.
+	for tile in geometry.edited:
 		var index := city.index_of(tile.x, tile.y)
 		if index < 0:
 			continue
+		var previous: Variant = points.get(index)
 		points.erase(index)
 		if search.has_point(tile):
 			_update(city, tile, index)
-			affected = true
+			# Nearby building/zone changes also reach this cache. Re-sort the
+			# complete road list only if its projected membership actually changed.
+			affected = affected or previous != points.get(index)
 	if rebuild:
 		collecting = true
 		_cursor = 0

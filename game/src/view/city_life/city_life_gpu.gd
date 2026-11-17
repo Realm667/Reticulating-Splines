@@ -169,11 +169,7 @@ func prepare_masks(canvas: CityLifeCanvas, entries: Array[Dictionary], budget_us
 			cached.version = version
 			cached.image = blank_mask
 			if not candidates.is_empty():
-				var image := blank.duplicate()
-				for candidate: Dictionary in candidates:
-					image.blend_rect(candidate.image, Rect2i(Vector2i.ZERO, candidate.image.get_size()), candidate.origin - point)
-				if not image.is_invisible():
-					cached.image = NativeVisualRaster.alpha_mask(image)
+				cached.image = _mask_image(candidates, point)
 			cached.origin = point
 			cached.identity = cached.image.get_instance_id()
 		var slot := cached.slot
@@ -206,6 +202,31 @@ func prepare_masks(canvas: CityLifeCanvas, entries: Array[Dictionary], budget_us
 			for layer: int in changed:
 				masks[page].update_layer(changed[layer], layer)
 	return complete
+
+
+func _mask_image(candidates: Array, point: Vector2i) -> Image:
+	# The canvas already merges normal silhouettes. Blending that one RGBA
+	# image onto transparent RGBA and then discarding RGB repeats the work.
+	if candidates.size() == 1:
+		var candidate: Dictionary = candidates[0]
+		var image: Image = candidate.image
+		if image.get_format() == Image.FORMAT_RGBA8:
+			if image.is_invisible():
+				return blank_mask
+			var destination: Vector2i = candidate.origin - point
+			var overlap := Rect2i(destination, image.get_size()).intersection(Rect2i(Vector2i.ZERO, blank_mask.get_size()))
+			if not overlap.has_area():
+				return blank_mask
+			var alpha := NativeVisualRaster.alpha_mask(image)
+			if destination == Vector2i.ZERO and image.get_size() == blank_mask.get_size():
+				return alpha
+			var result := blank_mask.duplicate()
+			result.blit_rect(alpha, Rect2i(Vector2i.ZERO, alpha.get_size()), destination)
+			return result
+	var image := blank.duplicate()
+	for candidate: Dictionary in candidates:
+		image.blend_rect(candidate.image, Rect2i(Vector2i.ZERO, candidate.image.get_size()), candidate.origin - point)
+	return blank_mask if image.is_invisible() else NativeVisualRaster.alpha_mask(image)
 
 
 func _select_mask_bank(signature: Array) -> void:

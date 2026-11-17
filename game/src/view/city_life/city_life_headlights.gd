@@ -4,6 +4,7 @@ extends Node2D
 @warning_ignore_start("integer_division")
 
 const GROUP_SIZE := 64
+const PREPARE_UPLOAD_BYTES := 2 * 1024 * 1024
 const STRIDE := 8
 const SHADER := preload("res://src/view/city_life/city_life_headlights.gdshader")
 var groups: Array[MultiMeshInstance2D] = []
@@ -137,6 +138,11 @@ func prepare_surface(figure: CityLifeController.Figure, surface: Dictionary) -> 
 		images[slot] = surface.image
 		return true
 	return false
+
+
+static func surface_bytes(surface: Dictionary) -> int:
+	var image: Image = surface.image
+	return image.get_width() * image.get_height() * (16 if image.get_format() == Image.FORMAT_RGBAF else 4)
 
 
 func _flush_uploads() -> void:

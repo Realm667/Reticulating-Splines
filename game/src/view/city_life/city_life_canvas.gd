@@ -119,7 +119,7 @@ func render(app: CityApplication, figures: Array, sprites: CityLifeSprites, prep
 	_entries.clear()
 	var entries := _entries
 	var receiver_inputs: Dictionary[int, Dictionary] = {}
-	var receiver_uploads := 0
+	var receiver_bytes := 0
 	for figure: CityLifeController.Figure in figures:
 		var preparation_started := Time.get_ticks_usec()
 		var cold := not _occluders.has(Vector3i(figure.tile.x, figure.tile.y, figure.enter % 2))
@@ -134,8 +134,9 @@ func render(app: CityApplication, figures: Array, sprites: CityLifeSprites, prep
 			var headlights := road_layer as CityLifeHeadlights
 			if gpu_enabled and preparation_budget_usec > 0 and not headlights._published:
 				receiver_uploaded = headlights.prepare_surface(figure, receiver_inputs[figure.id])
-				receiver_uploads += int(receiver_uploaded)
-				if receiver_uploads >= 8:
+				if receiver_uploaded:
+					receiver_bytes += CityLifeHeadlights.surface_bytes(receiver_inputs[figure.id])
+				if receiver_bytes >= CityLifeHeadlights.PREPARE_UPLOAD_BYTES:
 					return _pending_frame(app, previous_bounds)
 		var sprite := sprites.sprite(figure.walking, figure.variant, figure.direction, int(figure.distance * 8.0) % 2, figure.vehicle_kind)
 		if not _sprite_sizes.has(sprite):
@@ -296,7 +297,7 @@ func prepare_lights(app: CityApplication, figures: Array, budget_usec := 1500) -
 			return
 	# Warm cache hits are cheap. Scan far enough to keep up with moving cars,
 	# while retaining the time limit and a separate cap on texture transfers.
-	var uploads := 0
+	var upload_bytes := 0
 	# A bounded round-robin visits every figure without repeating an entire
 	# warm 600-figure sweep on each intervening interpolation frame.
 	for index in mini(figures.size(), 96):
@@ -312,9 +313,9 @@ func prepare_lights(app: CityApplication, figures: Array, budget_usec := 1500) -
 					func(tile: Vector2i, enter: int) -> Array: return _light_candidates(app, tile, enter), false)
 			# Once visible, warm CPU receivers only. A live GPU slot still belongs
 			# to the old published origin until the next complete light batch.
-			if can_upload:
-				uploads += int(headlights.prepare_surface(figure, surface))
-		if uploads >= 8 or Time.get_ticks_usec() - started >= budget_usec:
+			if can_upload and headlights.prepare_surface(figure, surface):
+				upload_bytes += CityLifeHeadlights.surface_bytes(surface)
+		if upload_bytes >= CityLifeHeadlights.PREPARE_UPLOAD_BYTES or Time.get_ticks_usec() - started >= budget_usec:
 			break
 
 

@@ -7,6 +7,7 @@ const CityRotation = preload("res://src/tools/city/city_rotation_command.gd")
 
 func _initialize() -> void:
 	_check_stamp_pixels()
+	_check_gpu_mask_pixels()
 	_check_road_pixels()
 	_check_local_invalidation()
 	_check_zoom_banks()
@@ -29,6 +30,29 @@ func _initialize() -> void:
 	_check_publication_budget()
 	print("PASS: exact city-life artwork/emission pixels, road coordinates, local occlusion invalidation and bounded light reuse")
 	quit()
+
+
+func _check_gpu_mask_pixels() -> void:
+	var gpu := CityLifeGpu.new()
+	var image := Image.create(137, 113, false, Image.FORMAT_RGBA8)
+	for y in image.get_height():
+		for x in image.get_width():
+			image.set_pixel(x, y, Color(0.7, 0.2, 0.9, float([0, 1, 63, 127, 254, 255][(x + y) % 6]) / 255.0))
+	for offset in [Vector2i.ZERO, Vector2i(-57, -21), Vector2i(75, 93), Vector2i(200, 0)]:
+		for multiple in [false, true]:
+			var candidates: Array = [{"image": image, "origin": offset}]
+			if multiple:
+				candidates.append({"image": image, "origin": offset + Vector2i(3, -9)})
+			var reference := gpu.blank.duplicate()
+			for candidate in candidates:
+				reference.blend_rect(candidate.image, Rect2i(Vector2i.ZERO, candidate.image.get_size()), candidate.origin)
+			assert(gpu._mask_image(candidates, Vector2i.ZERO).get_data() == NativeVisualRaster.alpha_mask(reference).get_data(),
+				"GPU mask optimization changed partial alpha, overlap or clipped pixels")
+	var exact := Image.create(128, 128, false, Image.FORMAT_RGBA8)
+	exact.fill(Color(1, 0, 0, 0.5))
+	assert(gpu._mask_image([{"image": exact, "origin": Vector2i(10, 20)}], Vector2i(10, 20)).get_data() == NativeVisualRaster.alpha_mask(exact).get_data())
+	exact.fill(Color.TRANSPARENT)
+	assert(gpu._mask_image([{"image": exact, "origin": Vector2i.ZERO}], Vector2i.ZERO) == gpu.blank_mask)
 
 
 func _check_night_preparation() -> void:

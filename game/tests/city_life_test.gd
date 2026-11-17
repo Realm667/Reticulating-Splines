@@ -768,10 +768,12 @@ func _check_day_light_budget(app: CityApplication) -> void:
 		figure.direction = 2
 		figures.append(figure)
 	var uploaded := 0
+	var receiver_bytes := 96 * 96 * 16
+	var max_transfers := ceili(float(CityLifeHeadlights.PREPARE_UPLOAD_BYTES) / receiver_bytes)
 	for step in 12:
 		canvas.prepare_lights(app, figures, 1000000)
 		var ready := headlights.images.size() - headlights.images.count(null)
-		assert(ready - uploaded <= 8, "Day preparation must cap transfers even when its CPU budget has room")
+		assert(ready - uploaded <= max_transfers, "Day preparation must cap transferred bytes even when its CPU budget has room")
 		uploaded = ready
 		if uploaded == figures.size():
 			break
