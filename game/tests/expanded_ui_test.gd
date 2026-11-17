@@ -102,7 +102,61 @@ func _run() -> void:
 	app.regions.pending_edge = 2
 	assert(app.regions.found_region(), "Expanded can found a region")
 	assert(ExpandedRules.enabled(app.regions.campaign.template), "New regional cities inherit Expanded")
+	await _purchased_city_rename(app)
 	app.queue_free()
 	await process_frame
 	print("PASS: founding options, legacy/SC2X conversion, eight UI tools, query and multiplayer authority")
 	quit()
+
+
+func _purchased_city_rename(app: CityApplication) -> void:
+	var regions := app.regions
+	var original := RegionRules.cell(regions.campaign.active_cells[ApplicationRegions.LOCAL_OWNER])
+	var target := Vector2i(-1, -1)
+	for direction in RegionRules.DIRECTIONS:
+		var point: Vector2i = original + direction
+		if point.x >= 0 and point.y >= 0 and point.x < regions.campaign.edge and point.y < regions.campaign.edge:
+			target = point
+			break
+	assert(target.x >= 0)
+	regions.open_overview()
+	regions._select(target)
+	assert(not regions.quote.is_empty(), "Generated neighbor is offered for purchase")
+	regions._purchase()
+	assert(regions.campaign.own_count(ApplicationRegions.LOCAL_OWNER) == 2)
+	assert(regions.campaign.active_cells[ApplicationRegions.LOCAL_OWNER] == RegionRules.key(target))
+	regions._sync_navigation()
+	var preview := regions.preview.texture
+	var revision := regions.campaign.revision
+	var quote := regions.quote.duplicate(true)
+	var document := app.document_state.current_document
+	var expected := document.duplicate_document(true)
+	expected.add_city_name_chunk()
+	assert(expected.set_city_name("QOL Island"))
+	var rename := app.city_dialogs.city_rename_dialog
+	rename.name_input.text = "QOL Island"
+	rename.get_ok_button().pressed.emit()
+	assert(regions.selected == target and regions.grid.selected == target, "Rename preserves the purchased-area selection")
+	assert(regions.grid.state.cells.any(func(item: Dictionary) -> bool: return item.cell == [target.x, target.y] and item.name == document.city_name()),
+		"The open overview shows the renamed area without another selection")
+	assert(regions.details.text.begins_with(document.city_name()), "Selected owned-city details show the new name")
+	assert(regions.neighbor_details.text.begins_with(document.city_name()), "Current-city summary follows rename")
+	regions._sync_navigation()
+	assert(regions.mini_grid.state.cells.any(func(item: Dictionary) -> bool: return item.cell == [target.x, target.y] and item.name == document.city_name()),
+		"The sidebar mini-grid follows rename while paused")
+	assert(regions.preview.texture == preview and regions.quote == quote, "Rename retains preview and purchase state")
+	assert(regions.campaign.revision == revision and regions.campaign.owners[RegionRules.key(target)] == ApplicationRegions.LOCAL_OWNER,
+		"Presentation refresh cannot change regional ownership or revision")
+	assert(document.serialize().data == expected.serialize().data, "Only the intended name edit changes saved city data")
+	regions._select(original)
+	var inspected := regions.details.text
+	preview = regions.preview.texture
+	app.city_files.open_rename_dialog()
+	rename.name_input.text = "QOL Island Again"
+	rename.get_ok_button().pressed.emit()
+	assert(regions.selected == original and regions.grid.selected == original, "Renaming the active city preserves an inspected other city")
+	assert(regions.details.text == inspected and regions.preview.texture == preview,
+		"The inspected city's details and preview remain intact")
+	assert(regions.neighbor_details.text.begins_with(document.city_name()))
+	regions.window.hide()
+	await process_frame

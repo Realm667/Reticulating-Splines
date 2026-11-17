@@ -112,6 +112,7 @@ func rename_city() -> void:
 	app.city_menu_bar.set_city_name(app.document_state.city.display_name(),
 		DebugFileInfo.city_tooltip(app.document_state.city.display_name(), app.document_state.current_document))
 	app.reports.refresh_newspaper_menu()
+	app.regions.city_renamed()
 	app.status_label.theme_type_variation = ""
 	app.status_label.text = tr("City renamed to %s.") % app.document_state.city.city_name()
 	app.scripting.emit("city.renamed", {"name": app.document_state.city.city_name()})

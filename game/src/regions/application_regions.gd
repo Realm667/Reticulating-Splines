@@ -262,6 +262,22 @@ func refresh() -> void:
 		_show_city(item)
 
 
+func city_renamed() -> void:
+	# Renaming does not advance the day or campaign revision. Invalidate only
+	# presentation; keep the inspected cell, preview, quote and ownership.
+	_navigation_signature.clear()
+	_sync_navigation()
+	if window == null or not window.visible or campaign == null or app.coop.active():
+		return
+	var item := _cell_summary(selected, summary())
+	if item.get("own", false):
+		var document: Sc2File = campaign.documents[RegionRules.key(selected)]
+		var city := CityState.from_document(document)
+		var budget := BudgetReport.capture(city, BudgetPhase.funding_values(city))
+		var administration := RegionCampaign.administration_report(document)
+		_show_owned_city(item, budget.estimated_cash - int(administration.estimated))
+
+
 func _show_city(item: Dictionary) -> void:
 	details.text = str(item.get("name", "")) + "\n" + tr("Population") + ": " + DisplayNumberFormat.format(int(item.get("population", 0)))
 	if item.has("region"):
