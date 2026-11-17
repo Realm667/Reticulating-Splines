@@ -659,6 +659,11 @@ func leave() -> void:
 	panel.hide()
 	multiplayer_save_path = ""
 	windows.close()
+	app.budget.reset_prompts()
+	app.budget.reset_pending_state()
+	app.current_tool.reset_prompts()
+	for window in app.city_dialogs.blocking_windows + app.city_dialogs.modeless_windows:
+		window.hide()
 	if original_document != null:
 		app.city_session.activate_document(original_document, null, tr("Left multiplayer"), true)
 		app.document_state.current_save_path = original_save_path

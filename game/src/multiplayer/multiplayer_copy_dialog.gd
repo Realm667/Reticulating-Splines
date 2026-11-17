@@ -78,7 +78,9 @@ static func host_ended(coop: ApplicationMultiplayer) -> void:
 		file.access = FileDialog.ACCESS_FILESYSTEM
 		file.file_mode = FileDialog.FILE_MODE_SAVE_FILE
 		file.filters = PackedStringArray(["*.sc2x ; " + str(TranslationServer.translate("Single-player city"))])
-		file.current_dir = AppPaths.path("cities")
+		var save_directory := AppPaths.path("cities")
+		DirAccess.make_dir_recursive_absolute(save_directory)
+		file.current_dir = save_directory
 		file.current_file = CityState.from_document(city).city_name().validate_filename() + "-singleplayer.sc2x"
 		coop.ended_dialog.add_child(file)
 		file.canceled.connect(file.queue_free)

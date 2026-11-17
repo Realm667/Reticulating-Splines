@@ -316,6 +316,7 @@ func run() -> void:
 	await readonly_city(main)
 	await readonly_city(main, true)
 	await client_rights_and_end(main)
+	await client_rights_and_end(main, true)
 	main.queue_free()
 	await process_frame
 	print("Koop UI checks: %d failures" % failures)
@@ -557,7 +558,9 @@ func readonly_city(main: CityApplication, expansion := false) -> void:
 	check(not main.city_menu_bar.debug_menu.disabled and not main.city_menu_bar.windows_menu.get_popup().is_item_disabled(0), "leaving multiplayer restores local administrative menus")
 
 
-func client_rights_and_end(main: CityApplication) -> void:
+func client_rights_and_end(main: CityApplication, restore_city: bool = false) -> void:
+	var prior := Sc2xDocument.create_empty(32, "Prior single-player city").document
+	main.coop.original_document = prior if restore_city else null
 	var host := CoopSession.new()
 	root.add_child(host)
 	host.host(Sc2xDocument.create_empty(32, "End notice").document, 0, "", "Host", "coop", false)
@@ -573,15 +576,59 @@ func client_rights_and_end(main: CityApplication) -> void:
 		main.reports.on_windows_menu(7)
 		main.debug_overlay.toggle()
 		check(not main.debug_overlay.is_open and not main.debug_overlay._window.visible, "client cannot open debug by menu or alternate path")
+		main.reports.on_windows_menu(2)
+		main.reports.on_windows_menu(0)
+		check(main.city_dialogs.population_window.visible and main.city_dialogs.budget_dialog.visible, "client city reports are open before host ends")
 		host.stop()
 		deadline = Time.get_ticks_msec() + 5000
 		while not is_instance_valid(main.coop.ended_dialog) and Time.get_ticks_msec() < deadline:
 			await create_timer(0.01).timeout
 		check(is_instance_valid(main.coop.ended_dialog) and main.coop.ended_dialog.visible and main.document_state.current_document != null, "visible host-end notice retains city for save or retry")
 		if is_instance_valid(main.coop.ended_dialog):
+			await first_city_copy(main)
 			main.coop.ended_dialog.queue_free()
 			main.coop.ended_dialog = null
+	main.simulation_state.annual_budget_pending = true
 	main.coop.leave()
 	host.stop()
 	host.queue_free()
 	await process_frame
+	check(not main.city_dialogs.budget_dialog.visible and not main.city_dialogs.population_window.visible, "leaving closes blocking and modeless city reports")
+	check(not main.simulation_state.annual_budget_pending, "leaving clears pending city prompts")
+	if restore_city:
+		check(main.document_state.current_document == prior and not main.main_menu.visible, "leaving restores the prior single-player document")
+	else:
+		check(main.document_state.current_document == null and main.main_menu.visible, "leaving without prior city returns to main menu")
+
+
+func first_city_copy(main: CityApplication) -> void:
+	var previous_root := AppPaths.root()
+	AppPaths._root = previous_root.path_join("mp-copy-%d" % Time.get_ticks_usec())
+	var directory := AppPaths.path("cities")
+	check(not DirAccess.dir_exists_absolute(directory), "fresh joiner has no cities directory")
+	for button in main.coop.ended_dialog.find_children("*", "Button", true, false):
+		if button.text == main.coop.tr("Save city copy"):
+			button.pressed.emit()
+	await process_frame
+	var files := main.coop.ended_dialog.find_children("*", "FileDialog", true, false)
+	check(files.size() == 1, "host-end copy opens one file dialog")
+	if files.size() == 1:
+		var file := files[0] as FileDialog
+		check(DirAccess.dir_exists_absolute(directory) and file.current_dir.simplify_path() == directory.simplify_path(), "first copy creates and selects the profile cities directory")
+		var path := directory.path_join("export.sc2x")
+		file.file_selected.emit(path)
+		await process_frame
+		var saved := Sc2File.new()
+		check(saved.parse(FileAccess.get_file_as_bytes(path)), "host-end copy saves a loadable city")
+		check(not saved.sc2x_extra_entries.has("multiplayer.json"), "export is a single-player copy")
+		var before := FileAccess.get_file_as_bytes(path)
+		for button in main.coop.ended_dialog.find_children("*", "Button", true, false):
+			if button.text == main.coop.tr("Save city copy"):
+				button.pressed.emit()
+		await process_frame
+		files = main.coop.ended_dialog.find_children("*", "FileDialog", true, false)
+		if files.size() == 1:
+			files[0].file_selected.emit(path)
+			await process_frame
+		check(FileAccess.get_file_as_bytes(path) == before, "export never overwrites an existing city")
+	AppPaths._root = previous_root
