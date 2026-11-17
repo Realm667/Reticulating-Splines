@@ -33483,3 +33483,13 @@ msgstr "Intensidade do efeito solar"
 #. AI-assisted supplementary translation: sun overlay.
 msgid "Overall strength of the cool sunrise and warm sunset overlays, including soft rays. Protects bright surfaces. 0% disables the overlay."
 msgstr "Intensidade geral dos efeitos frios do nascer do sol e quentes do pôr do sol, incluindo raios suaves. Preserva superfícies claras. 0% desativa o efeito."
+
+
+#. AI-assisted supplementary translation: QOL beta status follow-up 2026-11-18.
+msgid "Paused"
+msgstr "Pausado"
+
+
+#. AI-assisted supplementary translation: QOL beta status follow-up 2026-11-18.
+msgid "Finish the annual budget before saving the city."
+msgstr "Conclua o orçamento anual antes de salvar a cidade."

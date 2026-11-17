@@ -11670,3 +11670,13 @@ msgstr "태양 오버레이 강도"
 #. AI-assisted supplementary translation: sun overlay.
 msgid "Overall strength of the cool sunrise and warm sunset overlays, including soft rays. Protects bright surfaces. 0% disables the overlay."
 msgstr "은은한 광선을 포함한 차가운 일출 및 따뜻한 일몰 효과의 전체 강도입니다. 밝은 표면을 보호합니다. 0%로 설정하면 오버레이가 꺼집니다."
+
+
+#. AI-assisted supplementary translation: QOL beta status follow-up 2026-11-18.
+msgid "Paused"
+msgstr "일시 정지"
+
+
+#. AI-assisted supplementary translation: QOL beta status follow-up 2026-11-18.
+msgid "Finish the annual budget before saving the city."
+msgstr "도시를 저장하기 전에 연간 예산을 완료하세요."
