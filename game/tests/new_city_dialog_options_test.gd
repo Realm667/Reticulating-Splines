@@ -71,6 +71,29 @@ func _run() -> void:
 	assert(not dialog.setup_options().expanded and dialog.terrain_options().features.is_empty())
 	dialog.rules_tabs.current_tab = 1
 	assert(dialog.terrain_options().size == 128 and dialog.terrain_options().features.is_empty())
+	await _check_viewport_actions(dialog)
 	dialog.free()
 	print("PASS: Classic/Expanded tabs, original options, isolated terrain settings, creation guards and preview state")
 	quit()
+
+
+func _check_viewport_actions(dialog: NewCityTerrainDialog) -> void:
+	dialog.theme = AppUiTheme.current()
+	for locale in ["en", "de", "es", "fr", "it", "ko", "pt_BR"]:
+		AppLocalization.select(locale)
+		dialog.size = Vector2(1280, 800) if locale == "en" else Vector2(800, 500)
+		dialog.show()
+		for frame in 5:
+			await process_frame
+		var viewport := Rect2(dialog.global_position, dialog.size)
+		var cancel := dialog.done_button.get_parent().get_node("Cancel") as Button
+		assert(viewport.encloses(dialog.done_button.get_global_rect()), "New City completion must remain reachable inside the viewport")
+		assert(viewport.encloses(cancel.get_global_rect()), "New City cancellation must remain reachable inside the viewport")
+		var scroll := dialog.get_node("Center/NewCityDialog/Content/Body") as ScrollContainer
+		var footer := dialog.done_button.get_global_rect()
+		scroll.ensure_control_visible(dialog.trees_input)
+		for frame in 3:
+			await process_frame
+		assert(dialog.done_button.get_global_rect() == footer, "Scrolling terrain fields cannot move the completion action")
+		dialog.hide()
+	AppLocalization.select("en")

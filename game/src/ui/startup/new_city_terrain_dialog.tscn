@@ -79,69 +79,74 @@ layout_mode = 2
 color = Color(0.25, 0.25, 0.25, 1)
 script = ExtResource("2_pepar")
 
-[node name="Body" type="HBoxContainer" parent="Center/NewCityDialog/Content"]
+[node name="Body" type="ScrollContainer" parent="Center/NewCityDialog/Content"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
+follow_focus = true
+
+[node name="Columns" type="HBoxContainer" parent="Center/NewCityDialog/Content/Body"]
+layout_mode = 2
+size_flags_horizontal = 3
 theme_override_constants/separation = 18
 
-[node name="Fields" type="VBoxContainer" parent="Center/NewCityDialog/Content/Body"]
+[node name="Fields" type="VBoxContainer" parent="Center/NewCityDialog/Content/Body/Columns"]
 custom_minimum_size = Vector2(340, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 6
 
-[node name="CityDetailsLabel" type="Label" parent="Center/NewCityDialog/Content/Body/Fields"]
+[node name="CityDetailsLabel" type="Label" parent="Center/NewCityDialog/Content/Body/Columns/Fields"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 16
 text = "City Details"
 
-[node name="CityFields" type="GridContainer" parent="Center/NewCityDialog/Content/Body/Fields"]
+[node name="CityFields" type="GridContainer" parent="Center/NewCityDialog/Content/Body/Columns/Fields"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/h_separation = 12
 theme_override_constants/v_separation = 5
 columns = 2
 
-[node name="CityNameLabel" type="Label" parent="Center/NewCityDialog/Content/Body/Fields/CityFields"]
+[node name="CityNameLabel" type="Label" parent="Center/NewCityDialog/Content/Body/Columns/Fields/CityFields"]
 layout_mode = 2
 text = "City Name"
 vertical_alignment = 1
 
-[node name="CityNameRow" type="HBoxContainer" parent="Center/NewCityDialog/Content/Body/Fields/CityFields"]
+[node name="CityNameRow" type="HBoxContainer" parent="Center/NewCityDialog/Content/Body/Columns/Fields/CityFields"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="CityNameInput" type="LineEdit" parent="Center/NewCityDialog/Content/Body/Fields/CityFields/CityNameRow"]
+[node name="CityNameInput" type="LineEdit" parent="Center/NewCityDialog/Content/Body/Columns/Fields/CityFields/CityNameRow"]
 layout_mode = 2
 size_flags_horizontal = 3
 tooltip_text = "The name of the city."
 max_length = 30
 
-[node name="RandomName" type="Button" parent="Center/NewCityDialog/Content/Body/Fields/CityFields/CityNameRow"]
+[node name="RandomName" type="Button" parent="Center/NewCityDialog/Content/Body/Columns/Fields/CityFields/CityNameRow"]
 layout_mode = 2
 script = ExtResource("3_refresh")
 custom_minimum_size = Vector2(28, 0)
 icon_alignment = 1
 tooltip_text = "Make a random city name."
 
-[node name="MayorNameLabel" type="Label" parent="Center/NewCityDialog/Content/Body/Fields/CityFields"]
+[node name="MayorNameLabel" type="Label" parent="Center/NewCityDialog/Content/Body/Columns/Fields/CityFields"]
 layout_mode = 2
 text = "Mayor Name"
 vertical_alignment = 1
 
-[node name="MayorNameInput" type="LineEdit" parent="Center/NewCityDialog/Content/Body/Fields/CityFields"]
+[node name="MayorNameInput" type="LineEdit" parent="Center/NewCityDialog/Content/Body/Columns/Fields/CityFields"]
 layout_mode = 2
 size_flags_horizontal = 3
 tooltip_text = "The name of the mayor."
 max_length = 23
 
-[node name="DifficultyLabel" type="Label" parent="Center/NewCityDialog/Content/Body/Fields/CityFields"]
+[node name="DifficultyLabel" type="Label" parent="Center/NewCityDialog/Content/Body/Columns/Fields/CityFields"]
 layout_mode = 2
 text = "Difficulty"
 vertical_alignment = 1
 
-[node name="DifficultyInput" type="OptionButton" parent="Center/NewCityDialog/Content/Body/Fields/CityFields"]
+[node name="DifficultyInput" type="OptionButton" parent="Center/NewCityDialog/Content/Body/Columns/Fields/CityFields"]
 layout_mode = 2
 size_flags_horizontal = 3
 tooltip_text = "The money at the start. Difficulty also sets the national economy."
@@ -154,12 +159,12 @@ popup/item_1/id = 2
 popup/item_2/text = "Hard — $10,000 bond at 3%"
 popup/item_2/id = 3
 
-[node name="StartingYearLabel" type="Label" parent="Center/NewCityDialog/Content/Body/Fields/CityFields"]
+[node name="StartingYearLabel" type="Label" parent="Center/NewCityDialog/Content/Body/Columns/Fields/CityFields"]
 layout_mode = 2
 text = "Starting Year"
 vertical_alignment = 1
 
-[node name="YearInput" type="OptionButton" parent="Center/NewCityDialog/Content/Body/Fields/CityFields"]
+[node name="YearInput" type="OptionButton" parent="Center/NewCityDialog/Content/Body/Columns/Fields/CityFields"]
 layout_mode = 2
 size_flags_horizontal = 3
 tooltip_text = "The first year of the city. The year sets the buildings and inventions that you can use."
@@ -174,12 +179,12 @@ popup/item_2/id = 2000
 popup/item_3/text = "2050"
 popup/item_3/id = 2050
 
-[node name="MapSizeLabel" type="Label" parent="Center/NewCityDialog/Content/Body/Fields/CityFields"]
+[node name="MapSizeLabel" type="Label" parent="Center/NewCityDialog/Content/Body/Columns/Fields/CityFields"]
 layout_mode = 2
 text = "Map Size"
 vertical_alignment = 1
 
-[node name="SizeInput" type="OptionButton" parent="Center/NewCityDialog/Content/Body/Fields/CityFields"]
+[node name="SizeInput" type="OptionButton" parent="Center/NewCityDialog/Content/Body/Columns/Fields/CityFields"]
 layout_mode = 2
 tooltip_text = "The number of tiles on each side of the map.\nSimCity 2000 compatibility uses only 128 × 128."
 selected = 0
@@ -201,212 +206,212 @@ popup/item_6/id = 2048
 popup/item_7/text = "4096 × 4096"
 popup/item_7/id = 4096
 
-[node name="TerrainDivider" type="HSeparator" parent="Center/NewCityDialog/Content/Body/Fields"]
+[node name="TerrainDivider" type="HSeparator" parent="Center/NewCityDialog/Content/Body/Columns/Fields"]
 layout_mode = 2
 
-[node name="TerrainLabel" type="Label" parent="Center/NewCityDialog/Content/Body/Fields"]
+[node name="TerrainLabel" type="Label" parent="Center/NewCityDialog/Content/Body/Columns/Fields"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 16
 text = "Terrain"
 
-[node name="TerrainFields" type="GridContainer" parent="Center/NewCityDialog/Content/Body/Fields"]
+[node name="TerrainFields" type="GridContainer" parent="Center/NewCityDialog/Content/Body/Columns/Fields"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/h_separation = 12
 theme_override_constants/v_separation = 5
 columns = 2
 
-[node name="FeaturesLabel" type="Label" parent="Center/NewCityDialog/Content/Body/Fields/TerrainFields"]
+[node name="FeaturesLabel" type="Label" parent="Center/NewCityDialog/Content/Body/Columns/Fields/TerrainFields"]
 layout_mode = 2
 size_flags_vertical = 0
 text = "Features"
 vertical_alignment = 1
 
-[node name="OceanRow" type="GridContainer" parent="Center/NewCityDialog/Content/Body/Fields/TerrainFields"]
+[node name="OceanRow" type="GridContainer" parent="Center/NewCityDialog/Content/Body/Columns/Fields/TerrainFields"]
 layout_mode = 2
 columns = 2
 theme_override_constants/h_separation = 8
 theme_override_constants/v_separation = 1
 
-[node name="OceanInput" type="CheckBox" parent="Center/NewCityDialog/Content/Body/Fields/TerrainFields/OceanRow"]
+[node name="OceanInput" type="CheckBox" parent="Center/NewCityDialog/Content/Body/Columns/Fields/TerrainFields/OceanRow"]
 layout_mode = 2
 text = "Ocean"
 
-[node name="RiverInput" type="CheckBox" parent="Center/NewCityDialog/Content/Body/Fields/TerrainFields/OceanRow"]
+[node name="RiverInput" type="CheckBox" parent="Center/NewCityDialog/Content/Body/Columns/Fields/TerrainFields/OceanRow"]
 layout_mode = 2
 text = "River"
 
-[node name="FeatureGapLabel" type="Control" parent="Center/NewCityDialog/Content/Body/Fields/TerrainFields"]
+[node name="FeatureGapLabel" type="Control" parent="Center/NewCityDialog/Content/Body/Columns/Fields/TerrainFields"]
 custom_minimum_size = Vector2(0, 4)
 layout_mode = 2
 mouse_filter = 2
 
-[node name="FeatureGap" type="Control" parent="Center/NewCityDialog/Content/Body/Fields/TerrainFields"]
+[node name="FeatureGap" type="Control" parent="Center/NewCityDialog/Content/Body/Columns/Fields/TerrainFields"]
 layout_mode = 2
 mouse_filter = 2
 
-[node name="HillsRow" type="HBoxContainer" parent="Center/NewCityDialog/Content/Body/Fields/TerrainFields"]
+[node name="HillsRow" type="HBoxContainer" parent="Center/NewCityDialog/Content/Body/Columns/Fields/TerrainFields"]
 layout_mode = 2
 alignment = 2
 
-[node name="TerrainPreview" type="TextureRect" parent="Center/NewCityDialog/Content/Body/Fields/TerrainFields/HillsRow"]
+[node name="TerrainPreview" type="TextureRect" parent="Center/NewCityDialog/Content/Body/Columns/Fields/TerrainFields/HillsRow"]
 visible = false
 texture_filter = 1
 custom_minimum_size = Vector2(18, 19)
 layout_mode = 2
 stretch_mode = 3
 
-[node name="HillsLabel" type="Label" parent="Center/NewCityDialog/Content/Body/Fields/TerrainFields/HillsRow"]
+[node name="HillsLabel" type="Label" parent="Center/NewCityDialog/Content/Body/Columns/Fields/TerrainFields/HillsRow"]
 layout_mode = 2
 text = "Hills"
 vertical_alignment = 1
 
-[node name="HillsInputGroup" type="HBoxContainer" parent="Center/NewCityDialog/Content/Body/Fields/TerrainFields"]
+[node name="HillsInputGroup" type="HBoxContainer" parent="Center/NewCityDialog/Content/Body/Columns/Fields/TerrainFields"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 8
 
-[node name="HillsInput" type="HSlider" parent="Center/NewCityDialog/Content/Body/Fields/TerrainFields/HillsInputGroup"]
+[node name="HillsInput" type="HSlider" parent="Center/NewCityDialog/Content/Body/Columns/Fields/TerrainFields/HillsInputGroup"]
 layout_mode = 2
 size_flags_horizontal = 3
 max_value = 47.0
 
-[node name="HillsValue" type="Label" parent="Center/NewCityDialog/Content/Body/Fields/TerrainFields/HillsInputGroup"]
+[node name="HillsValue" type="Label" parent="Center/NewCityDialog/Content/Body/Columns/Fields/TerrainFields/HillsInputGroup"]
 visible = false
 custom_minimum_size = Vector2(30, 0)
 layout_mode = 2
 horizontal_alignment = 2
 
-[node name="WaterRow" type="HBoxContainer" parent="Center/NewCityDialog/Content/Body/Fields/TerrainFields"]
+[node name="WaterRow" type="HBoxContainer" parent="Center/NewCityDialog/Content/Body/Columns/Fields/TerrainFields"]
 layout_mode = 2
 alignment = 2
 
-[node name="TerrainPreview" type="TextureRect" parent="Center/NewCityDialog/Content/Body/Fields/TerrainFields/WaterRow"]
+[node name="TerrainPreview" type="TextureRect" parent="Center/NewCityDialog/Content/Body/Columns/Fields/TerrainFields/WaterRow"]
 visible = false
 texture_filter = 1
 custom_minimum_size = Vector2(18, 19)
 layout_mode = 2
 stretch_mode = 3
 
-[node name="WaterLabel" type="Label" parent="Center/NewCityDialog/Content/Body/Fields/TerrainFields/WaterRow"]
+[node name="WaterLabel" type="Label" parent="Center/NewCityDialog/Content/Body/Columns/Fields/TerrainFields/WaterRow"]
 layout_mode = 2
 text = "Water"
 vertical_alignment = 1
 
-[node name="WaterInputGroup" type="HBoxContainer" parent="Center/NewCityDialog/Content/Body/Fields/TerrainFields"]
+[node name="WaterInputGroup" type="HBoxContainer" parent="Center/NewCityDialog/Content/Body/Columns/Fields/TerrainFields"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 8
 
-[node name="WaterInput" type="HSlider" parent="Center/NewCityDialog/Content/Body/Fields/TerrainFields/WaterInputGroup"]
+[node name="WaterInput" type="HSlider" parent="Center/NewCityDialog/Content/Body/Columns/Fields/TerrainFields/WaterInputGroup"]
 layout_mode = 2
 size_flags_horizontal = 3
 max_value = 47.0
 
-[node name="WaterValue" type="Label" parent="Center/NewCityDialog/Content/Body/Fields/TerrainFields/WaterInputGroup"]
+[node name="WaterValue" type="Label" parent="Center/NewCityDialog/Content/Body/Columns/Fields/TerrainFields/WaterInputGroup"]
 visible = false
 custom_minimum_size = Vector2(30, 0)
 layout_mode = 2
 horizontal_alignment = 2
 
-[node name="TreesRow" type="HBoxContainer" parent="Center/NewCityDialog/Content/Body/Fields/TerrainFields"]
+[node name="TreesRow" type="HBoxContainer" parent="Center/NewCityDialog/Content/Body/Columns/Fields/TerrainFields"]
 layout_mode = 2
 alignment = 2
 
-[node name="TerrainPreview" type="TextureRect" parent="Center/NewCityDialog/Content/Body/Fields/TerrainFields/TreesRow"]
+[node name="TerrainPreview" type="TextureRect" parent="Center/NewCityDialog/Content/Body/Columns/Fields/TerrainFields/TreesRow"]
 visible = false
 texture_filter = 1
 custom_minimum_size = Vector2(18, 19)
 layout_mode = 2
 stretch_mode = 3
 
-[node name="TreesLabel" type="Label" parent="Center/NewCityDialog/Content/Body/Fields/TerrainFields/TreesRow"]
+[node name="TreesLabel" type="Label" parent="Center/NewCityDialog/Content/Body/Columns/Fields/TerrainFields/TreesRow"]
 layout_mode = 2
 text = "Trees"
 vertical_alignment = 1
 
-[node name="TreesInputGroup" type="HBoxContainer" parent="Center/NewCityDialog/Content/Body/Fields/TerrainFields"]
+[node name="TreesInputGroup" type="HBoxContainer" parent="Center/NewCityDialog/Content/Body/Columns/Fields/TerrainFields"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 8
 
-[node name="TreesInput" type="HSlider" parent="Center/NewCityDialog/Content/Body/Fields/TerrainFields/TreesInputGroup"]
+[node name="TreesInput" type="HSlider" parent="Center/NewCityDialog/Content/Body/Columns/Fields/TerrainFields/TreesInputGroup"]
 layout_mode = 2
 size_flags_horizontal = 3
 max_value = 47.0
 
-[node name="TreesValue" type="Label" parent="Center/NewCityDialog/Content/Body/Fields/TerrainFields/TreesInputGroup"]
+[node name="TreesValue" type="Label" parent="Center/NewCityDialog/Content/Body/Columns/Fields/TerrainFields/TreesInputGroup"]
 visible = false
 custom_minimum_size = Vector2(30, 0)
 layout_mode = 2
 horizontal_alignment = 2
 
-[node name="TerrainHint" type="Label" parent="Center/NewCityDialog/Content/Body/Fields"]
+[node name="TerrainHint" type="Label" parent="Center/NewCityDialog/Content/Body/Columns/Fields"]
 visible = false
 modulate = Color(0.72, 0.72, 0.72, 1)
 layout_mode = 2
 
-[node name="Preview" type="VBoxContainer" parent="Center/NewCityDialog/Content/Body"]
+[node name="Preview" type="VBoxContainer" parent="Center/NewCityDialog/Content/Body/Columns"]
 custom_minimum_size = Vector2(320, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 8
 
-[node name="TerrainPreviewLabel" type="Label" parent="Center/NewCityDialog/Content/Body/Preview"]
+[node name="TerrainPreviewLabel" type="Label" parent="Center/NewCityDialog/Content/Body/Columns/Preview"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 16
 text = "Terrain Preview"
 horizontal_alignment = 1
 
-[node name="PreviewFrame" type="PanelContainer" parent="Center/NewCityDialog/Content/Body/Preview"]
+[node name="PreviewFrame" type="PanelContainer" parent="Center/NewCityDialog/Content/Body/Columns/Preview"]
 custom_minimum_size = Vector2(320, 320)
 layout_mode = 2
 size_flags_vertical = 0
 
-[node name="TerrainPreview" type="TextureRect" parent="Center/NewCityDialog/Content/Body/Preview/PreviewFrame"]
+[node name="TerrainPreview" type="TextureRect" parent="Center/NewCityDialog/Content/Body/Columns/Preview/PreviewFrame"]
 texture_filter = 1
 layout_mode = 2
 expand_mode = 1
 stretch_mode = 5
 
-[node name="PreviewStatus" type="Label" parent="Center/NewCityDialog/Content/Body/Preview"]
+[node name="PreviewStatus" type="Label" parent="Center/NewCityDialog/Content/Body/Columns/Preview"]
 custom_minimum_size = Vector2(320, 0)
 layout_mode = 2
 text = "Generating terrain..."
 horizontal_alignment = 1
 autowrap_mode = 3
 
-[node name="Regenerate" type="Button" parent="Center/NewCityDialog/Content/Body/Preview"]
+[node name="Regenerate" type="Button" parent="Center/NewCityDialog/Content/Body/Columns/Preview"]
 layout_mode = 2
 tooltip_text = "Make new terrain with the same settings."
 text = "Regenerate Terrain"
 
-[node name="ExpandedFeatures" type="VBoxContainer" parent="Center/NewCityDialog/Content/Body/Preview"]
+[node name="ExpandedFeatures" type="VBoxContainer" parent="Center/NewCityDialog/Content/Body/Columns/Preview"]
 visible = false
 layout_mode = 2
 theme_override_constants/separation = 7
 
-[node name="Divider" type="HSeparator" parent="Center/NewCityDialog/Content/Body/Preview/ExpandedFeatures"]
+[node name="Divider" type="HSeparator" parent="Center/NewCityDialog/Content/Body/Columns/Preview/ExpandedFeatures"]
 layout_mode = 2
 
-[node name="Heading" type="Label" parent="Center/NewCityDialog/Content/Body/Preview/ExpandedFeatures"]
+[node name="Heading" type="Label" parent="Center/NewCityDialog/Content/Body/Columns/Preview/ExpandedFeatures"]
 layout_mode = 2
 text = "Expanded features"
 autowrap_mode = 3
 
-[node name="Chronicle" type="PanelContainer" parent="Center/NewCityDialog/Content/Body/Preview/ExpandedFeatures"]
+[node name="Chronicle" type="PanelContainer" parent="Center/NewCityDialog/Content/Body/Columns/Preview/ExpandedFeatures"]
 layout_mode = 2
 mouse_filter = 0
 mouse_default_cursor_shape = 16
 tooltip_text = "Review the last ten completed years of your city: population, finances, annual statistics, major buildings and disasters. Available in single-player cities and regions after the first completed year."
 theme_override_styles/panel = SubResource("Style_chronicle")
 
-[node name="Content" type="HBoxContainer" parent="Center/NewCityDialog/Content/Body/Preview/ExpandedFeatures/Chronicle"]
+[node name="Content" type="HBoxContainer" parent="Center/NewCityDialog/Content/Body/Columns/Preview/ExpandedFeatures/Chronicle"]
 layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 10
 
-[node name="Icon" type="TextureRect" parent="Center/NewCityDialog/Content/Body/Preview/ExpandedFeatures/Chronicle/Content"]
+[node name="Icon" type="TextureRect" parent="Center/NewCityDialog/Content/Body/Columns/Preview/ExpandedFeatures/Chronicle/Content"]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 mouse_filter = 2
@@ -414,7 +419,7 @@ texture = ExtResource("4_chronicle")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="Title" type="Label" parent="Center/NewCityDialog/Content/Body/Preview/ExpandedFeatures/Chronicle/Content"]
+[node name="Title" type="Label" parent="Center/NewCityDialog/Content/Body/Columns/Preview/ExpandedFeatures/Chronicle/Content"]
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
@@ -422,19 +427,19 @@ text = "Ten-year city chronicle"
 autowrap_mode = 3
 
 
-[node name="Rewards" type="PanelContainer" parent="Center/NewCityDialog/Content/Body/Preview/ExpandedFeatures"]
+[node name="Rewards" type="PanelContainer" parent="Center/NewCityDialog/Content/Body/Columns/Preview/ExpandedFeatures"]
 layout_mode = 2
 mouse_filter = 0
 mouse_default_cursor_shape = 16
 tooltip_text = "Eight unique buildings unlock as your population record rises from 150,000 to 4 million residents, including the National Museum, Opera House and World Exhibition Grounds. They provide benefits when powered and have upkeep costs."
 theme_override_styles/panel = SubResource("Style_rewards")
 
-[node name="Content" type="HBoxContainer" parent="Center/NewCityDialog/Content/Body/Preview/ExpandedFeatures/Rewards"]
+[node name="Content" type="HBoxContainer" parent="Center/NewCityDialog/Content/Body/Columns/Preview/ExpandedFeatures/Rewards"]
 layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 10
 
-[node name="Icon" type="TextureRect" parent="Center/NewCityDialog/Content/Body/Preview/ExpandedFeatures/Rewards/Content"]
+[node name="Icon" type="TextureRect" parent="Center/NewCityDialog/Content/Body/Columns/Preview/ExpandedFeatures/Rewards/Content"]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 mouse_filter = 2
@@ -442,7 +447,7 @@ texture = ExtResource("4_rewards")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="Title" type="Label" parent="Center/NewCityDialog/Content/Body/Preview/ExpandedFeatures/Rewards/Content"]
+[node name="Title" type="Label" parent="Center/NewCityDialog/Content/Body/Columns/Preview/ExpandedFeatures/Rewards/Content"]
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
@@ -450,19 +455,19 @@ text = "Eight metropolis rewards"
 autowrap_mode = 3
 
 
-[node name="Upgrades" type="PanelContainer" parent="Center/NewCityDialog/Content/Body/Preview/ExpandedFeatures"]
+[node name="Upgrades" type="PanelContainer" parent="Center/NewCityDialog/Content/Body/Columns/Preview/ExpandedFeatures"]
 layout_mode = 2
 mouse_filter = 0
 mouse_default_cursor_shape = 16
 tooltip_text = "Upgrade eligible facilities through the building query. Stage 1 requires a population record of 25,000 and the year 1920; stage 2 requires 100,000 and 1950. Construction takes time, keeps the existing service running and increases capacity and, where applicable, upkeep."
 theme_override_styles/panel = SubResource("Style_upgrades")
 
-[node name="Content" type="HBoxContainer" parent="Center/NewCityDialog/Content/Body/Preview/ExpandedFeatures/Upgrades"]
+[node name="Content" type="HBoxContainer" parent="Center/NewCityDialog/Content/Body/Columns/Preview/ExpandedFeatures/Upgrades"]
 layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 10
 
-[node name="Icon" type="TextureRect" parent="Center/NewCityDialog/Content/Body/Preview/ExpandedFeatures/Upgrades/Content"]
+[node name="Icon" type="TextureRect" parent="Center/NewCityDialog/Content/Body/Columns/Preview/ExpandedFeatures/Upgrades/Content"]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 mouse_filter = 2
@@ -470,7 +475,7 @@ texture = ExtResource("4_upgrades")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="Title" type="Label" parent="Center/NewCityDialog/Content/Body/Preview/ExpandedFeatures/Upgrades/Content"]
+[node name="Title" type="Label" parent="Center/NewCityDialog/Content/Body/Columns/Preview/ExpandedFeatures/Upgrades/Content"]
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2

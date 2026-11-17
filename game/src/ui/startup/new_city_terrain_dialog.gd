@@ -92,21 +92,21 @@ func _ready() -> void:
 	landscape_background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(landscape_background)
 	move_child(landscape_background, 0)
-	city_name_input = get_node("Center/NewCityDialog/Content/Body/Fields/CityFields/CityNameRow/CityNameInput")
-	mayor_name_input = get_node("Center/NewCityDialog/Content/Body/Fields/CityFields/MayorNameInput")
-	difficulty_input = get_node("Center/NewCityDialog/Content/Body/Fields/CityFields/DifficultyInput")
-	year_input = get_node("Center/NewCityDialog/Content/Body/Fields/CityFields/YearInput")
-	size_input = get_node("Center/NewCityDialog/Content/Body/Fields/CityFields/SizeInput")
-	ocean_input = get_node("Center/NewCityDialog/Content/Body/Fields/TerrainFields/OceanRow/OceanInput")
-	river_input = get_node("Center/NewCityDialog/Content/Body/Fields/TerrainFields/OceanRow/RiverInput")
-	hills_input = get_node("Center/NewCityDialog/Content/Body/Fields/TerrainFields/HillsInputGroup/HillsInput")
-	water_input = get_node("Center/NewCityDialog/Content/Body/Fields/TerrainFields/WaterInputGroup/WaterInput")
-	trees_input = get_node("Center/NewCityDialog/Content/Body/Fields/TerrainFields/TreesInputGroup/TreesInput")
-	var hills_value: Label = get_node("Center/NewCityDialog/Content/Body/Fields/TerrainFields/HillsInputGroup/HillsValue")
-	var water_value: Label = get_node("Center/NewCityDialog/Content/Body/Fields/TerrainFields/WaterInputGroup/WaterValue")
-	var trees_value: Label = get_node("Center/NewCityDialog/Content/Body/Fields/TerrainFields/TreesInputGroup/TreesValue")
-	preview_view = get_node("Center/NewCityDialog/Content/Body/Preview/PreviewFrame/TerrainPreview")
-	preview_status = get_node("Center/NewCityDialog/Content/Body/Preview/PreviewStatus")
+	city_name_input = get_node("Center/NewCityDialog/Content/Body/Columns/Fields/CityFields/CityNameRow/CityNameInput")
+	mayor_name_input = get_node("Center/NewCityDialog/Content/Body/Columns/Fields/CityFields/MayorNameInput")
+	difficulty_input = get_node("Center/NewCityDialog/Content/Body/Columns/Fields/CityFields/DifficultyInput")
+	year_input = get_node("Center/NewCityDialog/Content/Body/Columns/Fields/CityFields/YearInput")
+	size_input = get_node("Center/NewCityDialog/Content/Body/Columns/Fields/CityFields/SizeInput")
+	ocean_input = get_node("Center/NewCityDialog/Content/Body/Columns/Fields/TerrainFields/OceanRow/OceanInput")
+	river_input = get_node("Center/NewCityDialog/Content/Body/Columns/Fields/TerrainFields/OceanRow/RiverInput")
+	hills_input = get_node("Center/NewCityDialog/Content/Body/Columns/Fields/TerrainFields/HillsInputGroup/HillsInput")
+	water_input = get_node("Center/NewCityDialog/Content/Body/Columns/Fields/TerrainFields/WaterInputGroup/WaterInput")
+	trees_input = get_node("Center/NewCityDialog/Content/Body/Columns/Fields/TerrainFields/TreesInputGroup/TreesInput")
+	var hills_value: Label = get_node("Center/NewCityDialog/Content/Body/Columns/Fields/TerrainFields/HillsInputGroup/HillsValue")
+	var water_value: Label = get_node("Center/NewCityDialog/Content/Body/Columns/Fields/TerrainFields/WaterInputGroup/WaterValue")
+	var trees_value: Label = get_node("Center/NewCityDialog/Content/Body/Columns/Fields/TerrainFields/TreesInputGroup/TreesValue")
+	preview_view = get_node("Center/NewCityDialog/Content/Body/Columns/Preview/PreviewFrame/TerrainPreview")
+	preview_status = get_node("Center/NewCityDialog/Content/Body/Columns/Preview/PreviewStatus")
 	preview_timer = get_node("PreviewTimer")
 	done_button = $Center/NewCityDialog/Content/Buttons/Start
 	_build_region_fields()
@@ -119,10 +119,10 @@ func _ready() -> void:
 	for key in feature_titles:
 		var check := CheckBox.new()
 		check.text = feature_titles[key]
-		$Center/NewCityDialog/Content/Body/Fields/TerrainFields/OceanRow.add_child(check)
+		$Center/NewCityDialog/Content/Body/Columns/Fields/TerrainFields/OceanRow.add_child(check)
 		feature_inputs[key] = check
 		check.toggled.connect(_feature_changed.bind(key))
-	var feature_grid: GridContainer = $Center/NewCityDialog/Content/Body/Fields/TerrainFields/OceanRow
+	var feature_grid: GridContainer = $Center/NewCityDialog/Content/Body/Columns/Fields/TerrainFields/OceanRow
 	var ordered_checks := [ocean_input, feature_inputs.bay, river_input, feature_inputs.meander,
 		feature_inputs.branch, feature_inputs.rejoin, feature_inputs.crossing, feature_inputs.delta,
 		feature_inputs.lake, feature_inputs.lakes, feature_inputs.plateau, feature_inputs.ridge, feature_inputs.valley,
@@ -138,9 +138,10 @@ func _ready() -> void:
 	ocean_input.minimum_size_changed.connect(_align_features_label)
 	_align_features_label()
 	visibility_changed.connect(_visibility_changed)
-	resized.connect(_clamp_panel)
+	resized.connect(_center_panel)
+	$Center/NewCityDialog/Content.minimum_size_changed.connect(_center_panel.call_deferred)
 	_build_busy_overlay()
-	$Center/NewCityDialog/Content/Body/Fields/CityFields/CityNameRow/RandomName.pressed.connect(_random_name)
+	$Center/NewCityDialog/Content/Body/Columns/Fields/CityFields/CityNameRow/RandomName.pressed.connect(_random_name)
 	var title_bar: DialogTitleBar = $Center/NewCityDialog/Content/TitleBar
 	title_bar.title_label.text = "New City"
 	title_bar.close_requested.connect(cancel_requested.emit)
@@ -154,12 +155,12 @@ func _ready() -> void:
 		label.text = str(roundi(slider.value))
 		slider.value_changed.connect(_slider_changed.bind(label))
 
-	$Center/NewCityDialog/Content/Body/Preview/Regenerate.pressed.connect(terrain_regeneration_requested.emit)
+	$Center/NewCityDialog/Content/Body/Columns/Preview/Regenerate.pressed.connect(terrain_regeneration_requested.emit)
 	$Center/NewCityDialog/Content/Buttons/Cancel.pressed.connect(cancel_requested.emit)
 	$Center/NewCityDialog/Content/Buttons/Start.pressed.connect(build_requested.emit)
-	terrain_icons["Hills"] = get_node("Center/NewCityDialog/Content/Body/Fields/TerrainFields/HillsRow/TerrainPreview")
-	terrain_icons["Water"] = get_node("Center/NewCityDialog/Content/Body/Fields/TerrainFields/WaterRow/TerrainPreview")
-	terrain_icons["Trees"] = get_node("Center/NewCityDialog/Content/Body/Fields/TerrainFields/TreesRow/TerrainPreview")
+	terrain_icons["Hills"] = get_node("Center/NewCityDialog/Content/Body/Columns/Fields/TerrainFields/HillsRow/TerrainPreview")
+	terrain_icons["Water"] = get_node("Center/NewCityDialog/Content/Body/Columns/Fields/TerrainFields/WaterRow/TerrainPreview")
+	terrain_icons["Trees"] = get_node("Center/NewCityDialog/Content/Body/Columns/Fields/TerrainFields/TreesRow/TerrainPreview")
 	hills_input.tooltip_text = "The height of the hills."
 	water_input.tooltip_text = "The sea level and the number of streams. With terrain features, rivers are wider and there is more ocean."
 	trees_input.tooltip_text = "The number of tree groups."
@@ -298,11 +299,11 @@ func _rules_changed(index: int) -> void:
 		feature_inputs[key].visible = true
 	size_input.visible = expanded
 	classic_size.visible = not expanded
-	$Center/NewCityDialog/Content/Body/Preview/ExpandedFeatures.visible = expanded
+	$Center/NewCityDialog/Content/Body/Columns/Preview/ExpandedFeatures.visible = expanded
 	preview_view.get_parent().custom_minimum_size.y = 272 if expanded else 320
 	mayor_name_input.visible = expanded
-	$Center/NewCityDialog/Content/Body/Fields/CityFields/MayorNameLabel.visible = expanded
-	$Center/NewCityDialog/Content/Body/Fields/CityFields/CityNameRow/RandomName.visible = expanded
+	$Center/NewCityDialog/Content/Body/Columns/Fields/CityFields/MayorNameLabel.visible = expanded
+	$Center/NewCityDialog/Content/Body/Columns/Fields/CityFields/CityNameRow/RandomName.visible = expanded
 	game_type_input.visible = expanded and not _multiplayer_setup
 	game_type_label.visible = game_type_input.visible
 	game_type_input.set_item_disabled(1, not expanded)
@@ -518,13 +519,17 @@ func _visibility_changed() -> void:
 	_peek = false
 	_dragging = false
 	if visible:
-		panel.reset_size()
-		panel.position = ((size - panel.size) * 0.5).round()
 		_center_panel.call_deferred()
 
 
 func _center_panel() -> void:
-	panel.reset_size()
+	if panel == null:
+		return
+	# Only the form and preview scroll. Title and completion actions stay in
+	# the visible viewport, including Expanded's extra rows and scaled UIs.
+	var available := (size - Vector2(24, 24)).max(Vector2.ONE)
+	panel.custom_minimum_size.x = minf(960.0, available.x)
+	panel.size = Vector2(minf(1100.0, available.x), minf(760.0, available.y))
 	panel.position = ((size - panel.size) * 0.5).round()
 	_clamp_panel()
 
@@ -536,7 +541,7 @@ func _clamp_panel() -> void:
 
 
 func _align_features_label() -> void:
-	var label: Label = $Center/NewCityDialog/Content/Body/Fields/TerrainFields/FeaturesLabel
+	var label: Label = $Center/NewCityDialog/Content/Body/Columns/Fields/TerrainFields/FeaturesLabel
 	label.custom_minimum_size.y = ocean_input.get_combined_minimum_size().y
 
 
