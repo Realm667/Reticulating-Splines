@@ -5,7 +5,7 @@
 [Website](https://rs.realm667.com/) · [Gallery](https://rs.realm667.com/#screenshots) · [FAQ](https://rs.realm667.com/#faq) · [Support the project](https://rs.realm667.com/#support)
 
 Reticulating Splines is developed by **Daniel Gimmer (Realm667)** as an enhanced fork of
-[OpenSC2K](https://github.com/nicholas-ochoa/OpenSC2K), Nicholas Ochoa's independently
+[OpenSC2K](https://github.com/OpenSC2K/OpenSC2K), Nicholas Ochoa's independently
 written, open-source reimplementation of SimCity 2000 using Rust and Godot.
 Enjoy familiar graphics, music and sounds with new lighting, weather, modern
 tools and experimental multiplayer in an OpenSC2K-based engine.
@@ -24,27 +24,34 @@ single-player simulation rules. Multiplayer adds its own shared-control,
 ownership and municipal-account rules. Reticulating Splines does not patch or
 run the original SimCity 2000 executable.
 
-**Development status:** the project is in development; multiplayer is experimental.
-Public preview **0.3.0-rs.4** is based on Nicholas Ochoa's OpenSC2K 0.3.0
-with reviewed later upstream fixes. [Download the desktop packages](https://github.com/Realm667/Reticulating-Splines/releases/tag/v0.3.0-rs.4)
-for Windows x64/ARM64, Linux x64/ARM64, or macOS (Intel and Apple Silicon).
-Replacement graphics, music and sounds are included; importing your own
-supported original game is optional. Extract Windows/Linux archives to a writable
-folder, or drag the macOS app into Applications. This macOS preview is ad-hoc
-signed and is not Apple-notarized; macOS may require explicit approval in
-Privacy & Security. See [release packaging](docs/reticulating-splines-releases.md)
-for build and verification details.
+## v1.0.0-beta.1
 
-The default branch, **`reticulating-splines`**, is the shared development source.
-Upstream changes are reviewed manually before integration. The retained `main`
-and older feature branches are historical references. Existing OpenSC2K user
-profiles remain compatible; Windows exports use **`ReticulatingSplines.exe`**.
+[Download v1.0.0-beta.1 and read the release notes](https://github.com/Realm667/Reticulating-Splines/releases/tag/v1.0.0-beta.1)
+
+v1.0.0-beta.1 is the first public beta of the 1.0 series. Choose the Windows or Linux archive for x64
+or ARM64, the universal macOS disk image for Intel and Apple Silicon, or the
+Android ARM64 APK. Extract the desktop archives into a writable folder. On
+macOS, drag the app into Applications. The macOS preview uses an ad-hoc
+signature and may require approval in Privacy & Security.
+
+### Changes since 0.3.0-rs.9
+
+- Choose **Classic** or **Expanded** when founding a city. Expanded adds eight metropolis rewards and facility upgrades. New regions use Expanded rules.
+- Import a **SimCity Classic** city from the open dialog. Save previews show more city details, and favorites are available when browsing local and cloud cities.
+- Read the annual newspaper review, follow the city chronicle, and hear spatial city ambience. Dawn and dusk lighting, demolition dust and subtle zoom blur bring the city view to life.
+- Newly abandoned buildings can retain their former shape and orientation with weathered artwork. A slider controls how often that artwork appears.
+- Imported sidebar icons now stay centered at their intended pixel size. Tool flyouts support single click, double click and hold. The annual budget waits until the city-founding dialog closes.
+- Music Box effect volume follows the main settings. Multiplayer fixes cover the exit dialog and the first export of a city copy. Rendering changes reduce repeated work for figures, shadows and vehicle lights.
+- Reviewed OpenSC2K 0.4.0 tools add area PNG export, reports and an opt-in local test API for disposable profiles. See the [scripting guide](docs/scripting.md).
+
+Multiplayer is experimental. The default branch, **`reticulating-splines`**, is
+the development checkout. Use the release tag to build Beta 1 from its exact source.
 
 ## Included features
 
 | Area | What you can explore |
 | --- | --- |
-| Building & planning | Eleven map sizes from 16 to 4096 tiles per side, including classic 128 × 128 cities; configurable terrain, per-tile data maps, service coverage, transport overlays and additional zoom levels. Large maps need more memory and preparation time. |
+| Building & planning | New cities start at 128 × 128 tiles and can reach 4096 tiles per side. Configure terrain, inspect per-tile data maps and service coverage, or use transport overlays and additional zoom levels. Large maps need more memory and preparation time. |
 | Light, weather & life | Day/night cycles, illuminated windows and streets, rain, snow, storms, clouds, fog, seasons, reflective water, waves, forests, decorative traffic and pedestrians. |
 | Multiplayer | Two to eight players with LAN discovery, an Internet game directory, direct host connections, optional UPnP forwarding and an external reachability check; Co-op, Competitive Shared and Competitive Region modes. |
 | Everyday comfort | Middle-click tool picking, remembered window positions, compact tool flyouts and light/dark or Classic Windows/DOS interface themes. |
