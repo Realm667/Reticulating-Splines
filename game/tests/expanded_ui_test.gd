@@ -71,7 +71,22 @@ func _run() -> void:
 		"Region creation is owned by and modal above the overview")
 	assert(conversion.size.x <= app.regions.window.size.x and conversion.size.y <= app.regions.window.size.y,
 		"Region creation fits its actual parent window")
+	var engine := app.simulation_state.simulation_engine
+	engine.pending_interaction = "annual_budget"
+	app.budget.open_budget_dialog(BudgetPhase.funding_values(city), true)
+	var budget := app.city_dialogs.budget_dialog
+	assert(app.simulation_state.annual_budget_pending and not budget.visible,
+		"Annual budget stays pending and waits for the region creation window")
+	assert(not app.regions._convert_local(3) and conversion.visible and app.regions.campaign == null,
+		"The pending annual budget blocks region creation without closing or changing the region")
 	conversion.close_requested.emit()
+	await process_frame
+	await process_frame
+	assert(budget.visible and budget.exclusive and app.simulation_state.annual_budget_pending,
+		"The pending annual budget opens after region creation closes")
+	budget.hide()
+	app.budget.reset_pending_state()
+	engine.pending_interaction = ""
 	app.regions.window.hide()
 	city.set_funds(1000000)
 	city.document.set_misc_u32(Sc2MiscLayout.NORMAL_POPULATION, 4000000)

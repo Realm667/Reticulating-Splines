@@ -231,7 +231,9 @@ func set_city(value: CityState) -> void:
 	ordinance_control.refresh()
 
 
-func open_budget(values: PackedInt32Array, annual: bool, auto_budget: bool) -> void:
+func open_budget(values: PackedInt32Array, annual: bool, auto_budget: bool, show_window := true) -> void:
+	if not show_window:
+		hide()
 	title = "Annual Budget" if annual else "Budget"
 	_refresh_heading()
 	notice_label.text = "Review last year’s totals." if annual else "Review income, service funding and the year-end forecast."
@@ -247,7 +249,8 @@ func open_budget(values: PackedInt32Array, annual: bool, auto_budget: bool) -> v
 	tabs.current_tab = 0
 	refresh_report()
 	_fit_to_viewport()
-	popup_centered(size)
+	if show_window:
+		popup_centered(size)
 
 
 func _fit_to_viewport() -> void:

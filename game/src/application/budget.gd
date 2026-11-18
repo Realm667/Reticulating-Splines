@@ -69,10 +69,18 @@ func open_budget_dialog(values: PackedInt32Array, annual: bool) -> void:
 		ordinance_control.command_sink = func(index: int, enabled: bool) -> void:
 			app.coop.session.request({"kind": "ordinance", "ordinance": index, "enabled": enabled})
 	app.simulation_state.annual_budget_pending = annual
+	var conversion := app.regions.conversion_dialog
+	var defer_popup := annual and is_instance_valid(conversion) and conversion.visible
+	# Godot cannot open the exclusive budget alongside the region conversion.
+	# Keep the pending budget active and present it when the conversion closes.
+	if defer_popup:
+		conversion.tree_exited.connect(_show_deferred_annual_budget.bind(app.document_state.city),
+			CONNECT_DEFERRED | CONNECT_ONE_SHOT)
 	app.city_dialogs.budget_dialog.open_budget(
 		values,
 		annual,
 		app.document_state.city.document.misc_u32(Budget.MISC_AUTO_BUDGET) != 0,
+		not defer_popup,
 	)
 	_update_bond_controls()
 	var tabs := app.city_dialogs.budget_dialog.tabs
@@ -83,6 +91,13 @@ func open_budget_dialog(values: PackedInt32Array, annual: bool) -> void:
 		loans.setup(app.coop)
 	if loans != null:
 		loans.update(app.coop.session.latest if app.coop.active() else {})
+
+
+func _show_deferred_annual_budget(city: CityState) -> void:
+	if is_instance_valid(app) and app.is_inside_tree() and app.document_state.city == city \
+			and app.simulation_state.annual_budget_pending:
+		var dialog := app.city_dialogs.budget_dialog
+		dialog.popup_centered(dialog.size)
 
 
 func show_advisor(index: int) -> void:

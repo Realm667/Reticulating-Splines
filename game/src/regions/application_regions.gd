@@ -30,6 +30,7 @@ var open_button: Button
 var selected := Vector2i(-1, -1)
 var quote := {}
 var confirmation: ConfirmationDialog
+var conversion_dialog: QolDialog
 var last_revision := -1
 const LOCAL_OWNER := "local"
 const SNAPSHOT_TIMEOUT_MSEC := 15000
@@ -674,12 +675,15 @@ func _command_resolved(command_id: int, result: Dictionary) -> void:
 
 
 func open_conversion() -> void:
+	if is_instance_valid(conversion_dialog):
+		return
 	if app.coop.active() or app.document_state.city == null or app.simulation_state.simulation_engine.scenario != null:
 		return
 	if not ExpandedRules.enabled(app.document_state.current_document):
 		app.interface.show_error(tr("Regions require Expanded rules."))
 		return
 	var dialog := QolDialog.new()
+	conversion_dialog = dialog
 	dialog.title = "Create a region"
 	dialog.wrap_controls = false
 	dialog.label("Turn this city into the first city of a new region. A separate backup is saved first. No additional starting funds are granted.").custom_minimum_size.x = 0
