@@ -2,6 +2,61 @@
 (() => {
   const script = document.currentScript;
   const origin = new URL(script.src).origin;
+  const compactFormat = new Intl.NumberFormat('en', {maximumFractionDigits: 1});
+  const icons = {
+    total: 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2m20 0v-2a4 4 0 0 0-3-3.9M15 3.1a4 4 0 0 1 0 7.8 M13 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z',
+    solo: 'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2 M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z',
+    multi: 'M7 7h10a4 4 0 0 1 3.9 3.2l1 5.1a2.5 2.5 0 0 1-4.2 2.2L15 15H9l-2.7 2.5a2.5 2.5 0 0 1-4.2-2.2l1-5.1A4 4 0 0 1 7 7Zm0 3v4m-2-2h4m6-1h.01m3 2h.01',
+  };
+
+  function playerCount(icon) {
+    const metric = document.createElement('button');
+    metric.type = 'button';
+    metric.className = 'count';
+    const ns = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.setAttribute('aria-hidden', 'true');
+    const path = document.createElementNS(ns, 'path');
+    path.setAttribute('d', icons[icon]);
+    svg.append(path);
+    const value = document.createElement('span');
+    value.setAttribute('aria-hidden', 'true');
+    const tip = document.createElement('span');
+    tip.className = 'count-tip';
+    tip.setAttribute('aria-hidden', 'true');
+    metric.append(svg, value, tip);
+    metric.addEventListener('click', () => metric.focus({preventScroll: true}));
+    return {metric, update(number, singular) {
+      const label = number === 1 ? singular : `${singular}s`;
+      const formatted = number.toLocaleString('en');
+      metric.setAttribute('aria-label', `${formatted} ${label}`);
+      value.textContent = formatted;
+      tip.textContent = label;
+    }};
+  }
+
+  function showNumber(cell, number) {
+    if (!Number.isSafeInteger(number) || number < 0) {
+      cell.textContent = '—';
+      return;
+    }
+    const exact = number.toLocaleString('en');
+    const unit = number >= 10_000_000 ? [1_000_000, 'M'] : number >= 10_000 ? [1_000, 'K'] : null;
+    if (!unit) {
+      cell.textContent = exact;
+      return;
+    }
+    cell.title = exact;
+    const abbreviated = document.createElement('span');
+    abbreviated.setAttribute('aria-hidden', 'true');
+    abbreviated.textContent = `${compactFormat.format(number / unit[0])}\u00a0${unit[1]}`;
+    const full = document.createElement('span');
+    full.className = 'sr-only';
+    full.textContent = exact;
+    cell.append(abbreviated, full);
+  }
+
   function mount() {
     const containers = [...document.querySelectorAll('[data-rs-activity]')];
     // Some CMS editors strip data attributes from the supplied placeholder.
@@ -17,14 +72,53 @@
       if (container.shadowRoot) continue;
       const root = container.attachShadow({mode: 'open'});
       const style = document.createElement('style');
-      style.textContent = ':host{display:block;font:14px system-ui;color:inherit}section{padding:16px;border:1px solid #66717b;border-radius:6px}h3{margin:0 0 12px;font-size:16px}ul{list-style:none;padding:0;margin:0}li{padding:8px 0;border-top:1px solid #66717b}small{opacity:.8}';
-      style.textContent += ':host{position:relative}h3{padding-right:30px}table{width:100%;border-collapse:collapse;margin-top:18px;font:inherit}th,td{padding:9px 0;border-top:1px solid #515c65}th{font-weight:400;text-align:left;padding-right:16px}td{text-align:right;font-size:19px;font-weight:650;font-variant-numeric:tabular-nums;white-space:nowrap}button{position:absolute;right:14px;top:14px;width:28px;height:28px;border:1px solid #849099;border-radius:50%;background:transparent;color:inherit;font:600 16px system-ui;cursor:pointer}button:hover,button:focus-visible{color:#dfff63;border-color:#dfff63}button:focus-visible{outline:2px solid #dfff63;outline-offset:3px}.note{position:fixed;inset:auto;margin:0;box-sizing:border-box;width:440px;max-width:calc(100vw - 24px);padding:14px 16px;border:1px solid #849099;border-radius:8px;background:#171c22;color:#f2f5f7;box-shadow:0 10px 30px #0008;font:13px/1.55 system-ui;overflow:auto;z-index:2147483647}.note[hidden],button[hidden]{display:none}';
       const section = document.createElement('section');
-      style.textContent += 'h4{margin:14px 0 5px;font-size:14px}.matrix{overflow-x:auto;margin-top:18px}table{margin-top:0;table-layout:auto;min-width:300px}thead th{text-align:right;font-size:11px;font-weight:600;overflow-wrap:normal}thead th:first-child{width:36%;text-align:left}th,td{padding:9px 4px;overflow-wrap:anywhere}tbody th{font-size:13px}td{font-size:16px;white-space:nowrap}thead th:last-child,td:last-child{font-weight:750;background:#84909912}small{display:block;margin-top:8px}';
-      section.setAttribute('aria-live', 'polite');
+      style.textContent = `
+        :host{display:block;position:relative;container-type:inline-size;font:14px system-ui;color:inherit}
+        section{padding:16px;border:1px solid #66717b;border-radius:6px}
+        .counts{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding-right:32px;margin-bottom:14px}
+        button{background:transparent;color:inherit;cursor:pointer}
+        button:hover,button:focus-visible{color:#dfff63;border-color:#dfff63}
+        button:focus-visible{outline:2px solid #dfff63;outline-offset:3px}
+        .count{position:relative;display:inline-flex;align-items:center;gap:6px;padding:5px 9px;min-height:30px;border:1px solid #66717b;border-radius:5px;font:650 15px system-ui;font-variant-numeric:tabular-nums}
+        .count svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+        .count-tip,.note{border:1px solid #849099;border-radius:8px;background:#171c22;color:#f2f5f7;box-shadow:0 10px 30px #0008;font:13px/1.55 system-ui}
+        .count-tip{display:none;position:absolute;z-index:1;top:calc(100% + 5px);left:0;padding:5px 9px;white-space:nowrap;pointer-events:none}
+        .count:last-child .count-tip{right:0;left:auto}
+        .count:hover .count-tip,.count:focus .count-tip{display:block}
+        .activity-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+        @container (max-width:420px){.activity-grid{grid-template-columns:minmax(0,1fr);gap:14px}}
+        h4{margin:0 0 5px;font-size:14px}
+        ul{list-style:none;padding:0;margin:0}
+        li{padding:8px 0;border-top:1px solid #66717b;overflow-wrap:anywhere}
+        small{display:block;margin-top:8px;opacity:.8;overflow-wrap:anywhere}
+        .matrix{overflow-x:auto;margin-top:18px}
+        table{width:100%;min-width:280px;border-collapse:collapse;font:inherit}
+        th,td{padding:9px 4px;border-top:1px solid #515c65;overflow-wrap:anywhere}
+        th{font-weight:400;text-align:left}
+        thead th{text-align:right;font-size:11px;font-weight:600;overflow-wrap:normal}
+        thead th:first-child{width:36%;text-align:left}
+        tbody th{font-size:13px}
+        td{text-align:right;font-size:16px;font-weight:650;font-variant-numeric:tabular-nums;white-space:nowrap}
+        thead th:last-child,td:last-child{font-weight:750;background:#84909912}
+        .help{position:absolute;right:14px;top:14px;width:28px;height:28px;border:1px solid #849099;border-radius:50%;font:600 16px system-ui}
+        .note{position:fixed;inset:auto;margin:0;box-sizing:border-box;width:440px;max-width:calc(100vw - 24px);padding:14px 16px;overflow:auto;z-index:2147483647}
+        .note[hidden],button[hidden]{display:none}
+        .sr-only{position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+      `;
       section.textContent = 'Loading activity…';
+      const counts = document.createElement('div');
+      counts.className = 'counts';
+      counts.setAttribute('role', 'group');
+      counts.setAttribute('aria-label', 'Players online');
+      const totalCount = playerCount('total');
+      const soloCount = playerCount('solo');
+      const multiCount = playerCount('multi');
+      counts.append(totalCount.metric, soloCount.metric, multiCount.metric);
+      const directory = document.createElement('div');
       const help = document.createElement('button');
       help.type = 'button';
+      help.className = 'help';
       help.textContent = 'i';
       help.hidden = true;
       help.setAttribute('aria-label', 'About these statistics');
@@ -41,12 +135,16 @@
       function positionNote() {
         if (!open) return;
         const card = container.getBoundingClientRect();
-        note.style.maxHeight = Math.max(80, window.innerHeight - 24) + 'px';
+        const above = Math.max(0, card.top - 20);
+        const below = Math.max(0, window.innerHeight - card.bottom - 20);
+        const useOverlay = pinned && Math.max(above, below) < 100;
+        note.style.visibility = !pinned && Math.max(above, below) < 100 ? 'hidden' : '';
+        note.style.maxHeight = (useOverlay ? window.innerHeight - 24 : Math.max(above, below)) + 'px';
         const box = note.getBoundingClientRect();
         note.style.left = Math.max(12, Math.min(card.left, window.innerWidth - box.width - 12)) + 'px';
-        const below = card.bottom + 8;
-        note.style.top = Math.max(12, below + box.height <= window.innerHeight - 12
-          ? below : Math.min(card.top - box.height - 8, window.innerHeight - box.height - 12)) + 'px';
+        const top = useOverlay ? window.innerHeight - box.height - 12
+          : below >= box.height ? card.bottom + 8 : card.top - box.height - 8;
+        note.style.top = Math.max(12, top) + 'px';
       }
       function showNote() {
         clearTimeout(hideTimer);
@@ -100,9 +198,15 @@
           if (data.version !== 2 || !Array.isArray(data.games)) throw Error('version');
           const games = data.games.slice(0, 256);
           const solos = Array.isArray(data.singleplayer) ? data.singleplayer.slice(0, 1024) : [];
-          const heading = document.createElement('h3');
           const players = games.reduce((n,g) => n + g.players, 0);
-          heading.textContent = `${players + solos.length} active players · ${solos.length} single-player · ${players} multiplayer`;
+          totalCount.update(players + solos.length, 'active player');
+          soloCount.update(solos.length, 'single-player participant');
+          multiCount.update(players, 'multiplayer participant');
+          const activity = document.createElement('div');
+          activity.className = 'activity-grid';
+          const multiplayer = document.createElement('div');
+          const singleplayer = document.createElement('div');
+          activity.append(multiplayer, singleplayer);
           const list = document.createElement('ul');
           for (const game of games.slice(0, 10)) {
             const item = document.createElement('li');
@@ -124,17 +228,16 @@
             item.textContent = `${solo.city} · ${population} residents · ${solo.phase === 'paused' ? 'Paused' : 'In progress'}`;
             soloList.append(item);
           }
-          if (!solos.length) {
-            const item = document.createElement('li');
-            item.textContent = 'No shared single-player activity right now.';
-            item.style.fontSize = 'smaller';
-            soloList.append(item);
-          }
-          section.replaceChildren(heading, multiTitle, list, hint, soloTitle, soloList);
+          const soloHint = document.createElement('small');
+          soloHint.textContent = 'No shared single-player activity right now.';
+          multiplayer.append(multiTitle, list, hint);
+          singleplayer.append(soloTitle, solos.length ? soloList : soloHint);
+          if (section.firstChild !== counts) section.replaceChildren(counts, directory);
+          directory.replaceChildren(activity);
           const totals = data.totals;
           if (totals?.available && ['sessions', 'today', 'peak_players'].every(
             key => Number.isSafeInteger(totals[key]) && totals[key] >= 0)) {
-              const summary = document.createElement('table');
+            const summary = document.createElement('table');
             summary.setAttribute('aria-label', 'Activity statistics by game type');
             const head = document.createElement('thead');
             const header = document.createElement('tr');
@@ -157,8 +260,7 @@
               cell.append(title);
               for (const group of ['singleplayer', 'multiplayer', 'total']) {
                 const value = document.createElement('td');
-                const number = groups[group]?.[key];
-                value.textContent = Number.isSafeInteger(number) && number >= 0 ? number.toLocaleString('en') : '—';
+                showNumber(value, groups[group]?.[key]);
                 cell.append(value);
               }
               rows.append(cell);
@@ -172,7 +274,7 @@
               + 'Only reported sessions are included; single-player sharing is optional. Resumed games and reconnects after expiry count as new sessions, not unique people. '
               + 'Saved city IDs prevent double counting, including copied saves. A city played in both modes appears in both columns but once in Total; population uses its latest report, including offline cities. Older saves without an ID must first be saved by a reporting version. '
               + 'The total peak is simultaneous activity, not the sum of the two peaks. Up to ten sessions of each type are listed; counters include all active reports.';
-            section.append(matrix);
+            directory.append(matrix);
             help.hidden = false;
             positionNote();
           } else {
