@@ -125,13 +125,13 @@ func process(delta: float) -> void:
 		_spawn_cursor = -1
 		_activity_signature = activity
 		_spawn_elapsed = 1.0
-	# Compact in place instead of allocating a filtered array every frame.
-	var kept := 0
-	for figure in figures:
-		if options.life_people_enabled if figure.walking else options.life_cars_enabled and app.view_state.show_vehicles:
-			figures[kept] = figure
-			kept += 1
-	figures.resize(kept)
+	if not (options.life_people_enabled and options.life_cars_enabled and app.view_state.show_vehicles):
+		var kept := 0
+		for figure in figures:
+			if options.life_people_enabled if figure.walking else options.life_cars_enabled and app.view_state.show_vehicles:
+				figures[kept] = figure
+				kept += 1
+		figures.resize(kept)
 	var elapsed := maxf(delta, 0.0)
 	var speed := app.simulation_state.speed_controller.speed if app.simulation_state.speed_controller != null else 1
 	if options.pause_freezes and (speed == 1 or app.frame._simulation_suspended()):
@@ -163,7 +163,10 @@ func process(delta: float) -> void:
 	# A changed coordinate space collects lanes first and publishes next frame.
 	# Bounded spawn portions can accompany publication; deferring for them would
 	# force publication onto the next expensive movement frame.
-	if (_render_elapsed >= UPDATE_SECONDS or canvas.texture == null) and ((not advanced and not rebuilt_view) or canvas.texture == null or _deferred_render):
+	# Publish prepared lamps on the first available non-movement frame at dusk.
+	var first_light := not canvas._emission_active and app.visual_environment.night > 0.0 \
+		and VisualEnhancementOptions.detail_lights_visible(options, map.zoom_factor)
+	if (_render_elapsed >= UPDATE_SECONDS or first_light or canvas.texture == null) and ((not advanced and not rebuilt_view) or canvas.texture == null or _deferred_render):
 		_deferred_render = false
 		_render_elapsed = 0.0
 		canvas.interpolation = 0.0 if elapsed > 0.0 else 1.0
@@ -217,18 +220,23 @@ func _collect_tiles(city: CityState, budget_usec := 0) -> void:
 
 func _spawn(city: CityState, options: Dictionary, tile_limit := 0) -> bool:
 	_refresh_bus_area(city)
-	_rebuild_buckets()
-	_spawn_counts.clear()
-	var counts := _spawn_counts
-	for figure in figures:
-		var key := Vector3i(figure.tile.x, figure.tile.y, int(figure.walking))
-		counts[key] = counts.get(key, 0) + 1
 	if tiles.is_empty():
 		_spawn_cursor = -1
 		return true
 	if _spawn_cursor < 0:
 		_spawn_cursor = 0
 		_spawn_start = random.randi_range(0, tiles.size() - 1)
+	# A full population needs no occupancy map. Keep the traversal seed above
+	# so the next available spawn consumes the same random sequence.
+	if figures.size() >= MAX_FIGURES:
+		_spawn_cursor = -1
+		return true
+	_rebuild_buckets()
+	_spawn_counts.clear()
+	var counts := _spawn_counts
+	for figure in figures:
+		var key := Vector3i(figure.tile.x, figure.tile.y, int(figure.walking))
+		counts[key] = counts.get(key, 0) + 1
 	# Keep the same traversal and RNG stream across portions. The controller
 	# cancels it when geometry, viewport or population options change.
 	var end := mini(tiles.size(), _spawn_cursor + tile_limit) if tile_limit > 0 else tiles.size()
@@ -302,10 +310,20 @@ func _revalidate_lanes(city: CityState, changed: Variant = null) -> void:
 
 func _fade(elapsed: float) -> void:
 	# Wall-clock fades remain readable at African Swallow; pause still freezes them.
-	for figure in figures:
-		var duration := FADE_OUT_SECONDS if figure.retiring else FADE_IN_SECONDS
-		figure.visibility = move_toward(figure.visibility, 0.0 if figure.retiring else 1.0, elapsed / duration)
-	figures = figures.filter(func(f: Figure) -> bool: return not f.retiring or f.visibility > 0.0)
+	var kept := 0
+	for index in figures.size():
+		var figure := figures[index]
+		if figure.retiring:
+			figure.visibility = move_toward(figure.visibility, 0.0, elapsed / FADE_OUT_SECONDS)
+			if figure.visibility <= 0.0:
+				continue
+		elif figure.visibility != 1.0:
+			figure.visibility = move_toward(figure.visibility, 1.0, elapsed / FADE_IN_SECONDS)
+		if kept != index:
+			figures[kept] = figure
+		kept += 1
+	if kept != figures.size():
+		figures.resize(kept)
 
 
 func _exit(city: CityState, figure: Figure) -> int:

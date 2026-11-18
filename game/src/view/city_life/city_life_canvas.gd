@@ -346,9 +346,12 @@ func _candidates(app: CityApplication, tile: Vector2i, enter: int = 0) -> Array:
 	var lower_crossing := id in [BuildingTileIds.HIGHWAY_ROAD_CROSSING_1, BuildingTileIds.HIGHWAY_ROAD_CROSSING_2] \
 		and CityLifePaths.edge_height(city, tile, enter) < city.land_altitude(tile.x, tile.y) + 1.0
 	var candidates: Array = []
-	var commands := app.moving_sprites.static_occlusion_candidates(bounds)
-	if app.render_caches.region_cache != null and (include_cached_regions or app.render_caches.region_cache.resident):
-		commands = app.render_caches.region_cache.occlusion_candidates(bounds, true)
+	var regions := app.render_caches.region_cache
+	var commands: Array[CityStaticCommand]
+	if regions != null:
+		commands = regions.occlusion_candidates(bounds, include_cached_regions or regions.resident)
+	else:
+		commands = app.moving_sprites.static_occlusion_candidates(bounds)
 	for command in commands:
 		if CitySurfaceOcclusion.below(city, command, altitude, supports):
 			continue
