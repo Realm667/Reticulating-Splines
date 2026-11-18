@@ -393,6 +393,8 @@ func _refresh_group_icon(group_index: int) -> void:
 	var tool := Tools.tool(group_index, tool_index) if tool_index >= 0 else null
 	# Category artwork stays stable; selected construction sprites belong in the flyout.
 	button.icon = group_icon(group_index)
+	if button.icon is PixelArtTexture:
+		(button.icon as PixelArtTexture).limit_upscale = true
 	button.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST if toolbar_art != null else CanvasItem.TEXTURE_FILTER_LINEAR
 	button.text = str(group_index + 1) if button.icon == null else ""
 	button.tooltip_text = tr(str(Tools.GROUPS[group_index].name))
@@ -450,13 +452,9 @@ func _add_group_button(
 	button.add_theme_constant_override("icon_max_width", 28)
 	button.toggle_mode = true
 	button.button_group = button_group
-	button.tooltip_text = Tools.GROUPS[group_index].name
 	button.theme_type_variation = "ToolbarCategoryButton"
-	button.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST if toolbar_art != null else CanvasItem.TEXTURE_FILTER_LINEAR
-	button.icon = group_icon(group_index)
 	button.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	button.vertical_icon_alignment = VERTICAL_ALIGNMENT_CENTER
-	button.text = str(group_index + 1) if button.icon == null else ""
 	button.pressed.connect(_activate_group.bind(group_index))
 	button.mouse_exited.connect(func() -> void:
 		if _hold_group == group_index:
@@ -469,6 +467,7 @@ func _add_group_button(
 			]), button.get_theme_color("font_color")))
 	parent.add_child(button)
 	toolbar_buttons.append(button)
+	_refresh_group_icon(group_index)
 
 
 func _toolbar_icon(region: Rect2i) -> Texture2D:

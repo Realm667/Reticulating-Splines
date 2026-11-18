@@ -13,6 +13,8 @@ extends Texture2D
 var source: Texture2D
 # interface pixels for each artwork pixel when drawn at its own size
 var base := 1.0
+# Use the native pixel density even when a control offers extra drawing space.
+var limit_upscale := false
 
 
 func _draw(to_canvas_item: RID, pos: Vector2, modulate: Color, transpose: bool) -> void:
@@ -132,7 +134,8 @@ func whole_rect(rect: Rect2, texels: Vector2) -> Rect2:
 
 	var drawn := rect.size.abs()
 	var requested := drawn / texels
-	var pixels := Vector2.ONE * ScreenPixels.art_pixels(base)
+	var native_pixels := Vector2.ONE * ScreenPixels.art_pixels(base)
+	var pixels := native_pixels
 
 	if not drawn.is_equal_approx(Vector2(get_size())) or texels != Vector2(source.get_size()):
 		if requested.x * pixels_per_unit < 1.0 or requested.y * pixels_per_unit < 1.0:
@@ -143,6 +146,8 @@ func whole_rect(rect: Rect2, texels: Vector2) -> Rect2:
 		# keep square artwork pixels for a square request
 		if is_equal_approx(requested.x, requested.y):
 			pixels = Vector2.ONE * minf(pixels.x, pixels.y)
+		if limit_upscale:
+			pixels = pixels.min(native_pixels)
 
 	var size := texels * pixels / pixels_per_unit
 
