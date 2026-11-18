@@ -1,0 +1,279 @@
+# Play OpenSC2K through the remote API
+
+OpenSC2K is an open-source remake of SimCity 2000. You control it with JavaScript.
+Each request runs one script in the game and returns the value of its last expression
+as JSON.
+
+## Send a script
+
+| Client | Call |
+| --- | --- |
+| HTTP | `POST /eval` with the source as the body. The answer is `{ ok, value, error, console }`. |
+| MCP | The `eval` tool with `{ source }`. |
+| Shell | `tools/remote_game.py eval 'city.info()'`, or `eval -` with the source on standard input. |
+
+- `console` holds the console output of the script, also the errors of the game.
+- `let`, `const` and `class` names end with the request. Use the same names again in
+  the next request. `var`, function declarations and `globalThis` values stay.
+- Top-level `await` is permitted. The answer waits for the promise, for 30 seconds
+  by default. `POST /eval?timeout=120000` waits longer.
+- A function that cannot do its work throws an Error with the reason.
+- `GET /types` returns the TypeScript declarations of every function. Read them when
+  you need a function that this guide does not show.
+
+## The loop
+
+1. Do an action.
+2. Read `game.state()`. `status` is the result or the error of the last action.
+   `windows` lists the windows that show. `suspended` tells why the simulation waits.
+3. When a window waits for an answer, answer it: `ui.accept()`, `ui.close()` or
+   `ui.press('Button text')`. These also close a panel of the game, such as the
+   query result.
+
+```js
+game.state();
+// { screen: 'city', status: 'Built 11 Road tiles for $110.', suspended: '',
+//   city: { name, funds, population, date, demand, path, ... },
+//   speed, tool, view, disaster, windows: [{ id, type, title, text, blocking, buttons }] }
+```
+
+`screen` is `main-menu`, `new-city`, `terrain-editor`, `city`, `scurk` or `startup`.
+
+## Start a game
+
+```js
+game.newCity({ name: 'Springfield', difficulty: 'easy', year: 1900, size: 128, seed: 7 });
+ui.close(); // the founding newspaper waits for a close
+game.files(); // { cities, scenarios, saved, savedFolder, autosaves }: files that game.open takes
+await game.open(game.files().savedFolder + '/CITY.SC2', { discard: true }); // discard drops unsaved changes
+await game.saveAs('/full/path/my-city.sc2x');
+city.save(); // to the file of the city
+city.unsaved; // true when the city has changes that its file does not have
+```
+
+`newCity` also takes `mayor`, `sc2` (true makes an SC2 file that the original game
+opens), `ocean`, `river`, `hills`, `water`, `trees` (0 to 47), `features` and `edit`
+(true stays in the terrain editor).
+
+## Read the city
+
+```js
+city.info(); // name, funds, population, date, demand, weather
+city.cell(64, 64); // each value of one tile: structure, zone, terrain, power, water, data maps, the query text
+city.cells({ x: 40, y: 40, width: 8, height: 8 }); // { cells: [{ x, y, altitude, structure, zone, ... }] }
+city.cells({ x: 40, y: 40, width: 40, height: 20 }, { fields: ['structure', 'zone', 'powered'] });
+city.textMap({ x: 40, y: 40, width: 40, height: 20 }); // { rows, legend }: one character for each tile
+city.textMap(undefined, 'zones'); // the whole map; layers: surface, zones, underground, altitude, power, water
+city.tile(64, 64); // the stored values, the structure name, the zone name
+city.query(64, 64); // what the Query tool shows
+city.census(); // tiles of each structure and zone, powered and unpowered tiles
+city.find('Police Station'); // [{ x, y, name }]
+city.signs(); // [{ x, y, text }], also the signs at the connections to neighbors
+city.region(40, 40, 20, 20); // arrays of stored values for your own analysis
+city.dataMap('pollution'); city.graph('Residents');
+budget.info(); budget.ordinances(); city.demand;
+city.demographics(); // the Population window: residents, life expectancy and education of each age group
+city.industry(); // the Industry window: [{ key, name, ratio, taxRate, demand }]
+city.neighbors(); // the Neighbors window: the neighbor cities and the national population
+budget.report(); // the Budget window: the amount of each line, the totals, the bonds
+```
+
+`GET /city-data?x=64&y=64` (one tile), `GET /city-data?x=40&y=40&width=8&height=8` (an
+area), `GET /city-data` (the whole city) and the MCP `city_data` tool give the same
+data as JSON, without a script. A cell of `city.cells` leaves out its empty values.
+The whole map comes as `columns`: one array for each value, with the tile
+`(x + i, y + j)` at index `j * width + i`. It is large: name the `fields` that you need.
+
+Character `i` of `rows[j]` is the tile `(x + i, y + j)`. Tile coordinates go from 0 to
+`city.size - 1`. On the surface layer, `.` is clear land, `/` a slope, `~` water, `t`
+trees, `=` road, `#` rail, `+` a power line, lower case `r c i` an empty zone, upper
+case `R C I` a building, `P` a power plant. The `legend` of the answer names each
+character.
+
+## Build
+
+```js
+tools.list(); // every tool: { groupName, name, cost, size, available }
+tools.select('Roads', 'Road');
+tools.apply([30, 30], [40, 30]); // a drag from one tile to another: { changed, cost, message }
+tools.select('Residential', 'Dense Residential');
+tools.apply([30, 31], [40, 33]); // a zone fills the rectangle
+tools.select('Power', 'Coal Power Plant');
+tools.apply([44, 31]); // one click
+tools.select('Bulldozer', 'Demolish'); tools.apply([30, 30]);
+tools.undo();
+```
+
+- `changed` false means that nothing was built. `message` tells why.
+- A tool that needs a choice opens a window: a bridge, a tunnel, a connection to a
+  neighbor, the team of a stadium. The result then has `window`, the title of the
+  window, and `changed` is false until the answer. Find the window in
+  `game.state().windows` and answer it: `ui.press('Causeway')`, `ui.accept()`.
+- **Buildings:** `size` is the number of tiles on each edge. A building covers the
+  tiles from `x - floor((size - 1) / 2)` to `x + floor(size / 2)`: a power plant of 4
+  tiles starts one tile before the click. The site must be flat and clear.
+- **Networks:** a drag of Road, Rail, Power Lines, Water Pipes, Subway or Highway
+  builds a line. A highway is 2 tiles wide. An on-ramp goes on a clear tile that has
+  the highway on one side and a road on a side at a right angle to it. A drag that
+  ends on the edge of the map offers a connection to the neighbor. A drag over
+  water offers a bridge. Tunnel: click the foot of a hill.
+- **Under the ground:** Water Pipes and Subway change the view to `underground`. Set
+  `view.mode = 'city'` to return. `city.cell(x, y)` gives `underground` and `piped`.
+- **Special sites:** a marina must cover land and water. A hydro plant goes on a
+  waterfall: a water tile on a slope. `tools.list()` gives the `plant` values of each
+  power plant.
+- **Not available:** `available` false means that the city cannot use the tool now: a
+  reward needs residents, a plant needs its year, Dispatch needs an emergency.
+  `chooser: true` marks an entry that is only a list for the player; select one of
+  the tools after it.
+- **Terrain editor:** `game.newCity({ edit: true })` has the terrain tools. Stretch
+  Terrain needs the height: `tools.apply([x, y], null, { levels: 2 })`. Raise Sea
+  Level and Lower Sea Level do their work when `tools.select` selects them.
+  `ui.set('BrushSizeInput', 5)` sets the brush of Trees, Water and Place Forest.
+- **Drag shapes:** a drag of Trees or Water changes the tiles of a line. Place Forest
+  changes a round patch 7 tiles wide. A drag of Demolish, or of a zone, changes a
+  rectangle. Use one call for each row to fill a rectangle with trees.
+- **Power:** a zone tile grows only when it, or a tile beside it, has power. An empty
+  zone does not carry power; a building does. Thus drag Power Lines through each zone
+  block: the zone stays under the line, and a building takes the place of the line. A
+  power line crosses a road. `city.census().unpowered` counts the tiles without power,
+  and `city.cell(x, y).query.lines` of a power plant tells its load: build the next
+  plant before the load is 100%.
+- **Roads:** a zone tile needs a road, a rail line or a highway within three tiles. Two
+  streets 7 tiles apart serve the 6 rows between them.
+- **Water:** each building has pipes under it, but a street has none. Put a Water Pipes
+  tile under each street between two blocks, and a pipe from the pumps to the town. A
+  pump needs power; a pump beside water gives twice the water.
+  `city.cells(null, { fields: ['watered', 'piped'] })` shows what the water reaches.
+- **Demand:** `city.demand` goes from -2000 to 2000 for each zone type. Zone what has
+  demand. Residents come when the city has jobs: give power to the industrial zones first.
+- **Money:** the game settles the budget one time each year, in January; `city.funds`
+  changes then. `budget.report()` gives the income and the cost of each line, and
+  `budget.issueBond()` borrows $10,000.
+
+## Run the simulation
+
+```js
+await sim.advance(30); // pauses, then runs 30 days fast: { days, date, stopped }
+await sim.runTo({ year: 1905, month: 1, day: 1 }); // runs at Cheetah speed to a date: { date, stopped }
+sim.speed = 'Llama'; sim.pause(); sim.resume(); // real time, for a person who watches
+sim.suspended; // '' or the reason: 'prompt: annual budget', 'window: ...', 'newspaper', 'game over'
+```
+
+A month has 25 days and a year 300 days: `sim.advance(300)` runs one year.
+`advance` and `runTo` stop early when the simulation must wait. `stopped` gives the
+reason. Answer the window, then continue. While a disaster is active, the game runs
+the ticks of the disaster and no days: `advance` then stops with `'disaster: Fire'`.
+Fight the disaster with the Dispatch tools and call `advance` again, or end it with
+the cheat `sim.endDisaster()`. The yearly budget window opens each January:
+`ui.accept()` approves it. `budget.set({ autoBudget: true })` turns the yearly window off.
+
+```js
+budget.set({ taxes: { residential: 8 }, funding: { police: 90 } });
+budget.set({ industryTaxes: { all: 3, textiles: 7 } }); // the tax rate of each industry, 0 to 20
+budget.setOrdinance('proReading', true);
+budget.issueBond();
+sim.startDisaster('Fire', 64, 64); sim.noDisasters = true; city.funds = 50000; // cheats
+```
+
+## Windows, menus and dialogs
+
+Use these for each action that has no function of its own.
+
+```js
+ui.windows(); // the lowest first; the last takes the input: { id, type, title, text, modal, blocking, buttons }
+ui.controls(); // the controls of the top window: { id, kind, name, text, label, value, disabled, items, rect }
+ui.texts(); // the texts that the top window shows
+ui.press('OK'); // a button by its text, its node name or its id
+ui.set('CityNameInput', 'Springfield'); // a text field, a number, a check box
+ui.choose('Tabs', 'Bonds'); // an option, a tab, a row of a list or a tree
+ui.accept(); ui.close(); // the OK button, or the close button, of the top window
+ui.menus(); ui.menu('Windows', 'Graphs'); // the menu bar
+ui.chooseFile('/full/path/file.sc2'); // answers the file dialog that shows
+game.actions(); game.action('window_budget'); // the actions of the keys
+```
+
+- `ui.controls('main')` lists the controls of the game window: the toolbar and the menu bar.
+- A target is the text of a control, its node name, its id or its `label`: the label
+  that the window shows before a field without a name. `ui.set('Police', 80)` sets the
+  police funding in the Budget window.
+- When more than one control has the same text, the error lists their ids. Use an id.
+- A control under a modal window cannot be used. Answer the modal window first. `ui.menu`
+  and `game.action` also throw while a modal window shows.
+- `ui.texts()` also gives the texts that a window draws: the charts, the newspaper and
+  the tables of the Debug window. A tab that shows only an icon has its tooltip as its text.
+
+The newspaper opens by itself (`suspended` is then `'newspaper'`), or from its menu:
+
+```js
+ui.menu('Newspaper', city.newspapers[0]);
+city.newspaper(); // { title, date, price, stories: [{ headline, article }], weather, opinion, extra }
+ui.close();
+```
+
+## Mouse, keys and images
+
+```js
+const place = view.screenOf(64, 64); // a tile -> pixels of the game window
+input.click(place.x, place.y); // uses the selected tool on the tile, as a mouse click does
+await input.drag([400, 300], [520, 360]);
+input.key('Ctrl+S'); input.text('hello'); input.scroll(3, 640, 400);
+view.centerOn(64, 64); view.zoomIn(); view.rotate(); view.mode = 'pollution';
+await ui.screenshot('/full/path/screen.png'); // needs a game with a window
+await city.exportPng('/full/path/part.png', { area: { x: 40, y: 40, width: 12, height: 12 }, size: 'large' });
+await city.exportPng('/full/path/city.png'); // the whole city: a large image
+```
+
+- **An image of some tiles:** `GET /city-image?x=40&y=40&width=12&height=12&size=large`
+  and the MCP `city_image` tool return a PNG of only those tiles. `city.exportPng` with
+  `area` writes the same image to a file. These work in a headless game. The game draws
+  only the area, thus a small area is fast on a map of each size. Prefer this to an
+  image of the whole city, which can be too large to read.
+- **The size of the tiles:** `size` is `small` (a tile is 8 pixels wide, the default),
+  `medium` (16) or `large` (32). An area of 12 by 12 tiles at `large` is about 400 by
+  250 pixels. `view: 'underground'` draws the pipes and the subways.
+- **The window:** `GET /screenshot` and the MCP `screenshot` tool return the image of
+  the window. A headless game has no window image. A position of `input` and each
+  `rect` are in pixels of the full-size window image.
+- **A control that draws its content:** `GET /control-image?target=PixelCanvas&scale=4`,
+  the MCP `control_image` tool and `ui.image(target, path, { scale })` return its
+  picture. These work in a headless game. `ui.controls()` marks such a control with
+  `image: true`.
+
+## The SCURK editor
+
+`ui.press('SCURK')` on the main menu opens the tile editor. It has no functions of its
+own: use its buttons and menus with `ui`, and draw with `input`. Its two drawn controls
+give `data` to find a place:
+
+```js
+const find = (name) => ui.controls().find((control) => control.name === name);
+const colors = find('Colors').data; // { columns, selected, indices, colors: ['#rrggbb'], origin, end }
+const canvas = find('PixelCanvas').data; // { spriteWidth, spriteHeight, zoom, tool, colorIndex, editable, origin, end }
+const cell = (colors.end.x - colors.origin.x) / colors.columns;
+input.click(colors.origin.x + (40 % 16 + 0.5) * cell, colors.origin.y + (Math.floor(40 / 16) + 0.5) * cell); // palette cell 40
+const size = (canvas.end.x - canvas.origin.x) / canvas.spriteWidth;
+const at = (x, y) => [canvas.origin.x + (x + 0.5) * size, canvas.origin.y + (y + 0.5) * size];
+await input.drag(at(50, 244), at(78, 244)); // a line on the sprite
+ui.image('PixelCanvas', '/full/path/tile.png', { scale: 4 }); // look at the result
+```
+
+`origin` and `end` are the corners of the cells or of the sprite, in pixels of the window.
+
+## Other functions
+
+- `game.mainMenu()`, `game.quit({ discard: true })`, `game.debugMode = true`.
+- `game.audio()` tells what the game plays: the music track, and if the music and the
+  sounds are on. `game.on('sound', listener)` gets the ids of the sounds.
+- The Console window takes a command: `ui.set(input, 'help', { submit: true })`, where
+  `input` is the id of its text field. Debug mode (`game.debugMode = true`) adds the
+  Debug menu; `ui.texts()` gives the rows of the tables of the Debug window.
+- `game.preferences` gives the settings in use. Change a setting in the Settings window:
+  `game.action('settings')`, then `ui.choose('Tabs', 'Audio')` and `ui.set`.
+- `game.wait(ms)`, `game.frames(count)`, `await game.until(() => !sim.suspended)`.
+- `game.on(type, listener)` listens to game events; `game.events` lists them.
+- `view.follow = true` moves the view to each tile that `tools.apply` changes.
+- The Settings window and the Debug window have no functions of their own. Use the `ui`
+  and `input` functions for them.
+
+RS requires --api-test-profile=NAME and an explicit API start. File operations stay inside that temporary profile; copy synthetic fixtures there first. Default city rules are Classic; pass expanded: true for Expanded. Multiplayer and signed-in Cloud sessions are excluded. Secret account fields and private diagnostic paths are redacted. Actual player input/GPU checks still require native observation.

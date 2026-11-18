@@ -339,6 +339,8 @@ func _build_account(content: VBoxContainer) -> void:
 	password.max_length = 1024
 	password.tooltip_text = "Use at least 12 characters for a new password."
 	code = _field(account_form, "Email code")
+	for field in [email, password, code]:
+		field.set_meta(&"private_diagnostics", true)
 	code.max_length = 8
 	_code_help = _text(account_form, "Enter the code from your email here. After verification or a password reset, sign in with your password.")
 	remember = CheckBox.new()

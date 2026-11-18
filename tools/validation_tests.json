@@ -1,5 +1,11 @@
 [
   {
+    "id": "remote_privacy_test",
+    "script": "tests/remote_privacy_test.gd",
+    "domain": "scripting",
+    "lane": "product"
+  },
+  {
     "id": "menu_motion_gpu_test",
     "script": "tests/menu_motion_gpu_test.gd",
     "domain": "rendering",
@@ -983,6 +989,30 @@
       "ext/graphics/pack.json",
       "ext/data/pack.json"
     ]
+  },
+  {
+    "id": "remote_api_test",
+    "script": "tests/remote_api_test.gd",
+    "domain": "scripting",
+    "lane": "product",
+    "requires": [
+      "ext/graphics/pack.json",
+      "ext/data/pack.json"
+    ]
+  },
+  {
+    "id": "ui_automation_test",
+    "script": "tests/ui_automation_test.gd",
+    "domain": "scripting",
+    "lane": "product",
+    "driver": "scene-batch"
+  },
+  {
+    "id": "ui_automation_test_native",
+    "script": "tests/ui_automation_test.gd",
+    "domain": "scripting",
+    "lane": "native",
+    "driver": "scene-batch"
   },
   {
     "id": "control_binding_test",

@@ -24,6 +24,7 @@ var load_in_progress := false
 var load_task_id := -1
 var load_serial := 0
 var loading_preview: Image
+var last_load_result: Dictionary = {}
 var pending_cloud_choice := -1
 
 
@@ -258,6 +259,21 @@ func _city_has_unsaved_changes() -> bool:
 	return snapshot.is_empty() or snapshot != document_state.saved_city_snapshot
 
 
+func has_unsaved_changes() -> bool:
+	return _city_has_unsaved_changes()
+
+
+## Saves the city to a path, without the Save As dialog. True when the save
+## finished; a larger SC2X city finishes on a worker thread. Scripts use this.
+func save_city_as(path: String) -> bool:
+	if app.coop.active() or document_state.current_document == null:
+		return false
+	var document := document_state.current_document
+	if not document.sc2x_converted_from.is_empty() and path.simplify_path().to_lower() == document.sc2x_converted_from.simplify_path().to_lower():
+		return false
+	return _save_copy(path)
+
+
 func request_city_exit(action: String, path := "") -> void:
 	if app.coop.active():
 		app.coop.request_exit(action)
@@ -363,6 +379,7 @@ func _load_city_unchecked(path: String) -> void:
 func _load_city_in_background(path: String) -> void:
 	if not app.asset_state.assets_ready or load_in_progress:
 		return
+	last_load_result = {"path": path, "ok": false}
 
 	loading_preview = (app.city_dialogs.city_open_dialog as CityOpenDialog).image_for_path(path)
 	load_in_progress = true
@@ -397,6 +414,7 @@ func _finish_background_load(read: ReadCity) -> void:
 
 	_activate_read_city(read)
 	load_in_progress = false
+	last_load_result["ok"] = read.document != null and document_state.current_document == read.document
 	busy.hide()
 
 

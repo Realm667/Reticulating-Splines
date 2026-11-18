@@ -17,12 +17,14 @@ This API is new. Names and fields can change.
 - [Rules for scripts](#rules-for-scripts)
 - [Globals](#globals)
 - [game](#game): events, console commands, storage, status bar
-- [city](#city): city values, tiles, data maps, graphs, signs, name
-- [budget](#budget): taxes, funding, ordinances, bonds
+- [city](#city): city values, tiles and cells as data, data maps, graphs, signs, the report windows, the newspaper, images
+- [budget](#budget): taxes, funding, industry taxes, the amounts of the budget, ordinances, bonds
 - [sim](#sim): speed, steps, dates, disasters
-- [tools](#tools): select and use the player tools
+- [tools](#tools): select and use the player tools, in a city and in the terrain editor
 - [view](#view): camera, zoom, rotation, view modes
-- [ui](#ui): message windows, sounds
+- [ui](#ui): message windows, sounds, control of windows, menus and dialogs, pictures of drawn controls
+- [input](#input): mouse and keyboard input
+- [Remote API](remote-api.md): a program outside the game, such as an LLM agent, runs scripts through a local port
 - [Events](#events)
 - [Values between scripts and the game](#values-between-scripts-and-the-game)
 - [Add a game function](#add-a-game-function)
@@ -130,6 +132,10 @@ The folder `examples/mods` holds example mods. Copy a mod folder into the
 - **Access.** There is no file, network or process access, except `game.storage`
   and the import of module files. A mod can use files and import modules only in
   its own folder; see [The sandbox](mods.md#the-sandbox).
+- **Console scripts only.** Some functions open and save city files at a path, or
+  control the interface and the input of the player. Console input, script files and
+  the [remote API](remote-api.md) can use them. A mod cannot: the call throws an
+  Error. The tables mark them with *(console)*.
 - **Runtimes.** Console input and script files share the console runtime. Each
   mod has its own runtime. Runtimes share no variables; they talk through
   `game.emit` events.
@@ -147,7 +153,7 @@ The folder `examples/mods` holds example mods. Copy a mod folder into the
 | `console` | `log`, `info`, `debug`, `warn`, `error`, `trace`, `dir`, `assert`, `count`, `countReset`, `time`, `timeEnd`. The output goes to the game Console and to DevTools. |
 | `setTimeout(callback, ms, ...arguments)`, `setInterval`, `clearTimeout`, `clearInterval` | Timers in real time. They run once each frame at most, also while the game is paused. |
 | `inspect(value, { depth })` | The text that the console shows for a value. |
-| `game`, `city`, `budget`, `sim`, `tools`, `view`, `ui` | The game API. |
+| `game`, `city`, `budget`, `sim`, `tools`, `view`, `ui`, `input` | The game API. |
 
 The standard JavaScript built-ins are available: `Promise`, `Map`, `Set`, `JSON`,
 `Math`, `Date`, typed arrays, `WeakRef` and the others of ES2023.
@@ -203,6 +209,31 @@ console.log(text); // { outer: [Object] }
 | `game.storage.remove(key)`, `game.storage.keys()` | Removes a value; lists the keys. |
 | `game.version` | `{ game, godot, quickjs }`. |
 | `game.events` | The event types and their descriptions. |
+| `game.state()` | What the game shows now: `{ screen, assetsReady, busy, status, city, speed, suspended, tool, view, disaster, windows }`. `screen` is `startup`, `main-menu`, `new-city`, `terrain-editor`, `city` or `scurk`. `status` is the text of the status bar: the result or the error of the last action. |
+| `game.actions()` | The actions of the keys and the menus: `[{ id, label, category, scope, kind }]`. |
+| `game.action(id)` | Runs an action as its key does, for example `game.action('window_budget')`. False when the action does nothing now. It throws while a modal window shows. |
+| `game.wait(ms)`, `game.frames(count)` | Promises that resolve after a time, or after the game drew frames. |
+| `game.until(test, timeout)` | A promise that resolves when `test()` is true. It rejects after the timeout; the default is 30000 ms. |
+| `game.newCity(options)` *(console)* | Makes the terrain and founds a city, as the New City window does. Returns `game.state()`. See below. |
+| `game.open(path, { discard })` *(console)* | Opens a city or scenario in the disposable API profile. Use `await game.open(...)`; it resolves to `game.state()` after loading. |
+| `game.saveAs(path)` *(console)* | Saves the city to a path. A promise of the path. |
+| `game.files()` *(console)* | The city files that the game knows: `{ cities, scenarios, saved, savedFolder, autosaves }`. |
+| `game.audio()` | What the game plays now: `{ music: { enabled, playing, paused, track, name }, sound: { enabled, loop } }`. A program cannot hear the game. |
+| `game.mainMenu(show)` *(console)* | Shows the main menu, or with `false` returns to the city. |
+| `game.quit({ discard })` *(console)* | Closes the game. |
+| `game.settings` *(console)* | The stored settings: `{ section: { key: value } }`. Change a setting in the Settings window, with the `ui` functions. |
+| `game.preferences` *(console)* | The settings that the game uses now, also those that the file does not hold: `{ defaultMayorName, musicVolume, uiTheme, ... }`. |
+| `game.debugMode` *(console)* | Get or set the debug mode. |
+
+`game.newCity` takes `{ name, mayor, difficulty, year, size, sc2, ocean, river, hills,
+water, trees, features, seed, edit, discard }`. `difficulty` is `'easy'`, `'medium'`
+or `'hard'`; `year` is 1900, 1950, 2000 or 2050; `size` is the number of tiles on
+each map edge. `sc2: true` makes a city that the original game opens. `hills`,
+`water` and `trees` go from 0 to 47. `features` names terrain features, such as
+`['lake', 'ridge']`. The same `seed` and options make the same terrain. `edit: true`
+stays in the terrain editor; without it, the city starts and the founding newspaper
+shows. `game.newCity`, `game.open` and `game.quit` throw when the open city has
+unsaved changes, unless `discard` is true.
 
 The console scripts share one storage file, `scripts/storage.json` in the user
 data folder. Each mod has its own values, in `storage.json` in its folder.
@@ -261,13 +292,16 @@ for (const key of game.storage.keys()) {
 | Member | Use |
 | --- | --- |
 | `city.loaded` | True when a city is open. |
-| `city.info()` | `{ name, mayor, size, funds, population, foundingYear, difficulty, scenario, path, date, demand }`. |
+| `city.info()` | `{ name, mayor, size, funds, population, foundingYear, difficulty, scenario, weather, path, date, demand }`. |
 | `city.name`, `city.mayor`, `city.size`, `city.population` | Single values. `size` is the number of tiles on each map edge. |
-| `city.date` | `{ year, month, day, age }`. A month has 25 days. `age` counts the days from the founding. |
+| `city.date` | `{ year, month, day, age }`. A month has 25 days, thus a year has 300 days. `age` counts the days from the founding. |
 | `city.demand` | `{ residential, commercial, industrial }`, from -2000 to 2000. |
 | `city.funds` | Get or set the funds. |
 | `city.addFunds(amount)` | Adds a positive or negative amount. Returns the new funds. |
 | `city.tile(x, y)` | The stored values of a tile, or `null` outside the map. See below. |
+| `city.cell(x, y)` | Each value of one tile as data, with names: `{ x, y, altitude, slope, water, structure, structureId, zone, density, underground, undergroundId, powered, needsPower, watered, piped, sign, traffic, pollution, landValue, crime, police, fire, populationDensity, growth, symbol, query }`. `query` is what the Query tool tells: `{ title, kind, altitudeFeet, landValue, crime, pollution, lines, flags, things, text }`. |
+| `city.cells(area, options)` | The same values for each tile of an area, or of the whole map without an area: `{ x, y, width, height, format, fields, cells }`. A cell leaves out its empty values (an empty text, 0, false); `empty: true` keeps them. `fields` selects values. `density` is `low-density` or `high-density`; `water` is `fresh` or `salt`; the data maps go from 0 to 255. `format: 'columns'` gives `columns`, one array for each value, in place of `cells`; it is the default for more than 4096 tiles. The tile `(x + i, y + j)` is at index `j * width + i`. One answer holds 2,000,000 values at most. |
+| `city.cellFields` | The names of the values of a cell. |
 | `city.data(name, x, y)` | The value of a data map at a tile. |
 | `city.dataMap(name)` | A whole data map: `{ name, size, scale, values, at(x, y) }`. |
 | `city.dataMaps` | The data map names: `traffic`, `pollution`, `landValue`, `crime`, `police`, `fire`, `populationDensity`, `growth`. |
@@ -276,16 +310,49 @@ for (const key of game.storage.keys()) {
 | `city.rename(name)` | Gives the city a new name. Returns the name. |
 | `city.sign(x, y)` | The text of the sign on a tile, or `null`. |
 | `city.setSign(x, y, text)` | Places or changes a sign, as the Sign tool does. An empty text removes it. Undo reverses it. |
+| `city.signs()` | Every sign of the city: `[{ x, y, text }]`. A sign that the game shows at a connection to a neighbor has `connection: true`. |
 | `city.things()` | The moving objects: `{ id, type, name, x, y, state }`. |
-| `city.save()` | Saves the city to its file. A new city must be saved once from the File menu first. |
+| `city.save()` | Saves the city to its file. A new city must be saved once with `game.saveAs` or from the File menu first. |
+| `city.unsaved` | True when the city has changes that its file does not have. It compares the whole city, thus it is slow on a large map. |
+| `city.query(x, y)` | What the Query tool shows for a tile: `{ title, text, kind, zone, density, building, altitude, landValue, crime, pollution, traffic, powered, watered, underground, lines, flags, things }`. |
+| `city.textMap(area, layer)` | An area as text, one character for each tile: `{ x, y, width, height, layer, legend, rows }`. Without an area: the whole map. |
+| `city.textLayers` | The text layers: `surface`, `zones`, `underground`, `altitude`, `power`, `water`. |
+| `city.region(x, y, width, height)` | The stored values of an area, one array for each map: `{ x, y, width, height, building, zone, terrain, underground, altitude, water, powered, watered }`. |
+| `city.find(what, area)` | The tiles of a structure, by a part of its name or by its stored id: `[{ x, y, building, name }]`. 2000 tiles at most. |
+| `city.census(area)` | The number of tiles of each structure and zone: `{ tiles, structures, zones, water, powered, unpowered }`. |
+| `city.demographics()` | The values of the Population window: `{ population, workforcePercent, workforceLifeExpectancy, workforceEducation, ages }`. `ages` has one entry for each five years: `{ age, population, lifeExpectancy, education }`. |
+| `city.industry()` | The values of the Industry window: `[{ key, name, ratio, taxRate, demand }]`. `budget.set({ industryTaxes })` changes a tax rate. |
+| `city.neighbors()` | The values of the Neighbors window: `{ name, population, nationalPopulation, neighbors }`. A neighbor is `{ name, population, edge }`; `edge` is its side of the map: `x-max`, `y-max`, `x-min` or `y-min`. |
+| `city.newspapers` | The names of the papers of the Newspaper menu. |
+| `city.newspaper()` | The newspaper that shows: `{ title, date, price, stories: [{ headline, article }], weather, opinion, extra }`, or null. `ui.menu('Newspaper', city.newspapers[0])` opens a paper. |
+| `city.exportPng(path, options)` *(console)* | Writes an image of the city to a PNG file, as File > Export City as PNG does. A promise of `{ path, width, height, origin }`. Options: `area` (`{ x, y, width, height }` in tiles: the image shows only those tiles, and only they are drawn), `size` (`'small'`, `'medium'`, `'large'`), `view` (`'city'`, `'underground'`), `signs`, `movingThings`, `transparent`. `origin` is the place of the image in the picture of the whole city. |
 
 A point can be `(x, y)`, `({ x, y })` or `([x, y])`. Tile coordinates go from 0
 to `city.size - 1`.
 
 `city.tile(x, y)` gives `{ x, y, altitude, waterAltitude, terrain, building, zone,
 underground, overlay, water, saltWater, powered, powerable, watered, piped,
-traffic, data }`. `terrain`, `building`, `zone` and `underground` are the stored
-IDs of the XTER, XBLD, XZON and XUND maps. `data` holds the value of each data map.
+traffic, data, name, zoneName, symbol }`. `terrain`, `building`, `zone` and
+`underground` are the stored IDs of the XTER, XBLD, XZON and XUND maps. `data` holds
+the value of each data map. `name` is the name of the structure, and `symbol` is the
+character of the tile in `city.textMap`.
+
+An area is `{ x, y, width, height }` in tiles. In `city.textMap`, character `i` of
+`rows[j]` is the tile `(x + i, y + j)`, and `legend` gives the meaning of each
+character. In `city.region`, the value of that tile is at index `j * width + i`.
+
+```js
+// a text map of 12 by 4 tiles
+console.log(city.textMap({ x: 70, y: 56, width: 12, height: 4 }).rows.join('\n'));
+// PPPP+++++xCC
+// ....+....xCC
+// ....+....xCx
+// ============
+
+// each police station, and the tiles without power
+const stations = city.find('Police Station');
+const dark = city.census().unpowered;
+```
 
 A data map can have fewer cells than the map has tiles. Then one cell covers
 `scale` by `scale` tiles: `size` is the number of cells on each edge, and the
@@ -373,10 +440,12 @@ if (city.info().path) {
 
 | Member | Use |
 | --- | --- |
-| `budget.info()` | `{ taxes, funding, autoBudget, bonds }`. |
+| `budget.info()` | `{ taxes, funding, industryTaxes, autoBudget, bonds }`. |
+| `budget.report()` | The amounts of the Budget window for the stored rates: `{ year, yearEnd, recordedMonths, funds, yearToDate, estimate, yearEndFunds, lines, bonds }`. A line is `{ key, name, group, rate, yearToDate, estimate, months }`. An amount is positive for income and negative for a cost. `bonds` is `{ count, outstanding, rates, credit, bankRate, nextRate, cityValue }`. |
 | `budget.taxes` | `{ residential, commercial, industrial }`, tax rates in percent. |
 | `budget.funding` | `{ police, fire, health, school, college, road, highway, bridge, rail, subway, tunnel }`, in percent. |
-| `budget.set(changes)` | Changes the named values: `{ taxes, funding, autoBudget }`. Tax rates go from 0 to 22, funding from 0 to 100. Returns `budget.info()`. |
+| `budget.industryTaxes` | The tax rate of each industry in percent: `{ steelMining, textiles, petrochemical, food, construction, automotive, aerospace, finance, media, electronics, tourism }`. |
+| `budget.set(changes)` | Changes the named values: `{ taxes, funding, industryTaxes, autoBudget }`. Tax rates go from 0 to 22, funding from 0 to 100, industry tax rates from 0 to 20. An industry is a key of `city.industry()` or `all`: `{ industryTaxes: { all: 3, textiles: 7 } }`. Returns `budget.info()`. |
 | `budget.ordinances()` | Each ordinance: `{ key, name, category, enabled, cost }`. `cost` is the yearly amount; a tax ordinance has income. |
 | `budget.setOrdinance(key, enabled)` | Enables or disables an ordinance by its key or its name. Returns the new state. |
 | `budget.issueBond()` | Issues a $10,000 bond, as the Budget window does after confirmation. Returns `{ bonds, rate, funds }`. It throws when the council refuses the bond. |
@@ -388,7 +457,9 @@ The ordinance keys are `salesTax`, `incomeTax`, `legalizedGambling`,
 `businessAdvertising`, `cityBeautification`, `annualCarnival`,
 `energyConservation`, `nuclearFreeZone`, `homelessShelter` and `pollutionControls`.
 
-The budget cannot change while the yearly budget window is open.
+The budget cannot change while the yearly budget window is open. The game settles
+the budget one time each year, in January: the funds change then, and
+`budget.report()` gives the amounts of the year until now.
 
 ```js
 // lower the industrial tax and fund the police fully
@@ -442,6 +513,9 @@ while (budget.info().bonds > 0 && city.funds > 50000) {
 | `sim.startDisaster(disaster, x, y)` | Starts a disaster by name or ID at a tile. Without a tile, it starts at the view center. |
 | `sim.endDisaster()` | Ends the active disaster and clears its marks, as the Debug window does. False without a disaster. |
 | `sim.noDisasters` | Get or set: true turns the random disasters off. |
+| `sim.suspended` | Why the simulation waits now, or an empty text: `'prompt: annual budget'`, `'window: <title>'`, `'newspaper'`, `'terrain editor'`, `'game over'`. |
+| `sim.advance(days)` | Pauses the game and runs days as fast as the computer can. A promise of `{ days, date, stopped }`. It stops early when the simulation must wait; `stopped` is then `sim.suspended`. While a disaster is active, the game runs the ticks of the disaster and no days: `advance` runs 32 ticks, then stops with `'disaster: <name>'`. |
+| `sim.runTo(date, speed)` | As `runUntil`, with a promise of `{ date, stopped }` that resolves when the game paused on the date, or when the simulation must wait. |
 
 ```js
 // run to the next year, then show the population
@@ -480,16 +554,24 @@ sim.noDisasters = true;
 
 | Member | Use |
 | --- | --- |
-| `tools.list()` | Every tool: `{ group, subtool, groupName, name, cost, available }`. |
-| `tools.selected` | The selected tool: `{ group, subtool, groupName, name, cost }`. |
+| `tools.list()` | Every tool: `{ group, subtool, groupName, name, cost, size, available }`. `size` is the number of tiles on each edge of the square that the tool builds. `chooser: true` marks an entry that only opens a list of tools for the player, such as Power Plants. A power plant has `plant`: `{ outputMw, gridCapacity, pollution, serviceLife, note }`. In the terrain editor, `available` tells the tools of the editor. |
+| `tools.selected` | The selected tool: `{ group, subtool, groupName, name, cost, size }`. |
 | `tools.select(group, tool)` | Selects a tool by its group and tool name or index, for example `tools.select('Roads', 'Road')`. With one name: a tool name in any group, or a group name, which selects the tool of that group that was used last. The rules of the toolbar apply. |
-| `tools.apply(from, to)` | Uses the selected tool as a drag from one tile to another. Without `to`, it is a click. Returns the `tool.applied` detail. |
+| `tools.apply(from, to, options)` | Uses the selected tool as a drag from one tile to another. Without `to`, it is a click. Returns the `tool.applied` detail. When the tool asks first (a bridge, a tunnel, a connection to a neighbor), `changed` is false and `window` is the title of the window that waits. Stretch Terrain needs `{ levels }`. |
 | `tools.undo()` | Undoes the last edit, as Undo does. False when there is nothing to undo. |
 
 `tools.apply` follows the tool rules, the costs and the prompts of the game. A
 line tool such as Road follows the path that a drag makes: first along the longer
 axis. A zone tool fills the rectangle. A tool that needs a choice, such as a
 bridge, opens its window.
+
+A building covers a square of `size` tiles on each edge. The tile of the click is
+in it: the building covers the tiles from `x - floor((size - 1) / 2)` to
+`x + floor(size / 2)`, and the same for y. A building of 4 tiles thus starts one
+tile before the click, and a building of 2 tiles starts at the click. A brush
+tool (Trees, Water, Place Forest) changes the tiles of its brush around each tile
+of the drag. Cancel Dispatch, Raise Sea Level and Lower Sea Level do their work
+when `tools.select` selects them.
 
 ```js
 // a block of dense residential zones beside a road
@@ -527,6 +609,10 @@ tools.select(previous.group, previous.subtool);
 | `view.modes` | The view names. |
 | `view.zoom`, `view.zoomIn()`, `view.zoomOut()` | The zoom in percent. |
 | `view.rotation`, `view.rotate(clockwise)` | The compass rotation (0 to 3), and a quarter turn, clockwise unless the argument is false. |
+| `view.layers`, `view.setLayer(name, shown)` | The layers that show, and a change of one, as the View menu does: `buildings`, `networks`, `water`, `trees`, `signs`, `vehicles`, `waterMains`, `pipes`, `subways`, `tunnels`. |
+| `view.follow` | Get or set: true moves the view to each tile that `tools.apply` changes, when the map does not show it. For a person who watches a script play. |
+| `view.screenOf(x, y)` | The center of a tile in pixels of the game window: `{ x, y, visible }`. |
+| `view.tileAt(x, y)` | The tile at a place of the game window, or `null` outside the map. |
 
 ```js
 // show the traffic view for five seconds
@@ -573,6 +659,78 @@ ui.status('My mod is ready.');
 ui.playSound(500);
 ```
 
+The functions below control the interface as the player does. Only console scripts
+and the [remote API](remote-api.md) can use them.
+
+| Member | Use |
+| --- | --- |
+| `ui.windows()` | The windows that show, the lowest first: `[{ id, type, title, text, modal, blocking, focused, rect, buttons, items }]`. The first is the game window, with the id `main`. The last takes the input. A full-screen panel of the game, such as the main menu or the query result, is a window too. `blocking` tells that the simulation waits while the window shows. |
+| `ui.controls(window)` | The controls of a window that take input: `[{ id, kind, type, name, text, value, disabled, rect, items, ... }]`. Without a window: the top one. `kind` is `button`, `check`, `option`, `menu`, `text`, `number`, `tabs`, `list`, `tree` or `custom`. A control that draws its content can have `data`, its values for scripts, and `image: true` when `ui.image` can save its picture. A control without a name of its own has `label`: the label that the window shows before it. A target can be that label: `ui.set('Police', 80)` in the Budget window. |
+| `ui.texts(window)` | The texts that a window shows, top to bottom, also the texts that a chart, a table of the Debug window or the newspaper draws. |
+| `ui.press(target)` | Presses a button. A check box changes its state. |
+| `ui.set(target, value, { submit })` | Sets a text field, a number or a check box. `submit` also sends Enter in a text field or a text area: the input of the Console window then runs its line. |
+| `ui.choose(target, item, { activate })` | Chooses an item by its text or its index: an option, a tab, a row of a list or a tree, an item of a menu button. With the id of a popup menu that shows, it chooses an item of that menu. `activate` also sends the double click of a list or a tree. |
+| `ui.menus()`, `ui.menu(...path)` | The menus of the menu bar with their items, and a choice of an item: `ui.menu('File', 'Save City')`. `ui.menu` throws while a modal window shows. |
+| `ui.accept(window)`, `ui.close(window)` | The OK button of a dialog, and the close button of a window. A dialog takes a close as Cancel. Without a window: the top one. On a full-screen panel of the game, such as the query result, they press its OK or its Close button. |
+| `ui.chooseFile(path)` | Selects a full path in the file dialog that shows. |
+| `ui.screen` | The size of the game window in pixels: `{ width, height, headless }`. |
+| `ui.screenshot(path, { scale })` | Saves an image of the game window as a PNG file. A promise of `{ path, width, height }`. Without a path: in the `screenshots` folder of the user data. A headless game has no image. |
+| `ui.image(target, path, { scale })` | Saves the picture of a control that draws its content, such as the canvas of the SCURK editor: `{ path, width, height }`. `ui.controls()` marks such a control with `image: true`. Without a target: the first such control of the top window. `scale` makes each pixel larger, from 1 to 16. A headless game can do this. |
+
+A window is named by its `id`, its title or its `type`. A `target` is the `id` of a
+control, its text, its node name or its `label`. A tab, or a row of a tree, that
+shows only an icon has its tooltip as its text. The search starts in the top window
+and stops at a modal window, as the input of the player does. When more than one control matches,
+the error lists their ids. The `ui` functions change a control and send its signals,
+thus the game runs the same code as after a click. A `rect` is in pixels of the game
+window.
+
+```js
+// the yearly budget: raise the property tax, then approve
+const taxes = ui.controls().find((control) => control.kind === 'number');
+ui.set(taxes.id, 9);
+ui.accept();
+
+// a city from the File menu and its file dialog
+ui.menu('File', 'Open City');
+ui.chooseFile('/full/path/CITY.SC2');
+
+// each window that waits for an answer
+for (const window of game.state().windows.filter((window) => window.blocking)) {
+  console.log(window.title, window.text, window.buttons);
+}
+```
+
+## input
+
+Mouse and keyboard input, as the devices of the player send it. The events go
+through the input of the engine: the interface, the map and the key bindings react as
+to real input, also in a headless game. Use it for an action that has no function of
+its own, such as a drag in the SCURK editor. A position is in pixels of the game
+window. Only console scripts and the [remote API](remote-api.md) can use `input`.
+
+| Member | Use |
+| --- | --- |
+| `input.position` | The place of the pointer of scripts. |
+| `input.move(x, y)` | Moves the pointer. |
+| `input.click(x, y, { button, double })` | A click. `button` is `left`, `right`, `middle`, `back` or `forward`. |
+| `input.mouseDown(x, y, button)`, `input.mouseUp(x, y, button)` | Press and release, for a hold. |
+| `input.drag(from, to, { button, steps })` | A drag, one step each frame. A promise. |
+| `input.scroll(steps, x, y, { horizontal })` | Turns the wheel. A positive step scrolls down. |
+| `input.key(text)` | Presses and releases a key with its modifiers: `'Ctrl+S'`, `'Escape'`, `'F12'`, `'Shift+Tab'`. |
+| `input.keyDown(text)`, `input.keyUp(text)` | Press and release, for a hold. |
+| `input.text(value)` | Types a text into the control with the focus. |
+| `input.release()` | Releases each mouse button and modifier key that a script holds. |
+
+```js
+// a click with the selected tool on a tile, as the mouse does
+const place = view.screenOf(64, 64);
+input.click(place.x, place.y);
+
+// the keys of the game
+input.key('Space'); // pause, with the default bindings
+```
+
 ## Events
 
 A listener receives an event object: the `type`, and the fields below. For a
@@ -587,15 +745,16 @@ nothing. `game.events` lists the types.
 | `city.closed` | | The city closes after the game ends. |
 | `city.saved` | `path` | The city was saved. |
 | `city.renamed` | `name` | The city has a new name. |
-| `budget.changed` | `taxes`, `funding`, `autoBudget`, `bonds` | The Budget window, the yearly budget or a script changed the budget. |
+| `budget.changed` | `taxes`, `funding`, `industryTaxes`, `autoBudget`, `bonds` | The Budget window, the yearly budget or a script changed the budget. |
 | `sim.day` | `year`, `month`, `day`, `age` | A simulation day ended. |
 | `sim.month` | `year`, `month` | A new month started. |
 | `sim.year` | `year` | A new year started. |
 | `sim.speed` | `speed` | The speed changed: by the player, a script, a pause on the `runUntil` date, or a disaster that slows African Swallow to Cheetah. |
 | `disaster.beforeStart` | `id`, `name`, `x`, `y` | A menu or a script starts a disaster. Cancelable. The simulation starts other disasters itself. |
 | `disaster.started`, `disaster.ended` | `id`, `name` | The active disaster changed. |
-| `news` | `type`, `argument` | The simulation sent a news story. |
-| `notice` | `id` | The simulation shows a notice. |
+| `news` | `type`, `argument`, `name` | The simulation sent a news story. `name` is the subject of the story. |
+| `notice` | `id`, `text` | The simulation shows a notice. |
+| `sound` | `ids` | The game asked for sounds. The sound settings can drop a sound. |
 | `budget.prompt` | | The yearly budget opens. |
 | `military.proposal` | | The military asks for a base. |
 | `game.over` | `type`, `funds` | The game ended, or the scenario was won. |
@@ -608,7 +767,7 @@ nothing. `game.events` lists the types.
 | `mod.loaded` | `id`, `name`, `version` | A mod started. |
 | `mod.unloaded` | `id` | A mod stopped. |
 
-`tool` is `{ group, subtool, groupName, name, cost }`. `start` and `finish` are
+`tool` is `{ group, subtool, groupName, name, cost, size }`. `start` and `finish` are
 `{ x, y }`. The console runtime receives each event first, then each mod in load
 order. When a listener cancels a cancelable event, the later runtimes see
 `event.cancelled`.
@@ -637,8 +796,9 @@ game.on('budget.changed', (event) => console.log(`The residential tax is ${event
 // simulation events
 game.on('sim.year', (event) => console.log(`Happy new year ${event.year}!`));
 game.on('sim.speed', (event) => console.log(`Speed: ${event.speed}`));
-game.on('news', (event) => console.log(`News story ${event.type} (${event.argument})`));
-game.on('notice', (event) => console.log(`Notice ${event.id}`));
+game.on('news', (event) => console.log(`News story ${event.type}: ${event.name}`));
+game.on('notice', (event) => console.log(`Notice ${event.id}: ${event.text}`));
+game.on('sound', (event) => console.log(`Sounds ${event.ids.join(', ')}`));
 game.on('budget.prompt', () => game.status('Check the yearly budget.'));
 game.on('military.proposal', () => game.status('The military wants a base.'));
 game.on('game.over', (event) => console.log(`Game over: ${event.type}, funds $${event.funds}`));
@@ -687,12 +847,15 @@ The game API has three parts:
    `__runtime.host(name, ...arguments)`. `game/assets/scripting/opensc2k.d.ts`
    declares their types; add each new member there too.
 2. GDScript functions answer the host calls. `ApplicationScriptingApi` in
-   `game/src/application/scripting_api.gd` holds `game`, `sim`, `tools` and `view`;
-   `ScriptingCityApi`, `ScriptingBudgetApi` and `ScriptingUiApi` hold the others.
+   `game/src/application/scripting_api.gd` holds `sim`, `tools`, `view` and a part of
+   `game`; `ScriptingGameApi`, `ScriptingCityApi`, `ScriptingCityDataApi`,
+   `ScriptingReportsApi`, `ScriptingBudgetApi`, `ScriptingUiApi` and
+   `ScriptingInputApi` hold the others. A class lists the functions that a mod
+   cannot call in `RESTRICTED`.
    Each class maps names to functions in `handlers()`. A function receives the
    arguments as an Array and returns the result. A failed call returns
    `fail(message)`; the script then gets an Error. `ScriptingApiBase` has the
-   shared helpers: `need_city`, `point`, `argument` and `inside_map`.
+   shared helpers: `need_city`, `point`, `argument`, `inside_map` and `take_failure`.
 3. `ApplicationScripting.emit(type, detail, cancelable)` sends an event.
    `cancelled(type, detail)` sends a cancelable event and returns true when a
    listener cancelled it. Add each new event type to `ApplicationScripting.EVENTS`.
@@ -700,4 +863,9 @@ The game API has three parts:
    runtime, for functions that differ between mods, such as `game.storage`.
 
 Add a test to the `scripting` validation domain for each new function and event:
-`tools/validate_project.sh --suite scripting`.
+`tools/validate_project.sh --suite scripting`. Add the function to the tables of
+this page, and to the guide for agents in `game/assets/scripting/remote-api.md` when
+an agent needs it. A control that draws its content gives it to scripts with the
+probe functions; see [Remote API](remote-api.md#what-an-agent-can-do).
+
+For RS test-profile limits, Classic/Expanded options and account privacy, see [Remote API](remote-api.md#reticulating-splines-test-profile-rules).

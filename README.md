@@ -392,3 +392,6 @@ research, and reverse engineering of the original executable.
 
 Original SimCity 2000 source code and imported game assets are not distributed
 with Reticulating Splines. Replacement packs retain their own notices and provenance.
+
+The opt-in local test API is described in [Remote API](docs/remote-api.md).
+It is disabled during normal play; use a separate test profile.

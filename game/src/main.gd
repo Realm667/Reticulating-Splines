@@ -116,6 +116,8 @@ var cloud_ui: CloudWindow
 var cloud_saves := ApplicationCloudSaves.new(self)
 # the JavaScript runtime of mods and developer scripts
 var scripting: ApplicationScripting = ApplicationScripting.new(self)
+# the local port where other programs, such as an LLM agent, play the game
+var remote_api: ApplicationRemoteApi = ApplicationRemoteApi.new(self)
 
 
 func _ready() -> void:
@@ -141,6 +143,7 @@ func _ready() -> void:
 	scripting.attach_console(console_window.commands)
 	console_window.commands.version_details = assets.graphics_diagnostics
 	scripting.apply_command_line(OS.get_cmdline_args() + OS.get_cmdline_user_args())
+	remote_api.attach_console(console_window.commands)
 
 	if asset_state.reference_root.is_empty():
 		asset_state.reference_root = DataPack.default_folder()
@@ -161,6 +164,8 @@ func _ready() -> void:
 	activity = SingleplayerActivity.new()
 	activity.app = self
 	add_child(activity)
+	# the port opens when the game can answer
+	remote_api.apply_command_line(OS.get_cmdline_args() + OS.get_cmdline_user_args())
 
 	if not AppPaths.error().is_empty():
 		_show_data_folder_error()
@@ -211,6 +216,7 @@ func _exit_tree() -> void:
 	city_png_export.close()
 	autosave.close()
 	cloud_saves.close()
+	remote_api.close()
 	scripting.close()
 
 
@@ -223,6 +229,7 @@ func _process(delta: float) -> void:
 	autosave.process(delta)
 	cloud_saves.process(delta)
 	scripting.process(delta)
+	remote_api.process()
 
 
 func _input(event: InputEvent) -> void:

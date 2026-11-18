@@ -12023,3 +12023,27 @@ msgstr ""
 #. AI-assisted supplementary translation: QOL beta status follow-up 2026-11-18.
 msgid "Finish the annual budget before saving the city."
 msgstr ""
+
+#: src/application/remote_api.gd
+msgid "Let other programs control the game on a local port: api [port], or api off."
+msgstr ""
+
+#: src/application/remote_api.gd
+msgid "The remote API stopped."
+msgstr ""
+
+#: src/application/remote_api.gd
+msgid "The port must be a number from 0 to 65535."
+msgstr ""
+
+#: src/application/remote_api.gd
+msgid "Use --api-test-profile=NAME for a disposable local API profile."
+msgstr ""
+
+#: src/application/remote_api.gd
+msgid "The local test API is unavailable during multiplayer."
+msgstr ""
+
+#: src/application/remote_api.gd
+msgid "The local test API is unavailable while signed in to Cloud."
+msgstr ""

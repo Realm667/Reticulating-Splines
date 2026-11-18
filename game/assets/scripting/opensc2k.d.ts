@@ -15,7 +15,7 @@ interface TilePoint {
 
 type TileArgument = TilePoint | [number, number];
 
-/** A date of the city. A month has 25 days. `age` counts the days from the founding. */
+/** A date of the city. A month has 25 days and a year 300 days. `age` counts the days from the founding. */
 interface CityDate {
   year: number;
   month: number;
@@ -38,6 +38,8 @@ interface CityInfo {
   funds: number;
   population: number;
   foundingYear: number;
+  /** The weather that the status bar shows, such as `Chilly`. */
+  weather: string;
   difficulty: number;
   scenario: boolean;
   /** The file of the city, or an empty text. */
@@ -70,6 +72,240 @@ interface Tile {
   piped: boolean;
   traffic: number;
   data: TileData;
+  /** The name of the structure on the tile, or an empty text. */
+  name: string;
+  /** The name of the zone, or an empty text. */
+  zoneName: string;
+  /** The character of the tile on the surface layer of `city.textMap`. */
+  symbol: string;
+}
+
+/** A rectangle of tiles. */
+interface TileArea {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+/** What the Query tool shows for a tile. */
+interface QueryInfo {
+  x: number;
+  y: number;
+  title: string;
+  /** The text of the query window. */
+  text: string;
+  kind: string;
+  zone: string;
+  density: string;
+  building: number;
+  altitude: number;
+  landValue: number;
+  crime: string;
+  pollution: string;
+  traffic: number;
+  powered: boolean;
+  watered: boolean;
+  underground: string;
+  lines: string[];
+  flags: string[];
+  /** The moving objects on the tile. */
+  things: string[];
+}
+
+/** The stored values of an area. The value of the tile (x + i, y + j) is at index `j * width + i`. */
+interface CityRegion extends TileArea {
+  building: number[];
+  zone: number[];
+  terrain: number[];
+  underground: number[];
+  altitude: number[];
+  /** 1 for a water tile. */
+  water: number[];
+  powered: number[];
+  watered: number[];
+}
+
+type TextLayer = 'surface' | 'zones' | 'underground' | 'altitude' | 'power' | 'water';
+
+/** An area as text. Character `i` of `rows[j]` is the tile (x + i, y + j). */
+interface TextMap extends TileArea {
+  layer: TextLayer;
+  /** The meaning of each character. */
+  legend: Record<string, string>;
+  rows: string[];
+}
+
+interface FoundTile {
+  x: number;
+  y: number;
+  building: number;
+  name: string;
+}
+
+interface Census {
+  tiles: number;
+  /** Structure name -> number of tiles. */
+  structures: Record<string, number>;
+  /** Zone name -> number of tiles. */
+  zones: Record<string, number>;
+  water: number;
+  powered: number;
+  unpowered: number;
+}
+
+/** The name of a value of a cell. */
+type CellField =
+  | 'altitude' | 'slope' | 'water' | 'structure' | 'structureId' | 'zone' | 'density' | 'underground' | 'undergroundId'
+  | 'powered' | 'needsPower' | 'watered' | 'piped' | 'sign' | 'traffic' | 'pollution' | 'landValue' | 'crime' | 'police'
+  | 'fire' | 'populationDensity' | 'growth' | 'symbol';
+
+/** The values of one tile. `city.cells` leaves out the empty values of a cell: an empty text, 0 and false. */
+interface CityCell {
+  x: number;
+  y: number;
+  /** The level of the land, from 0. */
+  altitude: number;
+  slope?: boolean;
+  /** `''`, `'fresh'` or `'salt'`. */
+  water?: string;
+  /** The name of the structure on the tile: a building, a road, a power line, trees, rubble. */
+  structure?: string;
+  /** The stored id of the structure. */
+  structureId?: number;
+  /** The zone, such as `Residential`. */
+  zone?: string;
+  /** The density of the zone, such as `low-density`. */
+  density?: string;
+  /** What is under the tile: a pipe, a subway, a tunnel. */
+  underground?: string;
+  undergroundId?: number;
+  powered?: boolean;
+  /** True for a tile that uses power. */
+  needsPower?: boolean;
+  watered?: boolean;
+  /** True for a tile with a water pipe. */
+  piped?: boolean;
+  sign?: string;
+  /** The data maps, from 0 to 255. */
+  traffic?: number;
+  pollution?: number;
+  landValue?: number;
+  crime?: number;
+  police?: number;
+  fire?: number;
+  populationDensity?: number;
+  growth?: number;
+  /** The character of the tile on the surface layer of `city.textMap`. */
+  symbol?: string;
+}
+
+/** One tile with each value, and what the Query tool tells about it. */
+interface CityCellDetail extends Required<CityCell> {
+  query?: {
+    title: string;
+    kind: string;
+    altitudeFeet: number;
+    landValue: number;
+    crime: string;
+    pollution: string;
+    /** The lines of a building with its own values, such as the output of a power plant. */
+    lines: string[];
+    flags: string[];
+    things: string[];
+    text: string;
+  };
+}
+
+interface CityCellsOptions {
+  /** The values to return. The default is each value. */
+  fields?: CellField[];
+  /** `cells`: one object for each tile. `columns`: one array for each value. The default is `cells` for 4096 tiles or fewer. */
+  format?: 'cells' | 'columns';
+  /** With `cells`: also return the empty values of each cell. */
+  empty?: boolean;
+}
+
+/** The tiles of an area. A tile (x + i, y + j) is at index `j * width + i` of `cells` and of each column. */
+interface CityCells extends TileArea {
+  format: 'cells' | 'columns';
+  fields: CellField[];
+  cells?: CityCell[];
+  columns?: Partial<Record<CellField, (number | string | boolean)[]>>;
+}
+
+/** The values of the Population window. An age group covers five years. */
+interface Demographics {
+  population: number;
+  /** The percentage of the residents who are of working age. */
+  workforcePercent: number;
+  workforceLifeExpectancy: number;
+  /** The education quotient of the work force. */
+  workforceEducation: number;
+  ages: { age: number; population: number; lifeExpectancy: number; education: number }[];
+}
+
+type IndustryKey = 'steelMining' | 'textiles' | 'petrochemical' | 'food' | 'construction' | 'automotive'
+  | 'aerospace' | 'finance' | 'media' | 'electronics' | 'tourism';
+
+/** One row of the Industry window. */
+interface Industry {
+  key: IndustryKey;
+  name: string;
+  /** The size of the industry in the city, as the Ratios chart shows it. */
+  ratio: number;
+  /** The tax rate of the industry in percent. `budget.set({ industryTaxes })` changes it. */
+  taxRate: number;
+  /** The national demand for the industry. */
+  demand: number;
+}
+
+/** The values of the Neighbors window. */
+interface Neighbors {
+  name: string;
+  /** The population of the city with its arcologies. */
+  population: number;
+  nationalPopulation: number;
+  /** `edge` is the side of the map of the neighbor. The name `Ocean` has no city. */
+  neighbors: { name: string; population: number; edge: 'x-max' | 'y-max' | 'x-min' | 'y-min' }[];
+}
+
+interface NewspaperReport {
+  heading: string;
+  headline: string;
+  article: string;
+}
+
+/** The newspaper that shows. */
+interface Newspaper {
+  title: string;
+  date: string;
+  price: string;
+  /** The first story is the lead story. */
+  stories: { headline: string; article: string }[];
+  weather: NewspaperReport;
+  opinion: NewspaperReport;
+  extra: { headline: string; article: string }[];
+}
+
+interface PngExportOptions {
+  /** The image shows only these tiles, and the game draws only them. Without it: the whole city. */
+  area?: TileArea;
+  /** The size of the tiles. The default is `'small'`. */
+  size?: 'small' | 'medium' | 'large';
+  /** The default is `'city'`. */
+  view?: 'city' | 'underground';
+  signs?: boolean;
+  movingThings?: boolean;
+  transparent?: boolean;
+}
+
+interface ImageFile {
+  path: string;
+  width: number;
+  height: number;
+  /** City images only: the place of the image, in pixels, in the picture of the whole city. */
+  origin?: { x: number; y: number };
 }
 
 interface DataMap {
@@ -124,6 +360,8 @@ interface Funding {
 interface BudgetInfo {
   taxes: Taxes;
   funding: Funding;
+  /** The tax rate of each industry, from 0 to 20. */
+  industryTaxes: Record<IndustryKey, number>;
   autoBudget: boolean;
   bonds: number;
 }
@@ -131,7 +369,51 @@ interface BudgetInfo {
 interface BudgetChanges {
   taxes?: Partial<Taxes>;
   funding?: Partial<Funding>;
+  /** The key `all` sets each industry. A key can also be a name of the Industry window. */
+  industryTaxes?: Partial<Record<IndustryKey | 'all', number>>;
   autoBudget?: boolean;
+}
+
+/** One line of the Budget window. An amount is positive for income and negative for a cost. */
+interface BudgetLine {
+  key: keyof Taxes | keyof Funding | 'ordinances' | 'bonds';
+  name: string;
+  /** The row of the Budget window that holds the line, such as `Roads & transit`. */
+  group: string;
+  /** The tax rate or the funding in percent. */
+  rate: number;
+  yearToDate: number;
+  /** The estimate for the full year. */
+  estimate: number;
+  /** The amount of each month, January first. Months after `recordedMonths` are estimates. */
+  months: number[];
+}
+
+/** The amounts of the Budget window for the stored rates. */
+interface BudgetReportInfo {
+  year: number;
+  /** True while the yearly budget waits for its settlement. */
+  yearEnd: boolean;
+  recordedMonths: number;
+  funds: number;
+  /** The cash flow of the year until now. */
+  yearToDate: number;
+  /** The cash flow of the full year. */
+  estimate: number;
+  yearEndFunds: number;
+  lines: BudgetLine[];
+  bonds: {
+    count: number;
+    outstanding: number;
+    /** The interest rate of each bond in percent, the oldest first. */
+    rates: number[];
+    /** From `AAA` to `F`. */
+    credit: string;
+    bankRate: number;
+    /** The interest rate of the next bond. */
+    nextRate: number;
+    cityValue: number;
+  };
 }
 
 interface Ordinance {
@@ -162,15 +444,205 @@ interface ToolInfo {
   groupName: string;
   name: string;
   cost: number;
+  /**
+   * The number of tiles on each edge of the square that the tool builds. A tool with size 1 changes
+   * the tile of a click. A building covers the tiles from `x - floor((size - 1) / 2)` to
+   * `x + floor(size / 2)`, and the same for y. 0 for a tool that builds nothing.
+   */
+  size: number;
 }
 
 interface ToolListItem extends ToolInfo {
+  /** False when the city cannot use the tool now: too early a year, too few residents, or a tool of the terrain editor. */
   available: boolean;
+  /** True for an entry that opens a list of tools for the player, such as Power Plants. It builds nothing: select one of the tools after it. */
+  chooser?: true;
+  /** Power plants only: what the Power Plants window tells. */
+  plant?: { outputMw: number; gridCapacity: string; pollution: number; serviceLife: string; note: string };
 }
 
 type ViewMode =
   | 'city' | 'underground' | 'density' | 'growth' | 'traffic' | 'pollution' | 'crime' | 'police_power' | 'fire_power'
   | 'land_value' | 'water' | 'power' | 'height';
+
+/** A window that shows, or a full-screen panel of the game such as the main menu. */
+interface UiWindow {
+  /** The node path of the window, or `'main'` for the game window. */
+  id: string;
+  type: string;
+  title: string;
+  /** The message of a dialog. */
+  text: string;
+  /** True when the windows below take no input. */
+  modal: boolean;
+  /** True when the simulation waits while the window shows. */
+  blocking: boolean;
+  focused: boolean;
+  rect: ScreenRect;
+  /** The texts of the buttons. */
+  buttons: string[];
+  /** The items of a popup menu. */
+  items?: UiItem[];
+}
+
+/** A rectangle in pixels of the game window. */
+interface ScreenRect {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+/** A position in pixels of the game window. */
+interface ScreenPoint {
+  x: number;
+  y: number;
+}
+
+type ScreenArgument = ScreenPoint | [number, number];
+
+interface UiItem {
+  index: number;
+  text: string;
+  disabled?: boolean;
+  /** The id of a menu item. */
+  id?: number;
+  checked?: boolean;
+  separator?: boolean;
+  submenu?: UiItem[];
+  /** The depth, the cells and the selection of a tree row. */
+  depth?: number;
+  cells?: string[];
+  selected?: boolean;
+}
+
+/** A control that takes input. */
+interface UiControl {
+  /** The node path of the control. */
+  id: string;
+  kind: 'button' | 'check' | 'option' | 'menu' | 'text' | 'number' | 'tabs' | 'list' | 'tree' | 'custom';
+  /** The class of the control. */
+  type: string;
+  /** The node name. */
+  name: string;
+  /** The text that names the control: its own text, or its tooltip. */
+  text: string;
+  tooltip?: string;
+  value?: boolean | number | string | string[];
+  disabled?: boolean;
+  min?: number;
+  max?: number;
+  step?: number;
+  items?: UiItem[];
+  rect: ScreenRect;
+  /**
+   * The label that the window shows before the control. Only a control without a name of its own has it:
+   * a field without a text, or a control with the same text as another one. A target can be this label.
+   */
+  label?: string;
+  /** True when `ui.image` can save the picture of the control. */
+  image?: true;
+  /**
+   * Values of a control that draws its content. The canvas of the SCURK editor gives
+   * `{ spriteWidth, spriteHeight, zoom, tool, colorIndex, brushSize, origin, end }`: `origin` is the
+   * corner of sprite pixel (0, 0) and `end` the far corner of the last one, in pixels of the game window.
+   */
+  data?: Record<string, unknown>;
+}
+
+/** A control by its id, its text or its node name; or by a text in one window. */
+type UiTarget = string | { id: string } | { text: string; window?: string };
+
+interface UiMenu {
+  text: string;
+  disabled: boolean;
+  items: UiItem[];
+}
+
+/** An action of a key or a menu. */
+interface GameAction {
+  id: string;
+  label: string;
+  category: string;
+  scope: string;
+  kind: string;
+}
+
+interface GameState {
+  /** Outcome of the last normal asynchronous file load; empty before loading. */
+  load: { path?: string; ok?: boolean };
+  screen: 'startup' | 'main-menu' | 'new-city' | 'terrain-editor' | 'city' | 'scurk';
+  assetsReady: boolean;
+  /** True while a city loads or saves. */
+  busy: boolean;
+  /** The text of the status bar: the result or the error of the last action. */
+  status: string;
+  /** The windows that show, without the game window. */
+  windows: Pick<UiWindow, 'id' | 'type' | 'title' | 'text' | 'blocking' | 'buttons'>[];
+  city: {
+    name: string;
+    mayor: string;
+    size: number;
+    funds: number;
+    population: number;
+    path: string;
+    date: CityDate;
+    demand: Demand;
+  } | null;
+  speed?: SpeedName;
+  /** Why the simulation waits, or an empty text. */
+  suspended?: string;
+  tool?: ToolInfo;
+  disaster?: Disaster | null;
+  view?: { mode: ViewMode; zoom: number; rotation: number; center: TilePoint };
+}
+
+type TerrainFeature =
+  | 'meander' | 'delta' | 'peninsula' | 'crossing' | 'branch' | 'rejoin' | 'bay' | 'island' | 'islands' | 'plateau'
+  | 'ridge' | 'valley' | 'rolling' | 'basin' | 'canyon' | 'cliffs' | 'lake' | 'lakes';
+
+interface NewCityOptions {
+  /** RS defaults to Classic. Expanded enables larger maps and RS features. */
+  expanded?: boolean;
+  name?: string;
+  mayor?: string;
+  difficulty?: 'easy' | 'medium' | 'hard' | 1 | 2 | 3;
+  year?: 1900 | 1950 | 2000 | 2050;
+  /** The tiles on each map edge. The default is 128. */
+  size?: 128 | 256 | 384 | 512 | 640 | 1024 | 2048 | 4096;
+  /** True makes a city that the original game opens: 128 tiles, SC2 format. */
+  sc2?: boolean;
+  ocean?: boolean;
+  river?: boolean;
+  /** The amounts of hills, water and trees, from 0 to 47. */
+  hills?: number;
+  water?: number;
+  trees?: number;
+  features?: TerrainFeature[];
+  /** The same seed and options make the same terrain. */
+  seed?: number;
+  /** True stays in the terrain editor. Press "Done" to found the city. */
+  edit?: boolean;
+  /** True drops the unsaved changes of the open city. */
+  discard?: boolean;
+}
+
+interface GameFiles {
+  cities: string[];
+  scenarios: string[];
+  saved: string[];
+  savedFolder: string;
+  /** The autosaves of the last minutes, in the temporary folder. */
+  autosaves: string[];
+}
+
+/** What the game plays now. A program cannot hear the game. */
+interface AudioState {
+  /** `track` is -1 and `name` is empty when no track was started. */
+  music: { enabled: boolean; playing: boolean; paused: boolean; track: number; name: string };
+  /** `loop` is the id of the sound that repeats, or -1. */
+  sound: { enabled: boolean; loop: number };
+}
 
 /** The info.json fields of a mod. */
 interface ModInfo {
@@ -212,6 +684,12 @@ interface ToolAppliedDetail {
   command: string;
   cost: number;
   message: string;
+  /**
+   * `tools.apply` only: the title of the window that waits for an answer before the edit ends: the
+   * bridge choice, the tunnel cost or the connection to a neighbor. `changed` is then false. Answer the
+   * window with `ui.press` or `ui.accept`, then read `game.state().status`.
+   */
+  window?: string;
 }
 
 /** The fields of each game event, by type. */
@@ -228,8 +706,10 @@ interface GameEventMap {
   'disaster.beforeStart': { id: number; name: string; x: number; y: number };
   'disaster.started': Disaster;
   'disaster.ended': Disaster;
-  news: { type: number; argument: number };
-  notice: { id: number };
+  news: { type: number; argument: number; name: string };
+  notice: { id: number; text: string };
+  /** The game asked for sounds, by their ids. The sound settings can drop a sound. */
+  sound: { ids: number[] };
   'budget.prompt': {};
   'military.proposal': {};
   'game.over': { type: string; funds: number };
@@ -286,6 +766,38 @@ interface Game {
   command(name: string, description: string, handler: (...words: string[]) => unknown): void;
   /** Shows a message on the status bar. */
   status(text: string): void;
+  /** What the game shows now. Call it after an action to see the result and what waits for an answer. */
+  state(): GameState;
+  /** The actions of the keys and the menus. */
+  actions(): GameAction[];
+  /** Runs an action as its key does, such as `'window_budget'`. False when it does nothing now. It throws while a modal window shows. */
+  action(id: string): boolean;
+  /** Makes the terrain and founds a city, as the New City window does. Console scripts only. */
+  newCity(options?: NewCityOptions): GameState;
+  /** Opens a city or a scenario file. Console scripts only. */
+  open(path: string, options?: { discard?: boolean }): Promise<GameState>;
+  /** Saves the city to a path. Resolves with the path when the file is written. Console scripts only. */
+  saveAs(path: string): Promise<string>;
+  /** The city files that the game knows. Console scripts only. */
+  files(): GameFiles;
+  /** What the game plays now: the music track, and if the music and the sounds are on. */
+  audio(): AudioState;
+  /** Shows the main menu, or with false returns from it to the city. Returns the screen. Console scripts only. */
+  mainMenu(show?: boolean): GameState['screen'];
+  /** Closes the game. Console scripts only. */
+  quit(options?: { discard?: boolean }): true;
+  /** The stored settings: `{ section: { key: value } }`. Console scripts only. */
+  readonly settings: Record<string, Record<string, unknown>>;
+  /** The settings that the game uses now, also those that the file does not hold. The Settings window changes them. Console scripts only. */
+  readonly preferences: Record<string, unknown>;
+  /** Get or set the debug mode: the Debug menu and the debug tools. Console scripts only. */
+  debugMode: boolean;
+  /** Resolves after a time in milliseconds. */
+  wait(milliseconds: number): Promise<void>;
+  /** Resolves after the game drew this many frames. */
+  frames(count?: number): Promise<void>;
+  /** Resolves when `test()` is true. Rejects after the timeout in milliseconds; the default is 30000. */
+  until(test: () => boolean, timeout?: number): Promise<void>;
   /** Values that stay after the game closes. Each mod has its own values. */
   readonly storage: {
     /** The stored value, or the fallback. Give the type for a TypeScript check: `get<Zone[]>('zones', [])`. */
@@ -326,17 +838,55 @@ interface City {
   sign(x: number | TileArgument, y?: number): string | null;
   /** Places or changes a sign. An empty text removes it. */
   setSign(x: number, y: number, text: string): true;
+  /** Every sign of the city. `connection` is true for a sign that the game shows at a connection to a neighbor. */
+  signs(): { x: number; y: number; text: string; connection?: true }[];
   /** The moving objects. */
   things(): Thing[];
   /** Saves the city to its file. Returns the path. */
   save(): string;
+  /** True when the city has changes that its file does not have. This compares the whole city; it is slow on a large map. */
+  readonly unsaved: boolean;
+  /** What the Query tool shows for a tile. */
+  query(x: number | TileArgument, y?: number): QueryInfo;
+  /** The stored values of an area, or of the whole map. */
+  region(x?: number | TileArea, y?: number, width?: number, height?: number): CityRegion;
+  /** An area, or the whole map, as text: one character for each tile. */
+  textMap(area?: TileArea, layer?: TextLayer): TextMap;
+  readonly textLayers: TextLayer[];
+  /** The tiles of a structure, by a part of its name or by its stored id. 2000 tiles at most. */
+  find(what: string | number, area?: TileArea): FoundTile[];
+  /** The number of tiles of each structure and zone in an area, or in the whole map. */
+  census(area?: TileArea): Census;
+  /** Each value of one tile, and what the Query tool tells about it. */
+  cell(x: number | TileArgument, y?: number): CityCellDetail;
+  /**
+   * The values of each tile of an area, or of the whole map without an area, as data. One answer holds
+   * 2,000,000 values at most (tiles times fields): name fewer fields or a smaller area for a large map.
+   */
+  cells(area?: TileArea | null, options?: CityCellsOptions): CityCells;
+  readonly cellFields: CellField[];
+  /** The values of the Population window. */
+  demographics(): Demographics;
+  /** The values of the Industry window. */
+  industry(): Industry[];
+  /** The values of the Neighbors window. */
+  neighbors(): Neighbors;
+  /** The names of the papers of the Newspaper menu. */
+  readonly newspapers: string[];
+  /** The newspaper that shows, or null. `ui.menu('Newspaper', city.newspapers[0])` opens a paper. */
+  newspaper(): Newspaper | null;
+  /** Writes an image of the city, or of the tiles of `options.area`, to a PNG file. Resolves when the export ends. Console scripts only. */
+  exportPng(path: string, options?: PngExportOptions): Promise<ImageFile>;
 }
 
 interface Budget {
   info(): BudgetInfo;
+  /** The amounts of the Budget window: each line, the totals and the bonds. */
+  report(): BudgetReportInfo;
   readonly taxes: Taxes;
   readonly funding: Funding;
-  /** Changes the named values. Tax rates go from 0 to 22, funding from 0 to 100. */
+  readonly industryTaxes: Record<IndustryKey, number>;
+  /** Changes the named values. Tax rates go from 0 to 22, funding from 0 to 100, industry tax rates from 0 to 20. */
   set(changes: BudgetChanges): BudgetInfo;
   ordinances(): Ordinance[];
   /** Enables or disables an ordinance by its key or its name. Returns the new state. */
@@ -368,6 +918,16 @@ interface Sim {
   noDisasters: boolean;
   /** Runs at the speed until the date, then pauses. */
   runUntil(date: { year: number; month?: number; day?: number }, speed?: SpeedName | number): boolean;
+  /** Why the simulation waits now, or an empty text: a prompt, a window that blocks it, the terrain editor. */
+  readonly suspended: string;
+  /**
+   * Pauses the game and runs this many days, as fast as the computer can. Stops early when the simulation
+   * must wait; `stopped` tells why. While a disaster is active, the game runs the ticks of the disaster and
+   * no days: then `advance` runs 32 ticks and stops with `'disaster: <name>'`.
+   */
+  advance(days?: number): Promise<{ days: number; date: CityDate; stopped: string }>;
+  /** Runs at the speed until the date. Resolves when the game paused there, or when the simulation must wait. */
+  runTo(date: { year: number; month?: number; day?: number }, speed?: SpeedName | number): Promise<{ date: CityDate; stopped: string }>;
 }
 
 interface Tools {
@@ -375,8 +935,12 @@ interface Tools {
   readonly selected: ToolInfo;
   /** Selects a tool by its group and tool name or index, or by one tool or group name. */
   select(group: string | number, tool?: string | number): ToolInfo;
-  /** Uses the selected tool as a drag from one tile to another. Without `to`, it is a click. */
-  apply(from: TileArgument, to?: TileArgument): ToolAppliedDetail;
+  /**
+   * Uses the selected tool as a drag from one tile to another. Without `to`, it is a click. A brush tool
+   * (Trees, Water, Place Forest) changes the tiles of its brush around each tile of the drag. Stretch
+   * Terrain of the terrain editor needs `levels`: the height of its drag, below zero to lower the land.
+   */
+  apply(from: TileArgument, to?: TileArgument | null, options?: { levels?: number }): ToolAppliedDetail;
   /** Undoes the last edit. False when there is nothing to undo. */
   undo(): boolean;
 }
@@ -397,7 +961,20 @@ interface View {
   readonly rotation: number;
   /** A quarter turn, clockwise unless the argument is false. Returns the rotation. */
   rotate(clockwise?: boolean): number;
+  /** Get or set: true moves the view to each tile that a script uses a tool on, for a person who watches the game. */
+  follow: boolean;
+  /** The center of a tile in pixels of the game window. `visible` tells if the map shows it. */
+  screenOf(x: number | TileArgument, y?: number): ScreenPoint & { visible: boolean };
+  /** The tile at a place of the game window, or null outside the map. */
+  tileAt(x: number | ScreenArgument, y?: number): TilePoint | null;
+  /** The layers that show. */
+  readonly layers: Record<ViewLayer, boolean>;
+  /** Shows or hides a layer, as the View menu does. */
+  setLayer(name: ViewLayer, shown?: boolean): Record<ViewLayer, boolean>;
 }
+
+type ViewLayer =
+  | 'buildings' | 'networks' | 'water' | 'trees' | 'signs' | 'vehicles' | 'waterMains' | 'pipes' | 'subways' | 'tunnels';
 
 interface Ui {
   /** A message window with an OK button. The game continues while it shows. */
@@ -406,6 +983,71 @@ interface Ui {
   status(text: string): void;
   /** Plays SOUNDS/<id>.WAV of the sound pack. */
   playSound(id: number): void;
+  // The functions below control the interface as the player does. Console scripts only.
+  /** The windows that show, the lowest first. The first is the game window, `'main'`; the last takes the input. */
+  windows(): UiWindow[];
+  /** The controls of a window that take input. Without a window: the top one. */
+  controls(window?: string): UiControl[];
+  /** The texts that a window shows, top to bottom, also the texts that a chart, a debug table or the newspaper draws. */
+  texts(window?: string): string[];
+  /** Presses a button. A check box changes its state. */
+  press(target: UiTarget): true;
+  /** Sets a text field, a number or a check box. `submit` also sends Enter in a text field or a text area, such as the input of the Console window. */
+  set(target: UiTarget, value: string | number | boolean, options?: { submit?: boolean }): true;
+  /**
+   * Chooses an item by its text or index: an option, a tab, a row of a list or a tree, an item of a menu
+   * button, or an item of a popup menu that shows (give the id of its window). `activate` also sends the
+   * double click of a list or a tree.
+   */
+  choose(target: UiTarget, item: string | number | (string | number)[], options?: { activate?: boolean }): true;
+  /** The menus of the menu bar with their items. */
+  menus(): UiMenu[];
+  /** Chooses an item of the menu bar: `ui.menu('File', 'Save City')`. It throws while a modal window shows. */
+  menu(...path: (string | number)[]): true;
+  /** Answers a dialog with its OK button. Without a window: the top one. On a panel of the game, such as the query result, it presses the OK button. */
+  accept(window?: string): true;
+  /** Closes a window as its close button does. A dialog takes it as Cancel. On a panel of the game, it presses the Close or the Cancel button. */
+  close(window?: string): true;
+  /** Selects a full path in the file dialog that shows. */
+  chooseFile(path: string): true;
+  /** The size of the game window in pixels. A headless game draws no image. */
+  readonly screen: { width: number; height: number; headless: boolean };
+  /** Saves an image of the game window as a PNG file. Without a path: in the screenshots folder of the user data. */
+  screenshot(path?: string, options?: { scale?: number }): Promise<ImageFile>;
+  /**
+   * Saves the picture of a control that draws its content, such as the canvas of the SCURK editor.
+   * A headless game can do this. Without a target: the first such control of the top window.
+   * `scale` makes each pixel larger, from 1 to 16.
+   */
+  image(target: UiTarget | undefined, path: string, options?: { scale?: number }): ImageFile;
+}
+
+type MouseButtonName = 'left' | 'right' | 'middle' | 'back' | 'forward';
+
+/**
+ * Mouse and keyboard input, as the devices of the player send it. Use it for an action that has no function
+ * of its own. A position is in pixels of the game window. Console scripts only.
+ */
+interface GameInput {
+  /** The place of the pointer of scripts. */
+  readonly position: ScreenPoint;
+  move(x: number | ScreenArgument, y?: number): ScreenPoint;
+  /** Presses a mouse button at a place, or at the pointer. */
+  mouseDown(x?: number | ScreenArgument, y?: number, button?: MouseButtonName): ScreenPoint;
+  mouseUp(x?: number | ScreenArgument, y?: number, button?: MouseButtonName): ScreenPoint;
+  click(x?: number | ScreenArgument, y?: number, options?: { button?: MouseButtonName; double?: boolean }): ScreenPoint;
+  /** A drag from one place to another, one step each frame. */
+  drag(from: ScreenArgument, to: ScreenArgument, options?: { button?: MouseButtonName; steps?: number }): Promise<ScreenPoint>;
+  /** Turns the mouse wheel. A positive step scrolls down. */
+  scroll(steps?: number, x?: number | ScreenArgument, y?: number, options?: { horizontal?: boolean }): ScreenPoint;
+  /** Presses and releases a key with its modifiers: `'Ctrl+S'`, `'Escape'`, `'F12'`, `'Shift+Tab'`. */
+  key(text: string): true;
+  keyDown(text: string): true;
+  keyUp(text: string): true;
+  /** Types a text into the control with the focus. */
+  text(value: string): true;
+  /** Releases every mouse button and modifier key that a script holds. */
+  release(): true;
 }
 
 /** The files of the mod folder. Each path is relative to the folder; a path outside it throws an Error. */
@@ -443,6 +1085,7 @@ declare const sim: Sim;
 declare const tools: Tools;
 declare const view: View;
 declare const ui: Ui;
+declare const input: GameInput;
 /** The mod of this runtime. Only the runtime of a mod has it; the console runtime does not. */
 declare const mod: Mod;
 

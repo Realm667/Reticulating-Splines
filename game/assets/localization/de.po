@@ -30553,3 +30553,27 @@ msgstr "Pausiert"
 #. AI-assisted supplementary translation: QOL beta status follow-up 2026-11-18.
 msgid "Finish the annual budget before saving the city."
 msgstr "Schließe das Jahresbudget ab, bevor du die Stadt speicherst."
+
+#: src/application/remote_api.gd
+msgid "Let other programs control the game on a local port: api [port], or api off."
+msgstr "Andere Programme können das Spiel über einen lokalen Port steuern: api [Port] oder api off."
+
+#: src/application/remote_api.gd
+msgid "The remote API stopped."
+msgstr "Die Remote-API wurde beendet."
+
+#: src/application/remote_api.gd
+msgid "The port must be a number from 0 to 65535."
+msgstr "Der Port muss eine Zahl von 0 bis 65535 sein."
+
+#: src/application/remote_api.gd
+msgid "Use --api-test-profile=NAME for a disposable local API profile."
+msgstr "Für ein temporäres lokales API-Profil --api-test-profile=NAME verwenden."
+
+#: src/application/remote_api.gd
+msgid "The local test API is unavailable during multiplayer."
+msgstr "Die lokale Test-API ist im Mehrspielermodus nicht verfügbar."
+
+#: src/application/remote_api.gd
+msgid "The local test API is unavailable while signed in to Cloud."
+msgstr "Die lokale Test-API ist während einer Cloud-Anmeldung nicht verfügbar."

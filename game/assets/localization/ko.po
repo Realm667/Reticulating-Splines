@@ -11693,3 +11693,27 @@ msgstr "일시 정지"
 #. AI-assisted supplementary translation: QOL beta status follow-up 2026-11-18.
 msgid "Finish the annual budget before saving the city."
 msgstr "도시를 저장하기 전에 연간 예산을 완료하세요."
+
+#: src/application/remote_api.gd
+msgid "Let other programs control the game on a local port: api [port], or api off."
+msgstr "다른 프로그램이 로컬 포트에서 게임을 제어하도록 허용합니다: api [포트] 또는 api off."
+
+#: src/application/remote_api.gd
+msgid "The remote API stopped."
+msgstr "원격 API가 중지되었습니다."
+
+#: src/application/remote_api.gd
+msgid "The port must be a number from 0 to 65535."
+msgstr "포트는 0에서 65535 사이의 숫자여야 합니다."
+
+#: src/application/remote_api.gd
+msgid "Use --api-test-profile=NAME for a disposable local API profile."
+msgstr "임시 로컬 API 프로필에는 --api-test-profile=NAME을 사용하세요."
+
+#: src/application/remote_api.gd
+msgid "The local test API is unavailable during multiplayer."
+msgstr "멀티플레이 중에는 로컬 테스트 API를 사용할 수 없습니다."
+
+#: src/application/remote_api.gd
+msgid "The local test API is unavailable while signed in to Cloud."
+msgstr "Cloud에 로그인한 동안에는 로컬 테스트 API를 사용할 수 없습니다."

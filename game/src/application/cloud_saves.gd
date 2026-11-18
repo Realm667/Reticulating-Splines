@@ -19,6 +19,8 @@ func initialize() -> void:
 	app.cloud_ui = CloudWindow.new()
 	app.add_child(app.cloud)
 	app.cloud.configure()
+	if AppPaths.is_api_test_profile():
+		app.cloud.transport.endpoint = "http://127.0.0.1:1"
 	app.add_child(app.cloud_ui)
 	app.cloud_ui.bind(app.cloud)
 	app.cloud.changed.connect(_resume_opt_in)

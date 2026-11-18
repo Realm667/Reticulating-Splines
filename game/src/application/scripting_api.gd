@@ -2,30 +2,42 @@ class_name ApplicationScriptingApi
 extends ScriptingApiBase
 ## The game functions that scripts call through `__runtime.host(name, ...)`.
 ## game/assets/scripting/api.js wraps them as the script objects. This file
-## holds `game`, `sim`, `tools` and `view`; ScriptingCityApi, ScriptingBudgetApi
-## and ScriptingUiApi hold the others. See docs/scripting.md.
+## holds `game`, `sim`, `tools` and `view`; ScriptingCityApi, ScriptingBudgetApi,
+## ScriptingReportsApi, ScriptingCityDataApi and ScriptingUiApi hold the others. See docs/scripting.md.
 
 const Tools = preload("res://src/tools/shared/tool_catalog.gd")
 const GameSpeed = preload("res://src/simulation/core/game_speed_controller.gd")
 
 var city_api: ScriptingCityApi
 var budget_api: ScriptingBudgetApi
+var reports_api: ScriptingReportsApi
+var city_data_api: ScriptingCityDataApi
 var ui_api: ScriptingUiApi
+var input_api: ScriptingInputApi
+var game_api: ScriptingGameApi
+# the view moves to the tile that a script uses a tool on, when the map does
+# not show it. A person who watches the game then sees what a script does
+var follow := false
 
 
 func _init(application: CityApplication) -> void:
-	super(application, {"failure": ""})
+	super(application, {"failure": "", "context": null})
 	city_api = ScriptingCityApi.new(application, call_state)
 	budget_api = ScriptingBudgetApi.new(application, call_state)
+	reports_api = ScriptingReportsApi.new(application, call_state)
+	city_data_api = ScriptingCityDataApi.new(application, call_state)
+	city_data_api.city_api = city_api
 	ui_api = ScriptingUiApi.new(application, call_state)
+	input_api = ScriptingInputApi.new(application, call_state)
+	game_api = ScriptingGameApi.new(application, call_state)
+	game_api.ui_api = ui_api
+	game_api.describe_tool = tool_info
 
 
-## The message of the failed call, or an empty text. Clears it.
-func take_failure() -> String:
-	var message: String = call_state.failure
-	call_state.failure = ""
-
-	return message
+## The functions that a mod cannot call: they use files outside the folder
+## of the mod, or they control the interface and the input of the player.
+static func restricted() -> PackedStringArray:
+	return ScriptingUiApi.RESTRICTED + ScriptingInputApi.RESTRICTED + ScriptingGameApi.RESTRICTED + ScriptingCityApi.RESTRICTED
 
 
 func handlers() -> Dictionary[String, Callable]:
@@ -59,22 +71,35 @@ func handlers() -> Dictionary[String, Callable]:
 		"view.zoomOut": _view_zoom.bind(false),
 		"view.rotation": func(_arguments: Array) -> Variant: return app.document_state.city.compass_rotation() if need_city() else null,
 		"view.rotate": _view_rotate,
+		"view.follow": func(_arguments: Array) -> Variant: return follow,
+		"view.setFollow": _view_set_follow,
+		"view.screenOf": _view_screen_of,
+		"view.tileAt": _view_tile_at,
+		"view.layers": _view_layers,
+		"view.setLayer": _view_set_layer,
 	}
 
-	for api in [city_api, budget_api, ui_api]:
+	for api in [city_api, budget_api, reports_api, city_data_api, ui_api, input_api, game_api]:
 		result.merge(api.handlers())
 
 	return result
 
 
-## The script description of a tool: { group, subtool, groupName, name, cost }.
+## True for an entry that opens a list of tools for the player and builds nothing itself.
+static func is_chooser(group: int, subtool: int) -> bool:
+	return ((group == CityToolIds.Group.POWER and subtool == CityToolIds.Power.PLANTS)
+		or (group == CityToolIds.Group.REWARDS and subtool == CityToolIds.Rewards.ARCOLOGIES))
+
+
+## The script description of a tool: { group, subtool, groupName, name, cost, size }.
 static func tool_info(group: int, subtool: int) -> Dictionary:
 	var tool := Tools.tool(group, subtool)
 
 	if tool == null:
 		return {}
 
-	return {"group": group, "subtool": subtool, "groupName": Tools.group(group).name, "name": tool.name, "cost": tool.cost}
+	return {"group": group, "subtool": subtool, "groupName": Tools.group(group).name, "name": tool.name, "cost": tool.cost,
+		"size": tool.area}
 
 
 ## The tiles of a drag from `start` to `finish`, as the map view selects them
@@ -258,7 +283,18 @@ func _tools_list(_arguments: Array) -> Variant:
 	for group in Tools.GROUPS.size():
 		for subtool in Tools.group(group).tools.size():
 			var info := tool_info(group, subtool)
-			info.available = city != null and ToolAvailability.is_available(city, group, subtool)
+			# the terrain editor does not ask for a year or for residents
+			info.available = (city != null and app.current_tool.group_allowed(group) and app.current_tool.subtool_allowed(group, subtool)
+				and (app.tool_state.landscape_editor or ToolAvailability.is_available(city, group, subtool)))
+
+			if is_chooser(group, subtool):
+				info.chooser = true
+
+			if group == CityToolIds.Group.POWER and Tools.POWER_PLANT_DETAILS.has(subtool):
+				var plant: Tools.PowerPlantDetails = Tools.POWER_PLANT_DETAILS[subtool]
+				info.plant = {"outputMw": plant.output_mw, "gridCapacity": plant.grid_capacity, "pollution": plant.pollution,
+					"serviceLife": plant.service_life, "note": plant.note}
+
 			result.append(info)
 
 	return result
@@ -277,6 +313,10 @@ func _tools_select(arguments: Array) -> Variant:
 
 	if app.tool_state.selected_group == choice.x:
 		app.current_tool.select_subtool(choice.y)
+
+	# Cancel Dispatch is an action: it recalls the units and the tool before it stays selected
+	if app.tool_state.selected_group == choice.x and choice.x == CityToolIds.Group.DISPATCH and choice.y == CityToolIds.Dispatch.RECALL:
+		return tool_info(choice.x, choice.y)
 
 	if app.tool_state.selected_group != choice.x or app.tool_state.selected_subtool != choice.y:
 		return fail("%s cannot be selected now." % Tools.tool(choice.x, choice.y).name)
@@ -331,6 +371,8 @@ static func _matches(value: Variant, index: int, name: String, id: String) -> bo
 func _tools_apply(arguments: Array) -> Variant:
 	if not need_city():
 		return null
+	if not ui_api.blocking_window().is_empty():
+		return fail("Answer the pending window before using a city tool.")
 
 	var start := point(arguments, 0)
 	var finish := point(arguments, 1) if arguments.size() > 1 else start
@@ -339,11 +381,60 @@ func _tools_apply(arguments: Array) -> Variant:
 		if not inside_map(tile):
 			return fail("The tile %d, %d is outside the map." % [tile.x, tile.y])
 
+	if is_chooser(app.tool_state.selected_group, app.tool_state.selected_subtool):
+		return fail("%s is a list of tools and builds nothing. Select one of the tools after it in tools.list()."
+			% Tools.tool(app.tool_state.selected_group, app.tool_state.selected_subtool).name)
+
+	if follow:
+		_show_tile(finish)
+
 	var state := ToolEditState.normal(app.document_state.city, app.view_state.overlay_mode, app.tool_state.selected_group,
 		app.tool_state.selected_subtool)
 	var path := selection_path(state.selection, start, finish)
+	var dragged := start != finish
+	var options: Dictionary = argument(arguments, 2, {}) if argument(arguments, 2, {}) is Dictionary else {}
 
-	return app.city_edits.apply_map_selection(start, finish, path, start != finish)
+	# a brush tool changes the tiles of its brush around each tile of the drag, as on the map
+	if app.map_view.landscape_brush:
+		path = _brush_path(path)
+
+	# Stretch Terrain takes the height of the drag: levels up, or down below zero
+	var stretch := (app.tool_state.landscape_editor and app.tool_state.selected_group == CityToolIds.Group.BULLDOZER
+		and app.tool_state.selected_subtool == CityToolIds.Bulldozer.STRETCH)
+
+	if stretch:
+		if not is_number(options.get("levels")) or int(options.levels) == 0:
+			return fail("Stretch Terrain needs the height of the drag: tools.apply([x, y], null, { levels: 2 }). A level below zero lowers the land.")
+
+		app.map_view.stretch_height_delta = int(options.levels)
+		dragged = true
+
+	var detail: Variant = app.city_edits.apply_map_selection(start, finish, path, dragged)
+
+	if stretch:
+		app.map_view.stretch_height_delta = 0
+
+	var waiting := ui_api.blocking_window()
+
+	# a bridge, a tunnel or a connection asks first: the edit ends when the window has its answer
+	if detail is Dictionary and not waiting.is_empty():
+		detail["window"] = waiting
+
+	return detail
+
+
+# the tiles of the brush around each tile of a path, each tile one time
+func _brush_path(centers: Array[Vector2i]) -> Array[Vector2i]:
+	var path: Array[Vector2i] = []
+	var seen := {}
+
+	for center in centers:
+		for tile in app.map_view.selection.brush_tiles(center):
+			if not seen.has(tile):
+				seen[tile] = true
+				path.append(tile)
+
+	return path
 
 
 func _tools_undo(_arguments: Array) -> Variant:
@@ -396,6 +487,114 @@ func _view_rotate(arguments: Array) -> Variant:
 	app.camera_input.rotate_city(not bool(argument(arguments, 0, true)))
 
 	return app.document_state.city.compass_rotation()
+
+
+func _view_set_follow(arguments: Array) -> Variant:
+	follow = bool(argument(arguments, 0, true))
+
+	return follow
+
+
+# moves the view to a tile when the map does not show it
+func _show_tile(tile: Vector2i) -> void:
+	var place: Variant = _view_screen_of([{"x": tile.x, "y": tile.y}])
+
+	if place is Dictionary and not bool(place.visible):
+		app.map_view.center_on_tile(tile)
+
+
+# the scale and the offset from source pixels of the map to pixels of the
+# map control: local = source * scale + offset
+func _map_scale_offset() -> Array:
+	var visible := app.map_view.visible_source_rect()
+	var scale := app.map_view.size.x / visible.size.x if visible.size.x > 0.0 else 1.0
+
+	return [scale, -visible.position * scale]
+
+
+# the place of the center of a tile in pixels of the game window
+func _view_screen_of(arguments: Array) -> Variant:
+	if not need_city():
+		return null
+
+	var tile := point(arguments, 0)
+
+	if not inside_map(tile):
+		return fail("The tile %d, %d is outside the map." % [tile.x, tile.y])
+
+	var polygon := CityIsometricRenderer.tile_polygon(app.document_state.city, tile.x, tile.y)
+
+	if polygon.size() != 4:
+		return null
+
+	var mapping := _map_scale_offset()
+	var local: Vector2 = (polygon[0] + polygon[1] + polygon[2] + polygon[3]) * 0.25 * float(mapping[0]) + mapping[1]
+	var screen := UiProbe.window_transform(app.map_view) * local
+
+	return {"x": roundi(screen.x), "y": roundi(screen.y), "visible": Rect2(Vector2.ZERO, app.map_view.size).has_point(local)}
+
+
+# the tile at a place in pixels of the game window, or null outside the map
+func _view_tile_at(arguments: Array) -> Variant:
+	if not need_city():
+		return null
+
+	var value: Variant = argument(arguments, 0)
+
+	if not value is Dictionary or not is_number(value.get("x")) or not is_number(value.get("y")):
+		return fail("A position is { x, y } in pixels of the game window.")
+
+	var mapping := _map_scale_offset()
+	var local := UiProbe.window_transform(app.map_view).affine_inverse() * Vector2(float(value.x), float(value.y))
+	var tile := CityIsometricRenderer.screen_to_tile(app.document_state.city, (local - mapping[1]) / float(mapping[0]),
+		app.view_state.overlay_mode == CityViewMode.Mode.HEIGHT)
+
+	return {"x": tile.x, "y": tile.y} if inside_map(tile) else null
+
+
+# the layers of the view that show: { buildings, networks, water, trees,
+# signs, vehicles, waterMains, pipes, subways, tunnels }
+func _view_layers(_arguments: Array) -> Variant:
+	var view := app.view_state
+	var result := {}
+
+	# the zones entry is the Zones view, which is not a layer
+	for layer: String in view.surface_visibility:
+		if layer != "zones":
+			result[layer] = bool(view.surface_visibility[layer])
+
+	result.merge({
+		"vehicles": view.show_vehicles, "waterMains": view.show_underground_water_mains, "pipes": view.show_underground_pipes,
+		"subways": view.show_underground_subways, "tunnels": view.show_underground_tunnels,
+	})
+
+	return result
+
+
+# shows or hides a layer of the view, as the View menu does
+func _view_set_layer(arguments: Array) -> Variant:
+	if not need_city():
+		return null
+
+	var layer := str(argument(arguments, 0, ""))
+	var shown := bool(argument(arguments, 1, true))
+
+	match layer:
+		"waterMains":
+			app.menus.set_underground_water_mains_visible(shown)
+		"pipes":
+			app.menus.set_underground_pipes_visible(shown)
+		"subways":
+			app.menus.set_underground_subways_visible(shown)
+		"tunnels":
+			app.menus.set_underground_tunnels_visible(shown)
+		_:
+			if not _view_layers([]).has(layer):
+				return fail("The layer must be one of: %s." % ", ".join(_view_layers([]).keys()))
+
+			app.menus.set_surface_visibility(shown, layer)
+
+	return _view_layers([])
 
 
 func _view_set_mode(arguments: Array) -> Variant:

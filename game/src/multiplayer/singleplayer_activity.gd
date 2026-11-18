@@ -17,7 +17,7 @@ func _process(_delta: float) -> void:
 
 
 func eligible() -> bool:
-	return not stopping and app != null and app.preferences.share_singleplayer_activity \
+	return not AppPaths.is_api_test_profile() and not stopping and app != null and app.preferences.share_singleplayer_activity \
 		and app.document_state.city != null and app.document_state.current_document != null \
 		and not app.coop.active() and not app.tool_state.landscape_editor \
 		and not app.city_files.load_in_progress and app.new_city_state.session.preview_document == null \

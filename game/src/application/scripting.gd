@@ -22,6 +22,8 @@ const INSPECTOR_HISTORY := 200
 # a listener can send an event, whose listener can send another one. They
 # nest this deep at most
 const MAX_EMIT_DEPTH := 16
+# settles a promise of api.js: (token, ok, value)
+const SETTLE_FUNCTION := "__gameApi.settle"
 # the events that the game sends: type -> description. "*" listens to all
 const EVENTS := {
 	"city.opened": "A city opened: { name, size, date }.",
@@ -36,8 +38,9 @@ const EVENTS := {
 	"disaster.beforeStart": "A menu or a script starts a disaster: { id, name, x, y }. Cancelable.",
 	"disaster.started": "A disaster started: { id, name }.",
 	"disaster.ended": "The disaster ended: { id, name }.",
-	"news": "The simulation sent a news story: { type, argument }.",
-	"notice": "The simulation showed a notice: { id }.",
+	"news": "The simulation sent a news story: { type, argument, name }.",
+	"notice": "The simulation showed a notice: { id, text }.",
+	"sound": "The game asked for sounds: { ids }. The sound settings can drop a sound.",
 	"budget.prompt": "The yearly budget opens.",
 	"military.proposal": "The military asks for a base.",
 	"game.over": "The game ended, or the scenario was won: { type, funds }.",
@@ -62,6 +65,8 @@ var runtime: ScriptRuntime:
 		return console.runtime if console != null else null
 var last_script_path := ""
 var _handlers: Dictionary[String, Callable] = {}
+# the functions that a mod cannot call: name -> true
+var _restricted: Dictionary[String, bool] = {}
 var _commands: ConsoleCommands
 # the active disaster at the last check, for the started and ended events
 var _disaster := 0
@@ -84,6 +89,11 @@ func _init(application: CityApplication) -> void:
 	api = ApplicationScriptingApi.new(application)
 	mods = ApplicationMods.new(self)
 	_handlers = api.handlers()
+
+	for name in ApplicationScriptingApi.restricted():
+		_restricted[name] = true
+
+	application.effects_audio.sound_listener = _on_sounds
 
 
 static func console_storage_path() -> String:
@@ -226,8 +236,8 @@ func create_context(id: String, manifest: ModManifest, storage: ScriptStorage) -
 
 		return context
 
-	if manifest != null:
-		var sandbox_error := created.set_sandbox(manifest.folder)
+	if manifest != null or AppPaths.is_api_test_profile():
+		var sandbox_error := created.set_sandbox(manifest.folder if manifest != null else AppPaths.root())
 
 		if not sandbox_error.is_empty():
 			context.error = sandbox_error
@@ -403,6 +413,9 @@ func evaluate_console(source: String) -> String:
 
 ## Runs a script file. Its listeners, timers and commands stay until a reset.
 func run_file(path: String) -> bool:
+	if AppPaths.is_api_test_profile() and not AppPaths.api_path_allowed(path):
+		_report_file("Scripts must stay inside the disposable API profile.", false)
+		return false
 	if not start():
 		return false
 
@@ -553,6 +566,14 @@ func _emit_from_script(context: ScriptContext, arguments: Array) -> Variant:
 	return null
 
 
+## Settles the promise of a script that waits for work of the game, such as
+## an image of the window: see `wait` in api.js. With an error text, the
+## promise is rejected.
+func settle(context: ScriptContext, token: int, value: Variant, error := "") -> void:
+	if context != null and context.runtime != null:
+		context.runtime.call_function(SETTLE_FUNCTION, [token, error.is_empty(), error if not error.is_empty() else value])
+
+
 ## True when a script cancelled the event.
 func cancelled(type: String, detail: Dictionary) -> bool:
 	return bool(emit(type, detail, true).get("cancelled", false))
@@ -628,10 +649,10 @@ func on_simulation_result(result: SimulationTickResult) -> void:
 		_emit_day(day)
 
 	for item in result.news_items:
-		emit("news", {"type": item.type, "argument": item.argument})
+		emit("news", {"type": item.type, "argument": item.argument, "name": NewspaperDialog.STORY_NAMES.get(item.type, "")})
 
 	for id in result.notice_ids:
-		emit("notice", {"id": id})
+		emit("notice", {"id": id, "text": ApplicationReports.NOTICE_TEXT.get(id, "")})
 
 	for event in result.game_over_events:
 		emit("game.over", {"type": event.type, "funds": event.funds})
@@ -680,6 +701,11 @@ func check_disaster() -> void:
 
 	if active != 0:
 		emit("disaster.started", {"id": active, "name": CityMenuBar.disaster_name(active)})
+
+
+func _on_sounds(events: Array[SoundEvent]) -> void:
+	if listens("sound"):
+		emit("sound", {"ids": events.map(func(event: SoundEvent) -> int: return event.sound_id)})
 
 
 ## Sends budget.changed with the budget values.
@@ -738,6 +764,12 @@ func _host(name: String, arguments: Array, context: ScriptContext) -> Variant:
 			return _emit_from_script(context, arguments)
 		"mod.info":
 			return context.manifest.info() if context.is_mod() else null
+		"request":
+			# the console runtime answers the requests of the remote API; a mod cannot
+			if not context.is_mod() and arguments.size() == 3:
+				app.remote_api.on_script_result(int(arguments[0]), bool(arguments[1]), str(arguments[2]))
+
+			return null
 		"game.mods":
 			return mods.running_info()
 
@@ -751,7 +783,21 @@ func _host(name: String, arguments: Array, context: ScriptContext) -> Variant:
 
 		return null
 
+	# Script diagnostics do not grant an MP host, seat or private economy role.
+	if app.coop.active():
+		context.runtime.throw_error("Script game access is unavailable during multiplayer.")
+		return null
+	if AppPaths.is_api_test_profile() and not app.remote_api.session_error().is_empty():
+		context.runtime.throw_error(app.remote_api.session_error())
+		return null
+
+	if context.is_mod() and _restricted.has(name):
+		context.runtime.throw_error("A mod cannot use %s. Console scripts and the remote API can." % name)
+
+		return null
+
 	api.take_failure()
+	api.call_state.context = context
 	var value: Variant = handler.call(arguments)
 	var failure := api.take_failure()
 

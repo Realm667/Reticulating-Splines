@@ -31,6 +31,8 @@ func _run() -> void:
 	_check_menu_and_dialog()
 	_check_content_options()
 	_check_render_progress()
+	_check_tile_area()
+	_check_expanded_tile_area()
 	main.city_dialogs.png_export_progress.visibility_changed.connect(func() -> void:
 		if main.city_dialogs.png_export_progress.visible:
 			overlay_shown += 1
@@ -43,7 +45,7 @@ func _run() -> void:
 	await _check_progress_overlay()
 	main.queue_free()
 	await process_frame
-	print("PASS: city PNG export options, 1:1 sizes, backgrounds, signs, moving things, files, and delayed progress")
+	print("PASS: city PNG export options, 1:1 sizes, backgrounds, signs, moving things, tile areas, files, and delayed progress")
 	quit()
 
 
@@ -165,6 +167,87 @@ func _check_render_progress() -> void:
 	assert(is_equal_approx(values.back(), 1.0))
 
 
+# The image of a tile area is that part of the image of the whole city, and
+# only that part is painted.
+func _check_tile_area() -> void:
+	var city: CityState = main.document_state.city
+	var palette: Sc2Palette = main.asset_state.palette
+	var sprites: Sc2SpriteArchive = main.static_render.sprite_archive_for_view(Renderer.VIEW_SMALL)
+	var tile_width: int = Renderer.view_configuration(Renderer.VIEW_SMALL).tile_width
+	var sign_index: int = city.sign_texts().keys()[0]
+	var sign_tile := Vector2i(sign_index / city.map_size, sign_index % city.map_size)
+	# one tile of a structure of more tiles, which is not the tile that the painter draws the sprite from
+	var part_tile := Vector2i(-1, -1)
+
+	for index in city.map_size * city.map_size:
+		var tile := Vector2i(index / city.map_size, index % city.map_size)
+
+		if city.building_corners(tile.x, tile.y) in [0x10, 0x20, 0x40]:
+			part_tile = tile
+
+			break
+
+	assert(part_tile.x >= 0, "The fixture has a structure of more than one tile")
+	var areas := {
+		"city": [Rect2i(sign_tile - Vector2i(6, 6), Vector2i(12, 12)), Rect2i(part_tile, Vector2i.ONE), Rect2i(120, 120, 40, 40)],
+		"underground": [Rect2i(40, 50, 16, 8)],
+	}
+
+	for view: String in areas:
+		var options := ScurkCityOutput.Options.new()
+		options.view = view
+		options.moving_things = true
+		var whole := ScurkCityOutput.render(city, palette, sprites, Renderer.VIEW_SMALL, options)
+		assert(whole.ok and whole.origin == Vector2i.ZERO)
+
+		for tiles: Rect2i in areas[view]:
+			var bands: Array[float] = []
+			options.tiles = tiles
+			options.progress = func(value: float) -> void: bands.append(value)
+			var part := ScurkCityOutput.render(city, palette, sprites, Renderer.VIEW_SMALL, options)
+			assert(part.ok, part.error)
+			var size := part.image.get_size()
+			assert(size.x < whole.image.get_width() / 2 and size.y < whole.image.get_height() / 2, "%s %s is a small image: %s" % [view, tiles, size])
+			assert(part.image.get_data() == whole.image.get_region(Rect2i(part.origin, size)).get_data(),
+				"%s %s is that part of the whole image" % [view, tiles])
+			assert(bands.size() == ceili(float(size.y) / IsometricImageRender.RASTER_BAND_HEIGHT) and is_equal_approx(bands.back(), 1.0),
+				"Only the bands of the area are painted")
+
+			if tiles.position == part_tile:
+				assert(size.x >= 2 * tile_width, "A structure with a part in the area is whole in the image: %s" % size)
+
+		options.tiles = Rect2i(200, 200, 4, 4)
+		assert(not ScurkCityOutput.render(city, palette, sprites, Renderer.VIEW_SMALL, options).ok, "An area outside the map has no image")
+
+
+func _check_expanded_tile_area() -> void:
+	var document := Sc2xDocument.create_empty(64, "Area test").document
+	assert(ExpandedRules.enable(document).is_empty())
+	document.set_misc_u32(Sc2MiscLayout.START_YEAR, 1950)
+	document.set_misc_u32(Sc2MiscLayout.NORMAL_POPULATION, 4000000)
+	var city := CityState.from_document(document)
+	city.set_funds(1000000)
+	NativeSimulationBridge.run("expanded.unlock", city, null, null, null)
+	assert(BuildingCommand.apply(city, 5, 16, Vector2i(12, 12), SimLfsrRandom.new(17), SimRandom.new(123)).ok)
+	var placed := ExpandedRules.render_records(city)
+	assert(placed.size() == 4 and placed[0] == 7 and placed[3] == 6, "The fixture has the placed 6x6 reward")
+	var corner := Vector2i(placed[1], placed[2])
+	var sprites: Sc2SpriteArchive = main.static_render.sprite_archive_for_view(Renderer.VIEW_SMALL)
+	ExpandedGraphics.apply(sprites)
+	var options := ScurkCityOutput.Options.new()
+	options.moving_things = false
+	var whole := ScurkCityOutput.render(city, main.asset_state.palette, sprites, Renderer.VIEW_SMALL, options)
+	assert(whole.ok, whole.error)
+	# The 6x6 reward's painter anchor is five tiles from this opposite corner.
+	options.tiles = Rect2i(corner + Vector2i(5, 0), Vector2i.ONE)
+	var part := ScurkCityOutput.render(city, main.asset_state.palette, sprites, Renderer.VIEW_SMALL, options)
+	assert(part.ok, part.error)
+	var size := part.image.get_size()
+	var tile_width: int = Renderer.view_configuration(Renderer.VIEW_SMALL).tile_width
+	assert(size.x >= 6 * tile_width, "Include the whole RS 6x6 reward at its far corner: part=%s tile=%s whole=%s" % [size, tile_width, whole.image.get_size()])
+	assert(part.image.get_data() == whole.image.get_region(Rect2i(part.origin, size)).get_data())
+
+
 func _check_exports() -> void:
 	var cases := [
 		["city", Renderer.VIEW_SMALL, 1, true, Vector2i(1040, 736)],
@@ -202,6 +285,22 @@ func _check_exports() -> void:
 			assert(corner.to_rgba32() == expected.to_rgba32(), "%s background" % entry[0])
 
 		DirAccess.remove_absolute(path)
+
+	# an export of a tile area writes only those tiles and tells the place of the image
+	var area := ExportJob.Options.new()
+	area.path = folder.path_join("area.png")
+	area.view_size = Renderer.VIEW_MEDIUM
+	area.tiles = Rect2i(60, 60, 8, 8)
+	main.city_png_export.start_export(area)
+
+	while main.city_png_export.is_running():
+		await process_frame
+
+	var result: ExportJob.Result = main.city_png_export.last_result
+	var written := Image.load_from_file(area.path)
+	assert(result.ok and written.get_size() == result.size and result.size.x < 2080 / 4 and result.origin.x > 0 and result.origin.y > 0,
+		"%s at %s" % [result.size, result.origin])
+	DirAccess.remove_absolute(area.path)
 
 
 func _check_progress_overlay() -> void:

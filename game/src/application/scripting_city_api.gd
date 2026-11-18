@@ -11,6 +11,15 @@ const DATA_MAPS := {
 	"police": "XPLC", "fire": "XFIR", "populationDensity": "XPOP", "growth": "XROG",
 }
 const GRAPH_PERIODS := ["year", "decade", "century"]
+# the functions that only console scripts and the remote API can call
+const RESTRICTED: PackedStringArray = ["city.exportPng"]
+# city.find returns this many tiles at most
+const MAX_FOUND := 2000
+# the image sizes of city.exportPng: name -> the view size of the renderer
+const EXPORT_VIEWS: PackedStringArray = ["city", "underground"]
+const EXPORT_SIZES := {
+	"small": CityIsometricRenderer.VIEW_SMALL, "medium": CityIsometricRenderer.VIEW_MEDIUM, "large": CityIsometricRenderer.VIEW_LARGE,
+}
 
 
 func handlers() -> Dictionary[String, Callable]:
@@ -28,8 +37,19 @@ func handlers() -> Dictionary[String, Callable]:
 		"city.rename": _city_rename,
 		"city.sign": _city_sign,
 		"city.setSign": _city_set_sign,
+		"city.signs": _city_signs,
 		"city.things": _city_things,
 		"city.save": _city_save,
+		"city.unsaved": func(_arguments: Array) -> Variant: return app.city_files.has_unsaved_changes(),
+		"city.query": _city_query,
+		"city.region": _city_region,
+		"city.textMap": _city_text_map,
+		"city.textLayers": func(_arguments: Array) -> Variant: return CityTextMap.LAYERS,
+		"city.find": _city_find,
+		"city.census": _city_census,
+		"city.exportPng": _city_export_png,
+		"city.exporting": func(_arguments: Array) -> Variant: return app.city_png_export.is_running(),
+		"city.exported": _city_exported,
 	}
 
 
@@ -49,6 +69,7 @@ func _city_info(_arguments: Array) -> Variant:
 		"foundingYear": city.founding_year(),
 		"difficulty": city.difficulty(),
 		"scenario": app.simulation_state.simulation_engine.scenario != null,
+		"weather": RciAftermathPhase.WEATHER_NAMES[clampi(city.weather_type(), 0, RciAftermathPhase.WEATHER_NAMES.size() - 1)],
 		"path": app.document_state.current_save_path,
 		"date": {"year": city.current_year(), "month": city.current_month(), "day": city.current_day(), "age": city.age_in_days()},
 		"demand": {"residential": demand.x, "commercial": demand.y, "industrial": demand.z},
@@ -107,6 +128,10 @@ func _city_tile(arguments: Array) -> Variant:
 		"piped": city.is_piped(tile.x, tile.y),
 		"traffic": city.traffic_density(tile.x, tile.y),
 		"data": _tile_data(tile),
+		"name": QueryStrings.tile_name(city.building_id(tile.x, tile.y)) if city.building_id(tile.x, tile.y) != 0 else "",
+		"zoneName": _zone_name(city.zone_id(tile.x, tile.y)),
+		"symbol": CityTextMap.surface_symbol(city.building_id(tile.x, tile.y), city.zone_id(tile.x, tile.y),
+			city.terrain_id(tile.x, tile.y), city.is_water(tile.x, tile.y)),
 	}
 
 
@@ -252,6 +277,27 @@ func _city_sign(arguments: Array) -> Variant:
 	return texts[index] if texts.has(index) else null
 
 
+# every sign of the city: [{ x, y, text }]. A sign that the game shows at a
+# connection to a neighbor has `connection: true`
+func _city_signs(_arguments: Array) -> Variant:
+	if not need_city():
+		return null
+
+	var city := app.document_state.city
+	var texts := city.sign_texts()
+	var connections := CityNeighbors.connection_sign_texts(city)
+	var indices := texts.keys() + connections.keys().filter(func(index: int) -> bool: return not texts.has(index))
+	indices.sort()
+
+	return indices.map(func(index: int) -> Dictionary:
+		var sign := {"x": index / city.map_size, "y": index % city.map_size, "text": texts.get(index, connections.get(index, ""))}
+
+		if not texts.has(index):
+			sign["connection"] = true
+
+		return sign)
+
+
 # places, changes or removes (with an empty text) the sign of a tile, as the
 # Sign tool does. Undo restores the previous sign
 func _city_set_sign(arguments: Array) -> Variant:
@@ -311,3 +357,277 @@ func _city_save(_arguments: Array) -> Variant:
 	app.city_files.save_city()
 
 	return path
+
+
+static func _zone_name(zone: int) -> String:
+	return QueryInfo.ZONE_NAMES[zone] if zone > 0 and zone < QueryInfo.ZONE_NAMES.size() else ""
+
+
+# what the Query tool shows for a tile, as data: { title, text, kind, zone,
+# landValue, crime, pollution, traffic, powered, watered, altitude, lines, things }
+func _city_query(arguments: Array) -> Variant:
+	if not need_city():
+		return null
+
+	var tile := point(arguments, 0)
+
+	if not inside_map(tile):
+		return fail("The tile %d, %d is outside the map." % [tile.x, tile.y])
+
+	var result := QueryInfo.inspect(app.document_state.city, tile)
+
+	if not result.ok:
+		return fail("Cannot query the tile: %s." % result.error)
+
+	return {
+		"x": tile.x, "y": tile.y, "title": result.title, "text": QueryText.format_text(result), "kind": result.kind,
+		"zone": result.zone_name, "density": result.zone_density, "building": result.building_id,
+		"altitude": result.altitude_feet, "landValue": result.land_value, "crime": result.crime_level,
+		"pollution": result.pollution_level, "traffic": result.traffic, "powered": result.powered, "watered": result.watered,
+		"underground": result.underground_name, "lines": result.lines, "flags": result.flag_names,
+		"things": result.things.map(func(thing: QueryThing) -> String: return thing.type_name),
+	}
+
+
+# the rectangle of an argument { x, y, width, height }, cut to the map. The
+# whole map without the argument. An empty rectangle, with a failure, when
+# the argument is wrong
+func _area(arguments: Array, index: int) -> Rect2i:
+	var city := app.document_state.city
+	var map := Rect2i(0, 0, city.map_size, city.map_size)
+	var value: Variant = argument(arguments, index)
+
+	if value == null:
+		return map
+
+	if not value is Dictionary:
+		fail("An area is { x, y, width, height } in tiles.")
+
+		return Rect2i()
+
+	var area := Rect2i(integer(value.get("x"), 0), integer(value.get("y"), 0), integer(value.get("width"), city.map_size),
+		integer(value.get("height"), city.map_size)).intersection(map)
+
+	if not area.has_area():
+		fail("The area is outside the map.")
+
+	return area
+
+
+# the stored values of a rectangle of tiles, one array for each map. The
+# value of the tile (x + i, y + j) is at index j * width + i
+func _city_region(arguments: Array) -> Variant:
+	if not need_city():
+		return null
+
+	var area := _area(arguments, 0)
+
+	if not area.has_area():
+		return null
+
+	if area.get_area() > CityTextMap.MAX_TILES:
+		return fail("The area can have %d tiles at most." % CityTextMap.MAX_TILES)
+
+	var city := app.document_state.city
+	var maps := {
+		"building": PackedByteArray(), "zone": PackedByteArray(), "terrain": PackedByteArray(), "underground": PackedByteArray(),
+		"altitude": PackedByteArray(), "water": PackedByteArray(), "powered": PackedByteArray(), "watered": PackedByteArray(),
+	}
+
+	for values: PackedByteArray in maps.values():
+		values.resize(area.get_area())
+
+	var at := 0
+
+	for y in range(area.position.y, area.end.y):
+		for x in range(area.position.x, area.end.x):
+			maps.building[at] = city.building_id(x, y)
+			maps.zone[at] = city.zone_id(x, y)
+			maps.terrain[at] = city.terrain_id(x, y)
+			maps.underground[at] = city.underground_id(x, y)
+			maps.altitude[at] = city.land_altitude(x, y)
+			maps.water[at] = 1 if city.is_water(x, y) else 0
+			maps.powered[at] = 1 if city.is_powered(x, y) else 0
+			maps.watered[at] = 1 if city.is_watered(x, y) else 0
+			at += 1
+
+	var result := {"x": area.position.x, "y": area.position.y, "width": area.size.x, "height": area.size.y}
+	result.merge(maps)
+
+	return result
+
+
+# a rectangle of tiles as text, one character for each tile
+func _city_text_map(arguments: Array) -> Variant:
+	if not need_city():
+		return null
+
+	var area := _area(arguments, 0)
+	var layer := str(argument(arguments, 1, CityTextMap.LAYERS[0]))
+
+	if not area.has_area():
+		return null
+
+	if not CityTextMap.LAYERS.has(layer):
+		return fail("The layer must be one of: %s." % ", ".join(CityTextMap.LAYERS))
+
+	if area.get_area() > CityTextMap.MAX_TILES:
+		return fail("The area can have %d tiles at most." % CityTextMap.MAX_TILES)
+
+	return CityTextMap.build(app.document_state.city, area, layer)
+
+
+# the tiles whose structure has the name or the stored id: [{ x, y, building, name }]
+func _city_find(arguments: Array) -> Variant:
+	if not need_city():
+		return null
+
+	var what: Variant = argument(arguments, 0)
+	var area := _area(arguments, 1)
+
+	if not area.has_area():
+		return null
+
+	if not (is_number(what) or (what is String and not str(what).is_empty())):
+		return fail("Name a structure, such as 'Police Station', or give its stored id.")
+
+	var wanted: Dictionary[int, String] = {}
+
+	for id in range(1, BuildingTileIds.COUNT):
+		var name := QueryStrings.tile_name(id)
+
+		if (is_number(what) and int(what) == id) or (what is String and name.to_lower().contains(str(what).to_lower())):
+			wanted[id] = name
+
+	var city := app.document_state.city
+	var found := []
+
+	for y in range(area.position.y, area.end.y):
+		for x in range(area.position.x, area.end.x):
+			var id := city.building_id(x, y)
+
+			if wanted.has(id) and found.size() < MAX_FOUND:
+				found.append({"x": x, "y": y, "building": id, "name": wanted[id]})
+
+	return found
+
+
+# the number of tiles of each structure name and of each zone:
+# { structures: { name: tiles }, zones: { name: tiles }, water, powered, unpowered }
+func _city_census(arguments: Array) -> Variant:
+	if not need_city():
+		return null
+
+	var area := _area(arguments, 0)
+
+	if not area.has_area():
+		return null
+
+	var city := app.document_state.city
+	var buildings := PackedInt32Array()
+	buildings.resize(BuildingTileIds.COUNT)
+	var zones := PackedInt32Array()
+	zones.resize(16)
+	var water := 0
+	var powered := 0
+	var unpowered := 0
+
+	for y in range(area.position.y, area.end.y):
+		for x in range(area.position.x, area.end.x):
+			buildings[city.building_id(x, y)] += 1
+			zones[city.zone_id(x, y)] += 1
+			water += 1 if city.is_water(x, y) else 0
+
+			if city.is_powered(x, y):
+				powered += 1
+			elif city.is_powerable(x, y):
+				unpowered += 1
+
+	var structures := {}
+
+	for id in range(1, BuildingTileIds.COUNT):
+		if buildings[id] > 0:
+			var name := QueryStrings.tile_name(id)
+			structures[name] = int(structures.get(name, 0)) + buildings[id]
+
+	var zone_counts := {}
+
+	for zone in range(1, zones.size()):
+		if zones[zone] > 0:
+			zone_counts[_zone_name(zone) if not _zone_name(zone).is_empty() else "Zone %d" % zone] = zones[zone]
+
+	return {"tiles": area.get_area(), "structures": structures, "zones": zone_counts, "water": water, "powered": powered,
+		"unpowered": unpowered}
+
+
+# exportPng(path, { area, size, view, signs, movingThings, transparent }):
+# starts the export of the city to a PNG file, as File > Export City as PNG
+# does. With an area, the image shows only those tiles and only they are drawn
+func _city_export_png(arguments: Array) -> Variant:
+	if not need_city():
+		return null
+
+	var path := str(argument(arguments, 0, ""))
+	var choices: Dictionary = argument(arguments, 1, {}) if argument(arguments, 1, {}) is Dictionary else {}
+	var size := str(choices.get("size", "small"))
+	var view := str(choices.get("view", "city"))
+
+	if AppPaths.is_api_test_profile() and not AppPaths.api_path_allowed(path):
+		return fail("Images must stay inside the disposable API profile.")
+	if path.is_empty() or not path.is_absolute_path():
+		return fail("The path must be a full path.")
+
+	if not EXPORT_SIZES.has(size):
+		return fail("The size must be one of: %s." % ", ".join(EXPORT_SIZES.keys()))
+
+	if not EXPORT_VIEWS.has(view):
+		return fail("The view must be one of: %s." % ", ".join(EXPORT_VIEWS))
+
+	if app.city_png_export.is_running():
+		return fail("A PNG export is already running.")
+
+	var map_size := app.document_state.city.map_size
+	var tiles := Rect2i()
+
+	if choices.get("area") != null:
+		tiles = _area([choices.area], 0)
+
+		if not tiles.has_area():
+			return null
+
+	# the area of the whole map is the image of the whole city
+	if tiles == Rect2i(0, 0, map_size, map_size):
+		tiles = Rect2i()
+
+	if not tiles.has_area() and not CityPngExportJob.fits(map_size, EXPORT_SIZES[size]):
+		return fail("The image of this city is too large at the size %s. Export an area of it: { area: { x, y, width, height } }." % size)
+
+	var options := CityPngExportJob.Options.new()
+	options.path = path
+	options.tiles = tiles
+	options.view_size = EXPORT_SIZES[size]
+	options.view = view
+	options.signs = bool(choices.get("signs", true))
+	options.moving_things = bool(choices.get("movingThings", true))
+	options.transparent_background = bool(choices.get("transparent", false))
+	DirAccess.make_dir_recursive_absolute(path.get_base_dir())
+	app.city_png_export.start_export(options)
+
+	if not app.city_png_export.is_running():
+		return fail("The PNG export cannot start: %s" % app.status_label.text)
+
+	return true
+
+
+# the image of the newest export that ended: { path, width, height, origin }.
+# `origin` is the place of the image in the picture of the whole city
+func _city_exported(_arguments: Array) -> Variant:
+	var result := app.city_png_export.last_result
+
+	if result == null:
+		return fail("No PNG export ended.")
+
+	if not result.ok:
+		return fail("The PNG export failed: %s" % result.error)
+
+	return {"path": result.path, "width": result.size.x, "height": result.size.y, "origin": {"x": result.origin.x, "y": result.origin.y}}

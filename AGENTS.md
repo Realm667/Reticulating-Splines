@@ -18,6 +18,8 @@ Load and save cities that the supplied game can use.
 - Add an automated test for each implemented file-format rule or simulation rule when practical.
 - Use deterministic pseudo-random state in the simulation. Save it when the original format permits this.
 - Use computer-use automation for live Godot input and visual checks.
+- The opt-in remote API can supplement reproducible tests in an isolated profile.
+  Structured API results do not replace actual player input or GPU evidence.
 - Run Godot tests and live checks with the Dummy audio driver. Automated validation must not play sound.
 - Use Simplified Technical English where practical.
 - Every new or changed user-visible feature text must ship in English and all
