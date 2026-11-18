@@ -24,11 +24,11 @@ single-player simulation rules. Multiplayer adds its own shared-control,
 ownership and municipal-account rules. Reticulating Splines does not patch or
 run the original SimCity 2000 executable.
 
-## v1.0 RC9
+## v1.0.0-beta.1
 
-[Download v1.0 RC9 and read the release notes](https://github.com/Realm667/Reticulating-Splines/releases/tag/v1.0.0-rc.9)
+[Download v1.0.0-beta.1 and read the release notes](https://github.com/Realm667/Reticulating-Splines/releases/tag/v1.0.0-beta.1)
 
-RC9 is a public release candidate. Choose the Windows or Linux archive for x64
+v1.0.0-beta.1 is the first public beta of the 1.0 series. Choose the Windows or Linux archive for x64
 or ARM64, the universal macOS disk image for Intel and Apple Silicon, or the
 Android ARM64 APK. Extract the desktop archives into a writable folder. On
 macOS, drag the app into Applications. The macOS preview uses an ad-hoc
@@ -45,7 +45,7 @@ signature and may require approval in Privacy & Security.
 - Reviewed OpenSC2K 0.4.0 tools add area PNG export, reports and an opt-in local test API for disposable profiles. See the [scripting guide](docs/scripting.md).
 
 Multiplayer is experimental. The default branch, **`reticulating-splines`**, is
-the development checkout. Use the release tag to build RC9 from its exact source.
+the development checkout. Use the release tag to build Beta 1 from its exact source.
 
 ## Included features
 

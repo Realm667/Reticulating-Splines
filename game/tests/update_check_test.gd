@@ -51,12 +51,13 @@ func _check_versions() -> void:
 	assert(Check.normalized_version(" v0.3.0-rs.6-dev.2 ") == "0.3.0-rs.6-dev.2")
 	assert(Check.parse_version("v1.0.0-rc.1") == [1, 0, 0, 0, 1])
 	assert(Check.normalized_version(" v1.0.0-rc.1 ") == "1.0.0-rc.1")
-	for pair in [["1.0.0-rc.1", "0.3.0-rs.9"], ["1.0.0-rc.10", "1.0.0-rc.9"],
+	for pair in [["1.0.0-beta.1", "0.3.0-rs.9"], ["1.0.0-beta.10", "1.0.0-beta.2"],
+			["1.0.0-rc.1", "1.0.0-beta.99"], ["1.0.0", "1.0.0-beta.1"], ["1.0.0-rc.1", "0.3.0-rs.9"], ["1.0.0-rc.10", "1.0.0-rc.9"],
 			["1.0.0", "1.0.0-rc.65535"], ["1.0.1-rc.1", "1.0.0"]]:
 		assert(Check.is_newer(pair[0], pair[1]), str(pair))
 		assert(not Check.is_newer(pair[1], pair[0]), str(pair))
 		assert(not Check.is_newer(pair[0], pair[0]), str(pair))
-	for invalid in ["1.0.0-rc", "1.0.0-rc.0", "1.0.0-rc.01", "1.0.0-rc.65536",
+	for invalid in ["1.0.0-beta.0", "1.0.0-beta.01", "1.0.0-beta.65536", "1.0.0-rc", "1.0.0-rc.0", "1.0.0-rc.01", "1.0.0-rc.65536",
 			"01.0.0-rc.1", "1.0.65536-rc.1", "1.0.0-rc.1-rs.1"]:
 		assert(Check.parse_version(invalid).is_empty(), invalid)
 	for invalid in ["0.3.0-rs.0", "0.3.0-rs.01", "0.3.0-rs.65536", "0.3.0-rs.1-dev.0",

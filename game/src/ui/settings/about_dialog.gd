@@ -17,7 +17,7 @@ func _ready() -> void:
 	# keep the scene visible in the editor, but closed until requested in game
 	hide()
 	get_label().hide()
-	$Content/Version.text = tr("Version %s") % ProjectSettings.get_setting("application/config/version")
+	$Content/Version.text = tr("Version %s") % ("v" + ReleaseUpdateCheck.current_version())
 	artwork = $Content/Tabs/About/Scene/Artwork
 	project_text = $Content/Tabs/About/Summary
 	license_picker = $Content/Tabs/Licenses/LicensePicker
@@ -186,7 +186,7 @@ func _refresh_project() -> void:
 		license_picker.set_item_text(index, tr(license_sources[index]))
 	$Content/Tabs.set_tab_title(0, tr("Project information"))
 	$Content/Tabs.set_tab_title(1, tr("Licenses and credits"))
-	$Content/Version.text = tr("Version %s") % ProjectSettings.get_setting("application/config/version")
+	$Content/Version.text = tr("Version %s") % ("v" + ReleaseUpdateCheck.current_version())
 	project_text.text = "[b]Reticulating Splines[/b]\n" + tr("Reticulating Splines is developed by Daniel Gimmer (Realm667), based on OpenSC2K by Nicholas Ochoa.")
 	project_text.text += "\n\n[b]" + tr("What Reticulating Splines adds") + "[/b]\n" + tr("New graphics and audio, day and night, seasons and weather, a modern interface, a music box for your own music, and cooperative and competitive multiplayer. Visual effects do not change the original single-player simulation.")
 	project_text.text += "\n\n[b]" + tr("Development and acknowledgements") + "[/b]\n[url=https://github.com/Realm667/Reticulating-Splines]Reticulating Splines · GitHub[/url]\n" + tr("Development of Reticulating Splines: Daniel Gimmer (Realm667). Thanks to Nicholas Ochoa and the OpenSC2K contributors for the foundation, and to everyone supporting this project with feedback, research and testing.")
