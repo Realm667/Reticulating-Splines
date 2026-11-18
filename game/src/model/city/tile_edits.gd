@@ -35,6 +35,8 @@ static func set_building_id(city: CityState, x: int, y: int, value: int) -> bool
 		return false
 
 	chunk.write_decoded_byte(index, value)
+	if city.buildings[index] != value and (AbandonedHistory.is_abandoned(value) or AbandonedHistory.is_abandoned(city.buildings[index])):
+		AbandonedHistory.reconcile(city, chunk.decoded_payload, 0, index)
 	city.buildings[index] = value
 
 	return true
@@ -49,6 +51,7 @@ static func replace_buildings(city: CityState, value: PackedByteArray) -> bool:
 	if chunk == null or not chunk.set_decoded_payload(value):
 		return false
 
+	AbandonedHistory.reconcile(city, value)
 	city.buildings = value.duplicate()
 
 	return true

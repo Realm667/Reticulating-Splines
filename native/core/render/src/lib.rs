@@ -76,6 +76,7 @@ pub struct City {
     pub dispatch: HashMap<usize, i32>,
     /// Every occupied cell maps to (kind, area, is_left_anchor).
     pub expanded: HashMap<usize, [i32; 3]>,
+    pub former_buildings: HashMap<usize, variants::FormerBuilding>,
 }
 
 impl City {
@@ -456,6 +457,13 @@ impl Builder {
             }
         }
 
+        if old.former_buildings != city.former_buildings {
+            for i in old.former_buildings.keys().chain(city.former_buildings.keys()) {
+                if old.former_buildings.get(i) != city.former_buildings.get(i) {
+                    changed[*i] = true;
+                }
+            }
+        }
         if old.expanded != city.expanded {
             for i in old.expanded.keys().chain(city.expanded.keys()) {
                 if old.expanded.get(i) != city.expanded.get(i) {

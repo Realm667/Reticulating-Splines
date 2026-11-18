@@ -36,9 +36,9 @@ const ZIP_SIGNATURE: u32 = 0x0403_4b50;
 const EMPTY_ZIP_SIGNATURE: u32 = 0x0605_4b50;
 
 /// The entry order after metadata. Missing optional entries are skipped.
-pub const ENTRY_ORDER: [&str; 28] = [
+pub const ENTRY_ORDER: [&str; 29] = [
     "MISC", "ALTM", "XTER", "XBLD", "XZON", "XUND", "XTXT", "XLAB", "XMIC", "XTHG", "XBIT", "XTRF", "XPLT", "XVAL", "XCRM", "XPLC", "XFIR",
-    "XPOP", "XROG", "XGRP", "XSGN", "SCEN", "TEXT", "PICT", "TMPL", "XEXP", "XUPG", "CUNK",
+    "XPOP", "XROG", "XGRP", "XSGN", "SCEN", "TEXT", "PICT", "TMPL", "XEXP", "XUPG", "RABH", "CUNK",
 ];
 pub const REQUIRED_ENTRIES: [&str; 21] = [
     "MISC", "ALTM", "XTER", "XBLD", "XZON", "XUND", "XTXT", "XLAB", "XMIC", "XTHG", "XBIT", "XTRF", "XPLT", "XVAL", "XCRM", "XPLC", "XFIR",
@@ -69,9 +69,9 @@ const DENSE_ENTRIES: [(&str, i64); 15] = [
 
 /// Known structures that a working document keeps as one chunk. Repeated TEXT
 /// chunks are the one exception.
-const SINGLETONS: [&str; 26] = [
+const SINGLETONS: [&str; 27] = [
     "CNAM", "MISC", "ALTM", "XTER", "XBLD", "XZON", "XUND", "XTXT", "XLAB", "XMIC", "XTHG", "XBIT", "XTRF", "XPLT", "XVAL", "XCRM", "XPLC",
-    "XFIR", "XPOP", "XROG", "XGRP", "SCEN", "PICT", "TMPL", "XEXP", "XUPG",
+    "XFIR", "XPOP", "XROG", "XGRP", "SCEN", "PICT", "TMPL", "XEXP", "XUPG", "RABH",
 ];
 
 pub const FRESH_LABEL_TABLE_SIZE: usize = sc2label_layout::ORIGINAL_SIZE as usize;
@@ -245,7 +245,7 @@ pub fn load(bytes: &[u8]) -> Result<Document, String> {
         }
     }
 
-    for id in ["PICT", "TMPL", "XEXP", "XUPG"] {
+    for id in ["PICT", "TMPL", "XEXP", "XUPG", "RABH"] {
         if let Some(data) = entry(id) {
             document.chunks.push(Chunk::new(id, data.to_vec(), -1));
         }
@@ -374,7 +374,7 @@ pub fn entries(document: &mut Document) -> Result<Entries, String> {
         result.add(&entry_name(TEXT_ID), framing::encode_text(&occurrences));
     }
 
-    for id in ["PICT", "TMPL", "XEXP", "XUPG"] {
+    for id in ["PICT", "TMPL", "XEXP", "XUPG", "RABH"] {
         if let Some(data) = payload(id) {
             result.add(&entry_name(id), data);
         }
@@ -646,6 +646,10 @@ pub fn from_legacy(source: &Document, fallback_name: &str, fresh: bool) -> Resul
 
     for payload in text_payloads {
         document.chunks.push(Chunk::new(TEXT_ID, payload, -1));
+    }
+
+    if let Some(history) = working.find("RABH") {
+        document.chunks.push(Chunk::new("RABH", history.decoded.clone(), -1));
     }
 
     if !picture.is_empty() {

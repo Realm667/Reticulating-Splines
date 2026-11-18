@@ -56,6 +56,11 @@ static func publish(completed: GameSpeedController, target: GameSpeedController)
 			into.is_dirty = from.is_dirty
 			into.mutation_revision = from.mutation_revision
 
+	# A worker may create a previously absent optional chunk during this tick.
+	if updated.document.chunks.size() > document.chunks.size():
+		document.chunks.append_array(updated.document.chunks.slice(document.chunks.size()))
+		document.invalidate_chunk_cache()
+
 	updated.copy_mirrors_to(city, true)
 	city.disaster_damage_class = updated.disaster_damage_class
 

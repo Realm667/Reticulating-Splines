@@ -358,7 +358,7 @@ static func _snapshot(city: CityState) -> Dictionary:
 	var things := city.document.find_chunk("XTHG")
 
 	return {"edge": city.map_size, "visible": city.visible_altitude_levels, "rotation": city.compass_rotation(),
-		"expanded": ExpandedRules.render_records(city), "altitude": city.altitude_words, "terrain": city.terrain, "buildings": city.buildings,
+		"abandoned_history": AbandonedHistory.records(city.document), "expanded": ExpandedRules.render_records(city), "altitude": city.altitude_words, "terrain": city.terrain, "buildings": city.buildings,
 		"zones": city.zones, "flags": city.tile_flags, "overlays": city.text_overlays, "underground": city.underground,
 		"ground": city.ground_overrides if city.ground_overrides.size() == cells else PackedInt32Array(),
 		"objects": city.object_altitude_overrides if city.object_altitude_overrides.size() == cells else PackedInt32Array(),

@@ -179,14 +179,21 @@ static func _run_days(path: String, days: int) -> Dictionary:
 
 			day_texts.append(JSON.stringify(TimingResults.without_timings(outcome)))
 
-	var saved := city.document.serialize(true)
+	# Compare classic simulation bytes with the standalone native simulation.
+	# Building variant tests separately round-trip the presentation history in both formats.
+	var simulation := city.document
+	if simulation.find_chunk(AbandonedHistory.CHUNK) != null:
+		simulation = simulation.duplicate_document(true)
+		simulation.chunks.erase(simulation.find_chunk(AbandonedHistory.CHUNK))
+		simulation.invalidate_chunk_cache()
+	var saved := simulation.serialize(true)
 
 	return {
 		"days": days,
 		"age": city.age_in_days(),
 		"funds": city.funds(),
-		"chunks": chunks_hash(city.document),
-		"saved": saved_hash(city.document, saved.data) if saved.ok else "error: " + saved.error,
+		"chunks": chunks_hash(simulation),
+		"saved": saved_hash(simulation, saved.data) if saved.ok else "error: " + saved.error,
 		"random": engine.random.state,
 		"lfsr_random": engine.lfsr_random.state,
 		"game_random": engine.game_random.state,

@@ -53,6 +53,25 @@ impl NativeCityArrays {
         sc2k_sim::sim::signature::masked_bytes(flags.as_slice(), mask as u8)
     }
 
+    /// Occupied RCI anchors replaced by abandoned lots in one committed XBLD plane.
+    #[func]
+    fn abandoned_anchors(before: PackedByteArray, after: PackedByteArray, zones: PackedByteArray, corner: i64) -> PackedInt32Array {
+        let anchors: Vec<i32> = before
+            .as_slice()
+            .iter()
+            .zip(after.as_slice())
+            .zip(zones.as_slice())
+            .enumerate()
+            .filter(|(_, ((old, new), zone))| {
+                matches!(**old, 112..=135 | 140..=165 | 174..=193)
+                    && matches!(**new, 138 | 139 | 170..=173 | 196 | 197)
+                    && (**old <= 135 || **zone & corner as u8 != 0)
+            })
+            .map(|(index, _)| index as i32)
+            .collect();
+        PackedInt32Array::from(anchors.as_slice())
+    }
+
     /// OverlayData.sign_indices: the sign cells of `start..end` of an XTXT
     /// index. A negative `end` scans to the last cell.
     #[func]

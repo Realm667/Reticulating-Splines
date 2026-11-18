@@ -278,6 +278,15 @@ impl Builder {
             let anchor = b <= tiles::HIGHWAY_ONRAMP_4
                 || (tiles::RAIL_SUBWAY_ENTRANCE_1..=tiles::RAIL_SUBWAY_ENTRANCE_4).contains(&b)
                 || self.city.zones[i] & ANCHOR_CORNERS[self.city.rotation] != 0;
+            let former = self
+                .city
+                .former_buildings
+                .get(&i)
+                .and_then(|&site| self.former_sprite(site).map(|sprite| (site, sprite)));
+            let anchor = match former {
+                Some((site, sprite)) if sprite != 0 => (x, y) == (site.x, site.y),
+                _ => anchor,
+            };
             if b != tiles::EMPTY && anchor {
                 if composite && (c.view != 0 || c.redraw_ground) {
                     for (dx, dy, px, py) in [
@@ -299,7 +308,11 @@ impl Builder {
                 // An odd compass rotation mirrors buildings, not networks.
                 let flip = sprite < crate::nature::FIRST
                     && ((self.city.flags[i] & flags::FLIPPED != 0) ^ (developed && self.city.rotation & 1 != 0));
-                let sprite = self.building_variant(x, y, sprite);
+                let (sprite, flip) = match former {
+                    Some((site, chosen)) if chosen != 0 => (chosen, site.flip ^ (self.city.rotation & 1 != 0)),
+                    Some(_) => (sprite, flip),
+                    None => (self.building_variant(x, y, sprite), flip),
+                };
                 let image = self.sprites.get(sprite, flip)?;
                 let width = self.sprites.footprint_width(image);
                 if developed && c.building_ground && !hydro {

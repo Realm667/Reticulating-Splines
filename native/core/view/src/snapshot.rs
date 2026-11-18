@@ -42,6 +42,7 @@ pub fn painter_city(city: &City, visible: i32) -> PainterCity {
         },
         dispatch: HashMap::new(),
         expanded: HashMap::new(),
+        former_buildings: HashMap::new(),
     };
 
     for kind in 0..8 {

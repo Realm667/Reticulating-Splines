@@ -1,6 +1,6 @@
 class_name AbandonedArtwork
 extends RefCounted
-## Display-only families. The city stores the abandoned tile and its zone.
+## Display-only families for remembered footprints and legacy abandoned lots.
 ## Columns are residential, commercial and industrial sprites of the same size.
 const SOURCES := {
 	138: [112, 124, 132], 139: [120, 130, 135],
@@ -9,7 +9,8 @@ const SOURCES := {
 	196: [174, 178, 188], 197: [176, 183, 192],
 }
 const FIRST := BuildingVariants.FIRST + BuildingVariants.SPAN
-const END := FIRST + 3 * BuildingVariants.SPAN
+const EXACT := FIRST + 3 * BuildingVariants.SPAN
+const END := EXACT + 2 * BuildingVariants.SPAN
 
 
 static func weathered(color: Color) -> Color:
@@ -71,29 +72,43 @@ static func apply(base: Sc2SpriteArchive, lookup: PackedByteArray, share: int, i
 				var lot := base.visual_registration.get(id, Vector3i(standard.width, 0, 0)) as Vector3i
 				if footprint.x != lot.x:
 					continue
-				var decoded := source.decode_indices()
-				if not decoded.ok:
-					continue
-				var pixels := decoded.pixels.duplicate()
-				for i in pixels.size():
-					if pixels[i] >= 0:
-						pixels[i] = lookup[pixels[i]]
 				var alias := FIRST + sector * BuildingVariants.SPAN + id
-				var entry := Sc2SpriteArchive.entry_from_indices(alias, source.width, source.height, pixels)
-				result.entries.append(entry)
-				result.entries_by_id[alias] = entry
-				family.append_array(PackedInt64Array([alias, 1]))
-				if base.visual_registration.has(source_id):
-					result.visual_registration[alias] = footprint
-				if base.parcel_styles.has(source_id):
-					var parcel := base.parcel_styles[source_id].duplicate()
-					parcel[0] = weathered(Color.hex(parcel[0])).to_rgba32()
-					result.parcel_styles[alias] = parcel
-				if base.high_resolution.has(source_id):
-					result.high_resolution[alias] = _still(base.high_resolution[source_id], images)
+				if _convert(base, result, source_id, alias, lookup, images):
+					family.append_array(PackedInt64Array([alias, 1]))
 			if not family.is_empty():
 				result.building_variants[id] = family
+		for tile in range(112, 194):
+			if AbandonedHistory.area(tile) == 0:
+				continue
+			var id := view * 500 + tile
+			_convert(base, result, id, EXACT + id, lookup, images)
+			_convert(base, result, BuildingVariants.FIRST + id, EXACT + BuildingVariants.SPAN + id, lookup, images)
 	return result if result.entries.size() > base.entries.size() else base
+
+
+static func _convert(base: Sc2SpriteArchive, result: Sc2SpriteArchive, id: int, alias: int, lookup: PackedByteArray, images: Dictionary) -> bool:
+	var source := base.find_sprite(id)
+	if source == null:
+		return false
+	var decoded := source.decode_indices()
+	if not decoded.ok:
+		return false
+	var pixels := decoded.pixels.duplicate()
+	for i in pixels.size():
+		if pixels[i] >= 0:
+			pixels[i] = lookup[pixels[i]]
+	var entry := Sc2SpriteArchive.entry_from_indices(alias, source.width, source.height, pixels)
+	result.entries.append(entry)
+	result.entries_by_id[alias] = entry
+	if base.visual_registration.has(id):
+		result.visual_registration[alias] = base.visual_registration[id]
+	if base.parcel_styles.has(id):
+		var parcel := base.parcel_styles[id].duplicate()
+		parcel[0] = weathered(Color.hex(parcel[0])).to_rgba32()
+		result.parcel_styles[alias] = parcel
+	if base.high_resolution.has(id):
+		result.high_resolution[alias] = _still(base.high_resolution[id], images)
+	return true
 
 
 ## Several zooms can share the same source image, but use different logical heights.

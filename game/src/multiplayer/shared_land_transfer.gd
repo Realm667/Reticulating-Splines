@@ -77,6 +77,7 @@ static func stage(seller: CityState, buyer: CityState, tiles: Array) -> Dictiona
 		var chunk: Sc2Chunk = entry[0].find_chunk(entry[1])
 		chunk.expected_decoded_size = entry[2].size()
 		chunk.set_decoded_payload(entry[2])
+	transfer_history(from, to, selected)
 	var upgrade_error := transfer_upgrades(from, to, selected, facilities)
 	if not upgrade_error.is_empty():
 		return {"error": upgrade_error}
@@ -91,6 +92,28 @@ static func stage(seller: CityState, buyer: CityState, tiles: Array) -> Dictiona
 		for building in counts.size():
 			municipality.document.set_misc_u32(Sc2MiscLayout.TILE_COUNTS + building * 4, counts[building])
 	return {"error": "", "seller": from_city, "buyer": to_city}
+
+
+static func transfer_history(source: Sc2File, target: Sc2File, selected: Dictionary) -> void:
+	var records := AbandonedHistory.records(source)
+	var kept := PackedInt32Array()
+	var received := AbandonedHistory.records(target)
+	for i in range(0, records.size(), 2):
+		var size := AbandonedHistory.area(records[i + 1] & 255)
+		var sold := 0
+		for dx in size:
+			for dy in size:
+				if selected.has(records[i] + dx * source.map_size + dy):
+					sold += 1
+		if sold == 0:
+			kept.append(records[i])
+			kept.append(records[i + 1])
+		elif sold == size * size:
+			received.append(records[i])
+			received.append(records[i + 1])
+	if kept != records:
+		AbandonedHistory.store(source, kept)
+		AbandonedHistory.store(target, received)
 
 
 static func transfer_upgrades(source: Sc2File, target: Sc2File, selected: Dictionary, facilities: Dictionary) -> String:

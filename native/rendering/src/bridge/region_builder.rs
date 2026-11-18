@@ -170,6 +170,17 @@ fn artwork_image(value: &Variant) -> Result<Sprite, String> {
     })
 }
 
+fn registered_building(id: i64, view: i32) -> bool {
+    let base = if (i64::from(sc2k_render::variants::FIRST)..i64::from(sc2k_render::variants::EXACT + 2 * sc2k_render::variants::SPAN))
+        .contains(&id)
+    {
+        id % i64::from(sc2k_render::variants::SPAN)
+    } else {
+        id
+    };
+    (i64::from(view * 500) + 112..=i64::from(view * 500) + 255).contains(&base)
+}
+
 fn city(d: &VarDictionary) -> Result<City, String> {
     let mut c = City {
         edge: int(d, "edge", 0) as i32,
@@ -187,6 +198,7 @@ fn city(d: &VarDictionary) -> Result<City, String> {
         traffic: bytes(d, "traffic"),
         dispatch: HashMap::new(),
         expanded: HashMap::new(),
+        former_buildings: HashMap::new(),
     };
 
     let records = ints(d, "expanded");
@@ -205,6 +217,7 @@ fn city(d: &VarDictionary) -> Result<City, String> {
         }
     }
     c.validate()?;
+    c.load_abandoned_history(&ints(d, "abandoned_history"));
     c.set_dispatch(&bytes(d, "things"));
     Ok(c)
 }
@@ -481,7 +494,7 @@ impl NativeCityRegionBuilder {
                 for (key, value) in registrations.iter_shared() {
                     let id = key.try_to::<i64>().map_err(|_| "invalid sprite canvas registration")?;
                     let padding = value.try_to::<Vector3i>().map_err(|_| "invalid sprite canvas registration")?;
-                    if !(i64::from(view * 500) + 112..=i64::from(view * 500) + 255).contains(&id) {
+                    if !registered_building(id, view) {
                         return Err("invalid sprite canvas registration".into());
                     }
                     let key = id as u64 * 2;
@@ -507,7 +520,7 @@ impl NativeCityRegionBuilder {
                 for (id, value) in parcels.iter_shared() {
                     let id = id.try_to::<i64>().map_err(|_| "invalid parcel sprite")?;
                     let style = value.try_to::<PackedInt64Array>().map_err(|_| "invalid parcel style")?;
-                    if !(i64::from(view * 500) + 112..=i64::from(view * 500) + 255).contains(&id)
+                    if !registered_building(id, view)
                         || style.len() != 2
                         || !(0..=u32::MAX as i64).contains(&style[0])
                         || !(0..=6).contains(&style[1])

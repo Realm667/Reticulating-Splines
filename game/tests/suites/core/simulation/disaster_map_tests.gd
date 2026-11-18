@@ -262,7 +262,8 @@ func _test_toxic(reference_root: String) -> void:
 		abandon_tick.ok
 		and abandon_tick.counters.abandoned_structures == 1
 		and abandoned_toxic.city.building_id(20, 20) == 0x8b
-		and abandoned_toxic.city.zone_id(20, 20) == 1,
+		and abandoned_toxic.city.zone_id(20, 20) == 1
+		and (AbandonedHistory.records(abandoned_toxic.city.document) == PackedInt32Array([abandoned_toxic.city.index_of(20,20), Tiles.LOWER_CLASS_HOMES_1X1_1])),
 		"A toxic cloud changes a normal RCI building to its abandoned class before moving",
 	)
 	_check(

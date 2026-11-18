@@ -136,7 +136,8 @@ static func run(
 	if game_random != null and game_random.get_script() == GameLcgRandom:
 		game_random.state = response.randoms[2]
 
-	response.failed_chunk = apply_written(city, response.written, commit_order, response.revisions)
+	response.failed_chunk = apply_written(city, response.written, commit_order, response.revisions,
+		(1 if args.counter_clockwise else -1) if operation == "rotation" else 0)
 	city.disaster_damage_class = response.disaster_damage_class
 	response.result = decode(response.result)
 
@@ -175,7 +176,7 @@ static func city_fields(city: CityState) -> Dictionary:
 # store each written chunk in `order`, then the others, and refresh their city
 # mirrors. a rejected store restores the chunks already stored and returns the
 # rejected chunk id. `revisions` gives the native revision of each written chunk
-static func apply_written(city: CityState, written: Dictionary, order := PackedStringArray(), revisions := {}) -> String:
+static func apply_written(city: CityState, written: Dictionary, order := PackedStringArray(), revisions := {}, turn := 0) -> String:
 	if written.is_empty():
 		return ""
 
@@ -211,6 +212,8 @@ static func apply_written(city: CityState, written: Dictionary, order := PackedS
 		if revisions.has(chunk_id):
 			chunk.mutation_revision = revisions[chunk_id]
 
+	if applied.has("XBLD") or turn != 0:
+		AbandonedHistory.reconcile(city, written.get("XBLD", city.buildings), turn)
 	city.resync_mirrors(applied)
 
 	if applied.has("XTHG"):

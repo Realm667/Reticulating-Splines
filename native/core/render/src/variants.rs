@@ -1,5 +1,5 @@
 //! Stable, local artwork choices. Never consumes the simulation random state.
-use crate::Builder;
+use crate::{Builder, City};
 use std::collections::HashMap;
 
 pub const FIRST: i32 = 3_000_000;
@@ -7,12 +7,67 @@ pub const SPAN: i32 = 1500;
 const ABANDONED_FIRST: i32 = FIRST + SPAN;
 const ABANDONED_END: i32 = ABANDONED_FIRST + 3 * SPAN;
 
+pub const EXACT: i32 = ABANDONED_END;
+const EXACT_END: i32 = EXACT + 2 * SPAN;
+
+fn occupied_area(id: i32) -> Option<i32> {
+    match id {
+        112..=135 => Some(1),
+        140..=165 => Some(2),
+        174..=193 => Some(3),
+        _ => None,
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct FormerBuilding {
+    pub x: i32,
+    pub y: i32,
+    pub tile: i32,
+    pub flip: bool,
+}
+
+impl City {
+    /// Records use the minimum map corner; painting uses the left screen corner.
+    pub fn load_abandoned_history(&mut self, records: &[i32]) {
+        for record in records.chunks_exact(2) {
+            let tile = record[1] & 255;
+            let Some(area) = occupied_area(tile) else { continue };
+            if !(0..=511).contains(&record[1]) || !(0..self.edge * self.edge).contains(&record[0]) {
+                continue;
+            }
+            let x = record[0] / self.edge;
+            let y = record[0] % self.edge;
+            if x + area > self.edge || y + area > self.edge {
+                continue;
+            }
+            let cells = (x..x + area).flat_map(|cx| (y..y + area).map(move |cy| (cx, cy)));
+            if !cells
+                .clone()
+                .all(|(cx, cy)| abandoned_tile(i32::from(self.buildings[self.index(cx, cy)])))
+            {
+                continue;
+            }
+            let site = FormerBuilding {
+                x,
+                y: y + area - 1,
+                tile,
+                flip: record[1] & 256 != 0,
+            };
+            for (cx, cy) in cells {
+                self.former_buildings.insert(self.index(cx, cy), site);
+            }
+        }
+    }
+}
+
 fn abandoned_tile(id: i32) -> bool {
     matches!(id % 500, 138 | 139 | 170..=173 | 196 | 197)
 }
 
 pub(super) fn weathered_sprite(id: i32) -> bool {
-    (ABANDONED_FIRST..ABANDONED_END).contains(&id) && abandoned_tile(id)
+    ((ABANDONED_FIRST..ABANDONED_END).contains(&id) && abandoned_tile(id))
+        || ((EXACT..EXACT_END).contains(&id) && occupied_area(id % 500).is_some())
 }
 
 #[derive(Default)]
@@ -26,17 +81,9 @@ pub struct Variants {
 }
 
 impl Builder {
-    pub(super) fn building_variant(&self, x: i32, y: i32, id: i32) -> i32 {
-        let variants = &self.sprites.variants;
-        let Some(choices) = variants.choices.get(&id) else { return id };
-        let Some(image) = self.sprites.images.get(&(id as u64 * 2)) else {
-            return id;
-        };
-        let width = self.sprites.registration.get(&(id as u64 * 2)).map_or(image.w, |r| r[0]);
-        let area = (width / (32 / self.config.divisor())).max(1);
+    fn variant_hash(&self, x: i32, y: i32, id: i32, area: i32) -> u32 {
         // Each rotation uses another corner of a multi-cell footprint. Undo the
         // rotation of its center, in doubled coordinates to avoid rounding.
-        let anchor = self.city.index(x, y);
         let (x, y) = (2 * x + area - 1, 2 * y - area + 1);
         let last = 2 * (self.city.edge - 1);
         let (x, y) = match self.city.rotation {
@@ -48,9 +95,39 @@ impl Builder {
         let mut hash = (x as u32).wrapping_mul(374_761_393)
             ^ (y as u32).wrapping_mul(668_265_263)
             ^ ((id % 500) as u32).wrapping_mul(2_246_822_519)
-            ^ variants.seed.wrapping_mul(3_266_489_917);
+            ^ self.sprites.variants.seed.wrapping_mul(3_266_489_917);
         hash = (hash ^ (hash >> 13)).wrapping_mul(1_274_126_177);
         hash ^= hash >> 16;
+        hash
+    }
+
+    /// None allows legacy selection for unknown/missing artwork. Zero explicitly
+    /// selects the normal abandoned lot, including its actual sub-lot corners.
+    pub(super) fn former_sprite(&self, site: FormerBuilding) -> Option<i32> {
+        let source = self.config.base() + site.tile;
+        let chosen = self.building_variant(site.x, site.y, source);
+        let alias = EXACT + source + if chosen == FIRST + source { SPAN } else { 0 };
+        if !self.sprites.images.contains_key(&(alias as u64 * 2)) {
+            return None;
+        }
+        let hash = self.variant_hash(site.x, site.y, source, occupied_area(site.tile)?);
+        Some(if hash % 100 < self.sprites.variants.abandoned_percent {
+            alias
+        } else {
+            0
+        })
+    }
+
+    pub(super) fn building_variant(&self, x: i32, y: i32, id: i32) -> i32 {
+        let variants = &self.sprites.variants;
+        let Some(choices) = variants.choices.get(&id) else { return id };
+        let Some(image) = self.sprites.images.get(&(id as u64 * 2)) else {
+            return id;
+        };
+        let width = self.sprites.registration.get(&(id as u64 * 2)).map_or(image.w, |r| r[0]);
+        let area = (width / (32 / self.config.divisor())).max(1);
+        let anchor = self.city.index(x, y);
+        let hash = self.variant_hash(x, y, id, area);
         if abandoned_tile(id) {
             if hash % 100 >= variants.abandoned_percent {
                 return id;

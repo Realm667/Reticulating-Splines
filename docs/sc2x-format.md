@@ -354,3 +354,7 @@ SC2 and SCN cities keep the original allocation rules.
 - `game/src/model/city/sign_table.gd`: sign lookup and edits.
 - `game/src/simulation/core/sc2x_checkpoint.gd`: saved simulation state.
 - `native/core/sim/src/formats/sc2x`: the binary structures, the projection, and the limits.
+
+### Abandoned building artwork
+
+Reticulating Splines optionally saves `RABH.bin` (the raw `RABH` chunk in SC2). Each eight-byte record holds two little-endian 32-bit integers: the minimum footprint cell in the current map orientation (`x * map_size + y`), and the former occupied RCI tile ID in bits 0–7 with its horizontal flip in bit 8. The renderer uses the record while the entire parcel remains abandoned. Cities without records use the usual abandoned sprites and zone-based variants.

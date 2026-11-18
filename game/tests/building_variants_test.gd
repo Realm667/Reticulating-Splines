@@ -62,6 +62,7 @@ func _run() -> void:
 					assert(request.hd_animations[variant_id] == own.high_resolution[original_id].animation)
 					assert(request.hd_frames[variant_id] == own.high_resolution[original_id].frames)
 	_check_abandoned_artwork(rs)
+	_check_remembered_buildings(large)
 	_check_painters(large,small)
 	_check_rotations(large)
 	var save := AppSettingsStore.SaveOptions.new()
@@ -256,3 +257,77 @@ func _check_abandoned_artwork(pack: GraphicsPack) -> void:
 					var after := entry.decode_indices().pixels
 					for i in before.size():
 						assert(after[i] == (-1 if before[i] < 0 else lookup[before[i]]))
+
+
+func _check_remembered_buildings(mixed: Sc2SpriteArchive) -> void:
+	var city := CityState.from_document(EmptyCityTemplate.create(128))
+	var start := Vector2i(15, 19)
+	var after := city.buildings.duplicate()
+	var zones := city.zones.duplicate()
+	for x in range(start.x, start.x + 3):
+		for y in range(start.y, start.y + 3):
+			city.set_building_id(x, y, 183)
+			after[city.index_of(x,y)] = 138
+			zones[city.index_of(x,y)] = 0xf4
+	city.set_building_corners(start.x, start.y + 2, 0x80)
+	assert(city.set_tile_flag(start.x, start.y + 2, 2, true))
+	var history := PackedInt32Array([city.index_of(start.x, start.y), 183 | 256])
+	assert(NativeSimulationBridge.apply_written(city, {"XBLD": after,"XZON": zones}).is_empty())
+	assert(AbandonedHistory.records(city.document) == history)
+	var legacy := Sc2File.new()
+	assert(legacy.parse(city.document.serialize().data))
+	assert(AbandonedHistory.records(legacy) == history)
+	var modern := Sc2xDocument.from_legacy(legacy, "History")
+	assert(modern.ok, modern.error)
+	var loaded := Sc2File.new()
+	assert(loaded.parse(modern.document.serialize().data))
+	city = CityState.from_document(loaded)
+	assert(AbandonedHistory.records(city.document) == history)
+	var lookup := AbandonedArtwork.palette_map(Sc2Palette.index_encoding())
+	var art := AbandonedArtwork.apply(mixed, lookup, 100, {})
+	art.building_original_weight = 0
+	var alias := AbandonedArtwork.EXACT + BuildingVariants.SPAN + 1183
+	var exact := art.find_sprite(alias)
+	var source := mixed.find_sprite(BuildingVariants.FIRST + 1183)
+	assert(exact != null and source != null)
+	var original_pixels := source.decode_indices().pixels
+	var converted_pixels := exact.decode_indices().pixels
+	assert(original_pixels.size() == converted_pixels.size())
+	for i in original_pixels.size():
+		assert(converted_pixels[i] == (-1 if original_pixels[i] < 0 else lookup[original_pixels[i]]))
+	for turn in 4:
+		var cells := PackedInt32Array()
+		for x in range(start.x, start.x + 3):
+			for y in range(start.y, start.y + 3):
+				cells.append(x)
+				cells.append(y)
+		var context := CityGpuBuildContext.new()
+		assert(context.prepare(city, Sc2Palette.index_encoding(), art, 2).is_empty())
+		var records: PackedInt64Array = context.builder.tile_draws(cells).records
+		var visible := 0
+		for i in range(5, records.size(), CityGpuBuildContext.RECORD_SIZE):
+			assert(records[i] % 500 != 138, "Sub-lots must not cover the former building")
+			if records[i] == alias:
+				assert((records[i + 1] != 0) == (turn % 2 == 0), "Keep the occupied building mirror")
+				visible += 1
+		assert(visible == 1, "Draw the same RS-mixed building exactly once")
+		if turn == 0:
+			art.abandoned_percent = 0
+			assert(context.prepare(city, Sc2Palette.index_encoding(), art, 2).is_empty())
+			var standard: PackedInt64Array = context.builder.tile_draws(cells).records
+			var lots := 0
+			for i in range(5, standard.size(), CityGpuBuildContext.RECORD_SIZE):
+				assert(standard[i] != alias)
+				if standard[i] == 1138:
+					lots += 1
+			assert(lots == 9, "Zero percent shows the nine standard abandoned lots")
+			art.abandoned_percent = 100
+		assert(CityRotationCommand.apply(city,false).ok)
+		start = Vector2i(128 - start.y - 3, start.x)
+	assert(AbandonedHistory.records(city.document) == history)
+	assert(city.set_building_id(start.x + 1,start.y + 1,29))
+	assert(AbandonedHistory.records(city.document).is_empty(), "Redevelopment releases the old footprint")
+	assert(city.set_building_id(start.x + 1,start.y + 1,128))
+	assert(city.set_building_id(start.x + 1,start.y + 1,139))
+	var rebuilt := AbandonedHistory.records(city.document)
+	assert(rebuilt.size() == 2 and (rebuilt[1] & 255) == 128, "Remember the most recent occupant")

@@ -631,6 +631,16 @@ func snapshot_for(actor: String, live := false) -> Dictionary:
 		for id: String in record_cache[actor]:
 			document.find_chunk(id).expected_decoded_size = record_cache[actor][id].size()
 			document.find_chunk(id).set_decoded_payload(record_cache[actor][id])
+	var history := PackedInt32Array()
+	for player: String in actors:
+		var owner := actors.find(player) + 1
+		var records := AbandonedHistory.records(municipalities[player].city.document)
+		for i in range(0, records.size(), 2):
+			var tile := records[i]
+			if tile >= 0 and tile < owners.size() and owners[tile] == owner:
+				history.append(tile)
+				history.append(records[i + 1])
+	AbandonedHistory.store(document, history)
 	compose_upgrades(document, actor)
 	if live:
 		if not live_documents.has(actor):
