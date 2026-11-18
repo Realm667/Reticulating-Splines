@@ -52,6 +52,7 @@ test('standard embed renders empty directory and duplicate script is harmless', 
   const counts = panel(f).children[0].children;
   assert.deepEqual(counts.map(count => count.attributes['aria-label']), ['0 active players', '0 single-player participants', '0 multiplayer participants']);
   assert.ok(counts.every(count => count.children[0].tagName === 'svg' && count.children[1].textContent === '0'));
+  assert.ok(counts.every(count => count.attributes['data-active'] === 'false'));
   vm.runInContext(source, f.context);
   assert.equal(f.container.shadowRoot.children.length, 4);
 });
@@ -86,7 +87,7 @@ test('city totals render including genuine zero and reject invalid values', asyn
   const totals = {available: true, sessions: 12, today: 1, peak_players: 4,
     cities_founded: 0, total_population: 1234567, cities_since: '2026-10-18', since: '2026-10-17'};
   const f = await fixture({totals});
-  assert.deepEqual(rows(f).map(c => displayed(c.children[2])), ['—', '—', '12', '1', '4', '0', '1,234.6\u00a0K']);
+  assert.deepEqual(rows(f).map(c => displayed(c.children[2])), ['—', '—', '12', '1', '4', '0', '1,234.567\u00a0K']);
   const bad = await fixture({totals: {...totals, cities_founded: -1, total_population: '<img>'}});
   assert.deepEqual(rows(bad).slice(5).map(c => c.children[2].textContent), ['—', '—']);
 });
@@ -95,7 +96,9 @@ test('matrix uses deduplicated total rather than adding game-type cities and pea
   const totals = {available:true, sessions:3, today:1, peak_players:4};
   const statistics = {singleplayer:{cities_founded:7, peak_players:3}, multiplayer:{cities_founded:5, peak_players:4}, total:{cities_founded:10, peak_players:6}};
   const f = await fixture({totals, statistics, singleplayer:[{city:'<script>not markup</script>',population:0,phase:'paused'}]});
-  assert.equal(panel(f).children[0].children[0].attributes['aria-label'], '1 active player');
+  const counts = panel(f).children[0].children;
+  assert.equal(counts[0].attributes['aria-label'], '1 active player');
+  assert.deepEqual(counts.map(count => count.attributes['data-active']), ['true', 'true', 'false']);
   const [multi, solo] = directory(f).children[0].children;
   assert.equal(multi.children[2].textContent, 'No public games right now.');
   assert.equal(solo.children[1].children[0].textContent, '<script>not markup</script> · 0 residents · Paused');
@@ -107,7 +110,7 @@ test('statistics switch at the requested thresholds and retain the precise value
   const totals = {available: true, sessions: 9_999, today: 10_000, peak_players: 10_000_000, total_population: 40_705_185};
   const f = await fixture({totals});
   const values = rows(f).map(row => row.children[2]);
-  assert.deepEqual(values.map(displayed), ['—', '—', '9,999', '10\u00a0K', '10\u00a0M', '—', '40.7\u00a0M']);
+  assert.deepEqual(values.map(displayed), ['—', '—', '9,999', '10.000\u00a0K', '10.000\u00a0M', '—', '40.705\u00a0M']);
   assert.equal(values[6].title, '40,705,185');
   assert.equal(values[6].children[1].textContent, '40,705,185');
 });

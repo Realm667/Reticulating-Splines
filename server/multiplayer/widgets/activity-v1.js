@@ -2,11 +2,11 @@
 (() => {
   const script = document.currentScript;
   const origin = new URL(script.src).origin;
-  const compactFormat = new Intl.NumberFormat('en', {maximumFractionDigits: 1});
+  const compactFormat = new Intl.NumberFormat('en', {minimumFractionDigits: 3, maximumFractionDigits: 3});
   const icons = {
-    total: 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2m20 0v-2a4 4 0 0 0-3-3.9M15 3.1a4 4 0 0 1 0 7.8 M13 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z',
-    solo: 'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2 M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z',
-    multi: 'M7 7h10a4 4 0 0 1 3.9 3.2l1 5.1a2.5 2.5 0 0 1-4.2 2.2L15 15H9l-2.7 2.5a2.5 2.5 0 0 1-4.2-2.2l1-5.1A4 4 0 0 1 7 7Zm0 3v4m-2-2h4m6-1h.01m3 2h.01',
+    group: 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2m20 0v-2a4 4 0 0 0-3-3.9M15 3.1a4 4 0 0 1 0 7.8 M13 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z',
+    person: 'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2 M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z',
+    controller: 'M7 7h10a4 4 0 0 1 3.9 3.2l1 5.1a2.5 2.5 0 0 1-4.2 2.2L15 15H9l-2.7 2.5a2.5 2.5 0 0 1-4.2-2.2l1-5.1A4 4 0 0 1 7 7Zm0 3v4m-2-2h4m6-1h.01m3 2h.01',
   };
 
   function playerCount(icon) {
@@ -27,10 +27,11 @@
     tip.setAttribute('aria-hidden', 'true');
     metric.append(svg, value, tip);
     metric.addEventListener('click', () => metric.focus({preventScroll: true}));
-    return {metric, update(number, singular) {
+    return {metric, update(number, singular, active = number > 0) {
       const label = number === 1 ? singular : `${singular}s`;
       const formatted = number.toLocaleString('en');
       metric.setAttribute('aria-label', `${formatted} ${label}`);
+      metric.setAttribute('data-active', String(active));
       value.textContent = formatted;
       tip.textContent = label;
     }};
@@ -81,6 +82,7 @@
         button:hover,button:focus-visible{color:#dfff63;border-color:#dfff63}
         button:focus-visible{outline:2px solid #dfff63;outline-offset:3px}
         .count{position:relative;display:inline-flex;align-items:center;gap:6px;padding:5px 9px;min-height:30px;border:1px solid #66717b;border-radius:5px;font:650 15px system-ui;font-variant-numeric:tabular-nums}
+        .count[data-active="true"]{color:#dfff63;border-color:#dfff63;background:#dfff631f}
         .count svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
         .count-tip,.note{border:1px solid #849099;border-radius:8px;background:#171c22;color:#f2f5f7;box-shadow:0 10px 30px #0008;font:13px/1.55 system-ui}
         .count-tip{display:none;position:absolute;z-index:1;top:calc(100% + 5px);left:0;padding:5px 9px;white-space:nowrap;pointer-events:none}
@@ -111,9 +113,9 @@
       counts.className = 'counts';
       counts.setAttribute('role', 'group');
       counts.setAttribute('aria-label', 'Players online');
-      const totalCount = playerCount('total');
-      const soloCount = playerCount('solo');
-      const multiCount = playerCount('multi');
+      const totalCount = playerCount('controller');
+      const soloCount = playerCount('person');
+      const multiCount = playerCount('group');
       counts.append(totalCount.metric, soloCount.metric, multiCount.metric);
       const directory = document.createElement('div');
       const help = document.createElement('button');
@@ -201,7 +203,7 @@
           const players = games.reduce((n,g) => n + g.players, 0);
           totalCount.update(players + solos.length, 'active player');
           soloCount.update(solos.length, 'single-player participant');
-          multiCount.update(players, 'multiplayer participant');
+          multiCount.update(players, 'multiplayer participant', games.length > 0);
           const activity = document.createElement('div');
           activity.className = 'activity-grid';
           const multiplayer = document.createElement('div');
