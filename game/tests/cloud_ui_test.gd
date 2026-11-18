@@ -76,6 +76,7 @@ func _run() -> void:
 	root.add_child(shell)
 	var window := shell.content
 	window.bind(service)
+	await _standalone_navigation(shell, service)
 	assert(window.account_form.visible and not window.account_info.visible)
 	assert(window.cloud_enabled.disabled)
 	window.email.text = " test@example.invalid "
@@ -153,6 +154,68 @@ func _run() -> void:
 	await process_frame
 	print("PASS cloud account, selection, privacy, confirmation and bounded layout")
 	quit()
+
+
+func _standalone_navigation(shell: CloudWindow, service: FakeCloud) -> void:
+	var panel := shell.content
+	assert(panel.sections.current_tab == 0, "Signed-out users start at the account form")
+	assert(panel.sections.is_tab_disabled(1) and panel.sections.is_tab_disabled(2))
+	assert(not panel._code_help.visible and panel._reset_action.visible)
+	for page in panel.sections.get_children():
+		assert(page is ScrollContainer and page.follow_focus)
+		_assert_single_scroll(page)
+	assert(panel.saves.auto_height and panel.devices.auto_height,
+		"Lists must grow with their page instead of adding another wheel-scroll region")
+	root.size = Vector2i(800, 720)
+	shell.open()
+	shell.size = Vector2i(760, 620)
+	for frame in 6:
+		await process_frame
+	var page := panel._section_scrolls[0]
+	panel.submit.grab_focus()
+	for frame in 4:
+		await process_frame
+	assert(page.get_global_rect().encloses(panel.submit.get_global_rect()), "Keyboard focus reveals the whole account action in its sole scroll area")
+	assert(Rect2(Vector2.ZERO, Vector2(shell.size) / shell.content_scale_factor).encloses(panel.close_action.get_global_rect()), "Close remains outside the scrolling content")
+	var previous_locale := TranslationServer.get_locale()
+	for locale in AppLocalization.codes():
+		AppLocalization.select(locale)
+		shell.size = Vector2i(396, 520)
+		for frame in 6:
+			await process_frame
+		for index in 3:
+			assert(panel.sections.get_tab_title(index) == tr(["Account", "Cloud saves", "Devices"][index]), "Navigation follows language changes")
+		panel.submit.grab_focus()
+		page.ensure_control_visible(panel.submit)
+		for frame in 4:
+			await process_frame
+		assert(page.get_global_rect().encloses(panel.submit.get_global_rect()), "Account actions remain reachable in a narrow translated form")
+		assert(panel.get_combined_minimum_size().x <= 396, "Translated navigation must fit a narrow window")
+	AppLocalization.select(previous_locale)
+	panel.auth_mode.select(2)
+	panel._show_auth_fields()
+	assert(panel._code_help.visible and not panel._reset_action.visible and not panel.password.visible)
+	panel.auth_mode.select(0)
+	panel._show_auth_fields()
+	service.data.account = {"email": "navigation@example.invalid"}
+	for index in 30:
+		service.data.devices.append({"id": str(index), "name": "Device %d" % index})
+	panel.refresh()
+	assert(not panel.sections.is_tab_disabled(1) and not panel.sections.is_tab_disabled(2))
+	panel.sections.current_tab = 2
+	service.changed.emit()
+	assert(panel.sections.current_tab == 2, "Refresh preserves the selected management page")
+	service.data.account = {}
+	service.data.devices = []
+	panel.refresh()
+	assert(panel.sections.current_tab == 0 and panel.sections.is_tab_disabled(2), "Signing out returns to Account")
+	shell.hide()
+
+
+func _assert_single_scroll(node: Node) -> void:
+	for child in node.get_children():
+		assert(not child is ScrollContainer, "Account pages cannot contain nested scroll containers")
+		_assert_single_scroll(child)
 
 
 func _file_dialogs(service: FakeCloud) -> void:

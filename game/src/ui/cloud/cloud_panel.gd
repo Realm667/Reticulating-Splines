@@ -60,9 +60,16 @@ var _account_card: PanelContainer
 var _devices_card: PanelContainer
 var _save_card: PanelContainer
 var _inspection: BoxContainer
+var _standalone := false
+var sections: TabContainer
+var _section_scrolls: Array[ScrollContainer] = []
+var _code_help: Label
+var _credential_help: Label
+var _reset_action: Button
 
 
-func _init() -> void:
+func _init(standalone := false) -> void:
+	_standalone = standalone
 	column = self
 	size_flags_vertical = Control.SIZE_EXPAND_FILL
 	add_theme_constant_override("separation", 10)
@@ -78,6 +85,33 @@ func _init() -> void:
 	quota.theme_type_variation = &"HelpLabel"
 	notice = _text(column, "")
 	notice.hide()
+	if _standalone:
+		_build_standalone_sections()
+	else:
+		_build_embedded_sections()
+	close_action = _action(column, "Close", func() -> void: close_requested.emit())
+	confirm = ConfirmationDialog.new()
+	confirm.dialog_autowrap = true
+	confirm.exclusive = true
+	confirm.confirmed.connect(func() -> void:
+		var action := pending_action
+		pending_action = Callable()
+		if action.is_valid():
+			action.call())
+	add_child(confirm)
+	file_dialog = FileDialog.new()
+	file_dialog.file_mode = FileDialog.FILE_MODE_SAVE_FILE
+	file_dialog.access = FileDialog.ACCESS_FILESYSTEM
+	file_dialog.filters = PackedStringArray(["*.sc2x ; SC2X", "*.sc2 ; SC2"])
+	file_dialog.file_selected.connect(_download)
+	add_child(file_dialog)
+	resized.connect(_layout_pages)
+	visibility_changed.connect(func() -> void:
+		if not visible:
+			clear_secrets())
+
+
+func _build_embedded_sections() -> void:
 	var board_scroll := ScrollContainer.new()
 	board_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	board_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -104,26 +138,35 @@ func _init() -> void:
 	var device_content := _page("Devices", _sidebar)
 	_devices_card = device_content.get_parent().get_parent().get_parent()
 	_build_devices(device_content)
-	close_action = _action(column, "Close", func() -> void: close_requested.emit())
-	confirm = ConfirmationDialog.new()
-	confirm.dialog_autowrap = true
-	confirm.exclusive = true
-	confirm.confirmed.connect(func() -> void:
-		var action := pending_action
-		pending_action = Callable()
-		if action.is_valid():
-			action.call())
-	add_child(confirm)
-	file_dialog = FileDialog.new()
-	file_dialog.file_mode = FileDialog.FILE_MODE_SAVE_FILE
-	file_dialog.access = FileDialog.ACCESS_FILESYSTEM
-	file_dialog.filters = PackedStringArray(["*.sc2x ; SC2X", "*.sc2 ; SC2"])
-	file_dialog.file_selected.connect(_download)
-	add_child(file_dialog)
-	resized.connect(_layout_pages)
-	visibility_changed.connect(func() -> void:
-		if not visible:
-			clear_secrets())
+
+
+func _build_standalone_sections() -> void:
+	sections = TabContainer.new()
+	sections.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	sections.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	column.add_child(sections)
+	_build_account(_tab_page("Account"))
+	_save_section = _tab_page("Cloud saves")
+	_build_saves(_save_section)
+	_build_devices(_tab_page("Devices"))
+	# Let the page own scrolling, including long lists, instead of nesting
+	# independently scrolling cards and lists inside another scroll container.
+	saves.auto_height = true
+	devices.auto_height = true
+	devices.custom_minimum_size.y = 0
+
+
+func _tab_page(caption: String) -> VBoxContainer:
+	var scroll := ScrollContainer.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.follow_focus = true
+	sections.add_child(scroll)
+	sections.set_tab_title(sections.get_tab_count() - 1, tr(caption))
+	_section_scrolls.append(scroll)
+	var holder := VBoxContainer.new()
+	holder.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(holder)
+	return _page(caption, holder)
 
 
 func clear_secrets() -> void:
@@ -172,6 +215,9 @@ func _ready() -> void:
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_TRANSLATION_CHANGED and sync != null and saves != null:
+		if _standalone:
+			for index in 3:
+				sections.set_tab_title(index, tr(["Account", "Cloud saves", "Devices"][index]))
 		refresh()
 		var selected := saves.get_selected_items()
 		if not selected.is_empty():
@@ -228,14 +274,17 @@ func _page(caption: String, parent: Control) -> VBoxContainer:
 	card.add_child(frame)
 	var heading := _text(frame, caption)
 	heading.theme_type_variation = &"SectionHeading"
-	var scroll := ScrollContainer.new()
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	frame.add_child(scroll)
 	var content := VBoxContainer.new()
 	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	content.add_theme_constant_override("separation", 10)
-	scroll.add_child(content)
+	if _standalone:
+		frame.add_child(content)
+	else:
+		var scroll := ScrollContainer.new()
+		scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+		scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		frame.add_child(scroll)
+		scroll.add_child(content)
 	return content
 
 
@@ -291,15 +340,15 @@ func _build_account(content: VBoxContainer) -> void:
 	password.tooltip_text = "Use at least 12 characters for a new password."
 	code = _field(account_form, "Email code")
 	code.max_length = 8
-	_text(account_form, "Enter the code from your email here. After verification or a password reset, sign in with your password.")
+	_code_help = _text(account_form, "Enter the code from your email here. After verification or a password reset, sign in with your password.")
 	remember = CheckBox.new()
 	remember.text = "Stay signed in on this device"
 	remember.custom_minimum_size.y = 40
 	account_form.add_child(remember)
-	_text(account_form, "Your password is never saved. Remembered access uses your operating system's protected credential storage.")
+	_credential_help = _text(account_form, "Your password is never saved. Remembered access uses your operating system's protected credential storage.")
 	var auth_actions := _flow(account_form)
 	submit = _action(auth_actions, "Continue", _authenticate)
-	_action(auth_actions, "Send reset code", _request_reset)
+	_reset_action = _action(auth_actions, "Send reset code", _request_reset)
 	auth_mode.item_selected.connect(func(_index: int) -> void: _show_auth_fields())
 	account_info = VBoxContainer.new()
 	content.add_child(account_info)
@@ -321,6 +370,10 @@ func _show_auth_fields() -> void:
 	code.visible = auth_mode.selected in [2, 3]
 	code.get_parent().get_child(code.get_index() - 1).visible = code.visible
 	remember.visible = auth_mode.selected == 0
+	_code_help.visible = code.visible
+	_credential_help.visible = auth_mode.selected == 0
+	_reset_action.visible = auth_mode.selected in [0, 3]
+	submit.text = ["Sign in", "Register", "Verify email", "Reset password"][auth_mode.selected]
 	password.clear()
 	code.clear()
 
@@ -460,7 +513,8 @@ func refresh() -> void:
 		return
 	state = sync.snapshot()
 	var scope := str(state.get("account", {}).get("id", "")) + "|" + str(state.get("account", {}).get("email", ""))
-	if scope != _account_scope:
+	var account_changed := scope != _account_scope
+	if account_changed:
 		_account_scope = scope
 		request_generation += 1
 		selected_save = ""
@@ -470,6 +524,14 @@ func refresh() -> void:
 	var signed_in := not (state.get("account", {}) as Dictionary).is_empty()
 	account_form.visible = not signed_in
 	account_info.visible = signed_in
+	if _standalone:
+		sections.set_tab_disabled(1, not signed_in)
+		sections.set_tab_disabled(2, not signed_in)
+		if account_changed or not signed_in:
+			sections.current_tab = 1 if signed_in else 0
+		if account_changed:
+			for scroll in _section_scrolls:
+				scroll.scroll_vertical = 0
 	remembered_access.set_pressed_no_signal(bool(state.get("remember", false)))
 	var error := str(state.get("error", ""))
 	status.text = tr(error_message(error)) if not error.is_empty() else tr("Signed in as %s") % str(state.account.get("email", "")) if signed_in else tr("Not signed in")
@@ -528,6 +590,11 @@ func refresh() -> void:
 
 func _layout_pages() -> void:
 	if not is_inside_tree() or _summary == null or _workspace == null:
+		return
+	if _standalone:
+		_summary.vertical = size.x < 800
+		_inspection.vertical = size.x < 740
+		preview.custom_minimum_size = Vector2(0, 100) if _inspection.vertical else Vector2(150, 120)
 		return
 	var width := get_window().size.x / maxf(get_window().content_scale_factor, 0.001)
 	_summary.vertical = width < 800
