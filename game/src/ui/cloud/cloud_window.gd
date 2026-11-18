@@ -14,7 +14,7 @@ func _init() -> void:
 	wrap_controls = false
 	min_size = Vector2i(300, 260)
 	size = Vector2i(760, 620)
-	content = CloudPanel.new()
+	content = CloudPanel.new(true)
 	column.add_child(content)
 	content.close_requested.connect(hide)
 	content.downloaded.connect(func(path: String) -> void: downloaded.emit(path))
