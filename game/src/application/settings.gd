@@ -5,6 +5,7 @@ const SettingsStore = preload("res://src/ui/settings/app_settings_store.gd")
 
 var app: CityApplication
 var preferences: AppPreferences
+var _abandoned_mix_timer: Timer
 var _visual_save_timer: Timer
 var _visual_save_pending := false
 var graphics_loading := false
@@ -414,7 +415,20 @@ func _apply_visual_options(values: Dictionary) -> bool:
 				values[key] = preferences.visual_enhancements[key]
 	if preferences.visual_enhancements == values:
 		return false
+	var previous := preferences.visual_enhancements
 	preferences.visual_enhancements = values
+	if previous.abandoned_enabled != values.abandoned_enabled:
+		if _abandoned_mix_timer != null:
+			_abandoned_mix_timer.stop()
+		app.assets.refresh_abandoned_artwork(true)
+	elif values.abandoned_enabled and previous.abandoned_share != values.abandoned_share:
+		if _abandoned_mix_timer == null:
+			_abandoned_mix_timer = Timer.new()
+			_abandoned_mix_timer.one_shot = true
+			_abandoned_mix_timer.process_mode = Node.PROCESS_MODE_ALWAYS
+			_abandoned_mix_timer.timeout.connect(app.assets.refresh_abandoned_artwork.bind(false))
+			app.add_child(_abandoned_mix_timer)
+		_abandoned_mix_timer.start(0.25)
 	app.visual_environment.configure()
 	if app.main_menu != null:
 		app.main_menu.city_background.set_visual_options(values)

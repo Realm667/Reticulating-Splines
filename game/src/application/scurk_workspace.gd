@@ -532,6 +532,7 @@ func combine_tile_sets(tile_sets: Array[ScurkMif]) -> bool:
 	app.asset_state.large_sprites = new_large
 	app.asset_state.small_medium_sprites = new_small_medium
 	app.assets.use_dos_colors(dos_colors)
+	app.assets.apply_abandoned_artwork()
 
 	return true
 

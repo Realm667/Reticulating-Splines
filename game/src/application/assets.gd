@@ -398,6 +398,36 @@ func use_default_sprites() -> void:
 	ExpandedGraphics.apply(app.asset_state.large_sprites)
 	ExpandedGraphics.apply(app.asset_state.small_medium_sprites)
 	use_dos_colors(corrections)
+	apply_abandoned_artwork()
+
+
+func apply_abandoned_artwork() -> void:
+	var options := app.preferences.visual_enhancements
+	var palette := app.asset_state.palette
+	if not options.abandoned_enabled or palette == null or not palette.is_valid():
+		return
+	var lookup := AbandonedArtwork.palette_map(palette)
+	var share := roundi(float(options.abandoned_share) * 100.0)
+	var images := {}
+	app.asset_state.large_sprites = AbandonedArtwork.apply(app.asset_state.large_sprites, lookup, share, images)
+	app.asset_state.small_medium_sprites = AbandonedArtwork.apply(app.asset_state.small_medium_sprites, lookup, share, images)
+
+
+func refresh_abandoned_artwork(rebuild: bool) -> void:
+	if app.asset_state.large_sprites == null:
+		return
+	if rebuild:
+		_reload_sprites()
+		return
+	var share := roundi(float(app.preferences.visual_enhancements.abandoned_share) * 100.0)
+	app.static_render.stop_render_job()
+	for archive: Sc2SpriteArchive in [app.asset_state.large_sprites, app.asset_state.small_medium_sprites]:
+		if archive != null:
+			archive.abandoned_percent = share
+	app.static_render.invalidate_rendered_city()
+	app.main_menu.city_background.replace_graphics(app.asset_state.palette, app.asset_state.large_sprites)
+	if app.document_state.city != null:
+		app.map_render.refresh_map()
 
 
 ## Compact, shareable report for renderer issues. Paths and city names stay out.

@@ -3,6 +3,8 @@ extends RefCounted
 ## Local presentation preferences. No value is written to a city document.
 
 const FIELDS := [
+	["abandoned_enabled", "Weathered variants for abandoned buildings", "bool", true],
+	["abandoned_share", "Share of converted buildings", "number", 0.5, 0.0, 1.0, 0.01],
 	["tree_growth_enabled", "Tree growth", "bool", false],
 	["artwork_color_enabled", "Natural artwork colors", "bool", false],
 	["artwork_color_strength", "Artwork color reduction", "number", 0.5, 0.0, 1.0, 0.05],
@@ -144,6 +146,8 @@ static func normalize(source: Variant) -> Dictionary:
 				result[field[0]] = str(value).strip_edges() if value is String else field[3]
 				if field[0] == "brightmap_folder" and not result[field[0]].is_empty():
 					result[field[0]] = AppPaths.stored_path(result[field[0]])
+	if not input.has("abandoned_enabled") and input.has("day_enabled"):
+		result.abandoned_enabled = input.get("day_enabled", false) and input.get("water_reflections", 0) == 1
 	if not input.has("traffic_vehicles_enabled"):
 		# Keep smoothing enabled if any previously separate vehicle option was enabled.
 		var previous := ["traffic_helicopters_enabled", "traffic_planes_enabled", "traffic_ships_enabled", "traffic_trains_enabled"]

@@ -384,6 +384,7 @@ func _sync_backdrop() -> void:
 	var signature := [identity, city.compass_rotation(),
 		app.asset_state.large_sprites.get_instance_id() if app.asset_state.large_sprites != null else 0,
 		app.asset_state.large_sprites.visual_revision if app.asset_state.large_sprites != null else 0,
+		app.asset_state.large_sprites.abandoned_percent if app.asset_state.large_sprites != null else 0,
 		app.preferences.visual_enhancements.hash()]
 	if signature != _backdrop_signature:
 		_backdrop_signature = signature

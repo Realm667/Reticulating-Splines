@@ -118,7 +118,7 @@ func prepare(city: CityState, palette: Sc2Palette, sprites: Sc2SpriteArchive, vi
 
 	var layout := [city.map_size, city.visible_altitude_levels, city.compass_rotation(),
 		view, mode, pipes, subways, water_mains, palette, sprites, pack_atlas, special_overlays, animation_phase, tunnels,
-		with_artwork, hd_effects, sprites.visual_revision]
+		with_artwork, hd_effects, sprites.visual_revision, sprites.abandoned_percent]
 	var configuration := CityIsometricRenderer.view_configuration(view)
 
 	if configuration == null:
@@ -148,6 +148,7 @@ func prepare(city: CityState, palette: Sc2Palette, sprites: Sc2SpriteArchive, vi
 			if id / 500 == view:
 				variants[id] = sprites.building_variants[id]
 		request["building_variants"] = variants
+		request["abandoned_percent"] = sprites.abandoned_percent
 		request["building_mix_seed"] = sprites.building_mix_seed
 		request["building_original_weight"] = sprites.building_original_weight
 		var registrations: Dictionary[int, Vector3i] = {}
@@ -315,7 +316,7 @@ static func artwork_request(sprites: Sc2SpriteArchive, sprite_base: int, include
 
 	for id: int in sprites.high_resolution:
 		var nature := sprites.visual_nature.has(id) and id % CityNatureArtwork.SPAN / 500 == sprite_base / 500
-		var mixed := id >= BuildingVariants.FIRST and id < BuildingVariants.FIRST + BuildingVariants.SPAN \
+		var mixed := id >= BuildingVariants.FIRST and id < AbandonedArtwork.END \
 			and id % BuildingVariants.SPAN / 500 == sprite_base / 500
 		if nature:
 			if not include_nature:

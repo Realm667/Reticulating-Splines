@@ -352,7 +352,7 @@ impl Builder {
                 }
                 self.add(&mut draws, sprite, flip, sx, baseline)?;
                 draws.last_mut().expect("building draw was added").emission_disabled =
-                    developed && self.city.flags[i] & flags::POWERED == 0;
+                    developed && (self.city.flags[i] & flags::POWERED == 0 || crate::variants::weathered_sprite(sprite));
 
                 if let Some((id, traffic_flip)) = self.traffic_sprite(x, y, b) {
                     let traffic = self.sprites.get(id, traffic_flip)?;

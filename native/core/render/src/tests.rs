@@ -3,6 +3,41 @@ use super::painter::TRAFFIC;
 use super::*;
 
 #[test]
+fn abandoned_buildings_follow_zone_and_share_even_when_powered() {
+    let mut b = fixture(16, 2);
+    let id = 1138;
+    let image = b.sprites.images[&(1112 * 2)].clone();
+    b.sprites.images.insert(id as u64 * 2, image.clone());
+    let aliases: Vec<_> = (1..=3).map(|sector| (variants::FIRST + sector * variants::SPAN + id, 1)).collect();
+    for &(alias, _) in &aliases {
+        b.sprites.images.insert(alias as u64 * 2, image.clone());
+    }
+    b.sprites.variants.choices.insert(id, aliases.clone());
+    let mut sampled = [0, 0];
+    for x in 1..15 {
+        for y in 1..15 {
+            let cell = b.city.index(x, y);
+            let zone = 1 + (x + y) % 6;
+            b.city.zones[cell] = 0x80 | zone as u8;
+            b.city.buildings[cell] = 138;
+            b.city.flags[cell] = ids::sc2tile_flags::POWERED;
+            b.sprites.variants.abandoned_percent = 0;
+            assert_eq!(b.building_variant(x, y, id), id);
+            b.sprites.variants.abandoned_percent = 100;
+            let alias = aliases[((zone - 1) / 2) as usize].0;
+            assert_eq!(b.building_variant(x, y, id), alias);
+            let draws = b.paint(x, y).unwrap();
+            assert!(draws.iter().any(|d| d.sprite == alias && d.emission_disabled));
+            b.sprites.variants.abandoned_percent = 50;
+            let selected = b.building_variant(x, y, id);
+            assert!(selected == id || selected == alias);
+            sampled[usize::from(selected == alias)] += 1;
+        }
+    }
+    assert!(sampled.into_iter().all(|n| n > 40));
+}
+
+#[test]
 fn building_variants_keep_multicell_identity_across_views_rotations_and_rebuilds() {
     let mut expected = HashMap::new();
     for view in 0..3 {

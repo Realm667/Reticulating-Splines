@@ -41,7 +41,7 @@ static func for_assets(assets: LoadedAssetState) -> CityPreviewJob:
 		result.sprites.draw_building_ground = source.draw_building_ground
 		result.sprites.visual_registration.assign(source.visual_registration)
 		result.sprites.parcel_styles.assign(source.parcel_styles)
-		result._graphics_identity = "%s|%s|%s|%s|%s|%s" % [source.get_instance_id(), source.visual_revision,
+		result._graphics_identity = "%s|%s|%s|%s|%s|%s|%s" % [source.get_instance_id(), source.visual_revision, source.abandoned_percent,
 			assets.palette.to_rgba_bytes().hex_encode().sha256_text() if assets.palette != null else "",
 			assets.active_scurk_path, source.visual_nature_enabled, source.visual_terrain_enabled]
 	return result
@@ -60,7 +60,8 @@ func prepare_graphics_key() -> void:
 	var hash := HashingContext.new()
 	hash.start(HashingContext.HASH_SHA256)
 	hash.update(palette.to_rgba_bytes())
-	hash.update(var_to_bytes([sprites.draw_building_ground, sprites.redraw_small_highway_ground,
+	hash.update(var_to_bytes([sprites.abandoned_percent, sprites.building_mix_seed, sprites.building_original_weight, sprites.building_variants,
+		sprites.draw_building_ground, sprites.redraw_small_highway_ground,
 		sprites.visual_registration, sprites.parcel_styles, sprites.visual_nature_enabled, sprites.visual_terrain_enabled]))
 	var entries := sprites.entries_by_id.duplicate()
 	entries.merge(sprites.visual_nature)

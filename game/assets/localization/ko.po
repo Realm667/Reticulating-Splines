@@ -6173,6 +6173,19 @@ msgstr "계절 LUT 강도"
 msgid "Seasonal water color strength"
 msgstr "계절별 물 색상 강도"
 
+#. Visual enhancements: abandoned buildings.
+msgid "Weathered variants for abandoned buildings"
+msgstr "버려진 건물의 낡은 외형 사용"
+
+#. Visual enhancements: abandoned buildings.
+msgid "Share of converted buildings"
+msgstr "변환된 건물 비율"
+
+#. Visual enhancements: abandoned buildings.
+msgid "0% uses standard abandoned buildings. 100% uses converted buildings from the active graphics pack."
+msgstr "0%에서는 기본 폐건물이 표시됩니다. 100%에서는 현재 그래픽 팩의 건물을 변환하여 표시합니다."
+
+
 #. OpenSC2K visual UI; supplementary translation from English feature source.
 msgid "Weather source"
 msgstr "날씨 기준"

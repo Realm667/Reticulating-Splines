@@ -446,6 +446,7 @@ impl NativeCityRegionBuilder {
             configure_artwork(&mut core, &request)?;
             if let Some(value) = request.get("building_variants") {
                 let choices = value.try_to::<AnyDictionary>().map_err(|_| "invalid building variants")?;
+                core.sprites.variants.abandoned_percent = int(&request, "abandoned_percent", 0).clamp(0, 100) as u32;
                 core.sprites.variants.seed = int(&request, "building_mix_seed", 0) as u32;
                 core.sprites.variants.original_weight = int(&request, "building_original_weight", 50).clamp(0, 100) as u32;
                 for (id, values) in choices.iter_shared() {

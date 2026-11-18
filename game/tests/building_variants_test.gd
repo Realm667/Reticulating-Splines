@@ -61,6 +61,7 @@ func _run() -> void:
 				if own.high_resolution[original_id].animation != null:
 					assert(request.hd_animations[variant_id] == own.high_resolution[original_id].animation)
 					assert(request.hd_frames[variant_id] == own.high_resolution[original_id].frames)
+	_check_abandoned_artwork(rs)
 	_check_painters(large,small)
 	_check_rotations(large)
 	var save := AppSettingsStore.SaveOptions.new()
@@ -192,3 +193,66 @@ func _check_rotations(sprites: Sc2SpriteArchive) -> void:
 		assert(CityRotationCommand.apply(city,false).ok)
 		for i in positions.size():
 			positions[i] = CityRotationCommand.rotate_point(positions[i],128,false)
+
+
+func _check_abandoned_artwork(pack: GraphicsPack) -> void:
+	assert(not VisualEnhancementOptions.preset(0, {}).abandoned_enabled)
+	assert(VisualEnhancementOptions.preset(4, {}).abandoned_enabled)
+	assert(VisualEnhancementOptions.preset(4, {}).abandoned_share == 0.5)
+	var tab := VisualEnhancementsTab.new()
+	root.add_child(tab)
+	tab.show_values(VisualEnhancementOptions.preset(0, {}))
+	assert(not tab.abandoned_share_slider.editable)
+	tab.show_values(VisualEnhancementOptions.preset(4, {}))
+	assert(tab.abandoned_share_slider.editable and tab.abandoned_share_slider.value == 50)
+	tab.abandoned_share_slider.value = 75
+	assert(tab.selected_values().abandoned_share == 0.75)
+	tab.queue_free()
+	var palette := Sc2Palette.index_encoding()
+	palette.colors[20] = Color8(101, 73, 44)
+	palette.colors[25] = Color8(10, 142, 25)
+	var lookup := AbandonedArtwork.palette_map(palette)
+	assert(lookup[25] == 20)
+	for i in lookup:
+		assert(not (i >= 171 and i <= 219) and not (i >= 224 and i <= 239))
+	var desaturated := AbandonedArtwork.weathered(Color8(208, 73, 32, 97))
+	assert(desaturated.r == desaturated.b and desaturated.b == desaturated.g and desaturated.a8 == 97)
+	var brown := AbandonedArtwork.weathered(Color.FOREST_GREEN)
+	assert(brown.r > brown.g and brown.g > brown.b)
+	var images := {}
+	var city := CityState.from_document(EmptyCityTemplate.create(128))
+	city.set_building_id(64, 64, 138)
+	city.set_zone_id(64, 64, 3)
+	city.set_building_corners(64, 64, 0x80)
+	for original: Sc2SpriteArchive in [pack.large_sprites, pack.small_medium_sprites]:
+		var converted := AbandonedArtwork.apply(original, lookup, 50, images)
+		for view in ([2] if original == pack.large_sprites else [0, 1]):
+			var context := CityGpuBuildContext.new()
+			for share in [0, 100]:
+				converted.abandoned_percent = share
+				assert(context.prepare(city, palette, converted, view).is_empty())
+				var records: PackedInt64Array = context.builder.tile_draws(PackedInt32Array([64, 64])).records
+				var expected: int = view * 500 + 138
+				if share == 100:
+					expected += AbandonedArtwork.FIRST + BuildingVariants.SPAN
+				var found := false
+				for offset in range(5, records.size(), CityGpuBuildContext.RECORD_SIZE):
+					found = found or records[offset] == expected
+				assert(found)
+			for tile: int in AbandonedArtwork.SOURCES:
+				var id: int = view * 500 + tile
+				assert(converted.find_sprite(id) == original.find_sprite(id))
+				assert(converted.building_variants[id].size() == 6)
+				for sector in 3:
+					var alias := AbandonedArtwork.FIRST + sector * BuildingVariants.SPAN + id
+					assert(original.find_sprite(alias) == null)
+					var source_id: int = view * 500 + AbandonedArtwork.SOURCES[tile][sector]
+					var source := original.find_sprite(source_id)
+					var entry := converted.find_sprite(alias)
+					assert(entry.height == source.height and entry.width == source.width)
+					assert(converted.high_resolution[alias].emission == null)
+					assert(converted.high_resolution[alias].emission_animation == null)
+					var before := source.decode_indices().pixels
+					var after := entry.decode_indices().pixels
+					for i in before.size():
+						assert(after[i] == (-1 if before[i] < 0 else lookup[before[i]]))

@@ -54,6 +54,11 @@ func _init(parent: Control, city: CityState, controller: GameSpeedController,
 static func copy_graphics(source: Sc2SpriteArchive) -> Sc2SpriteArchive:
 	var copy := Sc2SpriteArchive.new()
 	copy.high_resolution.assign(source.high_resolution)
+	for id: int in source.building_variants:
+		if AbandonedArtwork.SOURCES.has(id % 500):
+			copy.building_variants[id] = source.building_variants[id]
+	copy.building_mix_seed = source.building_mix_seed
+	copy.abandoned_percent = source.abandoned_percent
 	copy.entries.assign(source.entries)
 	copy.entries_by_id.assign(source.entries_by_id)
 	copy.redraw_small_highway_ground = source.redraw_small_highway_ground

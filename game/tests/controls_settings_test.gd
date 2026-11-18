@@ -238,11 +238,12 @@ func _test_immediate_apply() -> void:
 	dialog.sprite_corrections_check.button_pressed = corrections
 	assert(main.preferences.sprite_corrections == corrections)
 	assert(AppSettingsStore.load_values(settings_path).sprite_corrections == corrections)
-	assert((main.asset_state.large_sprites != main.asset_state.base_large_sprites) == corrections,
+	var original := main.asset_state.base_large_sprites.find_sprite(1182).decode_indices().pixels
+	assert((main.asset_state.large_sprites.find_sprite(1182).decode_indices().pixels != original) == corrections,
 		"The sc2kfix corrections change the original sprites only while they are on")
 	assert((main.asset_state.palette.colors[0xea] != Color.BLACK) == corrections, "The corrections add the DOS colours")
 	dialog.sprite_corrections_check.button_pressed = not corrections
-	assert(main.asset_state.large_sprites == main.asset_state.base_large_sprites or corrections == false)
+	assert((main.asset_state.large_sprites.find_sprite(1182).decode_indices().pixels == original) == corrections)
 	# HD graphics need an HD pack: without one the check box is off and
 	# disabled, and the saved choice stays
 	dialog.loading_values = true

@@ -28,6 +28,7 @@ var _spawn_elapsed := 0.0
 var _serial := 0
 var _render_elapsed := 1.0
 var _deferred_render := false
+var _resume_published_canvas := false
 var _buckets: Dictionary[Vector2i, Array] = {}
 var _bus_signature: Array = []
 var _bus_tiles: Dictionary[Vector2i, bool] = {}
@@ -70,6 +71,7 @@ func process(delta: float) -> void:
 	var active := _active_view()
 	_sync_traffic(active and bool(options.life_cars_enabled))
 	if not active or (not options.life_cars_enabled and not options.life_people_enabled):
+		_resume_published_canvas = false
 		_spawn_cursor = -1
 		if canvas != null:
 			canvas.hide()
@@ -80,7 +82,8 @@ func process(delta: float) -> void:
 		# before collecting figures and preparing masks that would be discarded.
 		_spawn_cursor = -1
 		_render_elapsed = UPDATE_SECONDS
-		if canvas != null:
+		if canvas != null and canvas.visible:
+			_resume_published_canvas = true
 			canvas.hide()
 		return
 	if canvas == null:
@@ -100,6 +103,13 @@ func process(delta: float) -> void:
 		city.compass_rotation(), city.visible_altitude_levels]
 	var rebuilt_view := false
 	var viewport := Rect2i(map.visible_source_rect().grow(96))
+	if _resume_published_canvas:
+		# A temporarily empty GPU cache hid a valid frame. Restore it while the
+		# next buffer is prepared, only if its city and coordinate space still match.
+		if geometry == _geometry_signature and _viewport.encloses(viewport):
+			canvas.sync_view(app)
+			canvas.show()
+		_resume_published_canvas = false
 	if geometry != _geometry_signature or not _viewport.encloses(viewport) or _tile_cache.collecting:
 		_spawn_cursor = -1
 		var changed_geometry := geometry != _geometry_signature

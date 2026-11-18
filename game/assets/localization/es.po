@@ -7782,6 +7782,19 @@ msgstr "Intensidad LUT estacional"
 msgid "Seasonal water color strength"
 msgstr "Intensidad del color estacional del agua"
 
+#. Visual enhancements: abandoned buildings.
+msgid "Weathered variants for abandoned buildings"
+msgstr "Variantes deterioradas de edificios abandonados"
+
+#. Visual enhancements: abandoned buildings.
+msgid "Share of converted buildings"
+msgstr "Porcentaje de edificios convertidos"
+
+#. Visual enhancements: abandoned buildings.
+msgid "0% uses standard abandoned buildings. 100% uses converted buildings from the active graphics pack."
+msgstr "Al 0 % se muestran los edificios abandonados habituales. Al 100 % se muestran edificios convertidos del paquete gráfico activo."
+
+
 #. Supplementary OpenSC2K translation; original terminology used where
 #. available.
 msgid "Weather source"

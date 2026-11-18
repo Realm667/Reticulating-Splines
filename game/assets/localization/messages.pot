@@ -5205,6 +5205,19 @@ msgstr ""
 msgid "Seasonal water color strength"
 msgstr ""
 
+#. Visual enhancements: abandoned buildings.
+msgid "Weathered variants for abandoned buildings"
+msgstr ""
+
+#. Visual enhancements: abandoned buildings.
+msgid "Share of converted buildings"
+msgstr ""
+
+#. Visual enhancements: abandoned buildings.
+msgid "0% uses standard abandoned buildings. 100% uses converted buildings from the active graphics pack."
+msgstr ""
+
+
 msgid "Weather source"
 msgstr ""
 

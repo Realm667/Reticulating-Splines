@@ -5331,6 +5331,19 @@ msgstr "Stärke des Jahreszeiten-Farbfilters"
 msgid "Seasonal water color strength"
 msgstr "Stärke der saisonalen Wasserfarbe"
 
+#. Visual enhancements: abandoned buildings.
+msgid "Weathered variants for abandoned buildings"
+msgstr "Verwitterte Varianten für verlassene Gebäude"
+
+#. Visual enhancements: abandoned buildings.
+msgid "Share of converted buildings"
+msgstr "Anteil umgewandelter Gebäude"
+
+#. Visual enhancements: abandoned buildings.
+msgid "0% uses standard abandoned buildings. 100% uses converted buildings from the active graphics pack."
+msgstr "Bei 0 % erscheinen die üblichen verlassenen Gebäude. Bei 100 % erscheinen umgewandelte Gebäude aus dem aktiven Grafikpaket."
+
+
 #. Visual Enhancements settings (available in combined builds).
 msgid "Weather source"
 msgstr "Wettersteuerung"

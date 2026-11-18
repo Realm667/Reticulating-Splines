@@ -26,9 +26,9 @@ const SECTIONS := [
 		["disaster_blending", "speed_link", "pause_freezes", "idle_saving_enabled"]],
 	["Tilt shift", "Blur the top and bottom of the city view while keeping the center and interface sharp.",
 		["tilt_shift_enabled", "tilt_shift_strength", "tilt_shift_edge", "tilt_shift_transition"]],
-	["Tileset Shuffle", "Mix Reticulating Splines and original SC2000 buildings. Apply shuffles the selection again. Runways, piers, hydro and wind power plants always use SC2000 graphics.", []],
+	["Tileset Shuffle", "Mix Reticulating Splines and original SC2000 buildings. Apply shuffles the selection again. Runways, piers, hydro and wind power plants always use SC2000 graphics.", ["abandoned_enabled", "abandoned_share"]],
 ]
-const PERCENT_FIELDS := ["day_glow_intensity", "sunrise_strength", "sunset_strength", "day_glow_radius", "artwork_color_strength", "tilt_shift_strength", "tilt_shift_edge", "tilt_shift_transition", "nature_terrain_strength", "day_lut_strength", "night_strength", "season_transition", "season_lut_strength",
+const PERCENT_FIELDS := ["abandoned_share", "day_glow_intensity", "sunrise_strength", "sunset_strength", "day_glow_radius", "artwork_color_strength", "tilt_shift_strength", "tilt_shift_edge", "tilt_shift_transition", "nature_terrain_strength", "day_lut_strength", "night_strength", "season_transition", "season_lut_strength",
 	"season_water_strength", "weather_strength", "weather_lut_strength", "cloud_density", "fog_density", "cloud_shadow_strength",
 	"disaster_strength", "disaster_lights", "disaster_shake"]
 const LABELS := {
@@ -47,6 +47,7 @@ const LABELS := {
 	"lut_path": "Custom color filter (LUT PNG)", "brightmap_folder": "Custom light masks (brightmaps)",
 }
 const HINTS := {
+	"abandoned_share": "0% uses standard abandoned buildings. 100% uses converted buildings from the active graphics pack.",
 	"day_glow_intensity": "Overall strength of the cool sunrise and warm sunset overlays, including soft rays. Protects bright surfaces. 0% disables the overlay.",
 	"sunrise_enabled": "A white and cool blue glow moves from middle left to upper left around 07:00. Fades out during rain, snow and storms over 1.5 seconds.",
 	"sunset_enabled": "A white and warm orange glow moves from upper right to middle right around 19:00. Fades out during rain, snow and storms over 1.5 seconds.",
@@ -105,6 +106,7 @@ var building_mix_panel: BuildingMixPanel
 var controls: Dictionary = {}
 var terrain_strength_slider: HSlider
 var sun_intensity_slider: HSlider
+var abandoned_share_slider: HSlider
 var filling := false
 var host_controls_tree_growth := false
 var pages: Array[VBoxContainer] = []
@@ -264,7 +266,7 @@ func _add_field(page: VBoxContainer, field: Array) -> void:
 		control.custom_minimum_size.x = 155
 	control.tooltip_text = HINTS.get(key, "")
 	row.tooltip_text = control.tooltip_text
-	if key in ["nature_terrain_strength", "artwork_color_strength", "day_glow_intensity"]:
+	if key in ["nature_terrain_strength", "artwork_color_strength", "day_glow_intensity", "abandoned_share"]:
 		var spin := control as SpinBox
 		var slider := HSlider.new()
 		slider.min_value = spin.min_value
@@ -275,7 +277,9 @@ func _add_field(page: VBoxContainer, field: Array) -> void:
 		slider.value_changed.connect(func(value: float) -> void: spin.value = value)
 		spin.value_changed.connect(slider.set_value_no_signal)
 		row.add_child(slider)
-		if key == "nature_terrain_strength":
+		if key == "abandoned_share":
+			abandoned_share_slider = slider
+		elif key == "nature_terrain_strength":
 			terrain_strength_slider = slider
 		elif key == "day_glow_intensity":
 			sun_intensity_slider = slider
@@ -380,6 +384,9 @@ func _update_availability() -> void:
 		elif (key.begins_with("cloud_") and key != "cloud_enabled") or key == "fog_density":
 			available = values.cloud_enabled
 		match key:
+			"abandoned_share":
+				available = values.abandoned_enabled
+				abandoned_share_slider.editable = available
 			"sunrise_enabled", "sunset_enabled":
 				available = values.day_enabled
 			"sunrise_strength":
